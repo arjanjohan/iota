@@ -62,6 +62,7 @@ impl Transaction {
 #[enum_dispatch(BlockAPI)]
 pub enum Block {
     V1(BlockV1),
+    V2(BlockV2)
 }
 
 #[enum_dispatch]
@@ -164,6 +165,100 @@ impl BlockAPI for BlockV1 {
         &self.misbehavior_reports
     }
 }
+
+
+// ====== New BlockV2 Definition =====
+
+
+/// BlockHeader: Contains metadata for a block including the Merkle root of transactions and acknowledgement statements.
+#[derive(Clone, Default, Deserialize, Serialize)]
+pub struct BlockHeader {
+    epoch: Epoch,
+    round: Round,
+    author: AuthorityIndex,
+    // TODO: during verification ensure that timestamp_ms >= ancestors.timestamp
+    timestamp_ms: BlockTimestampMs,
+    ancestors: Vec<BlockRef>,
+    commit_votes: Vec<CommitVote>,
+    misbehavior_reports: Vec<MisbehaviorReport>,
+    /// Merkle root commitment of transactions.
+    transactions_commitment: [u8; 32],
+    /// Acknowledgement statements.
+    acknowledgement_statements: Vec<BlockRef>,
+}
+
+impl BlockHeader {
+
+    pub(crate) fn new(
+        epoch: Epoch,
+        round: Round,
+        author: AuthorityIndex,
+        timestamp_ms: BlockTimestampMs,
+        ancestors: Vec<BlockRef>,
+        commit_votes: Vec<CommitVote>,
+        misbehavior_reports: Vec<MisbehaviorReport>,
+        transactions_commitment: [u8; 32],
+        acknowledgement_statements: Vec<BlockRef>,
+    ) -> BlockHeader {
+        Self {
+            epoch,
+            round,
+            author,
+            timestamp_ms,
+            ancestors,
+            commit_votes,
+            misbehavior_reports,
+            transactions_commitment,
+            acknowledgement_statements,
+        }
+    }
+
+
+    /// Generates a genesis block header.
+    fn genesis(epoch: Epoch, author: AuthorityIndex) -> Self {
+        Self {
+            epoch,
+            round: GENESIS_ROUND,
+            author,
+            timestamp_ms: 0,
+            ancestors: vec![],
+            commit_votes: vec![],
+            misbehavior_reports: vec![],
+            transactions_commitment: [0u8; 32],
+            acknowledgement_statements: vec![],
+        }
+    }
+}
+
+/// BlockData: Contains the body of the block, such as transactions or shard data.
+#[derive(Clone, Default, Deserialize, Serialize)]
+pub enum BlockBody {
+    /// Contains transactions.
+    Transactions(Vec<Transaction>),
+    /// Contains shard data.
+    ShardData(Bytes),
+    /// No additional data.
+    Empty,
+}
+
+impl BlockBody{
+    /// Creates a new BlockBody with transactions.
+    pub fn new_transactions(transactions: Vec<Transaction>) -> Self {
+        BlockBody::Transactions(transactions)
+    }
+}
+
+/// BlockV2: Combines header and body, replacing BlockV1
+#[derive(Clone, Default, Deserialize, Serialize)]
+pub struct BlockV2 {
+    header: BlockHeader,
+    block_body: BlockBody,
+}
+
+
+
+
+
 
 /// `BlockRef` uniquely identifies a `VerifiedBlock` via `digest`. It also
 /// contains the slot info (round and author) so it can be used in logic such as
