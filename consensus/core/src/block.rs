@@ -76,6 +76,8 @@ pub trait BlockAPI {
     fn transactions(&self) -> &[Transaction];
     fn commit_votes(&self) -> &[CommitVote];
     fn misbehavior_reports(&self) -> &[MisbehaviorReport];
+    fn shard_data(&self) -> Option<&Bytes>;
+    fn acknowledgment_statements(&self) -> &[BlockRef];
 }
 
 #[derive(Clone, Default, Deserialize, Serialize)]
@@ -164,6 +166,15 @@ impl BlockAPI for BlockV1 {
     fn misbehavior_reports(&self) -> &[MisbehaviorReport] {
         &self.misbehavior_reports
     }
+
+    fn shard_data(&self) -> Option<&Bytes> {
+        None
+        }
+
+    fn acknowledgment_statements(&self) -> &[BlockRef] {
+        &[]
+    }
+
 }
 
 
@@ -252,9 +263,62 @@ impl BlockBody{
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct BlockV2 {
     header: BlockHeader,
-    block_body: BlockBody,
+    body: BlockBody,
 }
 
+
+impl BlockAPI for BlockV2 {
+    fn epoch(&self) -> Epoch {
+        self.header.epoch
+    }
+
+    fn round(&self) -> Round {
+        self.header.round
+    }
+
+    fn author(&self) -> AuthorityIndex {
+        self.header.author
+    }
+
+    fn slot(&self) -> Slot {
+        Slot::new(self.header.round, self.header.author)
+    }
+
+    fn timestamp_ms(&self) -> BlockTimestampMs {
+        self.header.timestamp_ms
+    }
+
+    fn ancestors(&self) -> &[BlockRef] {
+        &self.header.ancestors
+    }
+
+    fn transactions(&self) -> &[Transaction] {
+        match &self.body {
+            BlockBody::Transactions(transactions) => transactions,
+            BlockBody::ShardData(_) => &[],
+            BlockBody::Empty => &[],
+        }
+    }
+    fn shard_data(&self) -> Option<&Bytes> {
+        match &self.body {
+            BlockBody::ShardData(bytes) => Some(bytes),
+            BlockBody::Transactions(_) => None,
+            BlockBody::Empty => None,
+        }
+    }
+
+    fn commit_votes(&self) -> &[CommitVote] {
+        &self.header.commit_votes
+    }
+
+    fn misbehavior_reports(&self) -> &[MisbehaviorReport] {
+        &self.header.misbehavior_reports
+    }
+
+    fn acknowledgment_statements(&self) -> &[BlockRef] {
+        &self.header.acknowledgement_statements
+    }
+}
 
 
 
