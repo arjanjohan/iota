@@ -87,3 +87,6 @@ dev-tools/iota-private-network/configs/temp/
 
 # generated-documentation
 docs/generated-docs/**
+
+# WARN: Saved deferred and cancelled transactions data
+network-deferred-and-cancelled-txs

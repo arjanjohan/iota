@@ -628,6 +628,18 @@ async fn start(
     remote_migration_snapshots: Vec<SnapshotUrl>,
     delegator: Option<IotaAddress>,
 ) -> Result<(), anyhow::Error> {
+    // WARN:
+    let mut defer_and_cancel_txs_data_path = PathBuf::from("network_deferred_and_cancelled_txs");
+    let num_runs = match std::fs::read_dir(defer_and_cancel_txs_data_path.clone()) {
+        Ok(f) => f.count(),
+        Err(_) => 0,
+    };
+    defer_and_cancel_txs_data_path.push(format!("start_{:0>6}", num_runs));
+    if !defer_and_cancel_txs_data_path.exists() {
+        std::fs::create_dir_all(defer_and_cancel_txs_data_path.clone())
+            .expect("unable to create the dirs");
+    }
+
     if force_regenesis {
         ensure!(
             config_dir.is_none(),

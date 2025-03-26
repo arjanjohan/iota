@@ -5,6 +5,7 @@
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque},
     future::Future,
+    io::Write,
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -802,6 +803,25 @@ impl AuthorityPerEpochStore {
     ) -> Arc<Self> {
         let current_time = Instant::now();
         let epoch_id = committee.epoch;
+
+        // WARN:
+        if let Some(validator_idx) = committee.authority_index(&name) {
+            // do it only for validators as not every authority is a validator
+            let mut defer_and_cancel_txs_data_path =
+                PathBuf::from("network_deferred_and_cancelled_txs");
+            let start_idx = std::fs::read_dir(defer_and_cancel_txs_data_path.clone())
+                .expect("unable to read dir")
+                .count();
+            defer_and_cancel_txs_data_path.push(format!("start_{:0>6}", start_idx - 1));
+            defer_and_cancel_txs_data_path.push(format!(
+                "validator={}.json",
+                validator_idx,
+            ));
+            let file = std::fs::File::create(defer_and_cancel_txs_data_path.clone())
+                .expect("unable to open file");
+            let mut writer = std::io::BufWriter::new(file);
+            writeln!(writer, "{{\n{:?}\n}}", defer_and_cancel_txs_data_path).expect("unable to write");
+        }
 
         let tables = AuthorityEpochTables::open(epoch_id, parent_path, db_options.clone());
         let end_of_publish =
@@ -3177,6 +3197,11 @@ impl AuthorityPerEpochStore {
             .consensus_handler_max_object_costs
             .with_label_values(&["randomness_commit"])
             .set(shared_object_using_randomness_congestion_tracker.max_cost() as i64);
+
+        // WARN:
+        if !commit_has_deferred_txns {
+            warn!("round={}", consensus_commit_info.round);
+        }
 
         if randomness_state_updated {
             if let Some(randomness_manager) = randomness_manager.as_mut() {
