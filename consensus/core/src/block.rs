@@ -249,7 +249,7 @@ pub enum BlockBody {
     /// Contains shard data.
     ShardData(Bytes),
     /// No additional data.
-    Empty,
+    #[default] Empty,
 }
 
 impl BlockBody{
@@ -532,17 +532,32 @@ impl SignedBlock {
     }
 }
 
-/// Digest of a block, covering all `Block` fields without its signature.
+/// Digest of a block, covering all `Block` fields without its signature for BlockV1 and the `BlockHeader` for BlockV2
 /// This is used during Block signing and signature verification.
 /// This should never be used outside of this file, to avoid confusion with
 /// `BlockDigest`.
 #[derive(Serialize, Deserialize)]
 struct InnerBlockDigest([u8; consensus_config::DIGEST_LENGTH]);
 
-/// Computes the digest of a Block, only for signing and verifications.
+/// Computes the digest of a Block for  BlockV1 and t the Block Header For BlockV2, only for signing and verifications.
+
 fn compute_inner_block_digest(block: &Block) -> ConsensusResult<InnerBlockDigest> {
+    let serialized = match block {
+        Block::V1(_) => {
+            // For BlockV1, serialize the entire block.
+            bcs::to_bytes(block)
+                .map_err(ConsensusError::SerializationFailure)?
+        }
+        Block::V2(block_v2) => {
+            // For BlockV2, serialize only the BlockHeader.
+            bcs::to_bytes(&block_v2.header)
+                .map_err(ConsensusError::SerializationFailure)?
+        }
+    };
+
+    // Now hash the serialized bytes to produce the digest.
     let mut hasher = DefaultHashFunction::new();
-    hasher.update(bcs::to_bytes(block).map_err(ConsensusError::SerializationFailure)?);
+    hasher.update(&serialized);
     Ok(InnerBlockDigest(hasher.finalize().into()))
 }
 
