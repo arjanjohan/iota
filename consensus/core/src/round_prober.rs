@@ -489,7 +489,7 @@ mod test {
         );
 
         // Fake last proposed round to be 110.
-        let block = VerifiedBlock::new_for_test(TestBlock::new(110, 0).build());
+        let block = VerifiedBlock::new_for_test(TestBlock::new_v1(110, 0).build());
         dag_state.write().accept_block(block);
 
         // Compute quorum rounds and propagation delay based on last proposed round =

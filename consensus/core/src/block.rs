@@ -729,58 +729,127 @@ pub(crate) fn genesis_blocks(context: Arc<Context>) -> Vec<VerifiedBlock> {
 
 /// This struct is public for testing in other crates.
 #[derive(Clone)]
-pub struct TestBlock {
-    block: BlockV1,
+pub enum TestBlock {
+    V1(BlockV1),
+    V2(BlockV2),
 }
 
 impl TestBlock {
-    pub fn new(round: Round, author: u32) -> Self {
-        Self {
-            block: BlockV1 {
-                round,
-                author: AuthorityIndex::new_for_test(author),
-                ..Default::default()
-            },
+    pub fn new_v1(round: Round, author: u32) -> Self {
+        Self::V1(BlockV1 {
+            round,
+            author: AuthorityIndex::new_for_test(author),
+            ..Default::default()
+        })
+    }
+    pub fn new_v2(round: Round, author: u32) -> Self {
+        let header = BlockHeader {
+            round,
+            author: AuthorityIndex::new_for_test(author),
+            ..Default::default()
+        };
+        Self::V2(BlockV2 {
+            header,
+            ..Default::default()
+        })
+    }
+
+    pub fn set_epoch(self, epoch: Epoch) -> Self {
+        match self {
+            Self::V1(mut block) => {
+                block.epoch = epoch;
+                Self::V1(block)
+            }
+            Self::V2(mut block) => {
+                block.header.epoch = epoch;
+                Self::V2(block)
+            }
         }
     }
 
-    pub fn set_epoch(mut self, epoch: Epoch) -> Self {
-        self.block.epoch = epoch;
-        self
+    pub fn set_round(self, round: Round) -> Self {
+        match self {
+            Self::V1(mut block) => {
+                block.round = round;
+                Self::V1(block)
+            }
+            Self::V2(mut block) => {
+                block.header.round = round;
+                Self::V2(block)
+            }
+        }
     }
 
-    pub fn set_round(mut self, round: Round) -> Self {
-        self.block.round = round;
-        self
+    pub fn set_author(self, author: AuthorityIndex) -> Self {
+        match self {
+            Self::V1(mut block) => {
+                block.author = author;
+                Self::V1(block)
+            }
+            Self::V2(mut block) => {
+                block.header.author = author;
+                Self::V2(block)
+            }
+        }
     }
 
-    pub fn set_author(mut self, author: AuthorityIndex) -> Self {
-        self.block.author = author;
-        self
+    pub fn set_timestamp_ms(self, timestamp_ms: BlockTimestampMs) -> Self {
+        match self {
+            Self::V1(mut block) => {
+                block.timestamp_ms = timestamp_ms;
+                Self::V1(block)
+            }
+            Self::V2(mut block) => {
+                block.header.timestamp_ms = timestamp_ms;
+                Self::V2(block)
+            }
+        }
     }
 
-    pub fn set_timestamp_ms(mut self, timestamp_ms: BlockTimestampMs) -> Self {
-        self.block.timestamp_ms = timestamp_ms;
-        self
+    pub fn set_ancestors(self, ancestors: Vec<BlockRef>) -> Self {
+        match self {
+            Self::V1(mut block) => {
+                block.ancestors = ancestors;
+                Self::V1(block)
+            }
+            Self::V2(mut block) => {
+                block.header.ancestors = ancestors;
+                Self::V2(block)
+            }
+        }
     }
 
-    pub fn set_ancestors(mut self, ancestors: Vec<BlockRef>) -> Self {
-        self.block.ancestors = ancestors;
-        self
+    pub fn set_transactions(self, transactions: Vec<Transaction>) -> Self {
+        match self {
+            Self::V1(mut block) => {
+                block.transactions = transactions;
+                Self::V1(block)
+            }
+            Self::V2(mut block) => {
+                block.body = BlockBody::Transactions(transactions);
+                Self::V2(block)
+            }
+        }
     }
 
-    pub fn set_transactions(mut self, transactions: Vec<Transaction>) -> Self {
-        self.block.transactions = transactions;
-        self
-    }
-
-    pub fn set_commit_votes(mut self, commit_votes: Vec<CommitVote>) -> Self {
-        self.block.commit_votes = commit_votes;
-        self
+    pub fn set_commit_votes(self, commit_votes: Vec<CommitVote>) -> Self {
+        match self {
+            Self::V1(mut block) => {
+                block.commit_votes = commit_votes;
+                Self::V1(block)
+            }
+            Self::V2(mut block) => {
+                block.header.commit_votes = commit_votes;
+                Self::V2(block)
+            }
+        }
     }
 
     pub fn build(self) -> Block {
-        Block::V1(self.block)
+        match self {
+            Self::V1(block) => Block::V1(block),
+            Self::V2(block) => Block::V2(block),
+        }
     }
 }
 
@@ -808,18 +877,18 @@ mod tests {
     use fastcrypto::error::FastCryptoError;
 
     use crate::{
-        block::{SignedBlock, TestBlock},
+        block::{SignedBlock, TestBlock, BlockHeader},
         context::Context,
         error::ConsensusError,
     };
 
     #[tokio::test]
-    async fn test_sign_and_verify() {
+    async fn test_sign_and_verify_blockv1() {
         let (context, key_pairs) = Context::new_for_test(4);
         let context = Arc::new(context);
 
         // Create a block that authority 2 has created
-        let block = TestBlock::new(10, 2).build();
+        let block = TestBlock::new_v1(10, 2).build();
 
         // Create a signed block with authority's 2 private key
         let author_two_key = &key_pairs[2].1;
@@ -830,7 +899,7 @@ mod tests {
         assert!(result.is_ok());
 
         // Try to sign authority's 2 block with authority's 1 key
-        let block = TestBlock::new(10, 2).build();
+        let block = TestBlock::new_v1(10, 2).build();
         let author_one_key = &key_pairs[1].1;
         let signed_block = SignedBlock::new(block, author_one_key).expect("Shouldn't fail signing");
 
@@ -842,5 +911,40 @@ mod tests {
             }
             err => panic!("Unexpected error: {err:?}"),
         }
+    }
+    #[tokio::test]
+    async fn test_sign_and_verify_blockv2() {
+        // Setup test context with 4 authorities
+        let (context, key_pairs) = Context::new_for_test(4);
+        let context = Arc::new(context);
+
+        // Step 1: Use TestBlock to build a V2 block with round=10 and author=2
+        let block = TestBlock::new_v2(10, 2).build();
+
+        // Step 2: Sign using authority 2's private key
+        let author_two_key = &key_pairs[2].1;
+        let signed_block = SignedBlock::new(block, author_two_key)
+            .expect("Signing BlockV2 with correct key should succeed");
+
+        // Step 3: Verify signature using authority 2's public key
+        assert!(
+            signed_block.verify_signature(&context).is_ok(),
+            "BlockV2 signature should verify correctly"
+        );
+
+        // Step 4: Create a fake block that *claims* to be from authority 2...
+        let fake_block = TestBlock::new_v2(10, 2).build();
+
+        // ...but sign it with the wrong key (authority 1's private key)
+        let author_one_key = &key_pairs[1].1;
+        let fake_signed_block = SignedBlock::new(fake_block, author_one_key)
+            .expect("Fake signed block should still be created");
+
+        // Step 5: This should fail signature verification
+        let result = fake_signed_block.verify_signature(&context);
+        assert!(
+            result.is_err(),
+            "BlockV2 signed with wrong key should fail verification"
+        );
     }
 }

@@ -295,7 +295,7 @@ mod test {
         let authority_2_protocol_keypair = &keypairs[2].1;
         let verifier = SignedBlockVerifier::new(context.clone(), Arc::new(TxnSizeVerifier {}));
 
-        let test_block = TestBlock::new(10, 2)
+        let test_block = TestBlock::new_v1(10, 2)
             .set_ancestors(vec![
                 BlockRef::new(9, AuthorityIndex::new_for_test(2), BlockDigest::MIN),
                 BlockRef::new(9, AuthorityIndex::new_for_test(0), BlockDigest::MIN),
@@ -573,7 +573,7 @@ mod test {
 
         let mut ancestor_blocks = vec![];
         for i in 0..num_authorities {
-            let test_block = TestBlock::new(10, i as u32)
+            let test_block = TestBlock::new_v1(10, i as u32)
                 .set_timestamp_ms(1000 + 100 * i as BlockTimestampMs)
                 .build();
             ancestor_blocks.push(Some(VerifiedBlock::new_for_test(test_block)));
@@ -586,7 +586,7 @@ mod test {
 
         // Block respecting timestamp invariant.
         {
-            let block = TestBlock::new(11, 0)
+            let block = TestBlock::new_v1(11, 0)
                 .set_ancestors(ancestor_refs.clone())
                 .set_timestamp_ms(1500)
                 .build();
@@ -600,7 +600,7 @@ mod test {
 
         // Block not respecting timestamp invariant.
         {
-            let block = TestBlock::new(11, 0)
+            let block = TestBlock::new_v1(11, 0)
                 .set_ancestors(ancestor_refs.clone())
                 .set_timestamp_ms(1000)
                 .build();
@@ -628,14 +628,14 @@ mod test {
 
         // Create one block just on the `gc_round` (so it should be considered garbage
         // collected). This has higher timestamp that the block we are testing.
-        let test_block = TestBlock::new(gc_round, 0_u32)
+        let test_block = TestBlock::new_v1(gc_round, 0_u32)
             .set_timestamp_ms(1500 as BlockTimestampMs)
             .build();
         ancestor_blocks.push(Some(VerifiedBlock::new_for_test(test_block)));
 
         // Rest of the blocks
         for i in 1..=3 {
-            let test_block = TestBlock::new(gc_round + 1, i as u32)
+            let test_block = TestBlock::new_v1(gc_round + 1, i as u32)
                 .set_timestamp_ms(1000 + 100 * i as BlockTimestampMs)
                 .build();
             ancestor_blocks.push(Some(VerifiedBlock::new_for_test(test_block)));
@@ -649,7 +649,7 @@ mod test {
 
         // Block respecting timestamp invariant.
         {
-            let block = TestBlock::new(gc_round + 2, 0)
+            let block = TestBlock::new_v1(gc_round + 2, 0)
                 .set_ancestors(ancestor_refs.clone())
                 .set_timestamp_ms(1600)
                 .build();
@@ -664,7 +664,7 @@ mod test {
         // Block not respecting timestamp invariant for the block that is garbage
         // collected Validation should pass.
         {
-            let block = TestBlock::new(11, 0)
+            let block = TestBlock::new_v1(11, 0)
                 .set_ancestors(ancestor_refs.clone())
                 .set_timestamp_ms(1400)
                 .build();
@@ -679,7 +679,7 @@ mod test {
         // Block not respecting timestamp invariant for the blocks that are not garbage
         // collected
         {
-            let block = TestBlock::new(11, 0)
+            let block = TestBlock::new_v1(11, 0)
                 .set_ancestors(ancestor_refs.clone())
                 .set_timestamp_ms(1100)
                 .build();

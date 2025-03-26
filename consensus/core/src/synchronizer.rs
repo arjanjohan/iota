@@ -1423,7 +1423,7 @@ mod tests {
 
         // Create some test blocks
         let expected_blocks = (0..10)
-            .map(|round| VerifiedBlock::new_for_test(TestBlock::new(round, 0).build()))
+            .map(|round| VerifiedBlock::new_for_test(TestBlock::new_v1(round, 0).build()))
             .collect::<Vec<_>>();
         let missing_blocks = expected_blocks
             .iter()
@@ -1471,7 +1471,7 @@ mod tests {
 
         // Create some test blocks
         let expected_blocks = (0..=2 * FETCH_BLOCKS_CONCURRENCY)
-            .map(|round| VerifiedBlock::new_for_test(TestBlock::new(round as Round, 0).build()))
+            .map(|round| VerifiedBlock::new_for_test(TestBlock::new_v1(round as Round, 0).build()))
             .collect::<Vec<_>>();
 
         // Now start sending requests to fetch blocks by trying to saturate peer 1 task
@@ -1520,7 +1520,7 @@ mod tests {
 
         // Create some test blocks
         let expected_blocks = (0..10)
-            .map(|round| VerifiedBlock::new_for_test(TestBlock::new(round, 0).build()))
+            .map(|round| VerifiedBlock::new_for_test(TestBlock::new_v1(round, 0).build()))
             .collect::<Vec<_>>();
         let missing_blocks = expected_blocks
             .iter()
@@ -1593,7 +1593,7 @@ mod tests {
         // AND stub some missing blocks. The highest accepted round is 0. Create some
         // blocks that are below and above the threshold sync.
         let expected_blocks = (0..SYNC_MISSING_BLOCK_ROUND_THRESHOLD * 2)
-            .map(|round| VerifiedBlock::new_for_test(TestBlock::new(round, 0).build()))
+            .map(|round| VerifiedBlock::new_for_test(TestBlock::new_v1(round, 0).build()))
             .collect::<Vec<_>>();
 
         let missing_blocks = expected_blocks
@@ -1630,7 +1630,7 @@ mod tests {
         let blocks = (0..4)
             .map(|authority| {
                 let commit_votes = vec![CommitVote::new(commit_index, CommitDigest::MIN)];
-                let block = TestBlock::new(round, authority)
+                let block = TestBlock::new_v1(round, authority)
                     .set_commit_votes(commit_votes)
                     .build();
 
@@ -1684,7 +1684,7 @@ mod tests {
         // that are above the threshold sync.
         let mut expected_blocks = (SYNC_MISSING_BLOCK_ROUND_THRESHOLD * 2
             ..SYNC_MISSING_BLOCK_ROUND_THRESHOLD * 3)
-            .map(|round| VerifiedBlock::new_for_test(TestBlock::new(round, 0).build()))
+            .map(|round| VerifiedBlock::new_for_test(TestBlock::new_v1(round, 0).build()))
             .collect::<Vec<_>>();
         let missing_blocks = expected_blocks
             .iter()
@@ -1716,7 +1716,7 @@ mod tests {
         let blocks = (0..4)
             .map(|authority| {
                 let commit_votes = vec![CommitVote::new(commit_index, CommitDigest::MIN)];
-                let block = TestBlock::new(round, authority)
+                let block = TestBlock::new_v1(round, authority)
                     .set_commit_votes(commit_votes)
                     .build();
 
@@ -1800,7 +1800,7 @@ mod tests {
 
         // Create some test blocks
         let mut expected_blocks = (9..=10)
-            .map(|round| VerifiedBlock::new_for_test(TestBlock::new(round, 0).build()))
+            .map(|round| VerifiedBlock::new_for_test(TestBlock::new_v1(round, 0).build()))
             .collect::<Vec<_>>();
 
         // Now set different latest blocks for the peers
