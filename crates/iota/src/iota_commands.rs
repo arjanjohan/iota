@@ -666,7 +666,7 @@ async fn start(
                 tracing::warn!(
                     "{}",
                     format!(
-                        "deferred and cancelled transactions successfully data saved in {:?}",
+                        "deferred and cancelled transactions data successfully saved in {:?}",
                         defer_and_cancel_txs_data_path
                     )
                     .black()
