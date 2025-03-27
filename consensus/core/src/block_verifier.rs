@@ -38,9 +38,17 @@ pub(crate) trait BlockVerifier: Send + Sync + 'static {
 /// `SignedBlockVerifier` checks the validity of a block.
 ///
 /// Blocks that fail verification at one honest authority will be rejected by
-/// all other honest authorities as well. The means invalid blocks, and blocks
+/// all other honest authorities as well. This means invalid blocks, and blocks
 /// with an invalid ancestor, will never be accepted into the DAG.
+///
+/// For `BlockV1`, transaction verification is performed using the provided
+/// `TransactionVerifier`.
+///
+/// For `BlockV2`, if the block contains full transactions, the `TransactionVerifier`
+/// is used. If it contains a shard and Merkle proof, these need to be checked
+/// against the Merkle root in the block header (TODO: not yet implemented).
 pub(crate) struct SignedBlockVerifier {
+    // TODO: Add support for verifying Merkle shard against the commitment root in BlockV2
     context: Arc<Context>,
     genesis: BTreeSet<BlockRef>,
     transaction_verifier: Arc<dyn TransactionVerifier>,
@@ -260,7 +268,7 @@ impl BlockVerifier for NoopBlockVerifier {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use consensus_config::AuthorityIndex;
     use rstest::rstest;
 
@@ -289,13 +297,284 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_verify_block() {
+    async fn test_verify_block_v1() {
         let (context, keypairs) = Context::new_for_test(4);
         let context = Arc::new(context);
         let authority_2_protocol_keypair = &keypairs[2].1;
         let verifier = SignedBlockVerifier::new(context.clone(), Arc::new(TxnSizeVerifier {}));
 
         let test_block = TestBlock::new_v1(10, 2)
+            .set_ancestors(vec![
+                BlockRef::new(9, AuthorityIndex::new_for_test(2), BlockDigest::MIN),
+                BlockRef::new(9, AuthorityIndex::new_for_test(0), BlockDigest::MIN),
+                BlockRef::new(9, AuthorityIndex::new_for_test(1), BlockDigest::MIN),
+                BlockRef::new(7, AuthorityIndex::new_for_test(3), BlockDigest::MIN),
+            ])
+            .set_transactions(vec![Transaction::new(vec![4; 8])]);
+
+        // Valid SignedBlock.
+        {
+            let block = test_block.clone().build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            verifier.verify(&signed_block).unwrap();
+        }
+
+        // Block with wrong epoch.
+        {
+            let block = test_block.clone().set_epoch(1).build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::WrongEpoch {
+                    expected: _,
+                    actual: _
+                })
+            ));
+        }
+
+        // Block at genesis round.
+        {
+            let block = test_block.clone().set_round(0).build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::UnexpectedGenesisBlock)
+            ));
+        }
+
+        // Block with invalid authority index.
+        {
+            let block = test_block
+                .clone()
+                .set_author(AuthorityIndex::new_for_test(4))
+                .build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::InvalidAuthorityIndex { index: _, max: _ })
+            ));
+        }
+
+        // Block with mismatched authority index and signature.
+        {
+            let block = test_block
+                .clone()
+                .set_author(AuthorityIndex::new_for_test(1))
+                .build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::SignatureVerificationFailure(_))
+            ));
+        }
+
+        // Block with wrong key.
+        {
+            let block = test_block.clone().build();
+            let signed_block = SignedBlock::new(block, &keypairs[3].1).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::SignatureVerificationFailure(_))
+            ));
+        }
+
+        // Block without signature.
+        {
+            let block = test_block.clone().build();
+            let mut signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            signed_block.clear_signature();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::MalformedSignature(_))
+            ));
+        }
+
+        // Block with invalid ancestor round.
+        {
+            let block = test_block
+                .clone()
+                .set_ancestors(vec![
+                    BlockRef::new(9, AuthorityIndex::new_for_test(2), BlockDigest::MIN),
+                    BlockRef::new(9, AuthorityIndex::new_for_test(0), BlockDigest::MIN),
+                    BlockRef::new(9, AuthorityIndex::new_for_test(1), BlockDigest::MIN),
+                    BlockRef::new(10, AuthorityIndex::new_for_test(3), BlockDigest::MIN),
+                ])
+                .build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::InvalidAncestorRound {
+                    ancestor: _,
+                    block: _
+                })
+            ));
+        }
+
+        // Block with parents not reaching quorum.
+        {
+            let block = test_block
+                .clone()
+                .set_ancestors(vec![
+                    BlockRef::new(9, AuthorityIndex::new_for_test(2), BlockDigest::MIN),
+                    BlockRef::new(9, AuthorityIndex::new_for_test(0), BlockDigest::MIN),
+                    BlockRef::new(8, AuthorityIndex::new_for_test(1), BlockDigest::MIN),
+                    BlockRef::new(8, AuthorityIndex::new_for_test(3), BlockDigest::MIN),
+                ])
+                .build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::InsufficientParentStakes {
+                    parent_stakes: _,
+                    quorum: _
+                })
+            ));
+        }
+
+        // Block with too many ancestors.
+        {
+            let block = test_block
+                .clone()
+                .set_ancestors(vec![
+                    BlockRef::new(9, AuthorityIndex::new_for_test(2), BlockDigest::MIN),
+                    BlockRef::new(9, AuthorityIndex::new_for_test(0), BlockDigest::MIN),
+                    BlockRef::new(8, AuthorityIndex::new_for_test(1), BlockDigest::MIN),
+                    BlockRef::new(8, AuthorityIndex::new_for_test(3), BlockDigest::MIN),
+                    BlockRef::new(9, AuthorityIndex::new_for_test(3), BlockDigest::MIN),
+                ])
+                .build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::TooManyAncestors(_, _))
+            ));
+        }
+
+        // Block without own ancestor.
+        {
+            let block = test_block
+                .clone()
+                .set_ancestors(vec![
+                    BlockRef::new(9, AuthorityIndex::new_for_test(0), BlockDigest::MIN),
+                    BlockRef::new(8, AuthorityIndex::new_for_test(1), BlockDigest::MIN),
+                    BlockRef::new(8, AuthorityIndex::new_for_test(3), BlockDigest::MIN),
+                ])
+                .build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::InvalidAncestorPosition {
+                    block_authority: _,
+                    ancestor_authority: _,
+                    position: _
+                })
+            ));
+        }
+
+        // Block with own ancestor at wrong position.
+        {
+            let block = test_block
+                .clone()
+                .set_ancestors(vec![
+                    BlockRef::new(9, AuthorityIndex::new_for_test(0), BlockDigest::MIN),
+                    BlockRef::new(8, AuthorityIndex::new_for_test(1), BlockDigest::MIN),
+                    BlockRef::new(8, AuthorityIndex::new_for_test(2), BlockDigest::MIN),
+                    BlockRef::new(8, AuthorityIndex::new_for_test(3), BlockDigest::MIN),
+                ])
+                .build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::InvalidAncestorPosition {
+                    block_authority: _,
+                    ancestor_authority: _,
+                    position: _
+                })
+            ));
+        }
+
+        // Block with ancestors from the same authority.
+        {
+            let block = test_block
+                .clone()
+                .set_ancestors(vec![
+                    BlockRef::new(8, AuthorityIndex::new_for_test(2), BlockDigest::MIN),
+                    BlockRef::new(8, AuthorityIndex::new_for_test(1), BlockDigest::MIN),
+                    BlockRef::new(8, AuthorityIndex::new_for_test(1), BlockDigest::MIN),
+                ])
+                .build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::DuplicatedAncestorsAuthority(_))
+            ));
+        }
+
+        // Block with invalid transaction.
+        {
+            let block = test_block
+                .clone()
+                .set_transactions(vec![Transaction::new(vec![1; 2])])
+                .build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::InvalidTransaction(_))
+            ));
+        }
+
+        // Block with transaction too large.
+        {
+            let block = test_block
+                .clone()
+                .set_transactions(vec![Transaction::new(vec![4; 257 * 1024])])
+                .build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::TransactionTooLarge { size: _, limit: _ })
+            ));
+        }
+
+        // Block with too many transactions.
+        {
+            let block = test_block
+                .clone()
+                .set_transactions((0..1000).map(|_| Transaction::new(vec![4; 8])).collect())
+                .build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::TooManyTransactions { count: _, limit: _ })
+            ));
+        }
+
+        // Block with too many transaction bytes.
+        {
+            let block = test_block
+                .clone()
+                .set_transactions(
+                    (0..100)
+                        .map(|_| Transaction::new(vec![4; 8 * 1024]))
+                        .collect(),
+                )
+                .build();
+            let signed_block = SignedBlock::new(block, authority_2_protocol_keypair).unwrap();
+            assert!(matches!(
+                verifier.verify(&signed_block),
+                Err(ConsensusError::TooManyTransactionBytes { size: _, limit: _ })
+            ));
+        }
+    }
+    #[tokio::test]
+    // TODO: adapt the verification of BlockV2
+    async fn test_verify_block_v2() {
+        let (context, keypairs) = Context::new_for_test(4);
+        let context = Arc::new(context);
+        let authority_2_protocol_keypair = &keypairs[2].1;
+        let verifier = SignedBlockVerifier::new(context.clone(), Arc::new(TxnSizeVerifier {}));
+
+        let test_block = TestBlock::new_v2(10, 2)
             .set_ancestors(vec![
                 BlockRef::new(9, AuthorityIndex::new_for_test(2), BlockDigest::MIN),
                 BlockRef::new(9, AuthorityIndex::new_for_test(0), BlockDigest::MIN),
