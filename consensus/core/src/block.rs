@@ -876,7 +876,7 @@ mod tests {
     use fastcrypto::error::FastCryptoError;
 
     use crate::{
-        block::{SignedBlock, VerifiedBlock, TestBlock, BlockHeader, BlockAPI},
+        block::{SignedBlock, VerifiedBlock, TestBlock, BlockAPI},
         context::Context,
         error::ConsensusError,
     };
@@ -950,8 +950,7 @@ mod tests {
     }
     #[tokio::test]
     async fn test_signed_to_verified_block_conversion_v1() {
-        let (context, key_pairs) = Context::new_for_test(4);
-        let context = Arc::new(context);
+        let (_context, key_pairs) = Context::new_for_test(4);
 
         // Step 1: Create a signed BlockV1.
         let block = TestBlock::new_v1(5, 1).build();
@@ -975,8 +974,7 @@ mod tests {
     }
     #[tokio::test]
     async fn test_signed_to_verified_block_conversion_v2() {
-        let (context, key_pairs) = Context::new_for_test(4);
-        let context = Arc::new(context);
+        let (_context, key_pairs) = Context::new_for_test(4);
 
         // Step 1: Create a signed BlockV2.
         let block = TestBlock::new_v2(7, 2).build();
