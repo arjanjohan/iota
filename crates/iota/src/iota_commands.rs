@@ -658,7 +658,7 @@ async fn start(
                 let msg = "received Ctrl+C signal, finalizing writing deferred and \
                         cancelled transactions data to json files and exiting..."
                     .black()
-                    .on_red();
+                    .on_magenta();
                 tracing::warn!("{}", msg);
                 cancellation_token.cancel();
                 // sleep some time to let validator authorities finish writing to files
