@@ -10,6 +10,8 @@ use std::{
 };
 
 use arc_swap::ArcSwap;
+// WARN:
+use colored::Colorize;
 use consensus_config::Committee as ConsensusCommittee;
 use consensus_core::CommitConsumerMonitor;
 use iota_macros::{fail_point_async, fail_point_if};
@@ -31,8 +33,8 @@ use crate::{
     authority::{
         AuthorityMetrics, AuthorityState,
         authority_per_epoch_store::{
-            AuthorityPerEpochStore, ConsensusStats, ConsensusStatsAPI, ExecutionIndices,
-            ExecutionIndicesWithStats,
+            AuthorityPerEpochStore, ConsensusStats, ConsensusStatsAPI, DeferCancelTxsWriter,
+            ExecutionIndices, ExecutionIndicesWithStats,
         },
         epoch_start_configuration::EpochStartConfigTrait,
     },
@@ -196,7 +198,12 @@ fn update_index_and_hash(
 
 impl<C: CheckpointServiceNotify + Send + Sync> ConsensusHandler<C> {
     #[instrument(level = "debug", skip_all)]
-    async fn handle_consensus_output(&mut self, consensus_output: impl ConsensusOutputAPI) {
+    async fn handle_consensus_output(
+        &mut self,
+        consensus_output: impl ConsensusOutputAPI,
+        // WARN:
+        defer_cancel_txs_writer: &mut DeferCancelTxsWriter,
+    ) {
         let last_committed_round = self.last_consensus_stats.index.last_committed_round;
 
         let round = consensus_output.leader_round();
@@ -397,6 +404,8 @@ impl<C: CheckpointServiceNotify + Send + Sync> ConsensusHandler<C> {
                 self.cache_reader.as_ref(),
                 &ConsensusCommitInfo::new(&consensus_output),
                 &self.metrics,
+                // WARN:
+                defer_cancel_txs_writer,
             )
             .await
             .expect("Unrecoverable error in consensus handler");
@@ -460,13 +469,49 @@ impl MysticetiConsensusHandler {
         mut receiver: UnboundedReceiver<consensus_core::CommittedSubDag>,
         commit_consumer_monitor: Arc<CommitConsumerMonitor>,
     ) -> Self {
+        // WARN:this appears to be started once per epoch by each validator
+        let mut defer_cancel_txs_writer = if let Some(validator_idx) = consensus_handler
+            .epoch_store
+            .committee
+            .authority_index(&consensus_handler.epoch_store.name)
+        {
+            let mut defer_and_cancel_txs_data_path =
+                std::path::PathBuf::from("network_deferred_and_cancelled_txs");
+            let start_idx = std::fs::read_dir(defer_and_cancel_txs_data_path.clone())
+                .expect("unable to read dir")
+                .count();
+            defer_and_cancel_txs_data_path.push(format!("start_{:0>6}", start_idx - 1));
+            defer_and_cancel_txs_data_path.push(format!(
+                "epoch={}_validator={}.json",
+                consensus_handler.epoch(),
+                validator_idx
+            ));
+            let file = std::fs::File::create(defer_and_cancel_txs_data_path.clone())
+                .expect("unable to open file");
+            warn!(
+                "{}",
+                format!(
+                    "saving deferred and cancelled txs to {:?}",
+                    defer_and_cancel_txs_data_path,
+                )
+                .black()
+                .on_yellow()
+                .to_string()
+            );
+            Some(std::io::BufWriter::new(file))
+        } else {
+            None
+        };
+        // TODO: handle Ctrl+C here to finalize writing to json file
+
         let handle = spawn_monitored_task!(async move {
             // TODO: pause when execution is overloaded, so consensus can detect the
             // backpressure.
             while let Some(consensus_output) = receiver.recv().await {
                 let commit_index = consensus_output.commit_ref.index;
                 consensus_handler
-                    .handle_consensus_output(consensus_output)
+                    // WARN:
+                    .handle_consensus_output(consensus_output, &mut defer_cancel_txs_writer)
                     .await;
                 commit_consumer_monitor.set_highest_handled_commit(commit_index);
             }
@@ -890,7 +935,8 @@ mod tests {
 
         // AND processing the consensus output once
         consensus_handler
-            .handle_consensus_output(committed_sub_dag.clone())
+            // WARN:
+            .handle_consensus_output(committed_sub_dag.clone(), &mut None)
             .await;
 
         // AND capturing the consensus stats
@@ -917,7 +963,8 @@ mod tests {
         // THEN the consensus stats do not update
         for _ in 0..2 {
             consensus_handler
-                .handle_consensus_output(committed_sub_dag.clone())
+                // WARN:
+                .handle_consensus_output(committed_sub_dag.clone(), &mut None)
                 .await;
             let last_consensus_stats_2 = consensus_handler.last_consensus_stats.clone();
             assert_eq!(last_consensus_stats_1, last_consensus_stats_2);

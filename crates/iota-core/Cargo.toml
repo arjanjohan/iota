@@ -19,6 +19,8 @@ axum.workspace = true
 bcs.workspace = true
 bytes.workspace = true
 chrono.workspace = true
+# WARN:
+colored.workspace = true
 count-min-sketch = "0.1.7"
 dashmap.workspace = true
 diffy = { version = "0.3", default-features = false }

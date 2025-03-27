@@ -11,6 +11,7 @@ use std::{
 };
 
 use arc_swap::ArcSwapOption;
+use colored::Colorize;
 use enum_dispatch::enum_dispatch;
 use fastcrypto::groups::bls12381;
 use fastcrypto_tbls::{dkg, nodes::PartyId};
@@ -152,6 +153,8 @@ impl CertLockGuard {
 
 type JwkAggregator = GenericMultiStakeAggregator<(JwkId, JWK), true>;
 
+// WARN:
+#[derive(Debug, Clone, Serialize)]
 pub enum CancelConsensusCertificateReason {
     CongestionOnObjects(Vec<ObjectID>),
     DkgFailed,
@@ -305,6 +308,20 @@ pub struct ExecutionComponents {
     metrics: Arc<ResolverMetrics>,
 }
 
+// WARN:
+pub type DeferCancelTxsWriter = Option<std::io::BufWriter<std::fs::File>>;
+
+// WARN:
+#[derive(Debug, Serialize)]
+struct RoundDeferredCancelledTxs {
+    consensus_commit_round: u64,
+    consensus_commit_tx: TransactionDigest,
+    num_deferred: usize,
+    deferred_txs: BTreeMap<String, Vec<TransactionDigest>>,
+    num_cancelled: usize,
+    cancelled_txs: BTreeMap<TransactionDigest, CancelConsensusCertificateReason>,
+}
+
 #[cfg(test)]
 #[path = "../unit_tests/authority_per_epoch_store_tests.rs"]
 pub mod authority_per_epoch_store_tests;
@@ -323,7 +340,8 @@ pub struct AuthorityPerEpochStore {
     pub(crate) name: AuthorityName,
 
     /// Committee of validators for the current epoch.
-    committee: Arc<Committee>,
+    // WARN:
+    pub(crate) committee: Arc<Committee>,
 
     /// Holds the underlying per-epoch typed store tables.
     /// This is an ArcSwapOption because it needs to be used concurrently,
@@ -803,25 +821,6 @@ impl AuthorityPerEpochStore {
     ) -> Arc<Self> {
         let current_time = Instant::now();
         let epoch_id = committee.epoch;
-
-        // WARN:
-        if let Some(validator_idx) = committee.authority_index(&name) {
-            // do it only for validators as not every authority is a validator
-            let mut defer_and_cancel_txs_data_path =
-                PathBuf::from("network_deferred_and_cancelled_txs");
-            let start_idx = std::fs::read_dir(defer_and_cancel_txs_data_path.clone())
-                .expect("unable to read dir")
-                .count();
-            defer_and_cancel_txs_data_path.push(format!("start_{:0>6}", start_idx - 1));
-            defer_and_cancel_txs_data_path.push(format!(
-                "validator={}.json",
-                validator_idx,
-            ));
-            let file = std::fs::File::create(defer_and_cancel_txs_data_path.clone())
-                .expect("unable to open file");
-            let mut writer = std::io::BufWriter::new(file);
-            writeln!(writer, "{{\n{:?}\n}}", defer_and_cancel_txs_data_path).expect("unable to write");
-        }
 
         let tables = AuthorityEpochTables::open(epoch_id, parent_path, db_options.clone());
         let end_of_publish =
@@ -2565,6 +2564,8 @@ impl AuthorityPerEpochStore {
         cache_reader: &dyn ObjectCacheRead,
         consensus_commit_info: &ConsensusCommitInfo,
         authority_metrics: &Arc<AuthorityMetrics>,
+        // WARN:
+        defer_cancel_txs_writer: &mut DeferCancelTxsWriter,
     ) -> IotaResult<Vec<VerifiedExecutableTransaction>> {
         // Split transactions into different types for processing.
         let verified_transactions: Vec<_> = transactions
@@ -2756,6 +2757,8 @@ impl AuthorityPerEpochStore {
                 dkg_failed,
                 randomness_round,
                 authority_metrics,
+                // WARN:
+                defer_cancel_txs_writer,
             )
             .await?;
         self.finish_consensus_certificate_process_with_batch(
@@ -2997,6 +3000,8 @@ impl AuthorityPerEpochStore {
                 skip_consensus_commit_prologue_in_test,
             ),
             authority_metrics,
+            // WARN:
+            &mut None,
         )
         .await
     }
@@ -3058,6 +3063,8 @@ impl AuthorityPerEpochStore {
         dkg_failed: bool,
         randomness_round: Option<RandomnessRound>,
         authority_metrics: &Arc<AuthorityMetrics>,
+        // WARN:
+        defer_cancel_txs_writer: &mut Option<std::io::BufWriter<std::fs::File>>,
     ) -> IotaResult<(
         Vec<VerifiedExecutableTransaction>,    // transactions to schedule
         Vec<SequencedConsensusTransactionKey>, // keys to notify as complete
@@ -3179,9 +3186,11 @@ impl AuthorityPerEpochStore {
 
         let commit_has_deferred_txns = !deferred_txns.is_empty();
         let mut total_deferred_txns = 0;
-        for (key, txns) in deferred_txns.into_iter() {
+        // WARN:
+        for (key, txns) in deferred_txns.iter() {
             total_deferred_txns += txns.len();
-            output.defer_transactions(key, txns);
+            // WARN:
+            output.defer_transactions(*key, txns.clone());
         }
         authority_metrics
             .consensus_handler_deferred_transactions
@@ -3197,11 +3206,6 @@ impl AuthorityPerEpochStore {
             .consensus_handler_max_object_costs
             .with_label_values(&["randomness_commit"])
             .set(shared_object_using_randomness_congestion_tracker.max_cost() as i64);
-
-        // WARN:
-        if !commit_has_deferred_txns {
-            warn!("round={}", consensus_commit_info.round);
-        }
 
         if randomness_state_updated {
             if let Some(randomness_manager) = randomness_manager.as_mut() {
@@ -3219,6 +3223,51 @@ impl AuthorityPerEpochStore {
             consensus_commit_info,
             &cancelled_txns,
         )?;
+
+        // WARN:
+        let msg = format!(
+            "consensus commit round {}: num_defer_txs: {}, num_cancel_txs: {}",
+            consensus_commit_info.round,
+            total_deferred_txns,
+            cancelled_txns.len(),
+        );
+        if commit_has_deferred_txns {
+            warn!("{}", msg.yellow().bold());
+            if let Some(w) = defer_cancel_txs_writer {
+                let round_defer_cancel_txs = RoundDeferredCancelledTxs {
+                    consensus_commit_round: consensus_commit_info.round,
+                    consensus_commit_tx: *consensus_commit_prologue_root
+                        .expect("unable to get consensus commit transaction digest")
+                        .unwrap_digest(),
+                    num_deferred: total_deferred_txns,
+                    deferred_txs: deferred_txns
+                        .into_iter()
+                        .map(|(key, txs)| {
+                            (
+                                key.to_string(),
+                                txs.into_iter()
+                                    .map(|tx| {
+                                        tx.0.transaction
+                                            .executable_transaction_digest()
+                                            .expect("unable to get transaction digest")
+                                    })
+                                    .collect(),
+                            )
+                        })
+                        .collect(),
+                    num_cancelled: cancelled_txns.len(),
+                    cancelled_txs: cancelled_txns.clone(),
+                };
+                let round_defer_cancel_txs_json =
+                    serde_json::to_string_pretty(&round_defer_cancel_txs)
+                        .expect("unable to serialize data to json");
+                warn!("\n{}", round_defer_cancel_txs_json);
+                writeln!(w, "{},", round_defer_cancel_txs_json).expect("unable to write to file");
+                w.flush().expect("unable to flush output");
+            }
+        } else {
+            warn!("{}", msg);
+        }
 
         let verified_certificates: Vec<_> = verified_certificates.into();
 

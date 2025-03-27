@@ -22,6 +22,33 @@ pub enum DeferralKey {
     },
 }
 
+// WARN:
+impl std::fmt::Display for DeferralKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Randomness {
+                deferred_from_round,
+            } => {
+                write!(
+                    f,
+                    "randomness_round::deferred_from_round={}",
+                    deferred_from_round
+                )
+            }
+            Self::ConsensusRound {
+                future_round,
+                deferred_from_round,
+            } => {
+                write!(
+                    f,
+                    "consensus_round::(future_round={}, deferred_from_round={})",
+                    future_round, deferred_from_round
+                )
+            }
+        }
+    }
+}
+
 impl DeferralKey {
     pub fn new_for_randomness(deferred_from_round: CommitRound) -> Self {
         Self::Randomness {

@@ -6386,6 +6386,7 @@ dependencies = [
  "bytes",
  "chrono",
  "clap",
+ "colored",
  "consensus-config",
  "consensus-core",
  "count-min-sketch",
