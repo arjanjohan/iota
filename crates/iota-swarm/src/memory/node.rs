@@ -56,16 +56,33 @@ impl Node {
     }
 
     /// Start this Node
-    pub async fn spawn(&self) -> Result<()> {
+    pub async fn spawn(
+        &self,
+        // WARN:
+        defer_cancel_txs_cancellation_token: Option<tokio_util::sync::CancellationToken>,
+    ) -> Result<()> {
         info!(name =% self.name().concise(), "starting in-memory node");
         let config = self.config().clone();
-        *self.container.lock().unwrap() = Some(Container::spawn(config, self.runtime_type).await);
+        // WARN:
+        *self.container.lock().unwrap() = Some(
+            Container::spawn(
+                config,
+                self.runtime_type,
+                defer_cancel_txs_cancellation_token,
+            )
+            .await,
+        );
         Ok(())
     }
 
     /// Start this Node, waiting until its completely started up.
-    pub async fn start(&self) -> Result<()> {
-        self.spawn().await
+    pub async fn start(
+        &self,
+        // WARN:
+        defer_cancel_txs_cancellation_token: Option<tokio_util::sync::CancellationToken>,
+    ) -> Result<()> {
+        // WARN:
+        self.spawn(defer_cancel_txs_cancellation_token).await
     }
 
     /// Stop this Node
@@ -162,12 +179,14 @@ mod test {
 
         let validator = swarm.validator_nodes().next().unwrap();
 
-        validator.start().await.unwrap();
+        // WARN:
+        validator.start(None).await.unwrap();
         validator.health_check(true).await.unwrap();
         validator.stop();
         validator.health_check(true).await.unwrap_err();
 
-        validator.start().await.unwrap();
+        // WARN:
+        validator.start(None).await.unwrap();
         validator.health_check(true).await.unwrap();
     }
 }

@@ -116,7 +116,10 @@ fn main() {
     let (runtime_shutdown_tx, runtime_shutdown_rx) = broadcast::channel::<()>(1);
 
     runtimes.iota_node.spawn(async move {
-        match IotaNode::start_async(config, registry_service, Some(rpc_runtime), VERSION).await {
+        // WARN:
+        match IotaNode::start_async(config, registry_service, Some(rpc_runtime), VERSION, None)
+            .await
+        {
             Ok(iota_node) => node_once_cell_clone
                 .set(iota_node)
                 .expect("Failed to set node in AsyncOnceCell"),

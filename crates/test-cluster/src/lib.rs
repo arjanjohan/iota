@@ -205,7 +205,8 @@ impl TestCluster {
 
     pub async fn start_fullnode_from_config(&mut self, config: NodeConfig) -> FullNodeHandle {
         let json_rpc_address = config.json_rpc_address;
-        let node = self.swarm.spawn_new_node(config).await;
+        // WARN:
+        let node = self.swarm.spawn_new_node(config, None).await;
         FullNodeHandle::new(node, json_rpc_address).await
     }
 
@@ -247,7 +248,8 @@ impl TestCluster {
             if v.is_running() {
                 continue;
             }
-            v.start().await.unwrap();
+            // WARN:
+            v.start(None).await.unwrap();
         }
         tokio::time::sleep(Duration::from_secs(3)).await;
     }
@@ -257,7 +259,8 @@ impl TestCluster {
         if node.is_running() {
             return;
         }
-        node.start().await.unwrap();
+        // WARN:
+        node.start(None).await.unwrap();
     }
 
     pub async fn spawn_new_validator(
@@ -266,7 +269,8 @@ impl TestCluster {
     ) -> IotaNodeHandle {
         let node_config = ValidatorConfigBuilder::new()
             .build(genesis_config, self.swarm.config().genesis.clone());
-        self.swarm.spawn_new_node(node_config).await
+        // WARN:
+        self.swarm.spawn_new_node(node_config, None).await
     }
 
     pub fn random_node_restarter(self: &Arc<Self>) -> RandomNodeRestarter {
@@ -1633,7 +1637,8 @@ impl TestClusterBuilder {
         }
 
         let mut swarm = builder.build();
-        swarm.launch().await?;
+        // WARN:
+        swarm.launch(None).await?;
 
         let dir = swarm.dir();
 

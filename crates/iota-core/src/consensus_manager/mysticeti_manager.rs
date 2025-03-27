@@ -111,6 +111,8 @@ impl ConsensusManagerTrait for MysticetiManager {
         epoch_store: Arc<AuthorityPerEpochStore>,
         consensus_handler_initializer: ConsensusHandlerInitializer,
         tx_validator: IotaTxValidator,
+        // WARN:
+        defer_cancel_txs_cancellation_token: Option<tokio_util::sync::CancellationToken>,
     ) {
         let system_state = epoch_store.epoch_start_state();
         let committee: Committee = system_state.get_consensus_committee();
@@ -210,7 +212,13 @@ impl ConsensusManagerTrait for MysticetiManager {
         self.client.set(client);
 
         // spin up the new mysticeti consensus handler to listen for committed sub dags
-        let handler = MysticetiConsensusHandler::new(consensus_handler, commit_receiver, monitor);
+        let handler = MysticetiConsensusHandler::new(
+            consensus_handler,
+            commit_receiver,
+            monitor,
+            // WARN:
+            defer_cancel_txs_cancellation_token,
+        );
 
         let mut consensus_handler = self.consensus_handler.lock().await;
         *consensus_handler = Some(handler);

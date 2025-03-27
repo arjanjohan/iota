@@ -31,6 +31,8 @@ iota-protocol-config.workspace = true
 iota-swarm-config.workspace = true
 iota-types.workspace = true
 telemetry-subscribers.workspace = true
+# WARN:
+tokio-util.workspace = true
 
 [target.'cfg(msim)'.dependencies]
 iota-simulator.workspace = true

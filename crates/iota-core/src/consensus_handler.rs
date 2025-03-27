@@ -34,7 +34,7 @@ use crate::{
         AuthorityMetrics, AuthorityState,
         authority_per_epoch_store::{
             AuthorityPerEpochStore, ConsensusStats, ConsensusStatsAPI, DeferCancelTxsWriter,
-            ExecutionIndices, ExecutionIndicesWithStats,
+            DeferCancelTxsWriterInner, ExecutionIndices, ExecutionIndicesWithStats,
         },
         epoch_start_configuration::EpochStartConfigTrait,
     },
@@ -468,6 +468,8 @@ impl MysticetiConsensusHandler {
         mut consensus_handler: ConsensusHandler<CheckpointService>,
         mut receiver: UnboundedReceiver<consensus_core::CommittedSubDag>,
         commit_consumer_monitor: Arc<CommitConsumerMonitor>,
+        // WARN:
+        defer_cancel_txs_cancellation_token: Option<tokio_util::sync::CancellationToken>,
     ) -> Self {
         // WARN:this appears to be started once per epoch by each validator
         let mut defer_cancel_txs_writer = if let Some(validator_idx) = consensus_handler
@@ -491,18 +493,20 @@ impl MysticetiConsensusHandler {
             warn!(
                 "{}",
                 format!(
-                    "saving deferred and cancelled txs to {:?}",
+                    "deferred and cancelled txs will be saved to {:?}",
                     defer_and_cancel_txs_data_path,
                 )
                 .black()
                 .on_yellow()
                 .to_string()
             );
-            Some(std::io::BufWriter::new(file))
+            Some(DeferCancelTxsWriterInner::new(
+                std::io::BufWriter::new(file),
+                defer_cancel_txs_cancellation_token.expect("unable to get cancellation token"),
+            ))
         } else {
             None
         };
-        // TODO: handle Ctrl+C here to finalize writing to json file
 
         let handle = spawn_monitored_task!(async move {
             // TODO: pause when execution is overloaded, so consensus can detect the
@@ -510,8 +514,11 @@ impl MysticetiConsensusHandler {
             while let Some(consensus_output) = receiver.recv().await {
                 let commit_index = consensus_output.commit_ref.index;
                 consensus_handler
-                    // WARN:
-                    .handle_consensus_output(consensus_output, &mut defer_cancel_txs_writer)
+                    .handle_consensus_output(
+                        consensus_output,
+                        // WARN:
+                        &mut defer_cancel_txs_writer,
+                    )
                     .await;
                 commit_consumer_monitor.set_highest_handled_commit(commit_index);
             }

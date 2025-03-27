@@ -259,8 +259,18 @@ impl IotaNode {
         config: NodeConfig,
         registry_service: RegistryService,
         custom_rpc_runtime: Option<Handle>,
+        // WARN:
+        defer_cancel_txs_cancellation_token: Option<tokio_util::sync::CancellationToken>,
     ) -> Result<Arc<IotaNode>> {
-        Self::start_async(config, registry_service, custom_rpc_runtime, "unknown").await
+        Self::start_async(
+            config,
+            registry_service,
+            custom_rpc_runtime,
+            "unknown",
+            // WARN:
+            defer_cancel_txs_cancellation_token,
+        )
+        .await
     }
 
     /// Starts the JWK (JSON Web Key) updater tasks for the specified node
@@ -407,6 +417,8 @@ impl IotaNode {
         registry_service: RegistryService,
         custom_rpc_runtime: Option<Handle>,
         software_version: &'static str,
+        // WARN:
+        defer_cancel_txs_cancellation_token: Option<tokio_util::sync::CancellationToken>,
     ) -> Result<Arc<IotaNode>> {
         NodeConfigMetrics::new(&registry_service.default_registry()).record_metrics(&config);
         let mut config = config.clone();
@@ -805,6 +817,8 @@ impl IotaNode {
                 connection_monitor_status.clone(),
                 &registry_service,
                 iota_node_metrics.clone(),
+                // WARN:
+                defer_cancel_txs_cancellation_token.clone(),
             )
             .await?;
             // This is only needed during cold start.
@@ -852,7 +866,11 @@ impl IotaNode {
         let node = Arc::new(node);
         let node_copy = node.clone();
         spawn_monitored_task!(async move {
-            let result = Self::monitor_reconfiguration(node_copy).await;
+            let result = Self::monitor_reconfiguration(
+                node_copy,
+                defer_cancel_txs_cancellation_token.clone(),
+            )
+            .await;
             if let Err(error) = result {
                 warn!("Reconfiguration finished with error {:?}", error);
             }
@@ -1173,6 +1191,8 @@ impl IotaNode {
         connection_monitor_status: Arc<ConnectionMonitorStatus>,
         registry_service: &RegistryService,
         iota_node_metrics: Arc<IotaNodeMetrics>,
+        // WARN:
+        defer_cancel_txs_cancellation_token: Option<tokio_util::sync::CancellationToken>,
     ) -> Result<ValidatorComponents> {
         let mut config_clone = config.clone();
         let consensus_config = config_clone
@@ -1247,6 +1267,8 @@ impl IotaNode {
             checkpoint_metrics,
             iota_node_metrics,
             iota_tx_validator_metrics,
+            // WARN:
+            defer_cancel_txs_cancellation_token,
         )
         .await
     }
@@ -1269,6 +1291,8 @@ impl IotaNode {
         checkpoint_metrics: Arc<CheckpointMetrics>,
         iota_node_metrics: Arc<IotaNodeMetrics>,
         iota_tx_validator_metrics: Arc<IotaTxValidatorMetrics>,
+        // WARN:
+        defer_cancel_txs_cancellation_token: Option<tokio_util::sync::CancellationToken>,
     ) -> Result<ValidatorComponents> {
         let (checkpoint_service, checkpoint_service_tasks) = Self::start_checkpoint_service(
             config,
@@ -1320,6 +1344,8 @@ impl IotaNode {
                     state.transaction_manager().clone(),
                     iota_tx_validator_metrics.clone(),
                 ),
+                // WARN:
+                defer_cancel_txs_cancellation_token,
             )
             .await;
 
@@ -1507,7 +1533,11 @@ impl IotaNode {
     /// entire system. This function also handles role changes for the node when
     /// epoch changes and advertises capabilities to the committee if the node
     /// is a validator.
-    pub async fn monitor_reconfiguration(self: Arc<Self>) -> Result<()> {
+    pub async fn monitor_reconfiguration(
+        self: Arc<Self>,
+        // WARN:
+        defer_cancel_txs_cancellation_token: Option<tokio_util::sync::CancellationToken>,
+    ) -> Result<()> {
         let checkpoint_executor_metrics =
             CheckpointExecutorMetrics::new(&self.registry_service.default_registry());
 
@@ -1710,6 +1740,8 @@ impl IotaNode {
                             checkpoint_metrics,
                             self.metrics.clone(),
                             iota_tx_validator_metrics,
+                            // WARN:
+                            defer_cancel_txs_cancellation_token.clone(),
                         )
                         .await?,
                     )
@@ -1756,6 +1788,8 @@ impl IotaNode {
                             self.connection_monitor_status.clone(),
                             &self.registry_service,
                             self.metrics.clone(),
+                            // WARN:
+                            defer_cancel_txs_cancellation_token.clone(),
                         )
                         .await?,
                     )

@@ -101,6 +101,8 @@ async fn test_mysticeti_manager() {
                     state.transaction_manager().clone(),
                     IotaTxValidatorMetrics::new(&Registry::new()),
                 ),
+                // WARN:
+                None,
             )
             .await;
 

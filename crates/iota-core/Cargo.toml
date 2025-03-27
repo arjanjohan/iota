@@ -59,6 +59,8 @@ tempfile.workspace = true
 thiserror.workspace = true
 tokio = { workspace = true, features = ["full", "tracing", "test-util"] }
 tokio-stream.workspace = true
+# WARN:
+tokio-util.workspace = true
 tracing.workspace = true
 twox-hash = "1.6"
 zeroize = "1.6"
@@ -124,7 +126,10 @@ iota-protocol-config.workspace = true
 
 # moka uses `quanta` by default for timing, which is not compatible with the simulator
 [target.'cfg(msim)'.dependencies]
-moka = { version = "0.12", default-features = false, features = ["sync", "atomic64"] }
+moka = { version = "0.12", default-features = false, features = [
+  "sync",
+  "atomic64",
+] }
 
 [target.'cfg(msim)'.dev-dependencies]
 test-cluster.workspace = true

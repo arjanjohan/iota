@@ -630,15 +630,55 @@ async fn start(
 ) -> Result<(), anyhow::Error> {
     // WARN:
     let mut defer_and_cancel_txs_data_path = PathBuf::from("network_deferred_and_cancelled_txs");
+    //
     let num_runs = match std::fs::read_dir(defer_and_cancel_txs_data_path.clone()) {
         Ok(f) => f.count(),
         Err(_) => 0,
     };
+    //
     defer_and_cancel_txs_data_path.push(format!("start_{:0>6}", num_runs));
     if !defer_and_cancel_txs_data_path.exists() {
         std::fs::create_dir_all(defer_and_cancel_txs_data_path.clone())
             .expect("unable to create the dirs");
     }
+    //
+    tracing::warn!(
+        "{}",
+        "NOTE: to correctly finalize writng to json files, you should stop running the localnet \
+        by pressing Ctrl+C"
+            .black()
+            .on_magenta()
+    );
+    //
+    let defer_cancel_txs_cancellation_token = tokio_util::sync::CancellationToken::new();
+    let cancellation_token = defer_cancel_txs_cancellation_token.clone();
+    tokio::task::spawn(async move {
+        match tokio::signal::ctrl_c().await {
+            Ok(_) => {
+                let msg = "received Ctrl+C signal, finalizing writing deferred and \
+                        cancelled transactions data to json files and exiting..."
+                    .black()
+                    .on_red();
+                tracing::warn!("{}", msg);
+                cancellation_token.cancel();
+                // sleep some time to let validator authorities finish writing to files
+                tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                tracing::warn!(
+                    "{}",
+                    format!(
+                        "deferred and cancelled transactions successfully data saved in {:?}",
+                        defer_and_cancel_txs_data_path
+                    )
+                    .black()
+                    .on_green()
+                );
+                std::process::exit(0);
+            }
+            Err(e) => {
+                panic!("unable to listen to Ctrl+C event: {}", e);
+            }
+        }
+    });
 
     if force_regenesis {
         ensure!(
@@ -797,7 +837,9 @@ async fn start(
     }
 
     let mut swarm = tokio::task::spawn_blocking(move || swarm_builder.build()).await?;
-    swarm.launch().await?;
+    swarm
+        .launch(Some(defer_cancel_txs_cancellation_token))
+        .await?;
     // Let nodes connect to one another
     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
     info!("Cluster started");

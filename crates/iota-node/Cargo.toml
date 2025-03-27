@@ -31,6 +31,8 @@ serde.workspace = true
 snap.workspace = true
 tap.workspace = true
 tokio = { workspace = true, features = ["full"] }
+# WARN:
+tokio-util.workspace = true
 tower.workspace = true
 tracing.workspace = true
 url.workspace = true

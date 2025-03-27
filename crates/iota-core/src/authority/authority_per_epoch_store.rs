@@ -309,7 +309,28 @@ pub struct ExecutionComponents {
 }
 
 // WARN:
-pub type DeferCancelTxsWriter = Option<std::io::BufWriter<std::fs::File>>;
+pub(crate) struct DeferCancelTxsWriterInner {
+    writer: std::io::BufWriter<std::fs::File>,
+    should_write_cell: tokio::sync::OnceCell<bool>,
+    started_writing_cell: tokio::sync::OnceCell<bool>,
+    is_empty_cell: tokio::sync::OnceCell<bool>,
+    cancellation_token: tokio_util::sync::CancellationToken,
+}
+impl DeferCancelTxsWriterInner {
+    pub(crate) fn new(
+        writer: std::io::BufWriter<std::fs::File>,
+        cancellation_token: tokio_util::sync::CancellationToken,
+    ) -> Self {
+        Self {
+            writer,
+            should_write_cell: tokio::sync::OnceCell::new(),
+            started_writing_cell: tokio::sync::OnceCell::new(),
+            is_empty_cell: tokio::sync::OnceCell::new(),
+            cancellation_token,
+        }
+    }
+}
+pub(crate) type DeferCancelTxsWriter = Option<DeferCancelTxsWriterInner>;
 
 // WARN:
 #[derive(Debug, Serialize)]
@@ -3064,7 +3085,7 @@ impl AuthorityPerEpochStore {
         randomness_round: Option<RandomnessRound>,
         authority_metrics: &Arc<AuthorityMetrics>,
         // WARN:
-        defer_cancel_txs_writer: &mut Option<std::io::BufWriter<std::fs::File>>,
+        defer_cancel_txs_writer: &mut DeferCancelTxsWriter,
     ) -> IotaResult<(
         Vec<VerifiedExecutableTransaction>,    // transactions to schedule
         Vec<SequencedConsensusTransactionKey>, // keys to notify as complete
@@ -3187,6 +3208,7 @@ impl AuthorityPerEpochStore {
         let commit_has_deferred_txns = !deferred_txns.is_empty();
         let mut total_deferred_txns = 0;
         // WARN:
+        let commit_has_cancelled_txns = !cancelled_txns.is_empty();
         for (key, txns) in deferred_txns.iter() {
             total_deferred_txns += txns.len();
             // WARN:
@@ -3225,48 +3247,91 @@ impl AuthorityPerEpochStore {
         )?;
 
         // WARN:
-        let msg = format!(
-            "consensus commit round {}: num_defer_txs: {}, num_cancel_txs: {}",
-            consensus_commit_info.round,
-            total_deferred_txns,
-            cancelled_txns.len(),
-        );
-        if commit_has_deferred_txns {
-            warn!("{}", msg.yellow().bold());
-            if let Some(w) = defer_cancel_txs_writer {
-                let round_defer_cancel_txs = RoundDeferredCancelledTxs {
-                    consensus_commit_round: consensus_commit_info.round,
-                    consensus_commit_tx: *consensus_commit_prologue_root
-                        .expect("unable to get consensus commit transaction digest")
-                        .unwrap_digest(),
-                    num_deferred: total_deferred_txns,
-                    deferred_txs: deferred_txns
-                        .into_iter()
-                        .map(|(key, txs)| {
-                            (
-                                key.to_string(),
-                                txs.into_iter()
-                                    .map(|tx| {
-                                        tx.0.transaction
-                                            .executable_transaction_digest()
-                                            .expect("unable to get transaction digest")
-                                    })
-                                    .collect(),
-                            )
-                        })
-                        .collect(),
-                    num_cancelled: cancelled_txns.len(),
-                    cancelled_txs: cancelled_txns.clone(),
-                };
-                let round_defer_cancel_txs_json =
-                    serde_json::to_string_pretty(&round_defer_cancel_txs)
+        if let Some(writer_inner) = defer_cancel_txs_writer {
+            // ^ there is a writer and it was passed to the function being called
+            if !writer_inner.should_write_cell.initialized() {
+                // ^ only write to json object file if the object was not finalized with `]`
+
+                if !writer_inner.started_writing_cell.initialized() {
+                    // ^ write the very first string to json file
+
+                    write!(writer_inner.writer, "[").expect("unable to write to file");
+                    writer_inner
+                        .started_writing_cell
+                        .set(true)
+                        .expect("unable to set OneCell variable");
+                }
+
+                if commit_has_deferred_txns || commit_has_cancelled_txns {
+                    // ^ there are deferred or cancelled txs, so write them to file
+
+                    let msg = format!(
+                        "consensus commit round {}: num_defer_txs: {}, num_cancel_txs: {}",
+                        consensus_commit_info.round,
+                        total_deferred_txns,
+                        cancelled_txns.len(),
+                    )
+                    .yellow()
+                    .bold();
+                    warn!("{}", msg);
+
+                    let round_defer_cancel_txs = RoundDeferredCancelledTxs {
+                        consensus_commit_round: consensus_commit_info.round,
+                        consensus_commit_tx: *consensus_commit_prologue_root
+                            .expect("unable to get consensus commit transaction digest")
+                            .unwrap_digest(),
+                        num_deferred: total_deferred_txns,
+                        deferred_txs: deferred_txns
+                            .into_iter()
+                            .map(|(key, txs)| {
+                                (
+                                    key.to_string(),
+                                    txs.into_iter()
+                                        .map(|tx| {
+                                            tx.0.transaction
+                                                .executable_transaction_digest()
+                                                .expect("unable to get transaction digest")
+                                        })
+                                        .collect(),
+                                )
+                            })
+                            .collect(),
+                        num_cancelled: cancelled_txns.len(),
+                        cancelled_txs: cancelled_txns.clone(),
+                    };
+
+                    let json_str = serde_json::to_string_pretty(&round_defer_cancel_txs)
                         .expect("unable to serialize data to json");
-                warn!("\n{}", round_defer_cancel_txs_json);
-                writeln!(w, "{},", round_defer_cancel_txs_json).expect("unable to write to file");
-                w.flush().expect("unable to flush output");
+
+                    if writer_inner.is_empty_cell.initialized() {
+                        // ^ at least one json object has already been written to file
+
+                        write!(writer_inner.writer, ",\n{}", json_str)
+                            .expect("unable to write to file");
+                    } else {
+                        // ^ write the very first json object to file
+
+                        write!(writer_inner.writer, "\n{}", json_str)
+                            .expect("unable to write to file");
+                        writer_inner
+                            .is_empty_cell
+                            .set(false)
+                            .expect("unable to set OneCell variable");
+                    }
+                    writer_inner.writer.flush().expect("unable to flush output");
+                }
+
+                if writer_inner.cancellation_token.is_cancelled() {
+                    // ^ the token has been cancelled, so stop writing to json file
+
+                    writeln!(writer_inner.writer, "\n]").expect("unable to write to file");
+                    writer_inner.writer.flush().expect("unable to flush output");
+                    writer_inner
+                        .should_write_cell
+                        .set(false)
+                        .expect("unable to set OneCell variable");
+                }
             }
-        } else {
-            warn!("{}", msg);
         }
 
         let verified_certificates: Vec<_> = verified_certificates.into();

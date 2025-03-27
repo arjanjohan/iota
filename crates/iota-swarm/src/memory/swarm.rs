@@ -460,8 +460,17 @@ impl Swarm {
     }
 
     /// Start all nodes associated with this Swarm
-    pub async fn launch(&mut self) -> Result<()> {
-        try_join_all(self.nodes_iter_mut().map(|node| node.start())).await?;
+    pub async fn launch(
+        &mut self,
+        // WARN:
+        defer_cancel_txs_cancellation_token: Option<tokio_util::sync::CancellationToken>,
+    ) -> Result<()> {
+        try_join_all(
+            self.nodes_iter_mut()
+                // WARN:
+                .map(|node| node.start(defer_cancel_txs_cancellation_token.clone())),
+        )
+        .await?;
         tracing::info!("Successfully launched Swarm");
         Ok(())
     }
@@ -529,10 +538,18 @@ impl Swarm {
             .filter(|node| node.config().consensus_config.is_none())
     }
 
-    pub async fn spawn_new_node(&mut self, config: NodeConfig) -> IotaNodeHandle {
+    pub async fn spawn_new_node(
+        &mut self,
+        config: NodeConfig,
+        // WARN:
+        defer_cancel_txs_cancellation_token: Option<tokio_util::sync::CancellationToken>,
+    ) -> IotaNodeHandle {
         let name = config.authority_public_key();
         let node = Node::new(config);
-        node.start().await.unwrap();
+        // WARN:
+        node.start(defer_cancel_txs_cancellation_token)
+            .await
+            .unwrap();
         let handle = node.get_node_handle().unwrap();
         self.nodes.insert(name, node);
         handle
@@ -589,7 +606,8 @@ mod test {
             .with_fullnode_count(1)
             .build();
 
-        swarm.launch().await.unwrap();
+        // WARN
+        swarm.launch(None).await.unwrap();
 
         for validator in swarm.validator_nodes() {
             validator.health_check(true).await.unwrap();
