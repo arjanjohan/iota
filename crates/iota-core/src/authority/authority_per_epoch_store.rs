@@ -3266,8 +3266,8 @@ impl AuthorityPerEpochStore {
                     // ^ there are deferred or cancelled txs, so write them to file
 
                     let msg = format!(
-                        "validator {}, consensus commit round {}: num_defer_txs: {}, \
-                            num_cancel_txs: {}",
+                        "\"validator\": {}, \"consensus_commit_round\": {:>6}, \
+                            \"num_deferred_txs\": {:>4}, \"num_cancelled_txs\": {:>4}",
                         self.committee
                             .authority_index(&self.name)
                             .expect("unable to get authority index"),
