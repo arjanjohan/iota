@@ -643,7 +643,7 @@ async fn start(
     }
     //
     tracing::warn!(
-        "{}",
+        "  {}",
         "NOTE: to correctly finalize writng to json files, you should stop running the localnet \
         by pressing Ctrl+C"
             .black()
@@ -664,7 +664,7 @@ async fn start(
                 // sleep some time to let validator authorities finish writing to files
                 tokio::time::sleep(std::time::Duration::from_secs(2)).await;
                 tracing::warn!(
-                    "{}",
+                    "  {}",
                     format!(
                         "deferred and cancelled transactions data successfully saved in {:?}",
                         defer_and_cancel_txs_data_path
