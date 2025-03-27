@@ -942,9 +942,11 @@ mod tests {
 
         // Step 5: This should fail signature verification
         let result = fake_signed_block.verify_signature(&context);
-        assert!(
-            result.is_err(),
-            "BlockV2 signed with wrong key should fail verification"
-        );
+        match result.err().unwrap() {
+            ConsensusError::SignatureVerificationFailure(err) => {
+                assert_eq!(err, FastCryptoError::InvalidSignature);
+            }
+            err => panic!("Unexpected error: {err:?}"),
+        }
     }
 }
