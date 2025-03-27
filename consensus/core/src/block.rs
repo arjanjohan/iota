@@ -868,7 +868,6 @@ pub enum MisbehaviorProof {
 }
 
 // TODO: add basic verification for BlockRef and BlockDigest.
-// TODO: add tests for SignedBlock and VerifiedBlock conversion.
 
 #[cfg(test)]
 mod tests {
@@ -877,7 +876,7 @@ mod tests {
     use fastcrypto::error::FastCryptoError;
 
     use crate::{
-        block::{SignedBlock, TestBlock, BlockHeader},
+        block::{SignedBlock, VerifiedBlock, TestBlock, BlockHeader, BlockAPI},
         context::Context,
         error::ConsensusError,
     };
@@ -948,5 +947,55 @@ mod tests {
             }
             err => panic!("Unexpected error: {err:?}"),
         }
+    }
+    #[tokio::test]
+    async fn test_signed_to_verified_block_conversion_v1() {
+        let (context, key_pairs) = Context::new_for_test(4);
+        let context = Arc::new(context);
+
+        // Step 1: Create a signed BlockV1.
+        let block = TestBlock::new_v1(5, 1).build();
+        let signed_block = SignedBlock::new(block.clone(), &key_pairs[1].1).unwrap();
+        let serialized = signed_block.serialize().unwrap();
+
+        // Step 2: Convert to VerifiedBlock.
+        let verified_block = VerifiedBlock::new_verified(signed_block, serialized.clone());
+
+        // Step 3: Verify digest matches serialized bytes.
+        assert_eq!(
+            verified_block.digest(),
+            VerifiedBlock::compute_digest(&serialized),
+            "Digest must match serialized bytes digest"
+        );
+
+        // Step 4: Verify block metadata consistency.
+        assert_eq!(verified_block.round(), block.round());
+        assert_eq!(verified_block.author(), block.author());
+        assert_eq!(verified_block.epoch(), block.epoch());
+    }
+    #[tokio::test]
+    async fn test_signed_to_verified_block_conversion_v2() {
+        let (context, key_pairs) = Context::new_for_test(4);
+        let context = Arc::new(context);
+
+        // Step 1: Create a signed BlockV2.
+        let block = TestBlock::new_v2(7, 2).build();
+        let signed_block = SignedBlock::new(block.clone(), &key_pairs[2].1).unwrap();
+        let serialized = signed_block.serialize().unwrap();
+
+        // Step 2: Convert to VerifiedBlock.
+        let verified_block = VerifiedBlock::new_verified(signed_block, serialized.clone());
+
+        // Step 3: Verify digest matches serialized bytes.
+        assert_eq!(
+            verified_block.digest(),
+            VerifiedBlock::compute_digest(&serialized),
+            "Digest must match serialized bytes digest"
+        );
+
+        // Step 4: Verify block metadata consistency.
+        assert_eq!(verified_block.round(), block.round());
+        assert_eq!(verified_block.author(), block.author());
+        assert_eq!(verified_block.epoch(), block.epoch());
     }
 }
