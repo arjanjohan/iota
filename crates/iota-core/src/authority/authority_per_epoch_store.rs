@@ -154,7 +154,7 @@ impl CertLockGuard {
 type JwkAggregator = GenericMultiStakeAggregator<(JwkId, JWK), true>;
 
 // WARN:
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CancelConsensusCertificateReason {
     CongestionOnObjects(Vec<ObjectID>),
     DkgFailed,
@@ -168,7 +168,8 @@ pub enum ConsensusCertificateResult {
     IotaTransaction(VerifiedExecutableTransaction),
     /// The transaction should be re-processed at a future commit, specified by
     /// the DeferralKey
-    Deferred(DeferralKey),
+    // WARN:
+    Deferred(DeferralKey, DeferralReason),
     /// A message was processed which updates randomness state.
     RandomnessConsensusMessage,
     /// Everything else, e.g. AuthorityCapabilities, CheckpointSignatures, etc.
@@ -333,14 +334,15 @@ impl DeferCancelTxsWriterInner {
 pub(crate) type DeferCancelTxsWriter = Option<DeferCancelTxsWriterInner>;
 
 // WARN:
-#[derive(Debug, Serialize)]
-struct RoundDeferredCancelledTxs {
-    consensus_commit_round: u64,
-    consensus_commit_tx: TransactionDigest,
-    num_deferred: usize,
-    deferred_txs: BTreeMap<String, Vec<TransactionDigest>>,
-    num_cancelled: usize,
-    cancelled_txs: BTreeMap<TransactionDigest, CancelConsensusCertificateReason>,
+// It is made public so it can be used to deserialize saved data
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ConsensusCommitDeferredAndCancelledTxs {
+    pub consensus_commit_round: u64,
+    pub consensus_commit_tx: TransactionDigest,
+    pub num_deferred: usize,
+    pub deferred_txs: Vec<(DeferralKey, BTreeMap<TransactionDigest, DeferralReason>)>,
+    pub num_cancelled: usize,
+    pub cancelled_txs: BTreeMap<TransactionDigest, CancelConsensusCertificateReason>,
 }
 
 #[cfg(test)]
@@ -3100,8 +3102,11 @@ impl AuthorityPerEpochStore {
         let mut verified_certificates = VecDeque::with_capacity(transactions.len() + 1);
         let mut notifications = Vec::with_capacity(transactions.len());
 
-        let mut deferred_txns: BTreeMap<DeferralKey, Vec<VerifiedSequencedConsensusTransaction>> =
-            BTreeMap::new();
+        let mut deferred_txns: BTreeMap<
+            DeferralKey,
+            // WARN:
+            Vec<(VerifiedSequencedConsensusTransaction, DeferralReason)>,
+        > = BTreeMap::new();
         let mut cancelled_txns: BTreeMap<TransactionDigest, CancelConsensusCertificateReason> =
             BTreeMap::new();
 
@@ -3156,13 +3161,13 @@ impl AuthorityPerEpochStore {
                     notifications.push(key.clone());
                     verified_certificates.push_back(cert);
                 }
-                ConsensusCertificateResult::Deferred(deferral_key) => {
+                ConsensusCertificateResult::Deferred(deferral_key, deferral_reason) => {
                     // Note: record_consensus_message_processed() must be called for this
                     // cert even though we are not processing it now!
                     deferred_txns
                         .entry(deferral_key)
                         .or_default()
-                        .push(tx.clone());
+                        .push((tx.clone(), deferral_reason));
                     filter_roots = true;
                     if tx.0.transaction.is_executable_transaction() {
                         // Notify consensus adapter that the consensus handler has received the
@@ -3212,7 +3217,7 @@ impl AuthorityPerEpochStore {
         for (key, txns) in deferred_txns.iter() {
             total_deferred_txns += txns.len();
             // WARN:
-            output.defer_transactions(*key, txns.clone());
+            output.defer_transactions(*key, txns.iter().map(|(tx, _)| tx.clone()).collect());
         }
         authority_metrics
             .consensus_handler_deferred_transactions
@@ -3279,7 +3284,7 @@ impl AuthorityPerEpochStore {
                     .bold();
                     warn!("{}", msg);
 
-                    let round_defer_cancel_txs = RoundDeferredCancelledTxs {
+                    let round_defer_cancel_txs = ConsensusCommitDeferredAndCancelledTxs {
                         consensus_commit_round: consensus_commit_info.round,
                         consensus_commit_tx: *consensus_commit_prologue_root
                             .expect("unable to get consensus commit transaction digest")
@@ -3289,12 +3294,15 @@ impl AuthorityPerEpochStore {
                             .into_iter()
                             .map(|(key, txs)| {
                                 (
-                                    key.to_string(),
+                                    key,
                                     txs.into_iter()
-                                        .map(|tx| {
-                                            tx.0.transaction
-                                                .executable_transaction_digest()
-                                                .expect("unable to get transaction digest")
+                                        .map(|(tx, deferred_reason)| {
+                                            (
+                                                tx.0.transaction
+                                                    .executable_transaction_digest()
+                                                    .expect("unable to get transaction digest"),
+                                                deferred_reason,
+                                            )
                                         })
                                         .collect(),
                                 )
@@ -3315,7 +3323,7 @@ impl AuthorityPerEpochStore {
                     } else {
                         // ^ write the very first json object to file
 
-                        write!(writer_inner.writer, "\n{}", json_str)
+                        write!(writer_inner.writer, "{}", json_str)
                             .expect("unable to write to file");
                         writer_inner
                             .is_empty_cell
@@ -3328,7 +3336,7 @@ impl AuthorityPerEpochStore {
                 if writer_inner.cancellation_token.is_cancelled() {
                     // ^ the token has been cancelled, so stop writing to json file
 
-                    writeln!(writer_inner.writer, "\n]").expect("unable to write to file");
+                    writeln!(writer_inner.writer, "]").expect("unable to write to file");
                     writer_inner.writer.flush().expect("unable to flush output");
                     writer_inner
                         .should_write_cell
@@ -3568,7 +3576,8 @@ impl AuthorityPerEpochStore {
                     let deferral_result = match deferral_reason {
                         DeferralReason::RandomnessNotReady => {
                             // Always defer transaction due to randomness not ready.
-                            ConsensusCertificateResult::Deferred(deferral_key)
+                            // WARN:
+                            ConsensusCertificateResult::Deferred(deferral_key, deferral_reason)
                         }
                         DeferralReason::SharedObjectCongestion(congested_objects) => {
                             authority_metrics
@@ -3579,7 +3588,11 @@ impl AuthorityPerEpochStore {
                                 self.protocol_config()
                                     .max_deferral_rounds_for_congestion_control(),
                             ) {
-                                ConsensusCertificateResult::Deferred(deferral_key)
+                                ConsensusCertificateResult::Deferred(
+                                    deferral_key,
+                                    // WARN:
+                                    DeferralReason::SharedObjectCongestion(congested_objects),
+                                )
                             } else {
                                 // Cancel the transaction that has been deferred for too long.
                                 debug!(

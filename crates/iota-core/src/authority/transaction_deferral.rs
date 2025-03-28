@@ -105,7 +105,8 @@ impl DeferralKey {
     }
 }
 
-#[derive(Debug)]
+// WARN:
+#[derive(Debug, Serialize, Deserialize)]
 pub enum DeferralReason {
     RandomnessNotReady,
 
