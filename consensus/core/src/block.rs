@@ -10,10 +10,7 @@ use std::{
 };
 
 use bytes::Bytes;
-use consensus_config::{
-    AuthorityIndex, DIGEST_LENGTH, DefaultHashFunction, Epoch, ProtocolKeyPair,
-    ProtocolKeySignature, ProtocolPublicKey,
-};
+use consensus_config::{AuthorityIndex, DIGEST_LENGTH, DefaultHashFunction, Epoch, ProtocolKeyPair, ProtocolKeySignature, ProtocolPublicKey, TransactionsCommitment};
 use enum_dispatch::enum_dispatch;
 use fastcrypto::hash::{Digest, HashFunction};
 use serde::{Deserialize, Serialize};
@@ -193,7 +190,7 @@ pub struct BlockHeader {
     commit_votes: Vec<CommitVote>,
     misbehavior_reports: Vec<MisbehaviorReport>,
     /// Merkle root commitment of transactions.
-    transactions_commitment: [u8; 32],
+    transactions_commitment: TransactionsCommitment,
     /// Acknowledgement statements.
     acknowledgement_statements: Vec<BlockRef>,
 }
@@ -208,7 +205,7 @@ impl BlockHeader {
         ancestors: Vec<BlockRef>,
         commit_votes: Vec<CommitVote>,
         misbehavior_reports: Vec<MisbehaviorReport>,
-        transactions_commitment: [u8; 32],
+        transactions_commitment: TransactionsCommitment,
         acknowledgement_statements: Vec<BlockRef>,
     ) -> BlockHeader {
         Self {
@@ -235,7 +232,7 @@ impl BlockHeader {
             ancestors: vec![],
             commit_votes: vec![],
             misbehavior_reports: vec![],
-            transactions_commitment: [0u8; 32],
+            transactions_commitment: TransactionsCommitment::default(),
             acknowledgement_statements: vec![],
         }
     }
