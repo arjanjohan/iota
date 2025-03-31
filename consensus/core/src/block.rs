@@ -10,7 +10,7 @@ use std::{
 };
 
 use bytes::Bytes;
-use consensus_config::{AuthorityIndex, DIGEST_LENGTH, DefaultHashFunction, Epoch, ProtocolKeyPair, ProtocolKeySignature, ProtocolPublicKey, TransactionsCommitment};
+use consensus_config::{AuthorityIndex, DIGEST_LENGTH, DefaultHashFunction, Epoch, ProtocolKeyPair, ProtocolKeySignature, ProtocolPublicKey,  TRANSACTIONS_COMMITMENT_SIZE};
 use enum_dispatch::enum_dispatch;
 use fastcrypto::hash::{Digest, HashFunction};
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ use crate::{
     ensure,
     error::{ConsensusError, ConsensusResult},
 };
-
+use rs_merkle::Hasher as MerkleHasher;
 /// Round number of a block.
 pub type Round = u32;
 
@@ -179,6 +179,24 @@ impl BlockAPI for BlockV1 {
 
 
 /// BlockHeader: Contains metadata for a block including the Merkle root of transactions and acknowledgement statements.
+
+#[derive(Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Default, Hash, Serialize, Deserialize)]
+pub struct TransactionsCommitment([u8; TRANSACTIONS_COMMITMENT_SIZE]);
+
+pub type Blake3Hasher = blake3::Hasher;
+#[derive(Clone)]
+pub struct Blake3;
+
+impl MerkleHasher for Blake3 {
+    type Hash = [u8; 32];
+
+    fn hash(data: &[u8]) -> [u8; 32] {
+        let mut hasher = Blake3Hasher::new();
+        hasher.update(data);
+        hasher.finalize().into()
+    }
+}
+
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct BlockHeader {
     epoch: Epoch,
@@ -194,6 +212,9 @@ pub struct BlockHeader {
     /// Acknowledgement statements.
     acknowledgement_statements: Vec<BlockRef>,
 }
+
+
+
 
 impl BlockHeader {
 

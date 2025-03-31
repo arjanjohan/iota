@@ -175,22 +175,5 @@ pub type DefaultHashFunction = Blake2b256;
 pub const DIGEST_LENGTH: usize = DefaultHashFunction::OUTPUT_SIZE;
 pub const INTENT_MESSAGE_LENGTH: usize = INTENT_PREFIX_LENGTH + DIGEST_LENGTH;
 
-/// Defines format of transaction commitment
-pub const TRANSACTIONS_DIGEST_SIZE: usize = 32;
-#[derive(Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Default, Hash, Serialize, Deserialize)]
-pub struct TransactionsCommitment([u8; TRANSACTIONS_DIGEST_SIZE]);
-
-pub type Blake3Hasher = blake3::Hasher;
-
-#[derive(Clone)]
-pub struct Blake3;
-
-impl Hasher for Blake3 {
-    type Hash = [u8; 32];
-
-    fn hash(data: &[u8]) -> [u8; 32] {
-        let mut hasher = Blake3Hasher::new();
-        hasher.update(data);
-        hasher.finalize().into()
-    }
-}
+/// Defines size of transactions commitment
+pub const TRANSACTIONS_COMMITMENT_SIZE: usize = 32;
