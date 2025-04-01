@@ -20,7 +20,6 @@ use fastcrypto::{
     hash::{Blake2b256, HashFunction},
     traits::{KeyPair as _, Signer as _, ToFromBytes as _, VerifyingKey as _},
 };
-use rs_merkle::Hasher;
 use serde::{Deserialize, Serialize};
 use shared_crypto::intent::INTENT_PREFIX_LENGTH;
 
@@ -175,5 +174,5 @@ pub type DefaultHashFunction = Blake2b256;
 pub const DIGEST_LENGTH: usize = DefaultHashFunction::OUTPUT_SIZE;
 pub const INTENT_MESSAGE_LENGTH: usize = INTENT_PREFIX_LENGTH + DIGEST_LENGTH;
 
-/// Defines size of transactions commitment
+/// Defines format of transaction commitment
 pub const TRANSACTIONS_COMMITMENT_SIZE: usize = 32;

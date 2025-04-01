@@ -10,7 +10,7 @@ use std::{
 };
 
 use bytes::Bytes;
-use consensus_config::{AuthorityIndex, DIGEST_LENGTH, DefaultHashFunction, Epoch, ProtocolKeyPair, ProtocolKeySignature, ProtocolPublicKey,  TRANSACTIONS_COMMITMENT_SIZE};
+use consensus_config::{AuthorityIndex, DIGEST_LENGTH, DefaultHashFunction, Epoch, ProtocolKeyPair, ProtocolKeySignature, ProtocolPublicKey, TRANSACTIONS_COMMITMENT_SIZE};
 use enum_dispatch::enum_dispatch;
 use fastcrypto::hash::{Digest, HashFunction};
 use serde::{Deserialize, Serialize};
@@ -23,6 +23,8 @@ use crate::{
     error::{ConsensusError, ConsensusResult},
 };
 use rs_merkle::Hasher as MerkleHasher;
+use rs_merkle::MerkleTree;
+use blake3;
 /// Round number of a block.
 pub type Round = u32;
 
@@ -178,12 +180,18 @@ impl BlockAPI for BlockV1 {
 // ====== New BlockV2 Definition =====
 
 
-/// BlockHeader: Contains metadata for a block including the Merkle root of transactions and acknowledgement statements.
+/// BlockHeader: Contains metadata for a block including the Merkle root of transactions (TransactionsCommitment) and acknowledgement statements.
 
 #[derive(Clone, Copy, Eq, Ord, PartialOrd, PartialEq, Default, Hash, Serialize, Deserialize)]
 pub struct TransactionsCommitment([u8; TRANSACTIONS_COMMITMENT_SIZE]);
 
 pub type Blake3Hasher = blake3::Hasher;
+
+pub trait CryptoHash {
+    fn crypto_hash(&self, state: &mut Blake3Hasher);
+}
+
+
 #[derive(Clone)]
 pub struct Blake3;
 
@@ -196,6 +204,38 @@ impl MerkleHasher for Blake3 {
         hasher.finalize().into()
     }
 }
+pub type Shard = Vec<u8>;
+impl CryptoHash for Shard {
+    fn crypto_hash(&self, state: &mut Blake3Hasher) {
+        state.update(self);
+    }
+}
+impl TransactionsCommitment {
+    pub fn new_from_encoded_statements(
+        encoded_statements: &Vec<Shard>,
+        authority_index: usize,
+    ) -> (TransactionsCommitment, Vec<u8>) {
+        let mut leaves: Vec<[u8; 32]> = Vec::new();
+        for shard in encoded_statements {
+            let mut hasher = Blake3Hasher::new();
+            shard.crypto_hash(&mut hasher);
+            let leaf = hasher.finalize().into();
+            leaves.push(leaf);
+        }
+        let merkle_tree = MerkleTree::<Blake3>::from_leaves(&leaves);
+        let merkle_root = merkle_tree
+            .root()
+            .ok_or("couldn't get the merkle root")
+            .unwrap();
+        let indices_to_prove = vec![authority_index];
+        let merkle_proof = merkle_tree.proof(&indices_to_prove);
+        let merkle_proof_bytes = merkle_proof.to_bytes();
+        (TransactionsCommitment(merkle_root), merkle_proof_bytes)
+    }
+}
+
+
+
 
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct BlockHeader {
