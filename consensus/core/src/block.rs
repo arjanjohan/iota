@@ -209,6 +209,8 @@ impl CryptoHash for Shard {
         state.update(self);
     }
 }
+
+
 impl TransactionsCommitment {
     pub fn new_from_encoded_statements(
         encoded_statements: &Vec<Shard>,
@@ -230,6 +232,24 @@ impl TransactionsCommitment {
         let merkle_proof = merkle_tree.proof(&indices_to_prove);
         let merkle_proof_bytes = merkle_proof.to_bytes();
         (TransactionsCommitment(merkle_root), merkle_proof_bytes)
+    }
+    pub fn check_correctness_merkle_root(
+        encoded_statements: &Vec<Shard>,
+        merkle_root: TransactionsCommitment,
+    ) -> bool {
+        let mut leaves: Vec<[u8; 32]> = Vec::new();
+        for shard in encoded_statements {
+            let mut hasher = Blake3Hasher::new();
+            shard.crypto_hash(&mut hasher);
+            let leaf = hasher.finalize().into();
+            leaves.push(leaf);
+        }
+        let computed_merkle_tree = MerkleTree::<Blake3>::from_leaves(&leaves);
+        let computed_merkle_root = computed_merkle_tree
+            .root()
+            .ok_or("couldn't get the merkle root")
+            .unwrap();
+        computed_merkle_root == merkle_root.0
     }
 }
 
@@ -930,7 +950,6 @@ pub enum MisbehaviorProof {
 mod tests {
     use super::*;
     use std::sync::Arc;
-    use rand::{Rng, SeedableRng, rngs::StdRng};
     use fastcrypto::error::FastCryptoError;
 
     use crate::{
@@ -1054,31 +1073,30 @@ mod tests {
         assert_eq!(verified_block.epoch(), block.epoch());
     }
     #[test]
-    fn test_new_from_encoded_statements() {
+    fn test_new_from_encoded_statements_and_check_correctness() {
+        use rand::rngs::StdRng;
+        use rand::{Rng,SeedableRng};
         // Prepare some fake encoded statements (shards)
         let mut rng = StdRng::seed_from_u64(99);
         let num_shards = 5;
         let encoded_statements: Vec<Shard> = (0..num_shards)
             .map(|_| {
-                // Create a random vector of bytes with length 32
                 (0..32).map(|_| rng.gen()).collect()
             })
             .collect();
 
         // Choose an authority index to generate a proof for
-        let authority_index = 2; // for example
+        let authority_index = 2;
 
-        // Call the function to create the TransactionsCommitment and Merkle proof bytes
+        // Call function to create the TransactionsCommitment and Merkle proof
         let (commitment, proof_bytes) =
             TransactionsCommitment::new_from_encoded_statements(&encoded_statements, authority_index);
 
-        // Check that the commitment is the correct length (using TRANSACTIONS_COMMITMENT_SIZE)
+        // Basic checks
         assert_eq!(commitment.0.len(), TRANSACTIONS_COMMITMENT_SIZE);
-
-        // Check that proof_bytes is not empty
         assert!(!proof_bytes.is_empty(), "Merkle proof should not be empty");
 
-        // Re-create the Merkle tree here and verify the root matches
+        // Direct Merkle root computation
         let mut leaves: Vec<[u8; 32]> = Vec::new();
         for shard in &encoded_statements {
             let mut hasher = Blake3Hasher::new();
@@ -1088,6 +1106,16 @@ mod tests {
         let merkle_tree = MerkleTree::<Blake3>::from_leaves(&leaves);
         let expected_root = merkle_tree.root().unwrap();
         assert_eq!(commitment.0, expected_root, "Merkle roots must match");
-        }
+
+        // Now use the check_correctness_merkle_root function
+        let result = TransactionsCommitment::check_correctness_merkle_root(&encoded_statements, commitment);
+        assert!(result, "Merkle root correctness check should pass");
+
+        // Negative test
+        let mut tampered = encoded_statements.clone();
+        tampered[0][0] ^= 0xFF; // Flip a byte
+        let result = TransactionsCommitment::check_correctness_merkle_root(&tampered, commitment);
+        assert!(!result, "Merkle root correctness check should fail for tampered data");
     }
+}
 
