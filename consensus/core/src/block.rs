@@ -73,6 +73,7 @@ pub trait BlockAPI {
     fn timestamp_ms(&self) -> BlockTimestampMs;
     fn ancestors(&self) -> &[BlockRef];
     fn transactions(&self) -> &[Transaction];
+    fn transactions_commitment(&self) -> &TransactionsCommitment;
     fn commit_votes(&self) -> &[CommitVote];
     fn misbehavior_reports(&self) -> &[MisbehaviorReport];
     fn shard_data(&self) -> Option<&Bytes>;
@@ -158,6 +159,10 @@ impl BlockAPI for BlockV1 {
         &self.transactions
     }
 
+    fn transactions_commitment(&self) -> &TransactionsCommitment {
+        panic!("BlockV1 has no transactions commitment");
+    }
+
     fn commit_votes(&self) -> &[CommitVote] {
         &self.commit_votes
     }
@@ -167,11 +172,11 @@ impl BlockAPI for BlockV1 {
     }
 
     fn shard_data(&self) -> Option<&Bytes> {
-        None
+        panic!("BlockV1 has no shard data");
         }
 
     fn acknowledgment_statements(&self) -> &[BlockRef] {
-        &[]
+        panic!("BlockV1 has no acknowledgment statements");
     }
 
 }
@@ -339,8 +344,8 @@ impl BlockBody{
 /// BlockV2: Combines header and body, replacing BlockV1
 #[derive(Clone, Default, Deserialize, Serialize)]
 pub struct BlockV2 {
-    header: BlockHeader,
-    body: BlockBody,
+    pub(crate) header: BlockHeader,
+    pub(crate) body: BlockBody,
 }
 
 
@@ -375,6 +380,9 @@ impl BlockAPI for BlockV2 {
             BlockBody::ShardData(_) => &[],
             BlockBody::Empty => &[],
         }
+    }
+    fn transactions_commitment(&self) -> &TransactionsCommitment {
+        &self.header.transactions_commitment
     }
     fn shard_data(&self) -> Option<&Bytes> {
         match &self.body {
@@ -555,7 +563,7 @@ impl fmt::Debug for Slot {
 /// `BlockRef`.
 #[derive(Deserialize, Serialize)]
 pub(crate) struct SignedBlock {
-    inner: Block,
+    pub(crate) inner: Block,
     signature: Bytes,
 }
 

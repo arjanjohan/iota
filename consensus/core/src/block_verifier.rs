@@ -14,6 +14,7 @@ use crate::{
     error::{ConsensusError, ConsensusResult},
     transaction::TransactionVerifier,
 };
+use crate::block::{Block, BlockBody, TransactionsCommitment};
 
 pub(crate) trait BlockVerifier: Send + Sync + 'static {
     /// Verifies a block's metadata and transactions.
@@ -191,13 +192,37 @@ impl BlockVerifier for SignedBlockVerifier {
             });
         }
 
-        let batch: Vec<_> = block.transactions().iter().map(|t| t.data()).collect();
-
-        self.check_transactions(&batch)?;
-
-        self.transaction_verifier
-            .verify_batch(&batch)
-            .map_err(|e| ConsensusError::InvalidTransaction(format!("{e:?}")))
+        // === Version-specific verification ===
+        match &block.inner {
+            Block::V1(block_v1) => {
+                let batch: Vec<_> = block_v1.transactions().iter().map(|t| t.data()).collect();
+                self.check_transactions(&batch)?;
+                self.transaction_verifier
+                    .verify_batch(&batch)
+                    .map_err(|e| ConsensusError::InvalidTransaction(format!("{e:?}")))?;
+            }
+            Block::V2(block_v2) => {
+                match &block_v2.body {
+                    BlockBody::Transactions(transactions) => {
+                        let batch: Vec<_> = block_v2.transactions().iter().map(|t| t.data()).collect();
+                        self.check_transactions(&batch)?;
+                        self.transaction_verifier
+                            .verify_batch(&batch)
+                            .map_err(|e| ConsensusError::InvalidTransaction(format!("{e:?}")))?;
+                        // Check commitment consistency
+                        // TODO: we need the encoding decoding
+                    }
+                    BlockBody::ShardData(encoded_data) => {
+                        // Verify shard data against Merkle root
+                        // TODO
+                    }
+                    BlockBody::Empty => {
+                        // No verification needed
+                    }
+                }
+            }
+        }
+        Ok(())
     }
 
     fn check_ancestors(
