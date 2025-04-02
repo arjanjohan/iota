@@ -22,7 +22,7 @@ use crate::{
     ensure,
     error::{ConsensusError, ConsensusResult},
 };
-use rs_merkle::Hasher as MerkleHasher;
+use rs_merkle::{Hasher as MerkleHasher, MerkleProof};
 use rs_merkle::MerkleTree;
 use blake3;
 /// Round number of a block.
@@ -242,7 +242,7 @@ impl TransactionsCommitment {
         encoded_statements: &Vec<Shard>,
         merkle_root: TransactionsCommitment,
     ) -> bool {
-        let mut leaves: Vec<[u8; 32]> = Vec::new();
+        let mut leaves: Vec<[u8; TRANSACTIONS_COMMITMENT_SIZE]> = Vec::new();
         for shard in encoded_statements {
             let mut hasher = Blake3Hasher::new();
             shard.crypto_hash(&mut hasher);
@@ -255,6 +255,19 @@ impl TransactionsCommitment {
             .ok_or("couldn't get the merkle root")
             .unwrap();
         computed_merkle_root == merkle_root.0
+    }
+    pub fn check_correctness_merkle_leaf(
+        shard: Shard,
+        merkle_root: TransactionsCommitment,
+        proof_bytes: Vec<u8>,
+        tree_size: usize,
+        leaf_index: usize,
+    ) -> Option<bool> {
+        let mut hasher = Blake3Hasher::new();
+        shard.crypto_hash(&mut hasher);
+        let leaf_to_prove: [u8;TRANSACTIONS_COMMITMENT_SIZE] = hasher.finalize().into();
+        let proof = MerkleProof::<Blake3>::try_from(proof_bytes).ok()?;
+        Some(proof.verify(merkle_root.0, &[leaf_index], &[leaf_to_prove], tree_size))
     }
 }
 
