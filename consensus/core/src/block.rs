@@ -1138,5 +1138,53 @@ mod tests {
         let result = TransactionsCommitment::check_correctness_merkle_root(&tampered, commitment);
         assert!(!result, "Merkle root correctness check should fail for tampered data");
     }
+    #[test]
+    fn test_check_correctness_merkle_leaf() {
+        use rand::{SeedableRng, Rng};
+        use rand::rngs::StdRng;
+
+        let mut rng = StdRng::seed_from_u64(42);
+        let num_shards = 5;
+        let encoded_statements: Vec<Shard> = (0..num_shards)
+            .map(|_| (0..TRANSACTIONS_COMMITMENT_SIZE).map(|_| rng.gen()).collect())
+            .collect();
+
+        let authority_index = 2;
+
+        let (commitment, proof_bytes) =
+            TransactionsCommitment::new_from_encoded_statements(&encoded_statements, authority_index);
+
+        // Positive test
+        let shard = encoded_statements[authority_index].clone();
+        let result = TransactionsCommitment::check_correctness_merkle_leaf(
+            shard,
+            commitment.clone(),
+            proof_bytes.clone(),
+            num_shards,
+            authority_index,
+        );
+        assert_eq!(result, Some(true), "Merkle proof should verify correctly");
+
+        // Negative test: wrong shard
+        let wrong_index = 1;
+        let result = TransactionsCommitment::check_correctness_merkle_leaf(
+            encoded_statements[wrong_index].clone(),
+            commitment.clone(),
+            proof_bytes.clone(),
+            num_shards,
+            wrong_index,
+        );
+        assert_eq!(result, Some(false), "Merkle proof verification should fail for wrong shard");
+
+        // Negative test: invalid proof bytes
+        let result = TransactionsCommitment::check_correctness_merkle_leaf(
+            encoded_statements[authority_index].clone(),
+            commitment,
+            vec![0, 1, 2, 3], // invalid proof bytes
+            num_shards,
+            authority_index,
+        );
+        assert_eq!(result, None, "Invalid proof bytes should return None");
+    }
 }
 
