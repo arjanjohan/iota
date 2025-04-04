@@ -203,7 +203,13 @@ pub fn run() {
                         match result {
                             Ok(diags) => {
                                 for (k, v) in diags {
-                                    let url = Url::from_file_path(k).unwrap();
+                                    let url = match Url::from_file_path(k) {
+                                        Ok(url) => url,
+                                        Err(err) => {
+                                            eprintln!("Failed to convert file path to URL: {:?}", err);
+                                            continue;
+                                        }
+                                    };
                                     let params = lsp_types::PublishDiagnosticsParams::new(url, v, None);
                                     let notification = Notification::new(lsp_types::notification::PublishDiagnostics::METHOD.to_string(), params);
                                     if let Err(err) = context
