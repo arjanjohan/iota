@@ -1,5 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::BTreeMap, path::Path};
@@ -207,7 +208,7 @@ impl<'a> MoveTestAdapter<'a> for SimpleVMTestAdapter {
                         .collect::<VMResult<_>>()?;
 
                     session.execute_function_bypass_visibility(
-                        module, function, type_args, args, gas_status,
+                        module, function, type_args, args, gas_status, None,
                     )
                 },
                 test_vm_config(),

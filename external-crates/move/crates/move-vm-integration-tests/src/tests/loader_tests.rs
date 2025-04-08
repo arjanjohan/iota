@@ -1,5 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 // Simplifies logic around re-using ModuleIds.
@@ -244,6 +245,7 @@ impl Adapter {
                             vec![],
                             Vec::<Vec<u8>>::new(),
                             &mut UnmeteredGasMeter,
+                            None,
                         )
                         .unwrap_or_else(|_| {
                             panic!("Failure executing {:?}::{:?}", module_id, name)
@@ -276,6 +278,7 @@ impl Adapter {
                 vec![],
                 Vec::<Vec<u8>>::new(),
                 &mut UnmeteredGasMeter,
+                None,
             )
             .expect_err("calling function must fail");
     }
@@ -289,6 +292,7 @@ impl Adapter {
                 vec![],
                 Vec::<Vec<u8>>::new(),
                 &mut UnmeteredGasMeter,
+                None,
             )
             .unwrap_or_else(|e| panic!("Failure executing {module:?}::{name:?}: {e:#?}"))
     }

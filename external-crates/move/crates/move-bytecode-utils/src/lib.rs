@@ -1,5 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 pub mod layout;
@@ -25,10 +26,12 @@ impl<'a> Modules<'a> {
     pub fn new(modules: impl IntoIterator<Item = &'a CompiledModule>) -> Self {
         let mut map = BTreeMap::new();
         for m in modules {
-            assert!(
-                map.insert(m.self_id(), m).is_none(),
-                "Duplicate module found"
-            );
+            if let Some(prev) = map.insert(m.self_id(), m) {
+                panic!(
+                    "Duplicate module found: {}",
+                    prev.self_id().to_canonical_display(/* with_prefix */ true)
+                )
+            }
         }
         Modules(map)
     }

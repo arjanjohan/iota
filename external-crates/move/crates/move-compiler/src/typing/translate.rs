@@ -1,5 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -28,7 +29,7 @@ use crate::{
         unique_map::UniqueMap,
         *,
     },
-    sui_mode,
+    iota_mode,
     typing::{
         ast::{self as T},
         core::{
@@ -3991,6 +3992,7 @@ fn annotated_error_const(context: &mut Context, e: &mut T::Exp, abort_or_assert_
     {
         let ConstantInfo {
             doc: _,
+            index: _,
             attributes,
             defined_loc,
             signature: _,
@@ -4651,7 +4653,7 @@ fn unused_module_members(context: &mut Context, mident: &ModuleIdent_, mdef: &T:
         return;
     }
 
-    let is_sui_mode = context.env.package_config(mdef.package_name).flavor == Flavor::Sui;
+    let is_iota_mode = context.env.package_config(mdef.package_name).flavor == Flavor::Iota;
     context.push_warning_filter_scope(mdef.warning_filter);
 
     for (loc, name, c) in &mdef.constants {
@@ -4675,8 +4677,8 @@ fn unused_module_members(context: &mut Context, mident: &ModuleIdent_, mdef: &T:
             // functions with #[test] or R[random_test] attribute are implicitly used
             continue;
         }
-        if is_sui_mode && *name == sui_mode::INIT_FUNCTION_NAME {
-            // a Sui-specific filter to avoid signaling that the init function is unused
+        if is_iota_mode && *name == iota_mode::INIT_FUNCTION_NAME {
+            // a IOTA-specific filter to avoid signaling that the init function is unused
             continue;
         }
         context.push_warning_filter_scope(fun.warning_filter);

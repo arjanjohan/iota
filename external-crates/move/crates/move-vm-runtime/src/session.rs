@@ -1,5 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -94,38 +95,6 @@ impl<'r, 'l, S: MoveResolver> Session<'r, 'l, S> {
 
     /// Similar to execute_entry_function, but it bypasses visibility checks
     pub fn execute_function_bypass_visibility(
-        &mut self,
-        module: &ModuleId,
-        function_name: &IdentStr,
-        ty_args: Vec<Type>,
-        args: Vec<impl Borrow<[u8]>>,
-        gas_meter: &mut impl GasMeter,
-    ) -> VMResult<SerializedReturnValues> {
-        move_vm_profiler::tracing_feature_enabled! {
-            use move_vm_profiler::GasProfiler;
-            if gas_meter.get_profiler_mut().is_none() {
-                gas_meter.set_profiler(GasProfiler::init_default_cfg(
-                    function_name.to_string(),
-                    gas_meter.remaining_gas().into(),
-                ));
-            }
-        }
-
-        let bypass_declared_entry_check = true;
-        self.runtime.execute_function(
-            module,
-            function_name,
-            ty_args,
-            args,
-            &mut self.data_cache,
-            gas_meter,
-            &mut self.native_extensions,
-            bypass_declared_entry_check,
-            None,
-        )
-    }
-
-    pub fn execute_function_bypass_visibility_with_tracer_if_enabled(
         &mut self,
         module: &ModuleId,
         function_name: &IdentStr,
