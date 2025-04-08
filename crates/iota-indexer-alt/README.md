@@ -1,6 +1,7 @@
 # iota-indexer-alt
 
 ## Running
+
 The required flags are --remote-store-url (or --local-ingestion-path) and the --config. If both are provided, remote-store-url will be used.
 
 ```
@@ -8,6 +9,7 @@ cargo run --bin iota-indexer-alt -- --database-url {url} indexer --remote-store-
 ```
 
 ## Pruning
+
 To enable pruning, the `cp_sequence_numbers` pipeline must be enabled. Otherwise, even if pruning logic is
 configured for a table, the pruner task itself will skip if it cannot find a mapping for the
 checkpoint pruning watermark. Only one committer needs to update this table - it is not necessary

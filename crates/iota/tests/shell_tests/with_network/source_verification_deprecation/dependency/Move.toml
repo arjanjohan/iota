@@ -7,4 +7,3 @@ edition = "2024.beta"
 
 [addresses]
 dependency = "0x0"
-
