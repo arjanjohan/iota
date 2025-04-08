@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::displays::Pretty;
 use std::fmt::{Display, Formatter};
-use sui_json_rpc_types::{DevInspectResults, SuiTransactionBlockEffectsAPI};
+use iota_json_rpc_types::{DevInspectResults, IotaTransactionBlockEffectsAPI};
 
 impl<'a> Display for Pretty<'a, DevInspectResults> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -34,8 +35,8 @@ impl<'a> Display for Pretty<'a, DevInspectResults> {
                 if !result.mutable_reference_outputs.is_empty() {
                     writeln!(f, "  Mutable Reference Outputs")?;
                     for m in result.mutable_reference_outputs.iter() {
-                        writeln!(f, "    Sui Argument: {}", m.0)?;
-                        writeln!(f, "    Sui TypeTag: {:?}", m.2)?;
+                        writeln!(f, "    IOTA Argument: {}", m.0)?;
+                        writeln!(f, "    IOTA TypeTag: {:?}", m.2)?;
                         writeln!(f, "    Bytes: {:?}", m.1)?;
                     }
                 }
@@ -44,7 +45,7 @@ impl<'a> Display for Pretty<'a, DevInspectResults> {
                     writeln!(f, "  Return values")?;
 
                     for val in result.return_values.iter() {
-                        writeln!(f, "    Sui TypeTag: {:?}", val.1)?;
+                        writeln!(f, "    IOTA TypeTag: {:?}", val.1)?;
                         writeln!(f, "    Bytes: {:?}", val.0)?;
                     }
                 }

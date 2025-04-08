@@ -1,12 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{sync::Arc, time::Duration};
 
 use serde::{Deserialize, Serialize};
-use sui_field_count::FieldCount;
-use sui_pg_db::{self as db, Db};
-use sui_types::full_checkpoint_content::CheckpointData;
+use iota_field_count::FieldCount;
+use iota_pg_db::{self as db, Db};
+use iota_types::full_checkpoint_content::CheckpointData;
 use tokio::{sync::mpsc, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 use tracing::info;

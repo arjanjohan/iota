@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Context as _;
@@ -11,11 +12,11 @@ use move_core_types::language_storage::StructTag;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use sui_indexer_alt_schema::{objects::StoredOwnerKind, schema::obj_info};
-use sui_json_rpc_types::{Page as PageResponse, SuiObjectDataOptions};
-use sui_types::{
-    base_types::{ObjectID, SuiAddress},
-    sui_serde::SuiStructTag,
+use iota_indexer_alt_schema::{objects::StoredOwnerKind, schema::obj_info};
+use iota_json_rpc_types::{Page as PageResponse, IotaObjectDataOptions};
+use iota_types::{
+    base_types::{ObjectID, IotaAddress},
+    iota_serde::IotaStructTag,
     Identifier, TypeTag,
 };
 
@@ -29,16 +30,16 @@ use super::{error::Error, ObjectsConfig};
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, Default)]
 #[serde(rename_all = "camelCase", rename = "ObjectResponseQuery", default)]
-pub(crate) struct SuiObjectResponseQuery {
+pub(crate) struct IotaObjectResponseQuery {
     /// If None, no filter will be applied
-    pub filter: Option<SuiObjectDataFilter>,
+    pub filter: Option<IotaObjectDataFilter>,
     /// config which fields to include in the response, by default only digest is included
-    pub options: Option<SuiObjectDataOptions>,
+    pub options: Option<IotaObjectDataOptions>,
 }
 
 #[serde_as]
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
-pub(crate) enum SuiObjectDataFilter {
+pub(crate) enum IotaObjectDataFilter {
     /// Query by the object type's package.
     Package(ObjectID),
     /// Query by the object type's module.
@@ -51,7 +52,7 @@ pub(crate) enum SuiObjectDataFilter {
     },
     /// Query by the object's type.
     StructType(
-        #[serde_as(as = "SuiStructTag")]
+        #[serde_as(as = "IotaStructTag")]
         #[schemars(with = "String")]
         StructTag,
     ),
@@ -66,36 +67,36 @@ struct ObjectCursor {
 type Cursor = BcsCursor<ObjectCursor>;
 type ObjectIDs = PageResponse<ObjectID, String>;
 
-impl SuiObjectDataFilter {
+impl IotaObjectDataFilter {
     fn package(&self) -> ObjectID {
         match self {
-            SuiObjectDataFilter::Package(p) => *p,
-            SuiObjectDataFilter::MoveModule { package, .. } => *package,
-            SuiObjectDataFilter::StructType(tag) => tag.address.into(),
+            IotaObjectDataFilter::Package(p) => *p,
+            IotaObjectDataFilter::MoveModule { package, .. } => *package,
+            IotaObjectDataFilter::StructType(tag) => tag.address.into(),
         }
     }
 
     fn module(&self) -> Option<&str> {
         match self {
-            SuiObjectDataFilter::Package(_) => None,
-            SuiObjectDataFilter::MoveModule { module, .. } => Some(module.as_str()),
-            SuiObjectDataFilter::StructType(tag) => Some(tag.module.as_str()),
+            IotaObjectDataFilter::Package(_) => None,
+            IotaObjectDataFilter::MoveModule { module, .. } => Some(module.as_str()),
+            IotaObjectDataFilter::StructType(tag) => Some(tag.module.as_str()),
         }
     }
 
     fn name(&self) -> Option<&str> {
         match self {
-            SuiObjectDataFilter::Package(_) => None,
-            SuiObjectDataFilter::MoveModule { .. } => None,
-            SuiObjectDataFilter::StructType(tag) => Some(tag.name.as_str()),
+            IotaObjectDataFilter::Package(_) => None,
+            IotaObjectDataFilter::MoveModule { .. } => None,
+            IotaObjectDataFilter::StructType(tag) => Some(tag.name.as_str()),
         }
     }
 
     fn type_params(&self) -> Option<&[TypeTag]> {
         match self {
-            SuiObjectDataFilter::Package(_) => None,
-            SuiObjectDataFilter::MoveModule { .. } => None,
-            SuiObjectDataFilter::StructType(tag) => {
+            IotaObjectDataFilter::Package(_) => None,
+            IotaObjectDataFilter::MoveModule { .. } => None,
+            IotaObjectDataFilter::StructType(tag) => {
                 (!tag.type_params.is_empty()).then(|| &tag.type_params[..])
             }
         }
@@ -108,8 +109,8 @@ impl SuiObjectDataFilter {
 pub(super) async fn owned_objects(
     ctx: &Context,
     config: &ObjectsConfig,
-    owner: SuiAddress,
-    filter: &Option<SuiObjectDataFilter>,
+    owner: IotaAddress,
+    filter: &Option<IotaObjectDataFilter>,
     cursor: Option<String>,
     limit: Option<usize>,
 ) -> Result<ObjectIDs, RpcError<Error>> {

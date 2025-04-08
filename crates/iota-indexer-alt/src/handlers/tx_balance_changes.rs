@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::ops::Range;
@@ -7,16 +8,16 @@ use std::{collections::BTreeMap, sync::Arc};
 use anyhow::{Context, Result};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use sui_indexer_alt_framework::{
+use iota_indexer_alt_framework::{
     models::cp_sequence_numbers::tx_interval,
     pipeline::{concurrent::Handler, Processor},
 };
-use sui_indexer_alt_schema::{
+use iota_indexer_alt_schema::{
     schema::tx_balance_changes,
     transactions::{BalanceChange, StoredTxBalanceChange},
 };
-use sui_pg_db as db;
-use sui_types::{
+use iota_pg_db as db;
+use iota_types::{
     coin::Coin,
     effects::TransactionEffectsAPI,
     full_checkpoint_content::{CheckpointData, CheckpointTransaction},
@@ -127,9 +128,9 @@ fn balance_changes(transaction: &CheckpointTransaction) -> Result<Vec<BalanceCha
 mod tests {
     use super::*;
     use diesel_async::RunQueryDsl;
-    use sui_indexer_alt_framework::{handlers::cp_sequence_numbers::CpSequenceNumbers, Indexer};
-    use sui_indexer_alt_schema::MIGRATIONS;
-    use sui_types::test_checkpoint_data_builder::TestCheckpointDataBuilder;
+    use iota_indexer_alt_framework::{handlers::cp_sequence_numbers::CpSequenceNumbers, Indexer};
+    use iota_indexer_alt_schema::MIGRATIONS;
+    use iota_types::test_checkpoint_data_builder::TestCheckpointDataBuilder;
 
     async fn get_all_tx_balance_changes(conn: &mut db::Connection<'_>) -> Result<Vec<i64>> {
         Ok(tx_balance_changes::table

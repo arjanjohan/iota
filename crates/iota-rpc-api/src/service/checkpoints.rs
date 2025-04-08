@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::types::CheckpointResponse;
@@ -9,10 +10,10 @@ use crate::types::GetCheckpointOptions;
 use crate::types::GetFullCheckpointOptions;
 use crate::Result;
 use crate::RpcService;
-use sui_sdk_types::CheckpointContents;
-use sui_sdk_types::CheckpointDigest;
-use sui_sdk_types::CheckpointSequenceNumber;
-use sui_sdk_types::SignedCheckpointSummary;
+use iota_sdk_types::CheckpointContents;
+use iota_sdk_types::CheckpointDigest;
+use iota_sdk_types::CheckpointSequenceNumber;
+use iota_sdk_types::SignedCheckpointSummary;
 use tap::Pipe;
 
 impl RpcService {
@@ -133,11 +134,11 @@ impl RpcService {
 }
 
 pub(crate) fn checkpoint_data_to_full_checkpoint_response(
-    sui_types::full_checkpoint_content::CheckpointData {
+    iota_types::full_checkpoint_content::CheckpointData {
         checkpoint_summary,
         checkpoint_contents,
         transactions,
-    }: sui_types::full_checkpoint_content::CheckpointData,
+    }: iota_types::full_checkpoint_content::CheckpointData,
     options: &GetFullCheckpointOptions,
 ) -> Result<FullCheckpointResponse> {
     let sequence_number = checkpoint_summary.sequence_number;
@@ -178,13 +179,13 @@ pub(crate) fn checkpoint_data_to_full_checkpoint_response(
 }
 
 fn transaction_to_checkpoint_transaction(
-    sui_types::full_checkpoint_content::CheckpointTransaction {
+    iota_types::full_checkpoint_content::CheckpointTransaction {
         transaction,
         effects,
         events,
         input_objects,
         output_objects,
-    }: sui_types::full_checkpoint_content::CheckpointTransaction,
+    }: iota_types::full_checkpoint_content::CheckpointTransaction,
     options: &GetFullCheckpointOptions,
 ) -> Result<FullCheckpointTransaction> {
     let digest = transaction.digest().to_owned().into();
@@ -250,7 +251,7 @@ fn transaction_to_checkpoint_transaction(
 }
 
 fn object_to_object_response(
-    object: sui_types::object::Object,
+    object: iota_types::object::Object,
     options: &GetFullCheckpointOptions,
 ) -> Result<FullCheckpointObject> {
     let object_id = object.id().into();

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::proto::types::Bcs;
@@ -257,7 +258,7 @@ impl crate::proto::node::v2::node_service_server::NodeService for crate::RpcServ
                 ))
             }
         };
-        let mut signatures: Vec<sui_sdk_types::UserSignature> = Vec::new();
+        let mut signatures: Vec<iota_sdk_types::UserSignature> = Vec::new();
 
         if !request.signatures.is_empty() {
             let from_proto_signatures = request
@@ -279,7 +280,7 @@ impl crate::proto::node::v2::node_service_server::NodeService for crate::RpcServ
             let from_bytes_signatures = request
                 .signatures_bytes
                 .iter()
-                .map(|bytes| sui_sdk_types::UserSignature::from_bytes(bytes))
+                .map(|bytes| iota_sdk_types::UserSignature::from_bytes(bytes))
                 .collect::<Result<Vec<_>, _>>()
                 .map_err(|e| {
                     tonic::Status::new(
@@ -291,7 +292,7 @@ impl crate::proto::node::v2::node_service_server::NodeService for crate::RpcServ
             signatures.extend(from_bytes_signatures);
         }
 
-        let signed_transaction = sui_sdk_types::SignedTransaction {
+        let signed_transaction = iota_sdk_types::SignedTransaction {
             transaction,
             signatures,
         };

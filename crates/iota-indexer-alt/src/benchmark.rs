@@ -1,13 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{path::PathBuf, time::Instant};
 
 use prometheus::Registry;
-use sui_indexer_alt_framework::{ingestion::ClientArgs, Indexer, IndexerArgs};
-use sui_indexer_alt_schema::MIGRATIONS;
-use sui_pg_db::{reset_database, DbArgs};
-use sui_synthetic_ingestion::synthetic_ingestion::read_ingestion_data;
+use iota_indexer_alt_framework::{ingestion::ClientArgs, Indexer, IndexerArgs};
+use iota_indexer_alt_schema::MIGRATIONS;
+use iota_pg_db::{reset_database, DbArgs};
+use iota_synthetic_ingestion::synthetic_ingestion::read_ingestion_data;
 use tokio_util::sync::CancellationToken;
 
 use crate::{config::IndexerConfig, start_indexer};

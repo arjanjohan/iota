@@ -1,12 +1,13 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::sync::Arc;
 
 use async_graphql::dataloader::DataLoader;
 use prometheus::Registry;
-use sui_package_resolver::Resolver;
-use sui_pg_db::DbArgs;
+use iota_package_resolver::Resolver;
+use iota_pg_db::DbArgs;
 
 use crate::{
     data::{

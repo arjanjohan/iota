@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::mem;
 
-use sui_default_config::DefaultConfig;
+use iota_default_config::DefaultConfig;
 use tracing::warn;
 
 use crate::api::{objects::ObjectsConfig, transactions::TransactionsConfig};

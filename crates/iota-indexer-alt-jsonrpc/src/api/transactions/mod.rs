@@ -1,16 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use futures::future;
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use serde::{Deserialize, Serialize};
-use sui_json_rpc_types::{
-    Page, SuiTransactionBlockResponse, SuiTransactionBlockResponseOptions,
-    SuiTransactionBlockResponseQuery,
+use iota_json_rpc_types::{
+    Page, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+    IotaTransactionBlockResponseQuery,
 };
-use sui_open_rpc::Module;
-use sui_open_rpc_macros::open_rpc;
-use sui_types::digests::TransactionDigest;
+use iota_open_rpc::Module;
+use iota_open_rpc_macros::open_rpc;
+use iota_types::digests::TransactionDigest;
 
 use self::error::Error;
 
@@ -25,8 +26,8 @@ mod error;
 mod filter;
 mod response;
 
-#[open_rpc(namespace = "sui", tag = "Transactions API")]
-#[rpc(server, namespace = "sui")]
+#[open_rpc(namespace = "iota", tag = "Transactions API")]
+#[rpc(server, namespace = "iota")]
 trait TransactionsApi {
     /// Fetch a transaction by its transaction digest.
     #[method(name = "getTransactionBlock")]
@@ -35,12 +36,12 @@ trait TransactionsApi {
         /// The digest of the queried transaction.
         digest: TransactionDigest,
         /// Options controlling the output format.
-        options: SuiTransactionBlockResponseOptions,
-    ) -> RpcResult<SuiTransactionBlockResponse>;
+        options: IotaTransactionBlockResponseOptions,
+    ) -> RpcResult<IotaTransactionBlockResponse>;
 }
 
-#[open_rpc(namespace = "suix", tag = "Query Transactions API")]
-#[rpc(server, namespace = "suix")]
+#[open_rpc(namespace = "iotax", tag = "Query Transactions API")]
+#[rpc(server, namespace = "iotax")]
 trait QueryTransactionsApi {
     /// Query transactions based on their properties (sender, affected addresses, function calls,
     /// etc). Returns a paginated list of transactions.
@@ -57,14 +58,14 @@ trait QueryTransactionsApi {
     async fn query_transaction_blocks(
         &self,
         /// The query criteria, and the output options.
-        query: SuiTransactionBlockResponseQuery,
+        query: IotaTransactionBlockResponseQuery,
         /// Cursor to start paginating from.
         cursor: Option<String>,
         /// Maximum number of transactions to return per page.
         limit: Option<usize>,
         /// Order of results, defaulting to ascending order (false), by sequence on-chain.
         descending_order: Option<bool>,
-    ) -> RpcResult<Page<SuiTransactionBlockResponse, String>>;
+    ) -> RpcResult<Page<IotaTransactionBlockResponse, String>>;
 }
 
 pub(crate) struct Transactions(pub Context);
@@ -86,8 +87,8 @@ impl TransactionsApiServer for Transactions {
     async fn get_transaction_block(
         &self,
         digest: TransactionDigest,
-        options: SuiTransactionBlockResponseOptions,
-    ) -> RpcResult<SuiTransactionBlockResponse> {
+        options: IotaTransactionBlockResponseOptions,
+    ) -> RpcResult<IotaTransactionBlockResponse> {
         let Self(ctx) = self;
         Ok(response::transaction(ctx, digest, &options)
             .await
@@ -99,11 +100,11 @@ impl TransactionsApiServer for Transactions {
 impl QueryTransactionsApiServer for QueryTransactions {
     async fn query_transaction_blocks(
         &self,
-        query: SuiTransactionBlockResponseQuery,
+        query: IotaTransactionBlockResponseQuery,
         cursor: Option<String>,
         limit: Option<usize>,
         descending_order: Option<bool>,
-    ) -> RpcResult<Page<SuiTransactionBlockResponse, String>> {
+    ) -> RpcResult<Page<IotaTransactionBlockResponse, String>> {
         let Self(ctx, config) = self;
 
         let Page {

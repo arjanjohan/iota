@@ -1,13 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use sui_macros::sim_test;
-use sui_rpc_api::client::Client as CoreClient;
-use sui_rpc_api::proto::node::v2::node_service_client::NodeServiceClient;
-use sui_rpc_api::proto::node::v2::GetObjectOptions;
-use sui_rpc_api::proto::node::v2::GetObjectRequest;
-use sui_rpc_api::proto::node::v2::GetObjectResponse;
-use sui_sdk_types::ObjectId;
+use iota_macros::sim_test;
+use iota_rpc_api::client::Client as CoreClient;
+use iota_rpc_api::proto::node::v2::node_service_client::NodeServiceClient;
+use iota_rpc_api::proto::node::v2::GetObjectOptions;
+use iota_rpc_api::proto::node::v2::GetObjectRequest;
+use iota_rpc_api::proto::node::v2::GetObjectResponse;
+use iota_sdk_types::ObjectId;
 use test_cluster::TestClusterBuilder;
 
 #[sim_test]
@@ -91,5 +92,5 @@ async fn get_object() {
     assert!(object_bcs.is_some());
 
     // ensure we can convert proto ObjectResponse type to rust ObjectResponse
-    sui_rpc_api::types::ObjectResponse::try_from(&response).unwrap();
+    iota_rpc_api::types::ObjectResponse::try_from(&response).unwrap();
 }

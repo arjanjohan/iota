@@ -1,7 +1,7 @@
 [package]
-name = "sui-indexer-alt-e2e-tests"
+name = "iota-indexer-alt-e2e-tests"
 version = "0.1.0"
-authors = ["Mysten Labs <eng@mystenlabs.com>"]
+authors = ["IOTA Foundation <info@iota.org>"]
 license = "Apache-2.0"
 publish = false
 edition = "2021"
@@ -32,9 +32,9 @@ tokio.workspace = true
 tokio-util.workspace = true
 url.workspace = true
 
-sui-indexer-alt.workspace = true
-sui-indexer-alt-framework.workspace = true
-sui-indexer-alt-jsonrpc.workspace = true
-sui-pg-db.workspace = true
-sui-transactional-test-runner.workspace = true
+iota-indexer-alt.workspace = true
+iota-indexer-alt-framework.workspace = true
+iota-indexer-alt-jsonrpc.workspace = true
+iota-pg-db.workspace = true
+iota-transactional-test-runner.workspace = true
 

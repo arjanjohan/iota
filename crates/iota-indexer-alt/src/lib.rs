@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Context;
@@ -15,16 +16,16 @@ use handlers::{
     tx_calls::TxCalls, tx_digests::TxDigests, tx_kinds::TxKinds,
 };
 use prometheus::Registry;
-use sui_indexer_alt_framework::handlers::cp_sequence_numbers::CpSequenceNumbers;
-use sui_indexer_alt_framework::ingestion::{ClientArgs, IngestionConfig};
-use sui_indexer_alt_framework::pipeline::{
+use iota_indexer_alt_framework::handlers::cp_sequence_numbers::CpSequenceNumbers;
+use iota_indexer_alt_framework::ingestion::{ClientArgs, IngestionConfig};
+use iota_indexer_alt_framework::pipeline::{
     concurrent::{ConcurrentConfig, PrunerConfig},
     sequential::SequentialConfig,
     CommitterConfig,
 };
-use sui_indexer_alt_framework::{Indexer, IndexerArgs};
-use sui_indexer_alt_schema::MIGRATIONS;
-use sui_pg_db::DbArgs;
+use iota_indexer_alt_framework::{Indexer, IndexerArgs};
+use iota_indexer_alt_schema::MIGRATIONS;
+use iota_pg_db::DbArgs;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 

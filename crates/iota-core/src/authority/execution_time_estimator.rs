@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -10,13 +11,13 @@ use std::{
 use super::authority_per_epoch_store::AuthorityPerEpochStore;
 use crate::consensus_adapter::SubmitToConsensus;
 use itertools::Itertools;
-use mysten_common::debug_fatal;
-use mysten_metrics::monitored_scope;
+use iota_common::debug_fatal;
+use iota_metrics::monitored_scope;
 use simple_moving_average::{SingleSumSMA, SMA};
-use sui_protocol_config::PerObjectCongestionControlMode;
-use sui_types::{
+use iota_protocol_config::PerObjectCongestionControlMode;
+use iota_types::{
     committee::Committee,
-    error::SuiError,
+    error::IotaError,
     execution::{ExecutionTimeObservationKey, ExecutionTiming},
     messages_consensus::{AuthorityIndex, ConsensusTransaction, ExecutionTimeObservation},
     transaction::{
@@ -175,7 +176,7 @@ impl ExecutionTimeObserver {
                     .consensus_adapter
                     .submit_to_consensus(&[transaction], &epoch_store)
                 {
-                    if !matches!(e, SuiError::EpochEnded(_)) {
+                    if !matches!(e, IotaError::EpochEnded(_)) {
                         warn!("failed to submit execution time observation: {e:?}");
                     }
                 }
@@ -329,8 +330,8 @@ mod tests {
         ConnectionMonitorStatusForTests, ConsensusAdapter, ConsensusAdapterMetrics,
         MockConsensusClient,
     };
-    use sui_types::base_types::{ObjectID, SuiAddress};
-    use sui_types::transaction::{Argument, ProgrammableMoveCall};
+    use iota_types::base_types::{ObjectID, IotaAddress};
+    use iota_types::transaction::{Argument, ProgrammableMoveCall};
 
     #[tokio::test]
     async fn test_record_local_observations() {
@@ -763,7 +764,7 @@ mod tests {
 
         // Test single command transaction
         let single_move_tx = TransactionData::new_programmable(
-            SuiAddress::ZERO,
+            IotaAddress::ZERO,
             vec![],
             ProgrammableTransaction {
                 inputs: vec![],
@@ -787,7 +788,7 @@ mod tests {
 
         // Test multi-command transaction
         let multi_command_tx = TransactionData::new_programmable(
-            SuiAddress::ZERO,
+            IotaAddress::ZERO,
             vec![],
             ProgrammableTransaction {
                 inputs: vec![],

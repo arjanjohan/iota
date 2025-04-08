@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::BTreeMap, sync::Arc};
@@ -195,9 +196,9 @@ pub(super) fn collector<H: Handler + 'static>(
 
 #[cfg(test)]
 mod tests {
-    use sui_field_count::FieldCount;
-    use sui_pg_db as db;
-    use sui_types::full_checkpoint_content::CheckpointData;
+    use iota_field_count::FieldCount;
+    use iota_pg_db as db;
+    use iota_types::full_checkpoint_content::CheckpointData;
 
     use crate::{
         metrics::tests::test_metrics,

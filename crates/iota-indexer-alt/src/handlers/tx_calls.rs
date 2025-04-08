@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::ops::Range;
@@ -7,14 +8,14 @@ use std::sync::Arc;
 use anyhow::{Ok, Result};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use sui_indexer_alt_framework::{
+use iota_indexer_alt_framework::{
     models::cp_sequence_numbers::tx_interval,
     pipeline::{concurrent::Handler, Processor},
 };
-use sui_indexer_alt_schema::{schema::tx_calls, transactions::StoredTxCalls};
-use sui_pg_db as db;
-use sui_types::full_checkpoint_content::CheckpointData;
-use sui_types::transaction::TransactionDataAPI;
+use iota_indexer_alt_schema::{schema::tx_calls, transactions::StoredTxCalls};
+use iota_pg_db as db;
+use iota_types::full_checkpoint_content::CheckpointData;
+use iota_types::transaction::TransactionDataAPI;
 
 pub(crate) struct TxCalls;
 
@@ -89,9 +90,9 @@ impl Handler for TxCalls {
 mod tests {
     use super::*;
     use diesel_async::RunQueryDsl;
-    use sui_indexer_alt_framework::{handlers::cp_sequence_numbers::CpSequenceNumbers, Indexer};
-    use sui_indexer_alt_schema::MIGRATIONS;
-    use sui_types::{
+    use iota_indexer_alt_framework::{handlers::cp_sequence_numbers::CpSequenceNumbers, Indexer};
+    use iota_indexer_alt_schema::MIGRATIONS;
+    use iota_types::{
         base_types::ObjectID, test_checkpoint_data_builder::TestCheckpointDataBuilder,
     };
 

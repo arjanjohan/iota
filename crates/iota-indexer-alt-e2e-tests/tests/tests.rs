@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -18,20 +19,20 @@ use diesel_async::RunQueryDsl;
 use prometheus::Registry;
 use reqwest::Client;
 use serde_json::{json, Value};
-use sui_indexer_alt::{config::IndexerConfig, start_indexer};
-use sui_indexer_alt_framework::{ingestion::ClientArgs, schema::watermarks, IndexerArgs};
-use sui_indexer_alt_jsonrpc::{
+use iota_indexer_alt::{config::IndexerConfig, start_indexer};
+use iota_indexer_alt_framework::{ingestion::ClientArgs, schema::watermarks, IndexerArgs};
+use iota_indexer_alt_jsonrpc::{
     config::RpcConfig, data::system_package_task::SystemPackageTaskArgs, start_rpc, RpcArgs,
 };
-use sui_pg_db::{
+use iota_pg_db::{
     temp::{get_available_port, TempDb},
     Db, DbArgs,
 };
-use sui_transactional_test_runner::{
+use iota_transactional_test_runner::{
     create_adapter,
     offchain_state::{OffchainStateReader, TestResponse},
     run_tasks_with_adapter,
-    test_adapter::{OffChainConfig, SuiTestAdapter, PRE_COMPILED},
+    test_adapter::{OffChainConfig, IotaTestAdapter, PRE_COMPILED},
 };
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
@@ -266,7 +267,7 @@ async fn run_test(path: &Path) -> Result<(), Box<dyn Error>> {
 
     // start the adapter first to start the executor (simulacrum)
     let (output, mut adapter) =
-        create_adapter::<SuiTestAdapter>(path, Some(Arc::new(PRE_COMPILED.clone()))).await?;
+        create_adapter::<IotaTestAdapter>(path, Some(Arc::new(PRE_COMPILED.clone()))).await?;
 
     // configure access to the off-chain reader
     let cluster = OffchainCluster::new(adapter.offchain_config.as_ref().unwrap()).await;

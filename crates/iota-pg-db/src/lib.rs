@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::anyhow;
@@ -175,7 +176,7 @@ impl Default for DbArgs {
     fn default() -> Self {
         Self {
             database_url: Url::parse(
-                "postgres://postgres:postgrespw@localhost:5432/sui_indexer_alt",
+                "postgres://postgres:postgrespw@localhost:5432/iota_indexer_alt",
             )
             .unwrap(),
             db_connection_pool_size: 100,

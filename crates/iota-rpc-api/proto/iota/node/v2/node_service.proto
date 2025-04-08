@@ -1,19 +1,19 @@
-// The sui.node.v2 package contains API definitions for services that are
+// The iota.node.v2 package contains API definitions for services that are
 // expected to run on Fullnodes.
 syntax = "proto3";
 
-package sui.node.v2;
+package iota.node.v2;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
-import "sui/types/types.proto";
+import "iota/types/types.proto";
 
 //
 // RPC Node interface
 //
 
-// Service for reading data from a Sui Fullnode.
+// Service for reading data from a IOTA Fullnode.
 service NodeService {
   // Query a node for information about its current state.
   rpc GetNodeInfo(GetNodeInfoRequest) returns (GetNodeInfoResponse);
@@ -94,7 +94,7 @@ message GetNodeInfoResponse {
   //
   // The chain identifier is the digest of the genesis checkpoint, the
   // checkpoint with sequence number 0.
-  optional sui.types.Digest chain_id = 1;
+  optional iota.types.Digest chain_id = 1;
 
   // Human-readable name of the chain that this node is on.
   //
@@ -116,13 +116,13 @@ message GetNodeInfoResponse {
   // The lowest checkpoint for which object data is available.
   optional uint64 lowest_available_checkpoint_objects = 7;
 
-  // Software version of the `sui-node` binary.
+  // Software version of the `iota-node` binary.
   optional string software_version = 8;
 }
 
 // Request message for NodeService.GetCommittee.
 message GetCommitteeRequest {
-  // Optional. Request the sui.types.ValidatorCommittee corresponding to the
+  // Optional. Request the iota.types.ValidatorCommittee corresponding to the
   // provided epoch. If no epoch is provided the committee for the current
   // epoch will be returned.
   optional uint64 epoch = 1;
@@ -131,13 +131,13 @@ message GetCommitteeRequest {
 // Response message for `NodeService.GetCommittee`.
 message GetCommitteeResponse {
   // The committee of either the requested epoch or the current epoch.
-  optional sui.types.ValidatorCommittee committee = 1;
+  optional iota.types.ValidatorCommittee committee = 1;
 }
 
 // Request message for `NodeService.GetTransaction`.
 message GetTransactionRequest {
   // Required. The digest of the requested transaction.
-  optional sui.types.Digest digest = 1;
+  optional iota.types.Digest digest = 1;
 
   // DEPRECATED To be removed in the next release
   optional GetTransactionOptions options = 3;
@@ -148,7 +148,7 @@ message GetTransactionRequest {
 
 // DEPRECATED To be removed in the next release
 message GetTransactionOptions {
-  // Include the `sui.types.Transaction` message in the response.
+  // Include the `iota.types.Transaction` message in the response.
   //
   // Defaults to `false` if not included.
   optional bool transaction = 1;
@@ -156,7 +156,7 @@ message GetTransactionOptions {
   //
   // Defaults to `false` if not included.
   optional bool transaction_bcs = 2;
-  // Include the set of `sui.types.UserSignature`s in the response.
+  // Include the set of `iota.types.UserSignature`s in the response.
   //
   // Defaults to `false` if not included.
   optional bool signatures = 3;
@@ -164,7 +164,7 @@ message GetTransactionOptions {
   //
   // Defaults to `false` if not included.
   optional bool signatures_bytes = 8;
-  // Include the `sui.types.TransactionEffects` message in the response.
+  // Include the `iota.types.TransactionEffects` message in the response.
   //
   // Defaults to `false` if not included.
   optional bool effects = 4;
@@ -172,7 +172,7 @@ message GetTransactionOptions {
   //
   // Defaults to `false` if not included.
   optional bool effects_bcs = 5;
-  // Include the `sui.types.TransactionEvents` message in the response.
+  // Include the `iota.types.TransactionEvents` message in the response.
   //
   // Defaults to `false` if not included.
   optional bool events = 6;
@@ -184,46 +184,46 @@ message GetTransactionOptions {
 
 // Response message for `NodeService.GetTransactio`n.
 message GetTransactionResponse {
-  // The digest of this [Transaction](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.Transaction.html).
-  optional sui.types.Digest digest = 1;
+  // The digest of this [Transaction](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.Transaction.html).
+  optional iota.types.Digest digest = 1;
 
   // Optional. The transaction itself.
-  optional sui.types.Transaction transaction = 2;
+  optional iota.types.Transaction transaction = 2;
 
   // Optional. The
-  // [Transaction](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.Transaction.html)
+  // [Transaction](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.Transaction.html)
   // encoded as BCS bytes.
-  optional sui.types.Bcs transaction_bcs = 3;
+  optional iota.types.Bcs transaction_bcs = 3;
 
   // Optional. List of user signatures that are used to authorize the
   // execution of this transaction.
-  repeated sui.types.UserSignature signatures = 4;
+  repeated iota.types.UserSignature signatures = 4;
 
   // Optional. List of
-  // [UserSignature](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.UserSignature.html)s
+  // [UserSignature](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.UserSignature.html)s
   // encoded as bytes.
   repeated bytes signatures_bytes = 11;
 
   // Optional. The `TransactionEffects` for this transaction.
-  optional sui.types.TransactionEffects effects = 5;
+  optional iota.types.TransactionEffects effects = 5;
 
   // Optional. The
-  // [TransactionEffects](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.TransactionEffects.html)
+  // [TransactionEffects](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.TransactionEffects.html)
   // for this transaction encoded as BCS bytes.
-  optional sui.types.Bcs effects_bcs = 6;
+  optional iota.types.Bcs effects_bcs = 6;
 
   // Optional. The `TransactionEvents` for this transaction.
   //
   // This field might be empty, even if it was explicitly requested, if the
   // transaction didn't produce any events.
-  // `sui.types.TransactionEffects.events_digest` is populated if the
+  // `iota.types.TransactionEffects.events_digest` is populated if the
   // transaction produced any events.
-  optional sui.types.TransactionEvents events = 7;
+  optional iota.types.TransactionEvents events = 7;
 
   // Optional. The
-  // [TransactionEvents](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.TransactionEvents.html)
+  // [TransactionEvents](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.TransactionEvents.html)
   // for this transaction encoded as BCS bytes.
-  optional sui.types.Bcs events_bcs = 8;
+  optional iota.types.Bcs events_bcs = 8;
 
   // The sequence number for the checkpoint that includes this transaction.
   optional uint64 checkpoint = 9;
@@ -235,7 +235,7 @@ message GetTransactionResponse {
 // Request message for `NodeService.GetObject`.
 message GetObjectRequest {
   // Required. The `ObjectId` of the requested object.
-  optional sui.types.ObjectId object_id = 1;
+  optional iota.types.ObjectId object_id = 1;
 
   // Optional. Request that a specific version of the requested object is
   // returned. If no version is provided, then then the latest version for
@@ -251,7 +251,7 @@ message GetObjectRequest {
 
 // DEPRECATED To be removed in the next release
 message GetObjectOptions {
-  // Include the `sui.types.Object` message in the response.
+  // Include the `iota.types.Object` message in the response.
   //
   // Defaults to `false` if not included.
   optional bool object = 1;
@@ -265,21 +265,21 @@ message GetObjectOptions {
 // Response message for `NodeService.GetObject`.
 message GetObjectResponse {
   // The `ObjectId` of this object.
-  optional sui.types.ObjectId object_id = 1;
+  optional iota.types.ObjectId object_id = 1;
 
   // The version of this object.
   optional uint64 version = 2;
 
   // The digest of this object.
-  optional sui.types.Digest digest = 3;
+  optional iota.types.Digest digest = 3;
 
   // Optional. The object itself.
-  optional sui.types.Object object = 4;
+  optional iota.types.Object object = 4;
 
   // Optional. The
-  // [Object](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.Object.html)
+  // [Object](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.Object.html)
   // encoded as BCS bytes.
-  optional sui.types.Bcs object_bcs = 5;
+  optional iota.types.Bcs object_bcs = 5;
 }
 
 // Request message for `NodeService.GetCheckpoint`.
@@ -292,7 +292,7 @@ message GetCheckpointRequest {
   optional uint64 sequence_number = 1;
 
   // Optional. The digest of the requested checkpoint.
-  optional sui.types.Digest digest = 2;
+  optional iota.types.Digest digest = 2;
 
   // DEPRECATED To be removed in the next release
   optional GetCheckpointOptions options = 3;
@@ -303,7 +303,7 @@ message GetCheckpointRequest {
 
 // DEPRECATED To be removed in the next release
 message GetCheckpointOptions {
-  // Include the `sui.types.CheckpointSummary` in the response.
+  // Include the `iota.types.CheckpointSummary` in the response.
   //
   // Defaults to `false` if not included.
   optional bool summary = 3;
@@ -313,12 +313,12 @@ message GetCheckpointOptions {
   // Defaults to `false` if not included.
   optional bool summary_bcs = 4;
 
-  // Include the `sui.types.ValidatorAggregatedSignature` in the response.
+  // Include the `iota.types.ValidatorAggregatedSignature` in the response.
   //
   // Defaults to `false` if not included.
   optional bool signature = 5;
 
-  // Include the `sui.types.CheckpointContents` message in the response.
+  // Include the `iota.types.CheckpointContents` message in the response.
   //
   // Defaults to `false` if not included.
   optional bool contents = 6;
@@ -335,27 +335,27 @@ message GetCheckpointResponse {
   optional uint64 sequence_number = 1;
 
   // The digest of this checkpoint's `CheckpointSummary`.
-  optional sui.types.Digest digest = 2;
+  optional iota.types.Digest digest = 2;
 
   // Optional. The `CheckpointSummary` for this checkpoint.
-  optional sui.types.CheckpointSummary summary = 3;
+  optional iota.types.CheckpointSummary summary = 3;
 
   // Optional. The
-  // [CheckpointSummary](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.CheckpointSummary.html)
+  // [CheckpointSummary](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.CheckpointSummary.html)
   // for this checkpoint encoded as BCS bytes.
-  optional sui.types.Bcs summary_bcs = 4;
+  optional iota.types.Bcs summary_bcs = 4;
 
   // Optional. An aggregated quorum signature from the validator committee that
   // certifies this checkpoint.
-  optional sui.types.ValidatorAggregatedSignature signature = 5;
+  optional iota.types.ValidatorAggregatedSignature signature = 5;
 
   // Optional. The `CheckpointContents` for this checkpoint.
-  optional sui.types.CheckpointContents contents = 6;
+  optional iota.types.CheckpointContents contents = 6;
 
   // Optional. The
-  // [CheckpointContents](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.CheckpointContents.html)
+  // [CheckpointContents](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.CheckpointContents.html)
   // for this checkpoint encoded as BCS bytes.
-  optional sui.types.Bcs contents_bcs = 7;
+  optional iota.types.Bcs contents_bcs = 7;
 }
 
 // Request message for `NodeService.GetFullCheckpoint`.
@@ -368,7 +368,7 @@ message GetFullCheckpointRequest {
   optional uint64 sequence_number = 1;
 
   // Optional. The digest of the requested checkpoint.
-  optional sui.types.Digest digest = 2;
+  optional iota.types.Digest digest = 2;
 
   // DEPRECATED To be removed in the next release
   optional GetFullCheckpointOptions options = 3;
@@ -379,7 +379,7 @@ message GetFullCheckpointRequest {
 
 // DEPRECATED To be removed in the next release
 message GetFullCheckpointOptions {
-  // Include the `sui.types.CheckpointSummary` in the response.
+  // Include the `iota.types.CheckpointSummary` in the response.
   //
   // Defaults to `false` if not included.
   optional bool summary = 3;
@@ -389,12 +389,12 @@ message GetFullCheckpointOptions {
   // Defaults to `false` if not included.
   optional bool summary_bcs = 4;
 
-  // Include the `sui.types.ValidatorAggregatedSignature` in the response.
+  // Include the `iota.types.ValidatorAggregatedSignature` in the response.
   //
   // Defaults to `false` if not included.
   optional bool signature = 5;
 
-  // Include the `sui.types.CheckpointContents` message in the response.
+  // Include the `iota.types.CheckpointContents` message in the response.
   //
   // Defaults to `false` if not included.
   optional bool contents = 6;
@@ -404,7 +404,7 @@ message GetFullCheckpointOptions {
   // Defaults to `false` if not included.
   optional bool contents_bcs = 7;
 
-  // Include the `sui.types.Transaction` message in the response.
+  // Include the `iota.types.Transaction` message in the response.
   //
   // Defaults to `false` if not included.
   optional bool transaction = 8;
@@ -414,7 +414,7 @@ message GetFullCheckpointOptions {
   // Defaults to `false` if not included.
   optional bool transaction_bcs = 9;
 
-  // Include the `sui.types.TransactionEffects` message in the response.
+  // Include the `iota.types.TransactionEffects` message in the response.
   //
   // Defaults to `false` if not included.
   optional bool effects = 10;
@@ -424,7 +424,7 @@ message GetFullCheckpointOptions {
   // Defaults to `false` if not included.
   optional bool effects_bcs = 11;
 
-  // Include the `sui.types.TransactionEvents` message in the response.
+  // Include the `iota.types.TransactionEvents` message in the response.
   //
   // Defaults to `false` if not included.
   optional bool events = 12;
@@ -444,7 +444,7 @@ message GetFullCheckpointOptions {
   // Defaults to `false` if not included.
   optional bool output_objects = 15;
 
-  // Include the `sui.types.Object` message in the response.
+  // Include the `iota.types.Object` message in the response.
   //
   // Defaults to `false` if not included.
   optional bool object = 16;
@@ -460,27 +460,27 @@ message GetFullCheckpointResponse {
   // The sequence number of this checkpoint.
   optional uint64 sequence_number = 1;
   // The digest of this checkpoint's `CheckpointSummary`.
-  optional sui.types.Digest digest = 2;
+  optional iota.types.Digest digest = 2;
 
   // Optional. The `CheckpointSummary` for this checkpoint.
-  optional sui.types.CheckpointSummary summary = 3;
+  optional iota.types.CheckpointSummary summary = 3;
 
   // Optional. The
-  // [CheckpointSummary](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.CheckpointSummary.html)
+  // [CheckpointSummary](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.CheckpointSummary.html)
   // for this checkpoint encoded as BCS bytes.
-  optional sui.types.Bcs summary_bcs = 4;
+  optional iota.types.Bcs summary_bcs = 4;
 
   // Optional. An aggregated quorum signature from the validator committee that
   // certifies this checkpoint.
-  optional sui.types.ValidatorAggregatedSignature signature = 5;
+  optional iota.types.ValidatorAggregatedSignature signature = 5;
 
   // Optional. The `CheckpointContents` for this checkpoint.
-  optional sui.types.CheckpointContents contents = 6;
+  optional iota.types.CheckpointContents contents = 6;
 
   // Optional. The
-  // [CheckpointContents](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.CheckpointContents.html)
+  // [CheckpointContents](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.CheckpointContents.html)
   // for this checkpoint encoded as BCS bytes.
-  optional sui.types.Bcs contents_bcs = 7;
+  optional iota.types.Bcs contents_bcs = 7;
 
   // List of transactions included in this checkpoint.
   repeated FullCheckpointTransaction transactions = 8;
@@ -489,36 +489,36 @@ message GetFullCheckpointResponse {
 // A transaction, with all of its inputs and outputs.
 message FullCheckpointTransaction {
   // The digest of this transaction.
-  optional sui.types.Digest digest = 1;
+  optional iota.types.Digest digest = 1;
 
   // Optional. The transaction itself.
-  optional sui.types.Transaction transaction = 2;
+  optional iota.types.Transaction transaction = 2;
 
   // Optional. The
-  // [Transaction](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.Transaction.html)
+  // [Transaction](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.Transaction.html)
   // encoded as BCS bytes.
-  optional sui.types.Bcs transaction_bcs = 3;
+  optional iota.types.Bcs transaction_bcs = 3;
 
   // Optional. The `TransactionEffects` for this transaction.
-  optional sui.types.TransactionEffects effects = 5;
+  optional iota.types.TransactionEffects effects = 5;
 
   // Optional. The
-  // [TransactionEffects](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.TransactionEffects.html)
+  // [TransactionEffects](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.TransactionEffects.html)
   // for this transaction encoded as BCS bytes.
-  optional sui.types.Bcs effects_bcs = 6;
+  optional iota.types.Bcs effects_bcs = 6;
 
   // Optional. The `TransactionEvents` for this transaction.
   //
   // This field might be empty, even if it was explicitly requested, if the
   // transaction didn't produce any events.
-  // `sui.types.TransactionEffects.events_digest` is populated if the
+  // `iota.types.TransactionEffects.events_digest` is populated if the
   // transaction produced any events.
-  optional sui.types.TransactionEvents events = 7;
+  optional iota.types.TransactionEvents events = 7;
 
   // Optional. The
-  // [TransactionEvents](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.TransactionEvents.html)
+  // [TransactionEvents](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.TransactionEvents.html)
   // for this transaction encoded as BCS bytes.
-  optional sui.types.Bcs events_bcs = 8;
+  optional iota.types.Bcs events_bcs = 8;
 
   // DEPRECATED To be removed in the next release
   optional FullCheckpointObjects input_objects_old = 11;
@@ -542,21 +542,21 @@ message FullCheckpointObjects {
 // An object used by or produced from a transaction.
 message FullCheckpointObject {
   // The `ObjectId` of this object.
-  optional sui.types.ObjectId object_id = 1;
+  optional iota.types.ObjectId object_id = 1;
 
   // The version of this object.
   optional uint64 version = 2;
 
   // The digest of this object.
-  optional sui.types.Digest digest = 3;
+  optional iota.types.Digest digest = 3;
 
   // Optional. The object itself.
-  optional sui.types.Object object = 4;
+  optional iota.types.Object object = 4;
 
   // Optional. The
-  // [object](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.Object.html)
+  // [object](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.Object.html)
   // encoded as BCS bytes.
-  optional sui.types.Bcs object_bcs = 5;
+  optional iota.types.Bcs object_bcs = 5;
 }
 
 // Request message for `NodeService.ExecuteTransaction`.
@@ -564,14 +564,14 @@ message FullCheckpointObject {
 // Note: You must provide only one of `transaction` or `transaction_bcs`.
 message ExecuteTransactionRequest {
   // Optional. The transaction to execute.
-  optional sui.types.Transaction transaction = 1;
+  optional iota.types.Transaction transaction = 1;
 
   // Optional. The transaction to execute, encoded as BCS bytes.
-  optional sui.types.Bcs transaction_bcs = 2;
+  optional iota.types.Bcs transaction_bcs = 2;
 
   // Optional. Set of `UserSiganture`s authorizing the execution of the provided
   // transaction.
-  repeated sui.types.UserSignature signatures = 3;
+  repeated iota.types.UserSignature signatures = 3;
 
   // Optional. Set of `UserSiganture`s authorizing the execution of the provided
   // transaction, encoded as bytes.
@@ -586,7 +586,7 @@ message ExecuteTransactionRequest {
 
 // DEPRECATED To be removed in the next release
 message ExecuteTransactionOptions {
-  // Include the `sui.types.TransactionEffects` message in the response.
+  // Include the `iota.types.TransactionEffects` message in the response.
   //
   // Defaults to `false` if not included.
   optional bool effects = 4;
@@ -596,7 +596,7 @@ message ExecuteTransactionOptions {
   // Defaults to `false` if not included.
   optional bool effects_bcs = 5;
 
-  // Include the `sui.types.TransactionEvents` message in the response.
+  // Include the `iota.types.TransactionEvents` message in the response.
   //
   // Defaults to `false` if not included.
   optional bool events = 6;
@@ -618,25 +618,25 @@ message ExecuteTransactionResponse {
   optional EffectsFinality finality = 1;
 
   // Optional. The `TransactionEffects` for this transaction.
-  optional sui.types.TransactionEffects effects = 2;
+  optional iota.types.TransactionEffects effects = 2;
 
   // Optional. The
-  // [TransactionEffects](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.TransactionEffects.html)
+  // [TransactionEffects](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.TransactionEffects.html)
   // for this transaction encoded as BCS bytes.
-  optional sui.types.Bcs effects_bcs = 3;
+  optional iota.types.Bcs effects_bcs = 3;
 
   // Optional. The `TransactionEvents` for this transaction.
   //
   // This field might be empty, even if it was explicitly requested, if the
   // transaction didn't produce any events.
-  // `sui.types.TransactionEffects.events_digest` is populated if the
+  // `iota.types.TransactionEffects.events_digest` is populated if the
   // transaction produced any events.
-  optional sui.types.TransactionEvents events = 4;
+  optional iota.types.TransactionEvents events = 4;
 
   // Optional. The
-  // [TransactionEvents](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.TransactionEvents.html)
+  // [TransactionEvents](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.TransactionEvents.html)
   // for this transaction encoded as BCS bytes.
-  optional sui.types.Bcs events_bcs = 5;
+  optional iota.types.Bcs events_bcs = 5;
 
   // Optional. Set of balance change events as a result of this transaction.
   //
@@ -648,13 +648,13 @@ message ExecuteTransactionResponse {
 // The delta, or change, in balance for an address for a particular `Coin` type.
 message BalanceChange {
   // The account address that is affected by this balance change event.
-  optional sui.types.Address address = 1;
+  optional iota.types.Address address = 1;
 
   // The `Coin` type of this balance change event.
-  optional sui.types.TypeTag coin_type = 2;
+  optional iota.types.TypeTag coin_type = 2;
 
   // The amount or change in balance.
-  optional sui.types.I128 amount = 3;
+  optional iota.types.I128 amount = 3;
 }
 
 // Indicates the finality of the executed transaction.
@@ -662,7 +662,7 @@ message EffectsFinality {
   oneof finality {
     // A quorum certificate certifying that a transaction is final but might not
     // be included in a checkpoint yet.
-    sui.types.ValidatorAggregatedSignature certified = 1;
+    iota.types.ValidatorAggregatedSignature certified = 1;
 
     // Sequence number of the checkpoint that includes the transaction.
     uint64 checkpointed = 2;

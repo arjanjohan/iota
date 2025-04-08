@@ -1,17 +1,18 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Context as _;
 use futures::future::OptionFuture;
 use move_core_types::annotated_value::MoveTypeLayout;
-use sui_json_rpc_types::{
-    SuiData, SuiObjectData, SuiObjectDataOptions, SuiObjectRef, SuiObjectResponse, SuiParsedData,
-    SuiPastObjectResponse, SuiRawData,
+use iota_json_rpc_types::{
+    IotaData, IotaObjectData, IotaObjectDataOptions, IotaObjectRef, IotaObjectResponse, IotaParsedData,
+    IotaPastObjectResponse, IotaRawData,
 };
-use sui_types::{
+use iota_types::{
     base_types::{ObjectID, ObjectType, SequenceNumber},
     digests::ObjectDigest,
-    error::SuiObjectResponseError,
+    error::IotaObjectResponseError,
     object::{Data, Object},
     TypeTag,
 };
@@ -31,16 +32,16 @@ use crate::{
 pub(super) async fn live_object(
     ctx: &Context,
     object_id: ObjectID,
-    options: &SuiObjectDataOptions,
-) -> Result<SuiObjectResponse, RpcError> {
+    options: &IotaObjectDataOptions,
+) -> Result<IotaObjectResponse, RpcError> {
     let Some(info) = ctx
         .loader()
         .load_one(LatestObjectInfoKey(object_id))
         .await
         .context("Failed to load object ownership information from store")?
     else {
-        return Ok(SuiObjectResponse::new_with_error(
-            SuiObjectResponseError::NotExists { object_id },
+        return Ok(IotaObjectResponse::new_with_error(
+            IotaObjectResponseError::NotExists { object_id },
         ));
     };
 
@@ -49,8 +50,8 @@ pub(super) async fn live_object(
     // out of the available range, this record will be deleted too, so we return a `NotExists`
     // error instead of a `Deleted` error for consistency with the above error case.
     if info.owner_kind.is_none() {
-        return Ok(SuiObjectResponse::new_with_error(
-            SuiObjectResponseError::NotExists { object_id },
+        return Ok(IotaObjectResponse::new_with_error(
+            IotaObjectResponseError::NotExists { object_id },
         ));
     }
 
@@ -63,8 +64,8 @@ pub(super) async fn live_object(
 pub(super) async fn latest_object(
     ctx: &Context,
     object_id: ObjectID,
-    options: &SuiObjectDataOptions,
-) -> Result<SuiObjectResponse, RpcError> {
+    options: &IotaObjectDataOptions,
+) -> Result<IotaObjectResponse, RpcError> {
     // The fact that we found an `obj_info` record above means that the latest version of the
     // object does exist, so the following calls should find a valid latest version for the object,
     // and that version is expected to have content, so if either of those things don't happen,
@@ -80,7 +81,7 @@ pub(super) async fn latest_object(
 
     let version = SequenceNumber::from_u64(stored.object_version as u64);
 
-    Ok(SuiObjectResponse::new_with_data(
+    Ok(IotaObjectResponse::new_with_data(
         object(ctx, object_id, version, bytes, options).await?,
     ))
 }
@@ -91,26 +92,26 @@ pub(super) async fn past_object(
     ctx: &Context,
     object_id: ObjectID,
     version: SequenceNumber,
-    options: &SuiObjectDataOptions,
-) -> Result<SuiPastObjectResponse, RpcError> {
+    options: &IotaObjectDataOptions,
+) -> Result<IotaPastObjectResponse, RpcError> {
     let Some(stored) = ctx
         .loader()
         .load_one(VersionedObjectKey(object_id, version.value()))
         .await
         .context("Failed to load object from store")?
     else {
-        return Ok(SuiPastObjectResponse::VersionNotFound(object_id, version));
+        return Ok(IotaPastObjectResponse::VersionNotFound(object_id, version));
     };
 
     let Some(bytes) = &stored.serialized_object else {
-        return Ok(SuiPastObjectResponse::ObjectDeleted(SuiObjectRef {
+        return Ok(IotaPastObjectResponse::ObjectDeleted(IotaObjectRef {
             object_id,
             version,
             digest: ObjectDigest::OBJECT_DIGEST_DELETED,
         }));
     };
 
-    Ok(SuiPastObjectResponse::VersionFound(
+    Ok(IotaPastObjectResponse::VersionFound(
         object(ctx, object_id, version, bytes, options).await?,
     ))
 }
@@ -121,8 +122,8 @@ pub(crate) async fn object(
     object_id: ObjectID,
     version: SequenceNumber,
     bytes: &[u8],
-    options: &SuiObjectDataOptions,
-) -> Result<SuiObjectData, RpcError> {
+    options: &IotaObjectDataOptions,
+) -> Result<IotaObjectData, RpcError> {
     let object: Object = bcs::from_bytes(bytes).context("Failed to deserialize object")?;
 
     let type_ = options.show_type.then(|| ObjectType::from(&object));
@@ -134,12 +135,12 @@ pub(crate) async fn object(
 
     let content: OptionFuture<_> = options
         .show_content
-        .then(|| object_data::<SuiParsedData>(ctx, &object))
+        .then(|| object_data::<IotaParsedData>(ctx, &object))
         .into();
 
     let bcs: OptionFuture<_> = options
         .show_bcs
-        .then(|| object_data::<SuiRawData>(ctx, &object))
+        .then(|| object_data::<IotaRawData>(ctx, &object))
         .into();
 
     let (content, bcs) = join!(content, bcs);
@@ -152,7 +153,7 @@ pub(crate) async fn object(
         .transpose()
         .context("Failed to deserialize object to BCS")?;
 
-    Ok(SuiObjectData {
+    Ok(IotaObjectData {
         object_id,
         version,
         digest: object.digest(),
@@ -168,7 +169,7 @@ pub(crate) async fn object(
 
 /// Extract the contents of an object, in a format chosen by the `D` type parameter.
 /// This operaton can fail if it's not possible to get the type layout for the object's type.
-async fn object_data<D: SuiData>(ctx: &Context, object: &Object) -> Result<D, RpcError> {
+async fn object_data<D: IotaData>(ctx: &Context, object: &Object) -> Result<D, RpcError> {
     Ok(match object.data.clone() {
         Data::Package(move_package) => D::try_from_package(move_package)?,
 

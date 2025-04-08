@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{env, fs::File};
@@ -6,7 +7,7 @@ use std::{
     io::{BufWriter, Write},
     path::Path,
 };
-use sui_framework_snapshot::{load_bytecode_snapshot_manifest, manifest_path};
+use iota_framework_snapshot::{load_bytecode_snapshot_manifest, manifest_path};
 
 /// Output a file `OUT_DIR/framework_version_table.rs` containing the contents of the manifest as a
 /// rust literal of type `[(ProtocolVersion, FrameworkVersion)]`. This is included as the

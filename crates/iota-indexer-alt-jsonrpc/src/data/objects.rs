@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::HashMap, sync::Arc};
@@ -6,8 +7,8 @@ use std::{collections::HashMap, sync::Arc};
 use anyhow::Context as _;
 use async_graphql::dataloader::{DataLoader, Loader};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl};
-use sui_indexer_alt_schema::{objects::StoredObject, schema::kv_objects};
-use sui_types::base_types::ObjectID;
+use iota_indexer_alt_schema::{objects::StoredObject, schema::kv_objects};
+use iota_types::base_types::ObjectID;
 
 use super::{
     object_versions::LatestObjectVersionKey,

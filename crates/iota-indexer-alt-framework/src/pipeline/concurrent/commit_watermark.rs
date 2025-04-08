@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -7,7 +8,7 @@ use std::{
     sync::Arc,
 };
 
-use sui_pg_db::Db;
+use iota_pg_db::Db;
 use tokio::{
     sync::mpsc,
     task::JoinHandle,

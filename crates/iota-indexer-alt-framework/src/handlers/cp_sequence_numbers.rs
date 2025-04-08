@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::sync::Arc;
@@ -8,8 +9,8 @@ use crate::pipeline::{concurrent::Handler, Processor};
 use crate::schema::cp_sequence_numbers;
 use anyhow::Result;
 use diesel_async::RunQueryDsl;
-use sui_pg_db::{self as db};
-use sui_types::full_checkpoint_content::CheckpointData;
+use iota_pg_db::{self as db};
+use iota_types::full_checkpoint_content::CheckpointData;
 
 pub struct CpSequenceNumbers;
 

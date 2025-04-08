@@ -1,10 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::path::PathBuf;
 
-use sui_indexer_alt_metrics::MetricsArgs;
-use sui_pg_db::DbArgs;
+use iota_indexer_alt_metrics::MetricsArgs;
+use iota_pg_db::DbArgs;
 
 use crate::{data::system_package_task::SystemPackageTaskArgs, RpcArgs};
 

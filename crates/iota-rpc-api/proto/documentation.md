@@ -3,150 +3,150 @@
 
 ## Table of Contents
 
-- [sui.node.v2.proto](#sui-node-v2-proto)
-    - [BalanceChange](#sui-node-v2-BalanceChange)
-    - [BalanceChanges](#sui-node-v2-BalanceChanges)
-    - [EffectsFinality](#sui-node-v2-EffectsFinality)
-    - [ExecuteTransactionOptions](#sui-node-v2-ExecuteTransactionOptions)
-    - [ExecuteTransactionRequest](#sui-node-v2-ExecuteTransactionRequest)
-    - [ExecuteTransactionResponse](#sui-node-v2-ExecuteTransactionResponse)
-    - [FullCheckpointObject](#sui-node-v2-FullCheckpointObject)
-    - [FullCheckpointObjects](#sui-node-v2-FullCheckpointObjects)
-    - [FullCheckpointTransaction](#sui-node-v2-FullCheckpointTransaction)
-    - [GetCheckpointOptions](#sui-node-v2-GetCheckpointOptions)
-    - [GetCheckpointRequest](#sui-node-v2-GetCheckpointRequest)
-    - [GetCheckpointResponse](#sui-node-v2-GetCheckpointResponse)
-    - [GetCommitteeRequest](#sui-node-v2-GetCommitteeRequest)
-    - [GetCommitteeResponse](#sui-node-v2-GetCommitteeResponse)
-    - [GetFullCheckpointOptions](#sui-node-v2-GetFullCheckpointOptions)
-    - [GetFullCheckpointRequest](#sui-node-v2-GetFullCheckpointRequest)
-    - [GetFullCheckpointResponse](#sui-node-v2-GetFullCheckpointResponse)
-    - [GetNodeInfoRequest](#sui-node-v2-GetNodeInfoRequest)
-    - [GetNodeInfoResponse](#sui-node-v2-GetNodeInfoResponse)
-    - [GetObjectOptions](#sui-node-v2-GetObjectOptions)
-    - [GetObjectRequest](#sui-node-v2-GetObjectRequest)
-    - [GetObjectResponse](#sui-node-v2-GetObjectResponse)
-    - [GetTransactionOptions](#sui-node-v2-GetTransactionOptions)
-    - [GetTransactionRequest](#sui-node-v2-GetTransactionRequest)
-    - [GetTransactionResponse](#sui-node-v2-GetTransactionResponse)
-    - [UserSignatures](#sui-node-v2-UserSignatures)
-    - [UserSignaturesBytes](#sui-node-v2-UserSignaturesBytes)
+- [iota.node.v2.proto](#iota-node-v2-proto)
+    - [BalanceChange](#iota-node-v2-BalanceChange)
+    - [BalanceChanges](#iota-node-v2-BalanceChanges)
+    - [EffectsFinality](#iota-node-v2-EffectsFinality)
+    - [ExecuteTransactionOptions](#iota-node-v2-ExecuteTransactionOptions)
+    - [ExecuteTransactionRequest](#iota-node-v2-ExecuteTransactionRequest)
+    - [ExecuteTransactionResponse](#iota-node-v2-ExecuteTransactionResponse)
+    - [FullCheckpointObject](#iota-node-v2-FullCheckpointObject)
+    - [FullCheckpointObjects](#iota-node-v2-FullCheckpointObjects)
+    - [FullCheckpointTransaction](#iota-node-v2-FullCheckpointTransaction)
+    - [GetCheckpointOptions](#iota-node-v2-GetCheckpointOptions)
+    - [GetCheckpointRequest](#iota-node-v2-GetCheckpointRequest)
+    - [GetCheckpointResponse](#iota-node-v2-GetCheckpointResponse)
+    - [GetCommitteeRequest](#iota-node-v2-GetCommitteeRequest)
+    - [GetCommitteeResponse](#iota-node-v2-GetCommitteeResponse)
+    - [GetFullCheckpointOptions](#iota-node-v2-GetFullCheckpointOptions)
+    - [GetFullCheckpointRequest](#iota-node-v2-GetFullCheckpointRequest)
+    - [GetFullCheckpointResponse](#iota-node-v2-GetFullCheckpointResponse)
+    - [GetNodeInfoRequest](#iota-node-v2-GetNodeInfoRequest)
+    - [GetNodeInfoResponse](#iota-node-v2-GetNodeInfoResponse)
+    - [GetObjectOptions](#iota-node-v2-GetObjectOptions)
+    - [GetObjectRequest](#iota-node-v2-GetObjectRequest)
+    - [GetObjectResponse](#iota-node-v2-GetObjectResponse)
+    - [GetTransactionOptions](#iota-node-v2-GetTransactionOptions)
+    - [GetTransactionRequest](#iota-node-v2-GetTransactionRequest)
+    - [GetTransactionResponse](#iota-node-v2-GetTransactionResponse)
+    - [UserSignatures](#iota-node-v2-UserSignatures)
+    - [UserSignaturesBytes](#iota-node-v2-UserSignaturesBytes)
   
-    - [NodeService](#sui-node-v2-NodeService)
+    - [NodeService](#iota-node-v2-NodeService)
   
-- [sui.types.proto](#sui-types-proto)
-    - [ActiveJwk](#sui-types-ActiveJwk)
-    - [Address](#sui-types-Address)
-    - [AddressDeniedForCoinError](#sui-types-AddressDeniedForCoinError)
-    - [Argument](#sui-types-Argument)
-    - [AuthenticatorStateExpire](#sui-types-AuthenticatorStateExpire)
-    - [AuthenticatorStateUpdate](#sui-types-AuthenticatorStateUpdate)
-    - [Bcs](#sui-types-Bcs)
-    - [Bn254FieldElement](#sui-types-Bn254FieldElement)
-    - [CancelledTransaction](#sui-types-CancelledTransaction)
-    - [CancelledTransactions](#sui-types-CancelledTransactions)
-    - [ChangeEpoch](#sui-types-ChangeEpoch)
-    - [ChangedObject](#sui-types-ChangedObject)
-    - [CheckpointCommitment](#sui-types-CheckpointCommitment)
-    - [CheckpointContents](#sui-types-CheckpointContents)
-    - [CheckpointContents.V1](#sui-types-CheckpointContents-V1)
-    - [CheckpointSummary](#sui-types-CheckpointSummary)
-    - [CheckpointedTransactionInfo](#sui-types-CheckpointedTransactionInfo)
-    - [CircomG1](#sui-types-CircomG1)
-    - [CircomG2](#sui-types-CircomG2)
-    - [Command](#sui-types-Command)
-    - [CommandArgumentError](#sui-types-CommandArgumentError)
-    - [CongestedObjectsError](#sui-types-CongestedObjectsError)
-    - [ConsensusCommitPrologue](#sui-types-ConsensusCommitPrologue)
-    - [ConsensusDeterminedVersionAssignments](#sui-types-ConsensusDeterminedVersionAssignments)
-    - [Digest](#sui-types-Digest)
-    - [EndOfEpochData](#sui-types-EndOfEpochData)
-    - [EndOfEpochTransaction](#sui-types-EndOfEpochTransaction)
-    - [EndOfEpochTransactionKind](#sui-types-EndOfEpochTransactionKind)
-    - [Event](#sui-types-Event)
-    - [ExecutionStatus](#sui-types-ExecutionStatus)
-    - [FailureStatus](#sui-types-FailureStatus)
-    - [GasCostSummary](#sui-types-GasCostSummary)
-    - [GasPayment](#sui-types-GasPayment)
-    - [GenesisObject](#sui-types-GenesisObject)
-    - [GenesisTransaction](#sui-types-GenesisTransaction)
-    - [I128](#sui-types-I128)
-    - [Identifier](#sui-types-Identifier)
-    - [Input](#sui-types-Input)
-    - [Jwk](#sui-types-Jwk)
-    - [JwkId](#sui-types-JwkId)
-    - [MakeMoveVector](#sui-types-MakeMoveVector)
-    - [MergeCoins](#sui-types-MergeCoins)
-    - [ModifiedAtVersion](#sui-types-ModifiedAtVersion)
-    - [MoveCall](#sui-types-MoveCall)
-    - [MoveError](#sui-types-MoveError)
-    - [MoveField](#sui-types-MoveField)
-    - [MoveLocation](#sui-types-MoveLocation)
-    - [MoveModule](#sui-types-MoveModule)
-    - [MovePackage](#sui-types-MovePackage)
-    - [MoveStruct](#sui-types-MoveStruct)
-    - [MoveStructValue](#sui-types-MoveStructValue)
-    - [MoveValue](#sui-types-MoveValue)
-    - [MoveVariant](#sui-types-MoveVariant)
-    - [MoveVector](#sui-types-MoveVector)
-    - [MultisigAggregatedSignature](#sui-types-MultisigAggregatedSignature)
-    - [MultisigCommittee](#sui-types-MultisigCommittee)
-    - [MultisigMember](#sui-types-MultisigMember)
-    - [MultisigMemberPublicKey](#sui-types-MultisigMemberPublicKey)
-    - [MultisigMemberSignature](#sui-types-MultisigMemberSignature)
-    - [NestedResult](#sui-types-NestedResult)
-    - [Object](#sui-types-Object)
-    - [ObjectData](#sui-types-ObjectData)
-    - [ObjectExist](#sui-types-ObjectExist)
-    - [ObjectId](#sui-types-ObjectId)
-    - [ObjectReference](#sui-types-ObjectReference)
-    - [ObjectReferenceWithOwner](#sui-types-ObjectReferenceWithOwner)
-    - [ObjectWrite](#sui-types-ObjectWrite)
-    - [Owner](#sui-types-Owner)
-    - [PackageIdDoesNotMatch](#sui-types-PackageIdDoesNotMatch)
-    - [PackageUpgradeError](#sui-types-PackageUpgradeError)
-    - [PackageWrite](#sui-types-PackageWrite)
-    - [PasskeyAuthenticator](#sui-types-PasskeyAuthenticator)
-    - [ProgrammableTransaction](#sui-types-ProgrammableTransaction)
-    - [Publish](#sui-types-Publish)
-    - [RandomnessStateUpdate](#sui-types-RandomnessStateUpdate)
-    - [ReadOnlyRoot](#sui-types-ReadOnlyRoot)
-    - [RoaringBitmap](#sui-types-RoaringBitmap)
-    - [SharedObjectInput](#sui-types-SharedObjectInput)
-    - [SimpleSignature](#sui-types-SimpleSignature)
-    - [SizeError](#sui-types-SizeError)
-    - [SplitCoins](#sui-types-SplitCoins)
-    - [StructTag](#sui-types-StructTag)
-    - [SystemPackage](#sui-types-SystemPackage)
-    - [Transaction](#sui-types-Transaction)
-    - [Transaction.TransactionV1](#sui-types-Transaction-TransactionV1)
-    - [TransactionEffects](#sui-types-TransactionEffects)
-    - [TransactionEffectsV1](#sui-types-TransactionEffectsV1)
-    - [TransactionEffectsV2](#sui-types-TransactionEffectsV2)
-    - [TransactionEvents](#sui-types-TransactionEvents)
-    - [TransactionExpiration](#sui-types-TransactionExpiration)
-    - [TransactionKind](#sui-types-TransactionKind)
-    - [TransferObjects](#sui-types-TransferObjects)
-    - [TypeArgumentError](#sui-types-TypeArgumentError)
-    - [TypeOrigin](#sui-types-TypeOrigin)
-    - [TypeTag](#sui-types-TypeTag)
-    - [U128](#sui-types-U128)
-    - [U256](#sui-types-U256)
-    - [UnchangedSharedObject](#sui-types-UnchangedSharedObject)
-    - [Upgrade](#sui-types-Upgrade)
-    - [UpgradeInfo](#sui-types-UpgradeInfo)
-    - [UserSignature](#sui-types-UserSignature)
-    - [ValidatorAggregatedSignature](#sui-types-ValidatorAggregatedSignature)
-    - [ValidatorCommittee](#sui-types-ValidatorCommittee)
-    - [ValidatorCommitteeMember](#sui-types-ValidatorCommitteeMember)
-    - [VersionAssignment](#sui-types-VersionAssignment)
-    - [ZkLoginAuthenticator](#sui-types-ZkLoginAuthenticator)
-    - [ZkLoginClaim](#sui-types-ZkLoginClaim)
-    - [ZkLoginInputs](#sui-types-ZkLoginInputs)
-    - [ZkLoginProof](#sui-types-ZkLoginProof)
-    - [ZkLoginPublicIdentifier](#sui-types-ZkLoginPublicIdentifier)
+- [iota.types.proto](#iota-types-proto)
+    - [ActiveJwk](#iota-types-ActiveJwk)
+    - [Address](#iota-types-Address)
+    - [AddressDeniedForCoinError](#iota-types-AddressDeniedForCoinError)
+    - [Argument](#iota-types-Argument)
+    - [AuthenticatorStateExpire](#iota-types-AuthenticatorStateExpire)
+    - [AuthenticatorStateUpdate](#iota-types-AuthenticatorStateUpdate)
+    - [Bcs](#iota-types-Bcs)
+    - [Bn254FieldElement](#iota-types-Bn254FieldElement)
+    - [CancelledTransaction](#iota-types-CancelledTransaction)
+    - [CancelledTransactions](#iota-types-CancelledTransactions)
+    - [ChangeEpoch](#iota-types-ChangeEpoch)
+    - [ChangedObject](#iota-types-ChangedObject)
+    - [CheckpointCommitment](#iota-types-CheckpointCommitment)
+    - [CheckpointContents](#iota-types-CheckpointContents)
+    - [CheckpointContents.V1](#iota-types-CheckpointContents-V1)
+    - [CheckpointSummary](#iota-types-CheckpointSummary)
+    - [CheckpointedTransactionInfo](#iota-types-CheckpointedTransactionInfo)
+    - [CircomG1](#iota-types-CircomG1)
+    - [CircomG2](#iota-types-CircomG2)
+    - [Command](#iota-types-Command)
+    - [CommandArgumentError](#iota-types-CommandArgumentError)
+    - [CongestedObjectsError](#iota-types-CongestedObjectsError)
+    - [ConsensusCommitPrologue](#iota-types-ConsensusCommitPrologue)
+    - [ConsensusDeterminedVersionAssignments](#iota-types-ConsensusDeterminedVersionAssignments)
+    - [Digest](#iota-types-Digest)
+    - [EndOfEpochData](#iota-types-EndOfEpochData)
+    - [EndOfEpochTransaction](#iota-types-EndOfEpochTransaction)
+    - [EndOfEpochTransactionKind](#iota-types-EndOfEpochTransactionKind)
+    - [Event](#iota-types-Event)
+    - [ExecutionStatus](#iota-types-ExecutionStatus)
+    - [FailureStatus](#iota-types-FailureStatus)
+    - [GasCostSummary](#iota-types-GasCostSummary)
+    - [GasPayment](#iota-types-GasPayment)
+    - [GenesisObject](#iota-types-GenesisObject)
+    - [GenesisTransaction](#iota-types-GenesisTransaction)
+    - [I128](#iota-types-I128)
+    - [Identifier](#iota-types-Identifier)
+    - [Input](#iota-types-Input)
+    - [Jwk](#iota-types-Jwk)
+    - [JwkId](#iota-types-JwkId)
+    - [MakeMoveVector](#iota-types-MakeMoveVector)
+    - [MergeCoins](#iota-types-MergeCoins)
+    - [ModifiedAtVersion](#iota-types-ModifiedAtVersion)
+    - [MoveCall](#iota-types-MoveCall)
+    - [MoveError](#iota-types-MoveError)
+    - [MoveField](#iota-types-MoveField)
+    - [MoveLocation](#iota-types-MoveLocation)
+    - [MoveModule](#iota-types-MoveModule)
+    - [MovePackage](#iota-types-MovePackage)
+    - [MoveStruct](#iota-types-MoveStruct)
+    - [MoveStructValue](#iota-types-MoveStructValue)
+    - [MoveValue](#iota-types-MoveValue)
+    - [MoveVariant](#iota-types-MoveVariant)
+    - [MoveVector](#iota-types-MoveVector)
+    - [MultisigAggregatedSignature](#iota-types-MultisigAggregatedSignature)
+    - [MultisigCommittee](#iota-types-MultisigCommittee)
+    - [MultisigMember](#iota-types-MultisigMember)
+    - [MultisigMemberPublicKey](#iota-types-MultisigMemberPublicKey)
+    - [MultisigMemberSignature](#iota-types-MultisigMemberSignature)
+    - [NestedResult](#iota-types-NestedResult)
+    - [Object](#iota-types-Object)
+    - [ObjectData](#iota-types-ObjectData)
+    - [ObjectExist](#iota-types-ObjectExist)
+    - [ObjectId](#iota-types-ObjectId)
+    - [ObjectReference](#iota-types-ObjectReference)
+    - [ObjectReferenceWithOwner](#iota-types-ObjectReferenceWithOwner)
+    - [ObjectWrite](#iota-types-ObjectWrite)
+    - [Owner](#iota-types-Owner)
+    - [PackageIdDoesNotMatch](#iota-types-PackageIdDoesNotMatch)
+    - [PackageUpgradeError](#iota-types-PackageUpgradeError)
+    - [PackageWrite](#iota-types-PackageWrite)
+    - [PasskeyAuthenticator](#iota-types-PasskeyAuthenticator)
+    - [ProgrammableTransaction](#iota-types-ProgrammableTransaction)
+    - [Publish](#iota-types-Publish)
+    - [RandomnessStateUpdate](#iota-types-RandomnessStateUpdate)
+    - [ReadOnlyRoot](#iota-types-ReadOnlyRoot)
+    - [RoaringBitmap](#iota-types-RoaringBitmap)
+    - [SharedObjectInput](#iota-types-SharedObjectInput)
+    - [SimpleSignature](#iota-types-SimpleSignature)
+    - [SizeError](#iota-types-SizeError)
+    - [SplitCoins](#iota-types-SplitCoins)
+    - [StructTag](#iota-types-StructTag)
+    - [SystemPackage](#iota-types-SystemPackage)
+    - [Transaction](#iota-types-Transaction)
+    - [Transaction.TransactionV1](#iota-types-Transaction-TransactionV1)
+    - [TransactionEffects](#iota-types-TransactionEffects)
+    - [TransactionEffectsV1](#iota-types-TransactionEffectsV1)
+    - [TransactionEffectsV2](#iota-types-TransactionEffectsV2)
+    - [TransactionEvents](#iota-types-TransactionEvents)
+    - [TransactionExpiration](#iota-types-TransactionExpiration)
+    - [TransactionKind](#iota-types-TransactionKind)
+    - [TransferObjects](#iota-types-TransferObjects)
+    - [TypeArgumentError](#iota-types-TypeArgumentError)
+    - [TypeOrigin](#iota-types-TypeOrigin)
+    - [TypeTag](#iota-types-TypeTag)
+    - [U128](#iota-types-U128)
+    - [U256](#iota-types-U256)
+    - [UnchangedSharedObject](#iota-types-UnchangedSharedObject)
+    - [Upgrade](#iota-types-Upgrade)
+    - [UpgradeInfo](#iota-types-UpgradeInfo)
+    - [UserSignature](#iota-types-UserSignature)
+    - [ValidatorAggregatedSignature](#iota-types-ValidatorAggregatedSignature)
+    - [ValidatorCommittee](#iota-types-ValidatorCommittee)
+    - [ValidatorCommitteeMember](#iota-types-ValidatorCommitteeMember)
+    - [VersionAssignment](#iota-types-VersionAssignment)
+    - [ZkLoginAuthenticator](#iota-types-ZkLoginAuthenticator)
+    - [ZkLoginClaim](#iota-types-ZkLoginClaim)
+    - [ZkLoginInputs](#iota-types-ZkLoginInputs)
+    - [ZkLoginProof](#iota-types-ZkLoginProof)
+    - [ZkLoginPublicIdentifier](#iota-types-ZkLoginPublicIdentifier)
   
-    - [SignatureScheme](#sui-types-SignatureScheme)
+    - [SignatureScheme](#iota-types-SignatureScheme)
   
 - [google/protobuf/empty.proto](#google_protobuf_empty-proto)
     - [Empty](#google-protobuf-Empty)
@@ -158,15 +158,15 @@
 
 
 
-<a name="sui-node-v2-proto"></a>
+<a name="iota-node-v2-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## sui.node.v2.proto
-The sui.node.v2 package contains API definitions for services that are
+## iota.node.v2.proto
+The iota.node.v2 package contains API definitions for services that are
 expected to run on Full nodes.
 
 
-<a name="sui-node-v2-BalanceChange"></a>
+<a name="iota-node-v2-BalanceChange"></a>
 
 ### BalanceChange
 The delta, or change, in balance for an address for a particular `Coin` type.
@@ -174,16 +174,16 @@ The delta, or change, in balance for an address for a particular `Coin` type.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| address | [sui.types.Address](#sui-types-Address) | optional | The account address that is affected by this balance change event. |
-| coin_type | [sui.types.TypeTag](#sui-types-TypeTag) | optional | The `Coin` type of this balance change event. |
-| amount | [sui.types.I128](#sui-types-I128) | optional | The amount or change in balance. |
+| address | [iota.types.Address](#iota-types-Address) | optional | The account address that is affected by this balance change event. |
+| coin_type | [iota.types.TypeTag](#iota-types-TypeTag) | optional | The `Coin` type of this balance change event. |
+| amount | [iota.types.I128](#iota-types-I128) | optional | The amount or change in balance. |
 
 
 
 
 
 
-<a name="sui-node-v2-BalanceChanges"></a>
+<a name="iota-node-v2-BalanceChanges"></a>
 
 ### BalanceChanges
 Set of `BalanceChange`s that occurred as the result of a transaction.
@@ -194,14 +194,14 @@ type objects.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| balance_changes | [BalanceChange](#sui-node-v2-BalanceChange) | repeated |  |
+| balance_changes | [BalanceChange](#iota-node-v2-BalanceChange) | repeated |  |
 
 
 
 
 
 
-<a name="sui-node-v2-EffectsFinality"></a>
+<a name="iota-node-v2-EffectsFinality"></a>
 
 ### EffectsFinality
 Indicates the finality of the executed transaction.
@@ -209,7 +209,7 @@ Indicates the finality of the executed transaction.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| certified | [sui.types.ValidatorAggregatedSignature](#sui-types-ValidatorAggregatedSignature) |  | A quorum certificate certifying that a transaction is final but might not be included in a checkpoint yet. |
+| certified | [iota.types.ValidatorAggregatedSignature](#iota-types-ValidatorAggregatedSignature) |  | A quorum certificate certifying that a transaction is final but might not be included in a checkpoint yet. |
 | checkpointed | [uint64](#uint64) |  | Sequence number of the checkpoint that includes the transaction. |
 | quorum_executed | [google.protobuf.Empty](#google-protobuf-Empty) |  | Indicates that a quorum of validators has executed the transaction but that it might not be included in a checkpoint yet. |
 
@@ -218,7 +218,7 @@ Indicates the finality of the executed transaction.
 
 
 
-<a name="sui-node-v2-ExecuteTransactionOptions"></a>
+<a name="iota-node-v2-ExecuteTransactionOptions"></a>
 
 ### ExecuteTransactionOptions
 
@@ -226,13 +226,13 @@ Indicates the finality of the executed transaction.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| effects | [bool](#bool) | optional | Include the `sui.types.TransactionEffects` message in the response.
+| effects | [bool](#bool) | optional | Include the `iota.types.TransactionEffects` message in the response.
 
 Defaults to `false` if not included. |
 | effects_bcs | [bool](#bool) | optional | Include the `TransactionEffects` formatted as BCS in the response.
 
 Defaults to `false` if not included. |
-| events | [bool](#bool) | optional | Include the `sui.types.TransactionEvents` message in the response.
+| events | [bool](#bool) | optional | Include the `iota.types.TransactionEvents` message in the response.
 
 Defaults to `false` if not included. |
 | events_bcs | [bool](#bool) | optional | Include the `TransactionEvents` formatted as BCS in the response.
@@ -247,7 +247,7 @@ Defaults to `false` if not included. |
 
 
 
-<a name="sui-node-v2-ExecuteTransactionRequest"></a>
+<a name="iota-node-v2-ExecuteTransactionRequest"></a>
 
 ### ExecuteTransactionRequest
 Request message for `NodeService.ExecuteTransaction`.
@@ -257,18 +257,18 @@ Note: You must provide only one of `transaction` or `transaction_bcs`.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| transaction | [sui.types.Transaction](#sui-types-Transaction) | optional | Optional. The transaction to execute. |
-| transaction_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The transaction to execute, encoded as BCS bytes. |
-| signatures | [UserSignatures](#sui-node-v2-UserSignatures) | optional | Optional. Set of `UserSiganture`s authorizing the execution of the provided transaction. |
-| signatures_bytes | [UserSignaturesBytes](#sui-node-v2-UserSignaturesBytes) | optional | Optional. Set of `UserSiganture`s authorizing the execution of the provided transaction, encoded as bytes. |
-| options | [ExecuteTransactionOptions](#sui-node-v2-ExecuteTransactionOptions) | optional | Optional. Options for specifying which parts of the `ExecuteTransactionResponse` should be returned. |
+| transaction | [iota.types.Transaction](#iota-types-Transaction) | optional | Optional. The transaction to execute. |
+| transaction_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The transaction to execute, encoded as BCS bytes. |
+| signatures | [UserSignatures](#iota-node-v2-UserSignatures) | optional | Optional. Set of `UserSiganture`s authorizing the execution of the provided transaction. |
+| signatures_bytes | [UserSignaturesBytes](#iota-node-v2-UserSignaturesBytes) | optional | Optional. Set of `UserSiganture`s authorizing the execution of the provided transaction, encoded as bytes. |
+| options | [ExecuteTransactionOptions](#iota-node-v2-ExecuteTransactionOptions) | optional | Optional. Options for specifying which parts of the `ExecuteTransactionResponse` should be returned. |
 
 
 
 
 
 
-<a name="sui-node-v2-ExecuteTransactionResponse"></a>
+<a name="iota-node-v2-ExecuteTransactionResponse"></a>
 
 ### ExecuteTransactionResponse
 Response message for `NodeService.ExecuteTransaction`.
@@ -276,21 +276,21 @@ Response message for `NodeService.ExecuteTransaction`.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| finality | [EffectsFinality](#sui-node-v2-EffectsFinality) | optional | Indicates the finality of the executed transaction. |
-| effects | [sui.types.TransactionEffects](#sui-types-TransactionEffects) | optional | Optional. The `TransactionEffects` for this transaction. |
-| effects_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [TransactionEffects](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.TransactionEffects.html) for this transaction encoded as BCS bytes. |
-| events | [sui.types.TransactionEvents](#sui-types-TransactionEvents) | optional | Optional. The `TransactionEvents` for this transaction.
+| finality | [EffectsFinality](#iota-node-v2-EffectsFinality) | optional | Indicates the finality of the executed transaction. |
+| effects | [iota.types.TransactionEffects](#iota-types-TransactionEffects) | optional | Optional. The `TransactionEffects` for this transaction. |
+| effects_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [TransactionEffects](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.TransactionEffects.html) for this transaction encoded as BCS bytes. |
+| events | [iota.types.TransactionEvents](#iota-types-TransactionEvents) | optional | Optional. The `TransactionEvents` for this transaction.
 
-This field might be empty, even if it was explicitly requested, if the transaction didn&#39;t produce any events. `sui.types.TransactionEffects.events_digest` is populated if the transaction produced any events. |
-| events_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [TransactionEvents](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.TransactionEvents.html) for this transaction encoded as BCS bytes. |
-| balance_changes | [BalanceChanges](#sui-node-v2-BalanceChanges) | optional | Optional. Set of balance change events as a result of this transaction. |
-
-
+This field might be empty, even if it was explicitly requested, if the transaction didn&#39;t produce any events. `iota.types.TransactionEffects.events_digest` is populated if the transaction produced any events. |
+| events_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [TransactionEvents](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.TransactionEvents.html) for this transaction encoded as BCS bytes. |
+| balance_changes | [BalanceChanges](#iota-node-v2-BalanceChanges) | optional | Optional. Set of balance change events as a result of this transaction. |
 
 
 
 
-<a name="sui-node-v2-FullCheckpointObject"></a>
+
+
+<a name="iota-node-v2-FullCheckpointObject"></a>
 
 ### FullCheckpointObject
 An object used by or produced from a transaction.
@@ -298,18 +298,18 @@ An object used by or produced from a transaction.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object_id | [sui.types.ObjectId](#sui-types-ObjectId) | optional | The `ObjectId` of this object. |
+| object_id | [iota.types.ObjectId](#iota-types-ObjectId) | optional | The `ObjectId` of this object. |
 | version | [uint64](#uint64) | optional | The version of this object. |
-| digest | [sui.types.Digest](#sui-types-Digest) | optional | The digest of this object. |
-| object | [sui.types.Object](#sui-types-Object) | optional | Optional. The object itself. |
-| object_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [object](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.Object.html) encoded as BCS bytes. |
+| digest | [iota.types.Digest](#iota-types-Digest) | optional | The digest of this object. |
+| object | [iota.types.Object](#iota-types-Object) | optional | Optional. The object itself. |
+| object_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [object](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.Object.html) encoded as BCS bytes. |
 
 
 
 
 
 
-<a name="sui-node-v2-FullCheckpointObjects"></a>
+<a name="iota-node-v2-FullCheckpointObjects"></a>
 
 ### FullCheckpointObjects
 Set of objects used by or produced from a transaction.
@@ -317,14 +317,14 @@ Set of objects used by or produced from a transaction.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| objects | [FullCheckpointObject](#sui-node-v2-FullCheckpointObject) | repeated |  |
+| objects | [FullCheckpointObject](#iota-node-v2-FullCheckpointObject) | repeated |  |
 
 
 
 
 
 
-<a name="sui-node-v2-FullCheckpointTransaction"></a>
+<a name="iota-node-v2-FullCheckpointTransaction"></a>
 
 ### FullCheckpointTransaction
 A transaction, with all of its inputs and outputs.
@@ -332,24 +332,24 @@ A transaction, with all of its inputs and outputs.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| digest | [sui.types.Digest](#sui-types-Digest) | optional | The digest of this transaction. |
-| transaction | [sui.types.Transaction](#sui-types-Transaction) | optional | Optional. The transaction itself. |
-| transaction_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [Transaction](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.Transaction.html) encoded as BCS bytes. |
-| effects | [sui.types.TransactionEffects](#sui-types-TransactionEffects) | optional | Optional. The `TransactionEffects` for this transaction. |
-| effects_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [TransactionEffects](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.TransactionEffects.html) for this transaction encoded as BCS bytes. |
-| events | [sui.types.TransactionEvents](#sui-types-TransactionEvents) | optional | Optional. The `TransactionEvents` for this transaction.
+| digest | [iota.types.Digest](#iota-types-Digest) | optional | The digest of this transaction. |
+| transaction | [iota.types.Transaction](#iota-types-Transaction) | optional | Optional. The transaction itself. |
+| transaction_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [Transaction](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.Transaction.html) encoded as BCS bytes. |
+| effects | [iota.types.TransactionEffects](#iota-types-TransactionEffects) | optional | Optional. The `TransactionEffects` for this transaction. |
+| effects_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [TransactionEffects](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.TransactionEffects.html) for this transaction encoded as BCS bytes. |
+| events | [iota.types.TransactionEvents](#iota-types-TransactionEvents) | optional | Optional. The `TransactionEvents` for this transaction.
 
-This field might be empty, even if it was explicitly requested, if the transaction didn&#39;t produce any events. `sui.types.TransactionEffects.events_digest` is populated if the transaction produced any events. |
-| events_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [TransactionEvents](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.TransactionEvents.html) for this transaction encoded as BCS bytes. |
-| input_objects | [FullCheckpointObjects](#sui-node-v2-FullCheckpointObjects) | optional | Optional. Set of input objects used during the execution of this transaction. |
-| output_objects | [FullCheckpointObjects](#sui-node-v2-FullCheckpointObjects) | optional | Optional. Set of output objects produced from the execution of this transaction. |
-
-
+This field might be empty, even if it was explicitly requested, if the transaction didn&#39;t produce any events. `iota.types.TransactionEffects.events_digest` is populated if the transaction produced any events. |
+| events_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [TransactionEvents](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.TransactionEvents.html) for this transaction encoded as BCS bytes. |
+| input_objects | [FullCheckpointObjects](#iota-node-v2-FullCheckpointObjects) | optional | Optional. Set of input objects used during the execution of this transaction. |
+| output_objects | [FullCheckpointObjects](#iota-node-v2-FullCheckpointObjects) | optional | Optional. Set of output objects produced from the execution of this transaction. |
 
 
 
 
-<a name="sui-node-v2-GetCheckpointOptions"></a>
+
+
+<a name="iota-node-v2-GetCheckpointOptions"></a>
 
 ### GetCheckpointOptions
 Options for which parts of the `GetCheckpointResponse` should be returned.
@@ -357,16 +357,16 @@ Options for which parts of the `GetCheckpointResponse` should be returned.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| summary | [bool](#bool) | optional | Include the `sui.types.CheckpointSummary` in the response.
+| summary | [bool](#bool) | optional | Include the `iota.types.CheckpointSummary` in the response.
 
 Defaults to `false` if not included. |
 | summary_bcs | [bool](#bool) | optional | Include the `CheckpointSummary` formatted as BCS in the response.
 
 Defaults to `false` if not included. |
-| signature | [bool](#bool) | optional | Include the `sui.types.ValidatorAggregatedSignature` in the response.
+| signature | [bool](#bool) | optional | Include the `iota.types.ValidatorAggregatedSignature` in the response.
 
 Defaults to `false` if not included. |
-| contents | [bool](#bool) | optional | Include the `sui.types.CheckpointContents` message in the response.
+| contents | [bool](#bool) | optional | Include the `iota.types.CheckpointContents` message in the response.
 
 Defaults to `false` if not included. |
 | contents_bcs | [bool](#bool) | optional | Include the `CheckpointContents` formatted as BCS in the response.
@@ -378,7 +378,7 @@ Defaults to `false` if not included. |
 
 
 
-<a name="sui-node-v2-GetCheckpointRequest"></a>
+<a name="iota-node-v2-GetCheckpointRequest"></a>
 
 ### GetCheckpointRequest
 Request message for `NodeService.GetCheckpoint`.
@@ -391,15 +391,15 @@ returns the latest executed checkpoint.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | sequence_number | [uint64](#uint64) | optional | Optional. The sequence number of the requested checkpoint. |
-| digest | [sui.types.Digest](#sui-types-Digest) | optional | Optional. The digest of the requested checkpoint. |
-| options | [GetCheckpointOptions](#sui-node-v2-GetCheckpointOptions) | optional | Optional. Options for specifying which parts of the `GetCheckpointResponse` should be returned. |
+| digest | [iota.types.Digest](#iota-types-Digest) | optional | Optional. The digest of the requested checkpoint. |
+| options | [GetCheckpointOptions](#iota-node-v2-GetCheckpointOptions) | optional | Optional. Options for specifying which parts of the `GetCheckpointResponse` should be returned. |
 
 
 
 
 
 
-<a name="sui-node-v2-GetCheckpointResponse"></a>
+<a name="iota-node-v2-GetCheckpointResponse"></a>
 
 ### GetCheckpointResponse
 Response message for `NodeService.GetCheckpoint`.
@@ -408,19 +408,19 @@ Response message for `NodeService.GetCheckpoint`.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | sequence_number | [uint64](#uint64) | optional | The sequence number of this checkpoint. |
-| digest | [sui.types.Digest](#sui-types-Digest) | optional | The digest of this checkpoint&#39;s `CheckpointSummary`. |
-| summary | [sui.types.CheckpointSummary](#sui-types-CheckpointSummary) | optional | Optional. The `CheckpointSummary` for this checkpoint. |
-| summary_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [CheckpointSummary](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.CheckpointSummary.html) for this checkpoint encoded as BCS bytes. |
-| signature | [sui.types.ValidatorAggregatedSignature](#sui-types-ValidatorAggregatedSignature) | optional | Optional. An aggregated quorum signature from the validator committee that certifies this checkpoint. |
-| contents | [sui.types.CheckpointContents](#sui-types-CheckpointContents) | optional | Optional. The `CheckpointContents` for this checkpoint. |
-| contents_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [CheckpointContents](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.CheckpointContents.html) for this checkpoint encoded as BCS bytes. |
+| digest | [iota.types.Digest](#iota-types-Digest) | optional | The digest of this checkpoint&#39;s `CheckpointSummary`. |
+| summary | [iota.types.CheckpointSummary](#iota-types-CheckpointSummary) | optional | Optional. The `CheckpointSummary` for this checkpoint. |
+| summary_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [CheckpointSummary](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.CheckpointSummary.html) for this checkpoint encoded as BCS bytes. |
+| signature | [iota.types.ValidatorAggregatedSignature](#iota-types-ValidatorAggregatedSignature) | optional | Optional. An aggregated quorum signature from the validator committee that certifies this checkpoint. |
+| contents | [iota.types.CheckpointContents](#iota-types-CheckpointContents) | optional | Optional. The `CheckpointContents` for this checkpoint. |
+| contents_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [CheckpointContents](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.CheckpointContents.html) for this checkpoint encoded as BCS bytes. |
 
 
 
 
 
 
-<a name="sui-node-v2-GetCommitteeRequest"></a>
+<a name="iota-node-v2-GetCommitteeRequest"></a>
 
 ### GetCommitteeRequest
 Request message for NodeService.GetCommittee.
@@ -428,14 +428,14 @@ Request message for NodeService.GetCommittee.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| epoch | [uint64](#uint64) | optional | Optional. Request the sui.types.ValidatorCommittee corresponding to the provided epoch. If no epoch is provided the committee for the current epoch will be returned. |
+| epoch | [uint64](#uint64) | optional | Optional. Request the iota.types.ValidatorCommittee corresponding to the provided epoch. If no epoch is provided the committee for the current epoch will be returned. |
 
 
 
 
 
 
-<a name="sui-node-v2-GetCommitteeResponse"></a>
+<a name="iota-node-v2-GetCommitteeResponse"></a>
 
 ### GetCommitteeResponse
 Response message for `NodeService.GetCommittee`.
@@ -443,14 +443,14 @@ Response message for `NodeService.GetCommittee`.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| committee | [sui.types.ValidatorCommittee](#sui-types-ValidatorCommittee) | optional | The committee of either the requested epoch or the current epoch. |
+| committee | [iota.types.ValidatorCommittee](#iota-types-ValidatorCommittee) | optional | The committee of either the requested epoch or the current epoch. |
 
 
 
 
 
 
-<a name="sui-node-v2-GetFullCheckpointOptions"></a>
+<a name="iota-node-v2-GetFullCheckpointOptions"></a>
 
 ### GetFullCheckpointOptions
 Options for which parts of the `GetFullCheckpointResponse` should be returned.
@@ -458,34 +458,34 @@ Options for which parts of the `GetFullCheckpointResponse` should be returned.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| summary | [bool](#bool) | optional | Include the `sui.types.CheckpointSummary` in the response.
+| summary | [bool](#bool) | optional | Include the `iota.types.CheckpointSummary` in the response.
 
 Defaults to `false` if not included. |
 | summary_bcs | [bool](#bool) | optional | Include the `CheckpointSummary` formatted as BCS in the response.
 
 Defaults to `false` if not included. |
-| signature | [bool](#bool) | optional | Include the `sui.types.ValidatorAggregatedSignature` in the response.
+| signature | [bool](#bool) | optional | Include the `iota.types.ValidatorAggregatedSignature` in the response.
 
 Defaults to `false` if not included. |
-| contents | [bool](#bool) | optional | Include the `sui.types.CheckpointContents` message in the response.
+| contents | [bool](#bool) | optional | Include the `iota.types.CheckpointContents` message in the response.
 
 Defaults to `false` if not included. |
 | contents_bcs | [bool](#bool) | optional | Include the `CheckpointContents` formatted as BCS in the response.
 
 Defaults to `false` if not included. |
-| transaction | [bool](#bool) | optional | Include the `sui.types.Transaction` message in the response.
+| transaction | [bool](#bool) | optional | Include the `iota.types.Transaction` message in the response.
 
 Defaults to `false` if not included. |
 | transaction_bcs | [bool](#bool) | optional | Include the transaction formatted as BCS in the response.
 
 Defaults to `false` if not included. |
-| effects | [bool](#bool) | optional | Include the `sui.types.TransactionEffects` message in the response.
+| effects | [bool](#bool) | optional | Include the `iota.types.TransactionEffects` message in the response.
 
 Defaults to `false` if not included. |
 | effects_bcs | [bool](#bool) | optional | Include the `TransactionEffects` formatted as BCS in the response.
 
 Defaults to `false` if not included. |
-| events | [bool](#bool) | optional | Include the `sui.types.TransactionEvents` message in the response.
+| events | [bool](#bool) | optional | Include the `iota.types.TransactionEvents` message in the response.
 
 Defaults to `false` if not included. |
 | events_bcs | [bool](#bool) | optional | Include the `TransactionEvents` formatted as BCS in the response.
@@ -497,7 +497,7 @@ Defaults to `false` if not included. |
 | output_objects | [bool](#bool) | optional | Include the output objects for transactions in the response.
 
 Defaults to `false` if not included. |
-| object | [bool](#bool) | optional | Include the `sui.types.Object` message in the response.
+| object | [bool](#bool) | optional | Include the `iota.types.Object` message in the response.
 
 Defaults to `false` if not included. |
 | object_bcs | [bool](#bool) | optional | Include the object formatted as BCS in the response.
@@ -509,7 +509,7 @@ Defaults to `false` if not included. |
 
 
 
-<a name="sui-node-v2-GetFullCheckpointRequest"></a>
+<a name="iota-node-v2-GetFullCheckpointRequest"></a>
 
 ### GetFullCheckpointRequest
 Request message for `NodeService.GetFullCheckpoint`.
@@ -522,15 +522,15 @@ returns the latest executed checkpoint.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | sequence_number | [uint64](#uint64) | optional | Optional. The sequence number of the requested checkpoint. |
-| digest | [sui.types.Digest](#sui-types-Digest) | optional | Optional. The digest of the requested checkpoint. |
-| options | [GetFullCheckpointOptions](#sui-node-v2-GetFullCheckpointOptions) | optional | Optional. Options for specifying which parts of the `GetFullCheckpointResponse` should be returned. |
+| digest | [iota.types.Digest](#iota-types-Digest) | optional | Optional. The digest of the requested checkpoint. |
+| options | [GetFullCheckpointOptions](#iota-node-v2-GetFullCheckpointOptions) | optional | Optional. Options for specifying which parts of the `GetFullCheckpointResponse` should be returned. |
 
 
 
 
 
 
-<a name="sui-node-v2-GetFullCheckpointResponse"></a>
+<a name="iota-node-v2-GetFullCheckpointResponse"></a>
 
 ### GetFullCheckpointResponse
 Response message for `NodeService.GetFullCheckpoint`.
@@ -539,20 +539,20 @@ Response message for `NodeService.GetFullCheckpoint`.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | sequence_number | [uint64](#uint64) | optional | The sequence number of this checkpoint. |
-| digest | [sui.types.Digest](#sui-types-Digest) | optional | The digest of this checkpoint&#39;s `CheckpointSummary`. |
-| summary | [sui.types.CheckpointSummary](#sui-types-CheckpointSummary) | optional | Optional. The `CheckpointSummary` for this checkpoint. |
-| summary_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [CheckpointSummary](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.CheckpointSummary.html) for this checkpoint encoded as BCS bytes. |
-| signature | [sui.types.ValidatorAggregatedSignature](#sui-types-ValidatorAggregatedSignature) | optional | Optional. An aggregated quorum signature from the validator committee that certifies this checkpoint. |
-| contents | [sui.types.CheckpointContents](#sui-types-CheckpointContents) | optional | Optional. The `CheckpointContents` for this checkpoint. |
-| contents_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [CheckpointContents](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.CheckpointContents.html) for this checkpoint encoded as BCS bytes. |
-| transactions | [FullCheckpointTransaction](#sui-node-v2-FullCheckpointTransaction) | repeated | List of transactions included in this checkpoint. |
+| digest | [iota.types.Digest](#iota-types-Digest) | optional | The digest of this checkpoint&#39;s `CheckpointSummary`. |
+| summary | [iota.types.CheckpointSummary](#iota-types-CheckpointSummary) | optional | Optional. The `CheckpointSummary` for this checkpoint. |
+| summary_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [CheckpointSummary](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.CheckpointSummary.html) for this checkpoint encoded as BCS bytes. |
+| signature | [iota.types.ValidatorAggregatedSignature](#iota-types-ValidatorAggregatedSignature) | optional | Optional. An aggregated quorum signature from the validator committee that certifies this checkpoint. |
+| contents | [iota.types.CheckpointContents](#iota-types-CheckpointContents) | optional | Optional. The `CheckpointContents` for this checkpoint. |
+| contents_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [CheckpointContents](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.CheckpointContents.html) for this checkpoint encoded as BCS bytes. |
+| transactions | [FullCheckpointTransaction](#iota-node-v2-FullCheckpointTransaction) | repeated | List of transactions included in this checkpoint. |
 
 
 
 
 
 
-<a name="sui-node-v2-GetNodeInfoRequest"></a>
+<a name="iota-node-v2-GetNodeInfoRequest"></a>
 
 ### GetNodeInfoRequest
 Request message for `NodeService.GetNodeInfo`.
@@ -562,7 +562,7 @@ Request message for `NodeService.GetNodeInfo`.
 
 
 
-<a name="sui-node-v2-GetNodeInfoResponse"></a>
+<a name="iota-node-v2-GetNodeInfoResponse"></a>
 
 ### GetNodeInfoResponse
 Response message for `NodeService.GetNodeInfo`.
@@ -570,7 +570,7 @@ Response message for `NodeService.GetNodeInfo`.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| chain_id | [sui.types.Digest](#sui-types-Digest) | optional | The chain identifier of the chain that this node is on.
+| chain_id | [iota.types.Digest](#iota-types-Digest) | optional | The chain identifier of the chain that this node is on.
 
 The chain identifier is the digest of the genesis checkpoint, the checkpoint with sequence number 0. |
 | chain | [string](#string) | optional | Human-readable name of the chain that this node is on.
@@ -581,14 +581,14 @@ This is intended to be a human-readable name like `mainnet`, `testnet`, and so o
 | timestamp | [google.protobuf.Timestamp](#google-protobuf-Timestamp) | optional | Unix timestamp of the most recently executed checkpoint. |
 | lowest_available_checkpoint | [uint64](#uint64) | optional | The lowest checkpoint for which checkpoints and transaction data are available. |
 | lowest_available_checkpoint_objects | [uint64](#uint64) | optional | The lowest checkpoint for which object data is available. |
-| software_version | [string](#string) | optional | Software version of the `sui-node` binary. |
+| software_version | [string](#string) | optional | Software version of the `iota-node` binary. |
 
 
 
 
 
 
-<a name="sui-node-v2-GetObjectOptions"></a>
+<a name="iota-node-v2-GetObjectOptions"></a>
 
 ### GetObjectOptions
 
@@ -596,7 +596,7 @@ This is intended to be a human-readable name like `mainnet`, `testnet`, and so o
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object | [bool](#bool) | optional | Include the `sui.types.Object` message in the response.
+| object | [bool](#bool) | optional | Include the `iota.types.Object` message in the response.
 
 Defaults to `false` if not included. |
 | object_bcs | [bool](#bool) | optional | Include the object formatted as BCS in the response.
@@ -608,7 +608,7 @@ Defaults to `false` if not included. |
 
 
 
-<a name="sui-node-v2-GetObjectRequest"></a>
+<a name="iota-node-v2-GetObjectRequest"></a>
 
 ### GetObjectRequest
 Request message for `NodeService.GetObject`.
@@ -616,16 +616,16 @@ Request message for `NodeService.GetObject`.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object_id | [sui.types.ObjectId](#sui-types-ObjectId) | optional | Required. The `ObjectId` of the requested object. |
+| object_id | [iota.types.ObjectId](#iota-types-ObjectId) | optional | Required. The `ObjectId` of the requested object. |
 | version | [uint64](#uint64) | optional | Optional. Request that a specific version of the requested object is returned. If no version is provided, then then the latest version for the object is returned. |
-| options | [GetObjectOptions](#sui-node-v2-GetObjectOptions) | optional | Optional. Options for specifying which parts of the `GetObjectResponse` should be returned. |
+| options | [GetObjectOptions](#iota-node-v2-GetObjectOptions) | optional | Optional. Options for specifying which parts of the `GetObjectResponse` should be returned. |
 
 
 
 
 
 
-<a name="sui-node-v2-GetObjectResponse"></a>
+<a name="iota-node-v2-GetObjectResponse"></a>
 
 ### GetObjectResponse
 Response message for `NodeService.GetObject`.
@@ -633,18 +633,18 @@ Response message for `NodeService.GetObject`.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object_id | [sui.types.ObjectId](#sui-types-ObjectId) | optional | The `ObjectId` of this object. |
+| object_id | [iota.types.ObjectId](#iota-types-ObjectId) | optional | The `ObjectId` of this object. |
 | version | [uint64](#uint64) | optional | The version of this object. |
-| digest | [sui.types.Digest](#sui-types-Digest) | optional | The digest of this object. |
-| object | [sui.types.Object](#sui-types-Object) | optional | Optional. The object itself. |
-| object_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [Object](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.Object.html) encoded as BCS bytes. |
+| digest | [iota.types.Digest](#iota-types-Digest) | optional | The digest of this object. |
+| object | [iota.types.Object](#iota-types-Object) | optional | Optional. The object itself. |
+| object_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [Object](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.Object.html) encoded as BCS bytes. |
 
 
 
 
 
 
-<a name="sui-node-v2-GetTransactionOptions"></a>
+<a name="iota-node-v2-GetTransactionOptions"></a>
 
 ### GetTransactionOptions
 Options for which parts of the `GetTransactionResponse` should be returned.
@@ -652,25 +652,25 @@ Options for which parts of the `GetTransactionResponse` should be returned.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| transaction | [bool](#bool) | optional | Include the `sui.types.Transaction` message in the response.
+| transaction | [bool](#bool) | optional | Include the `iota.types.Transaction` message in the response.
 
 Defaults to `false` if not included. |
 | transaction_bcs | [bool](#bool) | optional | Include the transaction formatted as BCS in the response.
 
 Defaults to `false` if not included. |
-| signatures | [bool](#bool) | optional | Include the set of `sui.types.UserSignature`s in the response.
+| signatures | [bool](#bool) | optional | Include the set of `iota.types.UserSignature`s in the response.
 
 Defaults to `false` if not included. |
 | signatures_bytes | [bool](#bool) | optional | Include the set of `UserSignature`s encoded as bytes in the response.
 
 Defaults to `false` if not included. |
-| effects | [bool](#bool) | optional | Include the `sui.types.TransactionEffects` message in the response.
+| effects | [bool](#bool) | optional | Include the `iota.types.TransactionEffects` message in the response.
 
 Defaults to `false` if not included. |
 | effects_bcs | [bool](#bool) | optional | Include the `TransactionEffects` formatted as BCS in the response.
 
 Defaults to `false` if not included. |
-| events | [bool](#bool) | optional | Include the `sui.types.TransactionEvents` message in the response.
+| events | [bool](#bool) | optional | Include the `iota.types.TransactionEvents` message in the response.
 
 Defaults to `false` if not included. |
 | events_bcs | [bool](#bool) | optional | Include the `TransactionEvents` formatted as BCS in the response.
@@ -682,7 +682,7 @@ Defaults to `false` if not included. |
 
 
 
-<a name="sui-node-v2-GetTransactionRequest"></a>
+<a name="iota-node-v2-GetTransactionRequest"></a>
 
 ### GetTransactionRequest
 Request message for `NodeService.GetTransaction`.
@@ -690,15 +690,15 @@ Request message for `NodeService.GetTransaction`.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| digest | [sui.types.Digest](#sui-types-Digest) | optional | Required. The digest of the requested transaction. |
-| options | [GetTransactionOptions](#sui-node-v2-GetTransactionOptions) | optional | Optional. Options for specifying which parts of the `GetTransactionResponse` should be returned. |
+| digest | [iota.types.Digest](#iota-types-Digest) | optional | Required. The digest of the requested transaction. |
+| options | [GetTransactionOptions](#iota-node-v2-GetTransactionOptions) | optional | Optional. Options for specifying which parts of the `GetTransactionResponse` should be returned. |
 
 
 
 
 
 
-<a name="sui-node-v2-GetTransactionResponse"></a>
+<a name="iota-node-v2-GetTransactionResponse"></a>
 
 ### GetTransactionResponse
 Response message for `NodeService.GetTransactio`n.
@@ -706,17 +706,17 @@ Response message for `NodeService.GetTransactio`n.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| digest | [sui.types.Digest](#sui-types-Digest) | optional | The digest of this [Transaction](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.Transaction.html). |
-| transaction | [sui.types.Transaction](#sui-types-Transaction) | optional | Optional. The transaction itself. |
-| transaction_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [Transaction](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.Transaction.html) encoded as BCS bytes. |
-| signatures | [UserSignatures](#sui-node-v2-UserSignatures) | optional | Optional. List of user signatures that are used to authorize the execution of this transaction. |
-| signatures_bytes | [UserSignaturesBytes](#sui-node-v2-UserSignaturesBytes) | optional | Optional. List of [UserSignature](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.UserSignature.html)s encoded as bytes. |
-| effects | [sui.types.TransactionEffects](#sui-types-TransactionEffects) | optional | Optional. The `TransactionEffects` for this transaction. |
-| effects_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [TransactionEffects](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.TransactionEffects.html) for this transaction encoded as BCS bytes. |
-| events | [sui.types.TransactionEvents](#sui-types-TransactionEvents) | optional | Optional. The `TransactionEvents` for this transaction.
+| digest | [iota.types.Digest](#iota-types-Digest) | optional | The digest of this [Transaction](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.Transaction.html). |
+| transaction | [iota.types.Transaction](#iota-types-Transaction) | optional | Optional. The transaction itself. |
+| transaction_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [Transaction](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.Transaction.html) encoded as BCS bytes. |
+| signatures | [UserSignatures](#iota-node-v2-UserSignatures) | optional | Optional. List of user signatures that are used to authorize the execution of this transaction. |
+| signatures_bytes | [UserSignaturesBytes](#iota-node-v2-UserSignaturesBytes) | optional | Optional. List of [UserSignature](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.UserSignature.html)s encoded as bytes. |
+| effects | [iota.types.TransactionEffects](#iota-types-TransactionEffects) | optional | Optional. The `TransactionEffects` for this transaction. |
+| effects_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [TransactionEffects](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.TransactionEffects.html) for this transaction encoded as BCS bytes. |
+| events | [iota.types.TransactionEvents](#iota-types-TransactionEvents) | optional | Optional. The `TransactionEvents` for this transaction.
 
-This field might be empty, even if it was explicitly requested, if the transaction didn&#39;t produce any events. `sui.types.TransactionEffects.events_digest` is populated if the transaction produced any events. |
-| events_bcs | [sui.types.Bcs](#sui-types-Bcs) | optional | Optional. The [TransactionEvents](https://docs.rs/sui-sdk-types/latest/sui_sdk_types/struct.TransactionEvents.html) for this transaction encoded as BCS bytes. |
+This field might be empty, even if it was explicitly requested, if the transaction didn&#39;t produce any events. `iota.types.TransactionEffects.events_digest` is populated if the transaction produced any events. |
+| events_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The [TransactionEvents](https://docs.rs/iota-sdk-types/latest/iota_sdk_types/struct.TransactionEvents.html) for this transaction encoded as BCS bytes. |
 | checkpoint | [uint64](#uint64) | optional | The sequence number for the checkpoint that includes this transaction. |
 | timestamp | [google.protobuf.Timestamp](#google-protobuf-Timestamp) | optional | The Unix timestamp of the checkpoint that includes this transaction. |
 
@@ -725,7 +725,7 @@ This field might be empty, even if it was explicitly requested, if the transacti
 
 
 
-<a name="sui-node-v2-UserSignatures"></a>
+<a name="iota-node-v2-UserSignatures"></a>
 
 ### UserSignatures
 List of `UserSignature`s used to authorize a transaction.
@@ -733,14 +733,14 @@ List of `UserSignature`s used to authorize a transaction.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| signatures | [sui.types.UserSignature](#sui-types-UserSignature) | repeated |  |
+| signatures | [iota.types.UserSignature](#iota-types-UserSignature) | repeated |  |
 
 
 
 
 
 
-<a name="sui-node-v2-UserSignaturesBytes"></a>
+<a name="iota-node-v2-UserSignaturesBytes"></a>
 
 ### UserSignaturesBytes
 List of `UserSignature`s used to authorize a transaction encoded as bytes.
@@ -761,56 +761,56 @@ List of `UserSignature`s used to authorize a transaction encoded as bytes.
  
 
 
-<a name="sui-node-v2-NodeService"></a>
+<a name="iota-node-v2-NodeService"></a>
 
 ### NodeService
-Service for reading data from a Sui Full node.
+Service for reading data from a IOTA Full node.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| GetNodeInfo | [GetNodeInfoRequest](#sui-node-v2-GetNodeInfoRequest) | [GetNodeInfoResponse](#sui-node-v2-GetNodeInfoResponse) | Query a node for information about its current state. |
-| GetCommittee | [GetCommitteeRequest](#sui-node-v2-GetCommitteeRequest) | [GetCommitteeResponse](#sui-node-v2-GetCommitteeResponse) | Request the validator committee for a particular epoch or for the current epoch. |
-| GetObject | [GetObjectRequest](#sui-node-v2-GetObjectRequest) | [GetObjectResponse](#sui-node-v2-GetObjectResponse) | Request information for the specified object.
+| GetNodeInfo | [GetNodeInfoRequest](#iota-node-v2-GetNodeInfoRequest) | [GetNodeInfoResponse](#iota-node-v2-GetNodeInfoResponse) | Query a node for information about its current state. |
+| GetCommittee | [GetCommitteeRequest](#iota-node-v2-GetCommitteeRequest) | [GetCommitteeResponse](#iota-node-v2-GetCommitteeResponse) | Request the validator committee for a particular epoch or for the current epoch. |
+| GetObject | [GetObjectRequest](#iota-node-v2-GetObjectRequest) | [GetObjectResponse](#iota-node-v2-GetObjectResponse) | Request information for the specified object.
 
 Use this API to request an object by its `ObjectId`. The version of the object returned is dependent on if you request a specific version. If you do not request a specific version (GetObjectRequest.version is `None`), then the most recent version (if the object is live) is returned. If you do request a version, that version is returned if it historically existed, is available, and has not been pruned.
 
 Due to storage limitations, implementers of this service might prune older historical data, which can limit the data availability of this API. To determine the data availability range for historical objects, clients can look at `GetNodeInfoResponse.lowest_available_checkpoint_objects` to see the lowest checkpoint for which historical object data is available. |
-| GetTransaction | [GetTransactionRequest](#sui-node-v2-GetTransactionRequest) | [GetTransactionResponse](#sui-node-v2-GetTransactionResponse) | Request information for the specified transaction.
+| GetTransaction | [GetTransactionRequest](#iota-node-v2-GetTransactionRequest) | [GetTransactionResponse](#iota-node-v2-GetTransactionResponse) | Request information for the specified transaction.
 
 Use this API to request information about a transaction by its digest.
 
 Due to storage limitations, implementers of this service might prune older historical data, which can limit the data availability of this API. To determine the data availability range for historical transactions, clients can look at `GetNodeInfoResponse.lowest_available_checkpoint` to see the lowest checkpoint for which historical transaction data is available. |
-| GetCheckpoint | [GetCheckpointRequest](#sui-node-v2-GetCheckpointRequest) | [GetCheckpointResponse](#sui-node-v2-GetCheckpointResponse) | Request information for the specified checkpoint.
+| GetCheckpoint | [GetCheckpointRequest](#iota-node-v2-GetCheckpointRequest) | [GetCheckpointResponse](#iota-node-v2-GetCheckpointResponse) | Request information for the specified checkpoint.
 
 Use this API to request information about a checkpoint either by its digest or its sequence number (height).
 
 Due to storage limitations, implementers of this service might prune older historical data, which can limit the data availability of this API. To determine the data availability range for historical checkpoints, clients can look at `GetNodeInfoResponse.lowest_available_checkpoint` to see the lowest checkpoint for which historical checkpoint data is available. |
-| GetFullCheckpoint | [GetFullCheckpointRequest](#sui-node-v2-GetFullCheckpointRequest) | [GetFullCheckpointResponse](#sui-node-v2-GetFullCheckpointResponse) | Request information for the entirety of the specified checkpoint.
+| GetFullCheckpoint | [GetFullCheckpointRequest](#iota-node-v2-GetFullCheckpointRequest) | [GetFullCheckpointResponse](#iota-node-v2-GetFullCheckpointResponse) | Request information for the entirety of the specified checkpoint.
 
 Use this API to request information about a checkpoint either by its digest or its sequence number (height). In particular, you can use this API to request information about all the transactions included in a checkpoint, as well as their input and output objects.
 
 Due to storage limitations, implementers of this service might prune older historical data, which can limit the data availability of this API. To determine the data availability range for historical checkpoints, clients can look at `GetNodeInfoResponse.lowest_available_checkpoint` to see the lowest checkpoint for which historical checkpoint/transaction data is available and `GetNodeInfoResponse.lowest_available_checkpoint_objects` for which historical object data is available. |
-| ExecuteTransaction | [ExecuteTransactionRequest](#sui-node-v2-ExecuteTransactionRequest) | [ExecuteTransactionResponse](#sui-node-v2-ExecuteTransactionResponse) | Request that the provided transaction be relayed to the validator set for execution and inclusion in the blockchain. |
+| ExecuteTransaction | [ExecuteTransactionRequest](#iota-node-v2-ExecuteTransactionRequest) | [ExecuteTransactionResponse](#iota-node-v2-ExecuteTransactionResponse) | Request that the provided transaction be relayed to the validator set for execution and inclusion in the blockchain. |
 
  
 
 
 
-<a name="sui-types-proto"></a>
+<a name="iota-types-proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## sui.types.proto
-Protobuf definitions of public Sui core types.
+## iota.types.proto
+Protobuf definitions of public IOTA core types.
 
 This file contains a complete set of protobuf definitions for all of the
-public sui core types. All sui types are intended to have a 1:1 mapping to a
+public iota core types. All iota types are intended to have a 1:1 mapping to a
 protobuf message defined in this file and be able to roundtrip to/from their
 rust and protobuf definitions assuming a sufficiently up-to-date version of
 both these definitions.
 
 For more information on the types these proto messages correspond with, see
 the documentation for their rust versions defined in the
-[`sui-sdk-types`](https://mystenlabs.github.io/sui-rust-sdk/sui_sdk_types/)
+[`iota-sdk-types`](https://github.com/iotaledger/sui-rust-sdk/iota_sdk_types/)
 library.
 
 ## Use of `optional`
@@ -823,11 +823,11 @@ these definitions follow the convention of having all fields marked
 `optional`, and wrapping `repeated` fields in a message as needed.
 
 Even if a field is marked as `optional`, it might not actually be optional from
-the perspective of the Sui protocol. Such fields are explicitly labled
+the perspective of the IOTA protocol. Such fields are explicitly labled
 as `Required` or `Optional` in their documentation.
 
 
-<a name="sui-types-ActiveJwk"></a>
+<a name="iota-types-ActiveJwk"></a>
 
 ### ActiveJwk
 A new JWK.
@@ -835,8 +835,8 @@ A new JWK.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [JwkId](#sui-types-JwkId) | optional | Identifier used to uniquely identify a JWK. |
-| jwk | [Jwk](#sui-types-Jwk) | optional | The JWK. |
+| id | [JwkId](#iota-types-JwkId) | optional | Identifier used to uniquely identify a JWK. |
+| jwk | [Jwk](#iota-types-Jwk) | optional | The JWK. |
 | epoch | [uint64](#uint64) | optional | Most recent epoch in which the JWK was validated. |
 
 
@@ -844,14 +844,14 @@ A new JWK.
 
 
 
-<a name="sui-types-Address"></a>
+<a name="iota-types-Address"></a>
 
 ### Address
-Unique identifier for an account on the Sui blockchain.
+Unique identifier for an account on the IOTA blockchain.
 
 An `Address` is a 32-byte pseudonymous identifier used to uniquely identify an account and
-asset-ownership on the Sui blockchain. Often, human-readable addresses are encoded in
-hexadecimal with a `0x` prefix. For example, this is a valid Sui address:
+asset-ownership on the IOTA blockchain. Often, human-readable addresses are encoded in
+hexadecimal with a `0x` prefix. For example, this is a valid IOTA address:
 `0x02a212de6a9dfa3a69e22387acfbafbb1a9e591bd9d636e7895dcfc8de05f331`.
 
 
@@ -864,7 +864,7 @@ hexadecimal with a `0x` prefix. For example, this is a valid Sui address:
 
 
 
-<a name="sui-types-AddressDeniedForCoinError"></a>
+<a name="iota-types-AddressDeniedForCoinError"></a>
 
 ### AddressDeniedForCoinError
 Address is denied for this coin type.
@@ -872,7 +872,7 @@ Address is denied for this coin type.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| address | [Address](#sui-types-Address) | optional | Required. Denied address. |
+| address | [Address](#iota-types-Address) | optional | Required. Denied address. |
 | coin_type | [string](#string) | optional | Required. Coin type. |
 
 
@@ -880,7 +880,7 @@ Address is denied for this coin type.
 
 
 
-<a name="sui-types-Argument"></a>
+<a name="iota-types-Argument"></a>
 
 ### Argument
 An argument to a programmable transaction command.
@@ -891,14 +891,14 @@ An argument to a programmable transaction command.
 | gas | [google.protobuf.Empty](#google-protobuf-Empty) |  | The gas coin. The gas coin can only be used by-ref, except for with `TransferObjects`, which can use it by-value. |
 | input | [uint32](#uint32) |  | One of the input objects or primitive values (from `ProgrammableTransaction` inputs). |
 | result | [uint32](#uint32) |  | The result of another command (from `ProgrammableTransaction` commands). |
-| nested_result | [NestedResult](#sui-types-NestedResult) |  | Like a `Result` but it accesses a nested result. Currently, the only usage of this is to access a value from a Move call with multiple return values. |
+| nested_result | [NestedResult](#iota-types-NestedResult) |  | Like a `Result` but it accesses a nested result. Currently, the only usage of this is to access a value from a Move call with multiple return values. |
 
 
 
 
 
 
-<a name="sui-types-AuthenticatorStateExpire"></a>
+<a name="iota-types-AuthenticatorStateExpire"></a>
 
 ### AuthenticatorStateExpire
 Expire old JWKs.
@@ -914,7 +914,7 @@ Expire old JWKs.
 
 
 
-<a name="sui-types-AuthenticatorStateUpdate"></a>
+<a name="iota-types-AuthenticatorStateUpdate"></a>
 
 ### AuthenticatorStateUpdate
 Update the set of valid JWKs.
@@ -924,7 +924,7 @@ Update the set of valid JWKs.
 | ----- | ---- | ----- | ----------- |
 | epoch | [uint64](#uint64) | optional | Epoch of the authenticator state update transaction. |
 | round | [uint64](#uint64) | optional | Consensus round of the authenticator state update. |
-| new_active_jwks | [ActiveJwk](#sui-types-ActiveJwk) | repeated | Newly active JWKs. |
+| new_active_jwks | [ActiveJwk](#iota-types-ActiveJwk) | repeated | Newly active JWKs. |
 | authenticator_object_initial_shared_version | [uint64](#uint64) | optional | The initial version of the authenticator object that it was shared at. |
 
 
@@ -932,11 +932,11 @@ Update the set of valid JWKs.
 
 
 
-<a name="sui-types-Bcs"></a>
+<a name="iota-types-Bcs"></a>
 
 ### Bcs
 Message that represents a type that is serialized and encoded using the
-[BCS](https://mystenlabs.github.io/sui-rust-sdk/sui_sdk_types/index.html#bcs)
+[BCS](https://github.com/iotaledger/sui-rust-sdk/iota_sdk_types/index.html#bcs)
 format.
 
 
@@ -949,7 +949,7 @@ format.
 
 
 
-<a name="sui-types-Bn254FieldElement"></a>
+<a name="iota-types-Bn254FieldElement"></a>
 
 ### Bn254FieldElement
 A point on the BN254 elliptic curve.
@@ -964,7 +964,7 @@ A point on the BN254 elliptic curve.
 
 
 
-<a name="sui-types-CancelledTransaction"></a>
+<a name="iota-types-CancelledTransaction"></a>
 
 ### CancelledTransaction
 A transaction that was cancelled.
@@ -972,15 +972,15 @@ A transaction that was cancelled.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| digest | [Digest](#sui-types-Digest) | optional | Digest of the cancelled transaction. |
-| version_assignments | [VersionAssignment](#sui-types-VersionAssignment) | repeated | List of object version assignments. |
+| digest | [Digest](#iota-types-Digest) | optional | Digest of the cancelled transaction. |
+| version_assignments | [VersionAssignment](#iota-types-VersionAssignment) | repeated | List of object version assignments. |
 
 
 
 
 
 
-<a name="sui-types-CancelledTransactions"></a>
+<a name="iota-types-CancelledTransactions"></a>
 
 ### CancelledTransactions
 Set of cancelled transactions.
@@ -988,14 +988,14 @@ Set of cancelled transactions.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| cancelled_transactions | [CancelledTransaction](#sui-types-CancelledTransaction) | repeated |  |
+| cancelled_transactions | [CancelledTransaction](#iota-types-CancelledTransaction) | repeated |  |
 
 
 
 
 
 
-<a name="sui-types-ChangeEpoch"></a>
+<a name="iota-types-ChangeEpoch"></a>
 
 ### ChangeEpoch
 System transaction used to change the epoch.
@@ -1010,14 +1010,14 @@ System transaction used to change the epoch.
 | storage_rebate | [uint64](#uint64) | optional | The amount of storage rebate refunded to the txn senders. |
 | non_refundable_storage_fee | [uint64](#uint64) | optional | The non-refundable storage fee. |
 | epoch_start_timestamp_ms | [uint64](#uint64) | optional | Unix timestamp when epoch started. |
-| system_packages | [SystemPackage](#sui-types-SystemPackage) | repeated | System packages (specifically framework and Move stdlib) that are written before the new epoch starts. This tracks framework upgrades on chain. When executing the `ChangeEpoch` txn, the validator must write out the following modules. Modules are provided with the version they will be upgraded to, their modules in serialized form (which include their package ID), and a list of their transitive dependencies. |
+| system_packages | [SystemPackage](#iota-types-SystemPackage) | repeated | System packages (specifically framework and Move stdlib) that are written before the new epoch starts. This tracks framework upgrades on chain. When executing the `ChangeEpoch` txn, the validator must write out the following modules. Modules are provided with the version they will be upgraded to, their modules in serialized form (which include their package ID), and a list of their transitive dependencies. |
 
 
 
 
 
 
-<a name="sui-types-ChangedObject"></a>
+<a name="iota-types-ChangedObject"></a>
 
 ### ChangedObject
 Input/output state of an object that was changed during execution.
@@ -1025,12 +1025,12 @@ Input/output state of an object that was changed during execution.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object_id | [ObjectId](#sui-types-ObjectId) | optional | Required. ID of the object. |
+| object_id | [ObjectId](#iota-types-ObjectId) | optional | Required. ID of the object. |
 | not_exist | [google.protobuf.Empty](#google-protobuf-Empty) |  | Object did not exist prior to this transaction. |
-| exist | [ObjectExist](#sui-types-ObjectExist) |  | Object existed prior to this transaction. |
+| exist | [ObjectExist](#iota-types-ObjectExist) |  | Object existed prior to this transaction. |
 | removed | [google.protobuf.Empty](#google-protobuf-Empty) |  | Object was removed from the store due to this transaction. |
-| object_write | [ObjectWrite](#sui-types-ObjectWrite) |  | Object was written, including all of mutated, created, unwrapped. |
-| package_write | [PackageWrite](#sui-types-PackageWrite) |  | Package was written. |
+| object_write | [ObjectWrite](#iota-types-ObjectWrite) |  | Object was written, including all of mutated, created, unwrapped. |
+| package_write | [PackageWrite](#iota-types-PackageWrite) |  | Package was written. |
 | none | [google.protobuf.Empty](#google-protobuf-Empty) |  |  |
 | created | [google.protobuf.Empty](#google-protobuf-Empty) |  |  |
 | deleted | [google.protobuf.Empty](#google-protobuf-Empty) |  |  |
@@ -1040,7 +1040,7 @@ Input/output state of an object that was changed during execution.
 
 
 
-<a name="sui-types-CheckpointCommitment"></a>
+<a name="iota-types-CheckpointCommitment"></a>
 
 ### CheckpointCommitment
 A commitment made by a checkpoint.
@@ -1048,14 +1048,14 @@ A commitment made by a checkpoint.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ecmh_live_object_set | [Digest](#sui-types-Digest) |  | An elliptic curve multiset hash attesting to the set of objects that comprise the live state of the Sui blockchain. |
+| ecmh_live_object_set | [Digest](#iota-types-Digest) |  | An elliptic curve multiset hash attesting to the set of objects that comprise the live state of the IOTA blockchain. |
 
 
 
 
 
 
-<a name="sui-types-CheckpointContents"></a>
+<a name="iota-types-CheckpointContents"></a>
 
 ### CheckpointContents
 The committed to contents of a checkpoint.
@@ -1063,14 +1063,14 @@ The committed to contents of a checkpoint.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| v1 | [CheckpointContents.V1](#sui-types-CheckpointContents-V1) |  |  |
+| v1 | [CheckpointContents.V1](#iota-types-CheckpointContents-V1) |  |  |
 
 
 
 
 
 
-<a name="sui-types-CheckpointContents-V1"></a>
+<a name="iota-types-CheckpointContents-V1"></a>
 
 ### CheckpointContents.V1
 Version 1 of `CheckpointContents`.
@@ -1078,20 +1078,20 @@ Version 1 of `CheckpointContents`.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| transactions | [CheckpointedTransactionInfo](#sui-types-CheckpointedTransactionInfo) | repeated |  |
+| transactions | [CheckpointedTransactionInfo](#iota-types-CheckpointedTransactionInfo) | repeated |  |
 
 
 
 
 
 
-<a name="sui-types-CheckpointSummary"></a>
+<a name="iota-types-CheckpointSummary"></a>
 
 ### CheckpointSummary
-A header for a checkpoint on the Sui blockchain.
+A header for a checkpoint on the IOTA blockchain.
 
-On the Sui network, checkpoints define the history of the blockchain. They are quite similar to
-the concept of blocks used by other blockchains like Bitcoin or Ethereum. The Sui blockchain,
+On the IOTA network, checkpoints define the history of the blockchain. They are quite similar to
+the concept of blocks used by other blockchains like Bitcoin or Ethereum. The IOTA blockchain,
 however, forms checkpoints after transaction execution has already happened to provide a
 certified history of the chain, instead of being formed before execution.
 
@@ -1114,14 +1114,14 @@ the validator committee in a given epoch to allow verification of the chain&#39;
 | epoch | [uint64](#uint64) | optional | Epoch that this checkpoint belongs to. |
 | sequence_number | [uint64](#uint64) | optional | The height of this checkpoint. |
 | total_network_transactions | [uint64](#uint64) | optional | Total number of transactions committed since genesis, including those in this checkpoint. |
-| content_digest | [Digest](#sui-types-Digest) | optional | The hash of the `CheckpointContents` for this checkpoint. |
-| previous_digest | [Digest](#sui-types-Digest) | optional | The hash of the previous `CheckpointSummary`.
+| content_digest | [Digest](#iota-types-Digest) | optional | The hash of the `CheckpointContents` for this checkpoint. |
+| previous_digest | [Digest](#iota-types-Digest) | optional | The hash of the previous `CheckpointSummary`.
 
 This will be `None` only for the first, or genesis, checkpoint. |
-| epoch_rolling_gas_cost_summary | [GasCostSummary](#sui-types-GasCostSummary) | optional | The running total gas costs of all transactions included in the current epoch so far until this checkpoint. |
+| epoch_rolling_gas_cost_summary | [GasCostSummary](#iota-types-GasCostSummary) | optional | The running total gas costs of all transactions included in the current epoch so far until this checkpoint. |
 | timestamp_ms | [uint64](#uint64) | optional | Timestamp of the checkpoint - number of milliseconds from the Unix epoch Checkpoint timestamps are monotonic, but not strongly monotonic - subsequent checkpoints can have the same timestamp if they originate from the same underlining consensus commit. |
-| commitments | [CheckpointCommitment](#sui-types-CheckpointCommitment) | repeated | Commitments to checkpoint-specific state. |
-| end_of_epoch_data | [EndOfEpochData](#sui-types-EndOfEpochData) | optional | Extra data only present in the final checkpoint of an epoch. |
+| commitments | [CheckpointCommitment](#iota-types-CheckpointCommitment) | repeated | Commitments to checkpoint-specific state. |
+| end_of_epoch_data | [EndOfEpochData](#iota-types-EndOfEpochData) | optional | Extra data only present in the final checkpoint of an epoch. |
 | version_specific_data | [bytes](#bytes) | optional | `CheckpointSummary` is not an evolvable structure - it must be readable by any version of the code. Therefore, to allow extensions to be added to `CheckpointSummary`, opaque data can be added to checkpoints, which can be deserialized based on the current protocol version. |
 
 
@@ -1129,7 +1129,7 @@ This will be `None` only for the first, or genesis, checkpoint. |
 
 
 
-<a name="sui-types-CheckpointedTransactionInfo"></a>
+<a name="iota-types-CheckpointedTransactionInfo"></a>
 
 ### CheckpointedTransactionInfo
 Transaction information committed to in a checkpoint.
@@ -1137,16 +1137,16 @@ Transaction information committed to in a checkpoint.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| transaction | [Digest](#sui-types-Digest) | optional | Digest of the transaction. |
-| effects | [Digest](#sui-types-Digest) | optional | Digest of the effects. |
-| signatures | [UserSignature](#sui-types-UserSignature) | repeated | Set of user signatures that authorized the transaction. |
+| transaction | [Digest](#iota-types-Digest) | optional | Digest of the transaction. |
+| effects | [Digest](#iota-types-Digest) | optional | Digest of the effects. |
+| signatures | [UserSignature](#iota-types-UserSignature) | repeated | Set of user signatures that authorized the transaction. |
 
 
 
 
 
 
-<a name="sui-types-CircomG1"></a>
+<a name="iota-types-CircomG1"></a>
 
 ### CircomG1
 A G1 point.
@@ -1154,16 +1154,16 @@ A G1 point.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| e0 | [Bn254FieldElement](#sui-types-Bn254FieldElement) | optional | Required. |
-| e1 | [Bn254FieldElement](#sui-types-Bn254FieldElement) | optional | Required. |
-| e2 | [Bn254FieldElement](#sui-types-Bn254FieldElement) | optional | Required. |
+| e0 | [Bn254FieldElement](#iota-types-Bn254FieldElement) | optional | Required. |
+| e1 | [Bn254FieldElement](#iota-types-Bn254FieldElement) | optional | Required. |
+| e2 | [Bn254FieldElement](#iota-types-Bn254FieldElement) | optional | Required. |
 
 
 
 
 
 
-<a name="sui-types-CircomG2"></a>
+<a name="iota-types-CircomG2"></a>
 
 ### CircomG2
 A G2 point.
@@ -1171,19 +1171,19 @@ A G2 point.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| e00 | [Bn254FieldElement](#sui-types-Bn254FieldElement) | optional | Required. |
-| e01 | [Bn254FieldElement](#sui-types-Bn254FieldElement) | optional | Required. |
-| e10 | [Bn254FieldElement](#sui-types-Bn254FieldElement) | optional | Required. |
-| e11 | [Bn254FieldElement](#sui-types-Bn254FieldElement) | optional | Required. |
-| e20 | [Bn254FieldElement](#sui-types-Bn254FieldElement) | optional | Required. |
-| e21 | [Bn254FieldElement](#sui-types-Bn254FieldElement) | optional | Required. |
+| e00 | [Bn254FieldElement](#iota-types-Bn254FieldElement) | optional | Required. |
+| e01 | [Bn254FieldElement](#iota-types-Bn254FieldElement) | optional | Required. |
+| e10 | [Bn254FieldElement](#iota-types-Bn254FieldElement) | optional | Required. |
+| e11 | [Bn254FieldElement](#iota-types-Bn254FieldElement) | optional | Required. |
+| e20 | [Bn254FieldElement](#iota-types-Bn254FieldElement) | optional | Required. |
+| e21 | [Bn254FieldElement](#iota-types-Bn254FieldElement) | optional | Required. |
 
 
 
 
 
 
-<a name="sui-types-Command"></a>
+<a name="iota-types-Command"></a>
 
 ### Command
 A single command in a programmable transaction.
@@ -1191,20 +1191,20 @@ A single command in a programmable transaction.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| move_call | [MoveCall](#sui-types-MoveCall) |  | A call to either an entry or a public Move function. |
-| transfer_objects | [TransferObjects](#sui-types-TransferObjects) |  | `(Vec&lt;forall T:key&#43;store. T&gt;, address)` It sends n-objects to the specified address. These objects must have store (public transfer) and either the previous owner must be an address or the object must be newly created. |
-| split_coins | [SplitCoins](#sui-types-SplitCoins) |  | `(&amp;mut Coin&lt;T&gt;, Vec&lt;u64&gt;)` -&gt; `Vec&lt;Coin&lt;T&gt;&gt;` It splits off some amounts into new coins with those amounts. |
-| merge_coins | [MergeCoins](#sui-types-MergeCoins) |  | `(&amp;mut Coin&lt;T&gt;, Vec&lt;Coin&lt;T&gt;&gt;)` It merges n-coins into the first coin. |
-| publish | [Publish](#sui-types-Publish) |  | Publishes a Move package. It takes the package bytes and a list of the package&#39;s transitive dependencies to link against on chain. |
-| make_move_vector | [MakeMoveVector](#sui-types-MakeMoveVector) |  | `forall T: Vec&lt;T&gt; -&gt; vector&lt;T&gt;` Given n-values of the same type, it constructs a vector. For non-objects or an empty vector, the type tag must be specified. |
-| upgrade | [Upgrade](#sui-types-Upgrade) |  | Upgrades a Move package. Takes (in order): 1. A vector of serialized modules for the package. 2. A vector of object ids for the transitive dependencies of the new package. 3. The object ID of the package being upgraded. 4. An argument holding the `UpgradeTicket` that must have been produced from an earlier command in the same programmable transaction. |
+| move_call | [MoveCall](#iota-types-MoveCall) |  | A call to either an entry or a public Move function. |
+| transfer_objects | [TransferObjects](#iota-types-TransferObjects) |  | `(Vec&lt;forall T:key&#43;store. T&gt;, address)` It sends n-objects to the specified address. These objects must have store (public transfer) and either the previous owner must be an address or the object must be newly created. |
+| split_coins | [SplitCoins](#iota-types-SplitCoins) |  | `(&amp;mut Coin&lt;T&gt;, Vec&lt;u64&gt;)` -&gt; `Vec&lt;Coin&lt;T&gt;&gt;` It splits off some amounts into new coins with those amounts. |
+| merge_coins | [MergeCoins](#iota-types-MergeCoins) |  | `(&amp;mut Coin&lt;T&gt;, Vec&lt;Coin&lt;T&gt;&gt;)` It merges n-coins into the first coin. |
+| publish | [Publish](#iota-types-Publish) |  | Publishes a Move package. It takes the package bytes and a list of the package&#39;s transitive dependencies to link against on chain. |
+| make_move_vector | [MakeMoveVector](#iota-types-MakeMoveVector) |  | `forall T: Vec&lt;T&gt; -&gt; vector&lt;T&gt;` Given n-values of the same type, it constructs a vector. For non-objects or an empty vector, the type tag must be specified. |
+| upgrade | [Upgrade](#iota-types-Upgrade) |  | Upgrades a Move package. Takes (in order): 1. A vector of serialized modules for the package. 2. A vector of object ids for the transitive dependencies of the new package. 3. The object ID of the package being upgraded. 4. An argument holding the `UpgradeTicket` that must have been produced from an earlier command in the same programmable transaction. |
 
 
 
 
 
 
-<a name="sui-types-CommandArgumentError"></a>
+<a name="iota-types-CommandArgumentError"></a>
 
 ### CommandArgumentError
 An error with an argument to a command.
@@ -1218,7 +1218,7 @@ An error with an argument to a command.
 | invalid_usage_of_pure_argument | [google.protobuf.Empty](#google-protobuf-Empty) |  | The argument cannot be instantiated from raw bytes. |
 | invalid_argument_to_private_entry_function | [google.protobuf.Empty](#google-protobuf-Empty) |  | Invalid argument to private entry function. Private entry functions cannot take arguments from other Move functions. |
 | index_out_of_bounds | [uint32](#uint32) |  | Out of bounds access to input or results. |
-| secondary_index_out_of_bounds | [NestedResult](#sui-types-NestedResult) |  | Out of bounds access to subresult. |
+| secondary_index_out_of_bounds | [NestedResult](#iota-types-NestedResult) |  | Out of bounds access to subresult. |
 | invalid_result_arity | [uint32](#uint32) |  | Invalid usage of result. Expected a single result but found either no return value or multiple. |
 | invalid_gas_coin_usage | [google.protobuf.Empty](#google-protobuf-Empty) |  | Invalid usage of gas coin. The gas coin can only be used by-value with a `TransferObject` command. |
 | invalid_value_usage | [google.protobuf.Empty](#google-protobuf-Empty) |  | Invalid usage of Move value. - Mutably borrowed values require unique usage. - Immutably borrowed values cannot be taken or borrowed mutably. - Taken values cannot be used again. |
@@ -1231,7 +1231,7 @@ An error with an argument to a command.
 
 
 
-<a name="sui-types-CongestedObjectsError"></a>
+<a name="iota-types-CongestedObjectsError"></a>
 
 ### CongestedObjectsError
 Set of objects that were congested, leading to the transaction&#39;s cancellation.
@@ -1239,14 +1239,14 @@ Set of objects that were congested, leading to the transaction&#39;s cancellatio
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| congested_objects | [ObjectId](#sui-types-ObjectId) | repeated | Set of congested objects. |
+| congested_objects | [ObjectId](#iota-types-ObjectId) | repeated | Set of congested objects. |
 
 
 
 
 
 
-<a name="sui-types-ConsensusCommitPrologue"></a>
+<a name="iota-types-ConsensusCommitPrologue"></a>
 
 ### ConsensusCommitPrologue
 Consensus commit prologue system transaction.
@@ -1265,13 +1265,13 @@ Present in V1, V2, and V3. |
 | commit_timestamp_ms | [uint64](#uint64) | optional | Unix timestamp from consensus.
 
 Present in V1, V2, and V3. |
-| consensus_commit_digest | [Digest](#sui-types-Digest) | optional | Digest of consensus output.
+| consensus_commit_digest | [Digest](#iota-types-Digest) | optional | Digest of consensus output.
 
 Present in V2 and V3. |
 | sub_dag_index | [uint64](#uint64) | optional | The sub DAG index of the consensus commit. This field is populated if there are multiple consensus commits per round.
 
 Present in V3. |
-| consensus_determined_version_assignments | [ConsensusDeterminedVersionAssignments](#sui-types-ConsensusDeterminedVersionAssignments) | optional | Stores consensus handler determined shared object version assignments.
+| consensus_determined_version_assignments | [ConsensusDeterminedVersionAssignments](#iota-types-ConsensusDeterminedVersionAssignments) | optional | Stores consensus handler determined shared object version assignments.
 
 Present in V3. |
 
@@ -1280,7 +1280,7 @@ Present in V3. |
 
 
 
-<a name="sui-types-ConsensusDeterminedVersionAssignments"></a>
+<a name="iota-types-ConsensusDeterminedVersionAssignments"></a>
 
 ### ConsensusDeterminedVersionAssignments
 Version assignments performed by consensus.
@@ -1288,17 +1288,17 @@ Version assignments performed by consensus.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| cancelled_transactions | [CancelledTransactions](#sui-types-CancelledTransactions) |  | Cancelled transaction version assignment. |
+| cancelled_transactions | [CancelledTransactions](#iota-types-CancelledTransactions) |  | Cancelled transaction version assignment. |
 
 
 
 
 
 
-<a name="sui-types-Digest"></a>
+<a name="iota-types-Digest"></a>
 
 ### Digest
-32-byte output of hashing a Sui structure using the Blake2b256 hash function.
+32-byte output of hashing a IOTA structure using the Blake2b256 hash function.
 
 
 | Field | Type | Label | Description |
@@ -1310,7 +1310,7 @@ Version assignments performed by consensus.
 
 
 
-<a name="sui-types-EndOfEpochData"></a>
+<a name="iota-types-EndOfEpochData"></a>
 
 ### EndOfEpochData
 Data, which when included in a `CheckpointSummary`, signals the end of an `Epoch`.
@@ -1318,16 +1318,16 @@ Data, which when included in a `CheckpointSummary`, signals the end of an `Epoch
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| next_epoch_committee | [ValidatorCommitteeMember](#sui-types-ValidatorCommitteeMember) | repeated | The set of validators that will be in the `ValidatorCommittee` for the next epoch. |
+| next_epoch_committee | [ValidatorCommitteeMember](#iota-types-ValidatorCommitteeMember) | repeated | The set of validators that will be in the `ValidatorCommittee` for the next epoch. |
 | next_epoch_protocol_version | [uint64](#uint64) | optional | The protocol version that is in effect during the next epoch. |
-| epoch_commitments | [CheckpointCommitment](#sui-types-CheckpointCommitment) | repeated | Commitments to epoch specific state (live object set) |
+| epoch_commitments | [CheckpointCommitment](#iota-types-CheckpointCommitment) | repeated | Commitments to epoch specific state (live object set) |
 
 
 
 
 
 
-<a name="sui-types-EndOfEpochTransaction"></a>
+<a name="iota-types-EndOfEpochTransaction"></a>
 
 ### EndOfEpochTransaction
 Set of operations run at the end of the epoch to close out the current epoch
@@ -1336,14 +1336,14 @@ and start the next one.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| transactions | [EndOfEpochTransactionKind](#sui-types-EndOfEpochTransactionKind) | repeated |  |
+| transactions | [EndOfEpochTransactionKind](#iota-types-EndOfEpochTransactionKind) | repeated |  |
 
 
 
 
 
 
-<a name="sui-types-EndOfEpochTransactionKind"></a>
+<a name="iota-types-EndOfEpochTransactionKind"></a>
 
 ### EndOfEpochTransactionKind
 Operation run at the end of an epoch.
@@ -1351,12 +1351,12 @@ Operation run at the end of an epoch.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| change_epoch | [ChangeEpoch](#sui-types-ChangeEpoch) |  | End the epoch and start the next one. |
-| authenticator_state_expire | [AuthenticatorStateExpire](#sui-types-AuthenticatorStateExpire) |  | Expire JWKs used for zklogin. |
+| change_epoch | [ChangeEpoch](#iota-types-ChangeEpoch) |  | End the epoch and start the next one. |
+| authenticator_state_expire | [AuthenticatorStateExpire](#iota-types-AuthenticatorStateExpire) |  | Expire JWKs used for zklogin. |
 | authenticator_state_create | [google.protobuf.Empty](#google-protobuf-Empty) |  | Create and initialize the authenticator object used for zklogin. |
 | randomness_state_create | [google.protobuf.Empty](#google-protobuf-Empty) |  | Create and initialize the randomness object. |
 | deny_list_state_create | [google.protobuf.Empty](#google-protobuf-Empty) |  | Create and initialize the deny list object. |
-| bridge_state_create | [Digest](#sui-types-Digest) |  | Create and initialize the bridge object. |
+| bridge_state_create | [Digest](#iota-types-Digest) |  | Create and initialize the bridge object. |
 | bridge_committee_init | [uint64](#uint64) |  | Initialize the bridge committee. |
 
 
@@ -1364,7 +1364,7 @@ Operation run at the end of an epoch.
 
 
 
-<a name="sui-types-Event"></a>
+<a name="iota-types-Event"></a>
 
 ### Event
 An event.
@@ -1372,10 +1372,10 @@ An event.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| package_id | [ObjectId](#sui-types-ObjectId) | optional | Package ID of the top-level function invoked by a `MoveCall` command that triggered this event to be emitted. |
-| module | [Identifier](#sui-types-Identifier) | optional | Module name of the top-level function invoked by a `MoveCall` command that triggered this event to be emitted. |
-| sender | [Address](#sui-types-Address) | optional | Address of the account that sent the transaction where this event was emitted. |
-| event_type | [StructTag](#sui-types-StructTag) | optional | The type of the event emitted. |
+| package_id | [ObjectId](#iota-types-ObjectId) | optional | Package ID of the top-level function invoked by a `MoveCall` command that triggered this event to be emitted. |
+| module | [Identifier](#iota-types-Identifier) | optional | Module name of the top-level function invoked by a `MoveCall` command that triggered this event to be emitted. |
+| sender | [Address](#iota-types-Address) | optional | Address of the account that sent the transaction where this event was emitted. |
+| event_type | [StructTag](#iota-types-StructTag) | optional | The type of the event emitted. |
 | contents | [bytes](#bytes) | optional | BCS serialized bytes of the event. |
 
 
@@ -1383,7 +1383,7 @@ An event.
 
 
 
-<a name="sui-types-ExecutionStatus"></a>
+<a name="iota-types-ExecutionStatus"></a>
 
 ### ExecutionStatus
 The status of an executed transaction.
@@ -1392,14 +1392,14 @@ The status of an executed transaction.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | success | [bool](#bool) | optional | Required. Indicates if the transaction was successful or not. |
-| status | [FailureStatus](#sui-types-FailureStatus) | optional | Optional. The error if `success` is false. |
+| status | [FailureStatus](#iota-types-FailureStatus) | optional | Optional. The error if `success` is false. |
 
 
 
 
 
 
-<a name="sui-types-FailureStatus"></a>
+<a name="iota-types-FailureStatus"></a>
 
 ### FailureStatus
 An error that can occur during the execution of a transaction.
@@ -1412,9 +1412,9 @@ An error that can occur during the execution of a transaction.
 | invalid_gas_object | [google.protobuf.Empty](#google-protobuf-Empty) |  | Invalid `Gas` object. |
 | invariant_violation | [google.protobuf.Empty](#google-protobuf-Empty) |  | Invariant violation. |
 | feature_not_yet_supported | [google.protobuf.Empty](#google-protobuf-Empty) |  | Attempted to use feature that is not supported yet. |
-| object_too_big | [SizeError](#sui-types-SizeError) |  | Move object is larger than the maximum allowed size. |
-| package_too_big | [SizeError](#sui-types-SizeError) |  | Package is larger than the maximum allowed size. |
-| circular_object_ownership | [ObjectId](#sui-types-ObjectId) |  | Circular object ownership. |
+| object_too_big | [SizeError](#iota-types-SizeError) |  | Move object is larger than the maximum allowed size. |
+| package_too_big | [SizeError](#iota-types-SizeError) |  | Package is larger than the maximum allowed size. |
+| circular_object_ownership | [ObjectId](#iota-types-ObjectId) |  | Circular object ownership. |
 | insufficient_coin_balance | [google.protobuf.Empty](#google-protobuf-Empty) |  | Coin errors.
 
 Insufficient coin balance for requested operation. |
@@ -1422,11 +1422,11 @@ Insufficient coin balance for requested operation. |
 | publish_error_non_zero_address | [google.protobuf.Empty](#google-protobuf-Empty) |  | Publish/Upgrade errors.
 
 Publish error, non-zero address. The modules in the package must have their self-addresses set to zero. |
-| sui_move_verification_error | [google.protobuf.Empty](#google-protobuf-Empty) |  | Sui Move bytecode verification error. |
-| move_primitive_runtime_error | [MoveError](#sui-types-MoveError) |  | MoveVm errors.
+| iota_move_verification_error | [google.protobuf.Empty](#google-protobuf-Empty) |  | IOTA Move bytecode verification error. |
+| move_primitive_runtime_error | [MoveError](#iota-types-MoveError) |  | MoveVm errors.
 
 Error from a non-abort instruction. Possible causes: Arithmetic error, stack overflow, max value depth, or similar. |
-| move_abort | [MoveError](#sui-types-MoveError) |  | Move runtime abort. |
+| move_abort | [MoveError](#iota-types-MoveError) |  | Move runtime abort. |
 | vm_verification_or_deserialization_error | [google.protobuf.Empty](#google-protobuf-Empty) |  | Bytecode verification error. |
 | vm_invariant_violation | [google.protobuf.Empty](#google-protobuf-Empty) |  | MoveVm invariant violation. |
 | function_not_found | [google.protobuf.Empty](#google-protobuf-Empty) |  | Programmable transaction errors.
@@ -1435,26 +1435,26 @@ Function not found. |
 | arity_mismatch | [google.protobuf.Empty](#google-protobuf-Empty) |  | Parity mismatch for Move function. The number of arguments does not match the number of parameters. |
 | type_arity_mismatch | [google.protobuf.Empty](#google-protobuf-Empty) |  | Type parity mismatch for Move function. Mismatch between the number of actual versus expected type arguments. |
 | non_entry_function_invoked | [google.protobuf.Empty](#google-protobuf-Empty) |  | Non-entry function invoked. Move Call must start with an entry function. |
-| command_argument_error | [CommandArgumentError](#sui-types-CommandArgumentError) |  | Invalid command argument. |
-| type_argument_error | [TypeArgumentError](#sui-types-TypeArgumentError) |  | Type argument error. |
-| unused_value_without_drop | [NestedResult](#sui-types-NestedResult) |  | Unused result without the drop ability. |
+| command_argument_error | [CommandArgumentError](#iota-types-CommandArgumentError) |  | Invalid command argument. |
+| type_argument_error | [TypeArgumentError](#iota-types-TypeArgumentError) |  | Type argument error. |
+| unused_value_without_drop | [NestedResult](#iota-types-NestedResult) |  | Unused result without the drop ability. |
 | invalid_public_function_return_type | [uint32](#uint32) |  | Invalid public Move function signature. Unsupported return type for return value. |
 | invalid_transfer_object | [google.protobuf.Empty](#google-protobuf-Empty) |  | Invalid transfer object, object does not have public transfer. |
-| effects_too_large | [SizeError](#sui-types-SizeError) |  | Post-execution errors.
+| effects_too_large | [SizeError](#iota-types-SizeError) |  | Post-execution errors.
 
 Effects from the transaction are too large. |
 | publish_upgrade_missing_dependency | [google.protobuf.Empty](#google-protobuf-Empty) |  | Publish or Upgrade is missing dependency. |
 | publish_upgrade_dependency_downgrade | [google.protobuf.Empty](#google-protobuf-Empty) |  | Publish or upgrade dependency downgrade.
 
 Indirect (transitive) dependency of published or upgraded package has been assigned an on-chain version that is less than the version required by one of the package&#39;s transitive dependencies. |
-| package_upgrade_error | [PackageUpgradeError](#sui-types-PackageUpgradeError) |  | Invalid package upgrade. |
-| written_objects_too_large | [SizeError](#sui-types-SizeError) |  | Indicates the transaction tried to write objects too large to storage. |
+| package_upgrade_error | [PackageUpgradeError](#iota-types-PackageUpgradeError) |  | Invalid package upgrade. |
+| written_objects_too_large | [SizeError](#iota-types-SizeError) |  | Indicates the transaction tried to write objects too large to storage. |
 | certificate_denied | [google.protobuf.Empty](#google-protobuf-Empty) |  | Certificate is on the deny list. |
-| sui_move_verification_timedout | [google.protobuf.Empty](#google-protobuf-Empty) |  | Sui Move bytecode verification timed out. |
+| iota_move_verification_timedout | [google.protobuf.Empty](#google-protobuf-Empty) |  | IOTA Move bytecode verification timed out. |
 | shared_object_operation_not_allowed | [google.protobuf.Empty](#google-protobuf-Empty) |  | The requested shared object operation is not allowed. |
 | input_object_deleted | [google.protobuf.Empty](#google-protobuf-Empty) |  | Requested shared object has been deleted. |
-| execution_cancelled_due_to_shared_object_congestion | [CongestedObjectsError](#sui-types-CongestedObjectsError) |  | Certificate is cancelled due to congestion on shared objects. |
-| address_denied_for_coin | [AddressDeniedForCoinError](#sui-types-AddressDeniedForCoinError) |  | Address is denied for this coin type. |
+| execution_cancelled_due_to_shared_object_congestion | [CongestedObjectsError](#iota-types-CongestedObjectsError) |  | Certificate is cancelled due to congestion on shared objects. |
+| address_denied_for_coin | [AddressDeniedForCoinError](#iota-types-AddressDeniedForCoinError) |  | Address is denied for this coin type. |
 | coin_type_global_pause | [string](#string) |  | Coin type is globally paused for use. |
 | execution_cancelled_due_to_randomness_unavailable | [google.protobuf.Empty](#google-protobuf-Empty) |  | Certificate is cancelled because randomness could not be generated this epoch. |
 
@@ -1463,7 +1463,7 @@ Indirect (transitive) dependency of published or upgraded package has been assig
 
 
 
-<a name="sui-types-GasCostSummary"></a>
+<a name="iota-types-GasCostSummary"></a>
 
 ### GasCostSummary
 Summary of gas charges.
@@ -1504,7 +1504,7 @@ storage_rebate &#43; non_refundable_storage_fee`
 
 
 
-<a name="sui-types-GasPayment"></a>
+<a name="iota-types-GasPayment"></a>
 
 ### GasPayment
 Payment information for executing a transaction.
@@ -1512,8 +1512,8 @@ Payment information for executing a transaction.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| objects | [ObjectReference](#sui-types-ObjectReference) | repeated | Set of gas objects to use for payment. |
-| owner | [Address](#sui-types-Address) | optional | Owner of the gas objects, either the transaction sender or a sponsor. |
+| objects | [ObjectReference](#iota-types-ObjectReference) | repeated | Set of gas objects to use for payment. |
+| owner | [Address](#iota-types-Address) | optional | Owner of the gas objects, either the transaction sender or a sponsor. |
 | price | [uint64](#uint64) | optional | Gas unit price to use when charging for computation.
 
 Must be greater than or equal to the network&#39;s current RGP (reference gas price). |
@@ -1524,7 +1524,7 @@ Must be greater than or equal to the network&#39;s current RGP (reference gas pr
 
 
 
-<a name="sui-types-GenesisObject"></a>
+<a name="iota-types-GenesisObject"></a>
 
 ### GenesisObject
 An object part of the initial chain state.
@@ -1532,17 +1532,17 @@ An object part of the initial chain state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object_id | [ObjectId](#sui-types-ObjectId) | optional |  |
+| object_id | [ObjectId](#iota-types-ObjectId) | optional |  |
 | version | [uint64](#uint64) | optional |  |
-| owner | [Owner](#sui-types-Owner) | optional |  |
-| object | [ObjectData](#sui-types-ObjectData) | optional |  |
+| owner | [Owner](#iota-types-Owner) | optional |  |
+| object | [ObjectData](#iota-types-ObjectData) | optional |  |
 
 
 
 
 
 
-<a name="sui-types-GenesisTransaction"></a>
+<a name="iota-types-GenesisTransaction"></a>
 
 ### GenesisTransaction
 The genesis transaction.
@@ -1550,14 +1550,14 @@ The genesis transaction.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| objects | [GenesisObject](#sui-types-GenesisObject) | repeated | Set of genesis objects. |
+| objects | [GenesisObject](#iota-types-GenesisObject) | repeated | Set of genesis objects. |
 
 
 
 
 
 
-<a name="sui-types-I128"></a>
+<a name="iota-types-I128"></a>
 
 ### I128
 A signed 128-bit integer encoded in little-endian using 16-bytes.
@@ -1572,7 +1572,7 @@ A signed 128-bit integer encoded in little-endian using 16-bytes.
 
 
 
-<a name="sui-types-Identifier"></a>
+<a name="iota-types-Identifier"></a>
 
 ### Identifier
 A Move identifier.
@@ -1595,7 +1595,7 @@ UNDERSCORE = %x95
 
 
 
-<a name="sui-types-Input"></a>
+<a name="iota-types-Input"></a>
 
 ### Input
 An input to a user transaction.
@@ -1606,16 +1606,16 @@ An input to a user transaction.
 | pure | [bytes](#bytes) |  | A move value serialized as BCS.
 
 For normal operations this is required to be a move primitive type and not contain structs or objects. |
-| immutable_or_owned | [ObjectReference](#sui-types-ObjectReference) |  | A Move object that is either immutable or address owned. |
-| shared | [SharedObjectInput](#sui-types-SharedObjectInput) |  | A Move object whose owner is &#34;Shared&#34;. |
-| receiving | [ObjectReference](#sui-types-ObjectReference) |  | A Move object that is attempted to be received in this transaction. |
+| immutable_or_owned | [ObjectReference](#iota-types-ObjectReference) |  | A Move object that is either immutable or address owned. |
+| shared | [SharedObjectInput](#iota-types-SharedObjectInput) |  | A Move object whose owner is &#34;Shared&#34;. |
+| receiving | [ObjectReference](#iota-types-ObjectReference) |  | A Move object that is attempted to be received in this transaction. |
 
 
 
 
 
 
-<a name="sui-types-Jwk"></a>
+<a name="iota-types-Jwk"></a>
 
 ### Jwk
 A JSON web key.
@@ -1637,7 +1637,7 @@ The JWK is used to verify the JWT token.
 
 
 
-<a name="sui-types-JwkId"></a>
+<a name="iota-types-JwkId"></a>
 
 ### JwkId
 Key to uniquely identify a JWK.
@@ -1653,7 +1653,7 @@ Key to uniquely identify a JWK.
 
 
 
-<a name="sui-types-MakeMoveVector"></a>
+<a name="iota-types-MakeMoveVector"></a>
 
 ### MakeMoveVector
 Command to build a Move vector out of a set of individual elements.
@@ -1661,17 +1661,17 @@ Command to build a Move vector out of a set of individual elements.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| element_type | [TypeTag](#sui-types-TypeTag) | optional | Type of the individual elements.
+| element_type | [TypeTag](#iota-types-TypeTag) | optional | Type of the individual elements.
 
 This is required to be set when the type can&#39;t be inferred, for example when the set of provided arguments are all pure input values. |
-| elements | [Argument](#sui-types-Argument) | repeated | The set individual elements to build the vector with. |
+| elements | [Argument](#iota-types-Argument) | repeated | The set individual elements to build the vector with. |
 
 
 
 
 
 
-<a name="sui-types-MergeCoins"></a>
+<a name="iota-types-MergeCoins"></a>
 
 ### MergeCoins
 Command to merge multiple coins of the same type into a single coin.
@@ -1679,8 +1679,8 @@ Command to merge multiple coins of the same type into a single coin.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| coin | [Argument](#sui-types-Argument) | optional | Coin to merge coins into. |
-| coins_to_merge | [Argument](#sui-types-Argument) | repeated | Set of coins to merge into `coin`.
+| coin | [Argument](#iota-types-Argument) | optional | Coin to merge coins into. |
+| coins_to_merge | [Argument](#iota-types-Argument) | repeated | Set of coins to merge into `coin`.
 
 All listed coins must be of the same type and be the same type as `coin` |
 
@@ -1689,7 +1689,7 @@ All listed coins must be of the same type and be the same type as `coin` |
 
 
 
-<a name="sui-types-ModifiedAtVersion"></a>
+<a name="iota-types-ModifiedAtVersion"></a>
 
 ### ModifiedAtVersion
 Indicates that an object was modified at a specific version.
@@ -1697,7 +1697,7 @@ Indicates that an object was modified at a specific version.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object_id | [ObjectId](#sui-types-ObjectId) | optional | Required. `ObjectId` of the object. |
+| object_id | [ObjectId](#iota-types-ObjectId) | optional | Required. `ObjectId` of the object. |
 | version | [uint64](#uint64) | optional | Required. Version of the object prior to this transaction. |
 
 
@@ -1705,7 +1705,7 @@ Indicates that an object was modified at a specific version.
 
 
 
-<a name="sui-types-MoveCall"></a>
+<a name="iota-types-MoveCall"></a>
 
 ### MoveCall
 Command to call a Move function.
@@ -1716,18 +1716,18 @@ that is either `entry` or `public` (which don&#39;t have a reference return type
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| package | [ObjectId](#sui-types-ObjectId) | optional | The package containing the module and function. |
-| module | [Identifier](#sui-types-Identifier) | optional | The specific module in the package containing the function. |
-| function | [Identifier](#sui-types-Identifier) | optional | The function to be called. |
-| type_arguments | [TypeTag](#sui-types-TypeTag) | repeated | The type arguments to the function. |
-| arguments | [Argument](#sui-types-Argument) | repeated | The arguments to the function. |
+| package | [ObjectId](#iota-types-ObjectId) | optional | The package containing the module and function. |
+| module | [Identifier](#iota-types-Identifier) | optional | The specific module in the package containing the function. |
+| function | [Identifier](#iota-types-Identifier) | optional | The function to be called. |
+| type_arguments | [TypeTag](#iota-types-TypeTag) | repeated | The type arguments to the function. |
+| arguments | [Argument](#iota-types-Argument) | repeated | The arguments to the function. |
 
 
 
 
 
 
-<a name="sui-types-MoveError"></a>
+<a name="iota-types-MoveError"></a>
 
 ### MoveError
 Error that occurred in Move.
@@ -1735,7 +1735,7 @@ Error that occurred in Move.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| location | [MoveLocation](#sui-types-MoveLocation) | optional | Location in Move where the error occurred. |
+| location | [MoveLocation](#iota-types-MoveLocation) | optional | Location in Move where the error occurred. |
 | abort_code | [uint64](#uint64) | optional | Abort code from Move. |
 
 
@@ -1743,7 +1743,7 @@ Error that occurred in Move.
 
 
 
-<a name="sui-types-MoveField"></a>
+<a name="iota-types-MoveField"></a>
 
 ### MoveField
 
@@ -1751,15 +1751,15 @@ Error that occurred in Move.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [Identifier](#sui-types-Identifier) | optional |  |
-| value | [MoveValue](#sui-types-MoveValue) | optional |  |
+| name | [Identifier](#iota-types-Identifier) | optional |  |
+| value | [MoveValue](#iota-types-MoveValue) | optional |  |
 
 
 
 
 
 
-<a name="sui-types-MoveLocation"></a>
+<a name="iota-types-MoveLocation"></a>
 
 ### MoveLocation
 Location in Move bytecode where an error occurred.s
@@ -1767,18 +1767,18 @@ Location in Move bytecode where an error occurred.s
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| package | [ObjectId](#sui-types-ObjectId) | optional | Required. The package ID. |
-| module | [Identifier](#sui-types-Identifier) | optional | Required. The module name. |
+| package | [ObjectId](#iota-types-ObjectId) | optional | Required. The package ID. |
+| module | [Identifier](#iota-types-Identifier) | optional | Required. The module name. |
 | function | [uint32](#uint32) | optional | Required. The function index. |
 | instruction | [uint32](#uint32) | optional | Required. Offset of the instruction where the error occurred. |
-| function_name | [Identifier](#sui-types-Identifier) | optional | Optional. The name of the function, if available. |
+| function_name | [Identifier](#iota-types-Identifier) | optional | Optional. The name of the function, if available. |
 
 
 
 
 
 
-<a name="sui-types-MoveModule"></a>
+<a name="iota-types-MoveModule"></a>
 
 ### MoveModule
 Module defined by a package.
@@ -1786,7 +1786,7 @@ Module defined by a package.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| name | [Identifier](#sui-types-Identifier) | optional | Name of the module. |
+| name | [Identifier](#iota-types-Identifier) | optional | Name of the module. |
 | contents | [bytes](#bytes) | optional | Serialized bytecode of the module. |
 
 
@@ -1794,7 +1794,7 @@ Module defined by a package.
 
 
 
-<a name="sui-types-MovePackage"></a>
+<a name="iota-types-MovePackage"></a>
 
 ### MovePackage
 A Move package.
@@ -1802,18 +1802,18 @@ A Move package.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| id | [ObjectId](#sui-types-ObjectId) | optional | Address or ID of this package. |
+| id | [ObjectId](#iota-types-ObjectId) | optional | Address or ID of this package. |
 | version | [uint64](#uint64) | optional | Version of the package. |
-| modules | [MoveModule](#sui-types-MoveModule) | repeated | Set of modules defined by this package. |
-| type_origin_table | [TypeOrigin](#sui-types-TypeOrigin) | repeated | Maps struct/module to a package version where it was first defined, stored as a vector for simple serialization and deserialization. |
-| linkage_table | [UpgradeInfo](#sui-types-UpgradeInfo) | repeated | For each dependency, maps original package ID to the info about the (upgraded) dependency version that this package is using. |
+| modules | [MoveModule](#iota-types-MoveModule) | repeated | Set of modules defined by this package. |
+| type_origin_table | [TypeOrigin](#iota-types-TypeOrigin) | repeated | Maps struct/module to a package version where it was first defined, stored as a vector for simple serialization and deserialization. |
+| linkage_table | [UpgradeInfo](#iota-types-UpgradeInfo) | repeated | For each dependency, maps original package ID to the info about the (upgraded) dependency version that this package is using. |
 
 
 
 
 
 
-<a name="sui-types-MoveStruct"></a>
+<a name="iota-types-MoveStruct"></a>
 
 ### MoveStruct
 A Move struct.
@@ -1821,8 +1821,8 @@ A Move struct.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object_id | [ObjectId](#sui-types-ObjectId) | optional | `ObjectId` for this object. |
-| object_type | [StructTag](#sui-types-StructTag) | optional | The type of this object. |
+| object_id | [ObjectId](#iota-types-ObjectId) | optional | `ObjectId` for this object. |
+| object_type | [StructTag](#iota-types-StructTag) | optional | The type of this object. |
 | has_public_transfer | [bool](#bool) | optional | DEPRECATED this field is no longer used to determine whether a tx can transfer this object. Instead, it is always calculated from the objects type when loaded in execution. |
 | version | [uint64](#uint64) | optional | Version of the object. |
 | contents | [bytes](#bytes) | optional | BCS bytes of a Move struct value. |
@@ -1832,7 +1832,7 @@ A Move struct.
 
 
 
-<a name="sui-types-MoveStructValue"></a>
+<a name="iota-types-MoveStructValue"></a>
 
 ### MoveStructValue
 
@@ -1840,15 +1840,15 @@ A Move struct.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| struct_type | [StructTag](#sui-types-StructTag) | optional |  |
-| fields | [MoveField](#sui-types-MoveField) | repeated |  |
+| struct_type | [StructTag](#iota-types-StructTag) | optional |  |
+| fields | [MoveField](#iota-types-MoveField) | repeated |  |
 
 
 
 
 
 
-<a name="sui-types-MoveValue"></a>
+<a name="iota-types-MoveValue"></a>
 
 ### MoveValue
 
@@ -1861,20 +1861,20 @@ A Move struct.
 | u16 | [uint32](#uint32) |  |  |
 | u32 | [uint32](#uint32) |  |  |
 | u64 | [uint64](#uint64) |  |  |
-| u128 | [U128](#sui-types-U128) |  |  |
-| u256 | [U256](#sui-types-U256) |  |  |
-| address | [Address](#sui-types-Address) |  |  |
-| vector | [MoveVector](#sui-types-MoveVector) |  |  |
-| struct | [MoveStructValue](#sui-types-MoveStructValue) |  |  |
-| signer | [Address](#sui-types-Address) |  |  |
-| variant | [MoveVariant](#sui-types-MoveVariant) |  |  |
+| u128 | [U128](#iota-types-U128) |  |  |
+| u256 | [U256](#iota-types-U256) |  |  |
+| address | [Address](#iota-types-Address) |  |  |
+| vector | [MoveVector](#iota-types-MoveVector) |  |  |
+| struct | [MoveStructValue](#iota-types-MoveStructValue) |  |  |
+| signer | [Address](#iota-types-Address) |  |  |
+| variant | [MoveVariant](#iota-types-MoveVariant) |  |  |
 
 
 
 
 
 
-<a name="sui-types-MoveVariant"></a>
+<a name="iota-types-MoveVariant"></a>
 
 ### MoveVariant
 
@@ -1882,17 +1882,17 @@ A Move struct.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| enum_type | [StructTag](#sui-types-StructTag) | optional |  |
-| variant_name | [Identifier](#sui-types-Identifier) | optional |  |
+| enum_type | [StructTag](#iota-types-StructTag) | optional |  |
+| variant_name | [Identifier](#iota-types-Identifier) | optional |  |
 | tag | [uint32](#uint32) | optional |  |
-| fields | [MoveField](#sui-types-MoveField) | repeated |  |
+| fields | [MoveField](#iota-types-MoveField) | repeated |  |
 
 
 
 
 
 
-<a name="sui-types-MoveVector"></a>
+<a name="iota-types-MoveVector"></a>
 
 ### MoveVector
 
@@ -1900,14 +1900,14 @@ A Move struct.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| values | [MoveValue](#sui-types-MoveValue) | repeated |  |
+| values | [MoveValue](#iota-types-MoveValue) | repeated |  |
 
 
 
 
 
 
-<a name="sui-types-MultisigAggregatedSignature"></a>
+<a name="iota-types-MultisigAggregatedSignature"></a>
 
 ### MultisigAggregatedSignature
 Aggregated signature from members of a multisig committee.
@@ -1915,19 +1915,19 @@ Aggregated signature from members of a multisig committee.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| signatures | [MultisigMemberSignature](#sui-types-MultisigMemberSignature) | repeated | The plain signatures encoded with signature scheme.
+| signatures | [MultisigMemberSignature](#iota-types-MultisigMemberSignature) | repeated | The plain signatures encoded with signature scheme.
 
 The signatures must be in the same order as they are listed in the committee. |
 | bitmap | [uint32](#uint32) | optional | Required. Bitmap indicating which committee members contributed to the signature. |
-| legacy_bitmap | [RoaringBitmap](#sui-types-RoaringBitmap) | optional | Optional. If present, means this signature&#39;s on-chain format uses the old legacy multisig format. |
-| committee | [MultisigCommittee](#sui-types-MultisigCommittee) | optional | Required. The committee to use to validate this signature. |
+| legacy_bitmap | [RoaringBitmap](#iota-types-RoaringBitmap) | optional | Optional. If present, means this signature&#39;s on-chain format uses the old legacy multisig format. |
+| committee | [MultisigCommittee](#iota-types-MultisigCommittee) | optional | Required. The committee to use to validate this signature. |
 
 
 
 
 
 
-<a name="sui-types-MultisigCommittee"></a>
+<a name="iota-types-MultisigCommittee"></a>
 
 ### MultisigCommittee
 A multisig committee.
@@ -1935,7 +1935,7 @@ A multisig committee.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| members | [MultisigMember](#sui-types-MultisigMember) | repeated | A list of committee members and their corresponding weight. |
+| members | [MultisigMember](#iota-types-MultisigMember) | repeated | A list of committee members and their corresponding weight. |
 | threshold | [uint32](#uint32) | optional | Required. The threshold of signatures needed to validate a signature from this committee. |
 
 
@@ -1943,7 +1943,7 @@ A multisig committee.
 
 
 
-<a name="sui-types-MultisigMember"></a>
+<a name="iota-types-MultisigMember"></a>
 
 ### MultisigMember
 A member in a multisig committee.
@@ -1951,7 +1951,7 @@ A member in a multisig committee.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| public_key | [MultisigMemberPublicKey](#sui-types-MultisigMemberPublicKey) | optional | Required. The public key of the committee member. |
+| public_key | [MultisigMemberPublicKey](#iota-types-MultisigMemberPublicKey) | optional | Required. The public key of the committee member. |
 | weight | [uint32](#uint32) | optional | Required. The weight of this member&#39;s signature. |
 
 
@@ -1959,7 +1959,7 @@ A member in a multisig committee.
 
 
 
-<a name="sui-types-MultisigMemberPublicKey"></a>
+<a name="iota-types-MultisigMemberPublicKey"></a>
 
 ### MultisigMemberPublicKey
 Set of valid public keys for multisig committee members.
@@ -1970,14 +1970,14 @@ Set of valid public keys for multisig committee members.
 | ed25519 | [bytes](#bytes) |  | An ed25519 public key |
 | secp256k1 | [bytes](#bytes) |  | A secp256k1 public key |
 | secp256r1 | [bytes](#bytes) |  | A secp256r1 public key |
-| zklogin | [ZkLoginPublicIdentifier](#sui-types-ZkLoginPublicIdentifier) |  | A zklogin public identifier |
+| zklogin | [ZkLoginPublicIdentifier](#iota-types-ZkLoginPublicIdentifier) |  | A zklogin public identifier |
 
 
 
 
 
 
-<a name="sui-types-MultisigMemberSignature"></a>
+<a name="iota-types-MultisigMemberSignature"></a>
 
 ### MultisigMemberSignature
 A signature from a member of a multisig committee.
@@ -1988,14 +1988,14 @@ A signature from a member of a multisig committee.
 | ed25519 | [bytes](#bytes) |  | An ed25519 signature. |
 | secp256k1 | [bytes](#bytes) |  | A secp256k1 signature. |
 | secp256r1 | [bytes](#bytes) |  | A secp256r1 signature. |
-| zklogin | [ZkLoginAuthenticator](#sui-types-ZkLoginAuthenticator) |  | A zklogin signature. |
+| zklogin | [ZkLoginAuthenticator](#iota-types-ZkLoginAuthenticator) |  | A zklogin signature. |
 
 
 
 
 
 
-<a name="sui-types-NestedResult"></a>
+<a name="iota-types-NestedResult"></a>
 
 ### NestedResult
 An argument type for a nested result.
@@ -2011,27 +2011,27 @@ An argument type for a nested result.
 
 
 
-<a name="sui-types-Object"></a>
+<a name="iota-types-Object"></a>
 
 ### Object
-An object on the Sui blockchain.
+An object on the IOTA blockchain.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object_id | [ObjectId](#sui-types-ObjectId) | optional | `ObjectId` for this object. |
+| object_id | [ObjectId](#iota-types-ObjectId) | optional | `ObjectId` for this object. |
 | version | [uint64](#uint64) | optional | Version of the object. |
-| owner | [Owner](#sui-types-Owner) | optional | Owner of the object. |
-| object | [ObjectData](#sui-types-ObjectData) | optional |  |
-| previous_transaction | [Digest](#sui-types-Digest) | optional | The digest of the transaction that created or last mutated this object |
-| storage_rebate | [uint64](#uint64) | optional | The amount of SUI to rebate if this object gets deleted. This number is re-calculated each time the object is mutated based on the present storage gas price. |
+| owner | [Owner](#iota-types-Owner) | optional | Owner of the object. |
+| object | [ObjectData](#iota-types-ObjectData) | optional |  |
+| previous_transaction | [Digest](#iota-types-Digest) | optional | The digest of the transaction that created or last mutated this object |
+| storage_rebate | [uint64](#uint64) | optional | The amount of IOTA to rebate if this object gets deleted. This number is re-calculated each time the object is mutated based on the present storage gas price. |
 
 
 
 
 
 
-<a name="sui-types-ObjectData"></a>
+<a name="iota-types-ObjectData"></a>
 
 ### ObjectData
 Object data, either a package or struct.
@@ -2039,15 +2039,15 @@ Object data, either a package or struct.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| struct | [MoveStruct](#sui-types-MoveStruct) |  |  |
-| package | [MovePackage](#sui-types-MovePackage) |  |  |
+| struct | [MoveStruct](#iota-types-MoveStruct) |  |  |
+| package | [MovePackage](#iota-types-MovePackage) |  |  |
 
 
 
 
 
 
-<a name="sui-types-ObjectExist"></a>
+<a name="iota-types-ObjectExist"></a>
 
 ### ObjectExist
 Information about the old version of the object.
@@ -2056,20 +2056,20 @@ Information about the old version of the object.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | version | [uint64](#uint64) | optional | Required. Version of the object. |
-| digest | [Digest](#sui-types-Digest) | optional | Required. Digest of the object. |
-| owner | [Owner](#sui-types-Owner) | optional | Required. Owner of the object. |
+| digest | [Digest](#iota-types-Digest) | optional | Required. Digest of the object. |
+| owner | [Owner](#iota-types-Owner) | optional | Required. Owner of the object. |
 
 
 
 
 
 
-<a name="sui-types-ObjectId"></a>
+<a name="iota-types-ObjectId"></a>
 
 ### ObjectId
-Unique identifier for an object on the Sui blockchain.
+Unique identifier for an object on the IOTA blockchain.
 
-An `ObjectId` is a 32-byte identifier used to uniquely identify an object on the Sui
+An `ObjectId` is a 32-byte identifier used to uniquely identify an object on the IOTA
 blockchain.
 
 
@@ -2082,7 +2082,7 @@ blockchain.
 
 
 
-<a name="sui-types-ObjectReference"></a>
+<a name="iota-types-ObjectReference"></a>
 
 ### ObjectReference
 Reference to an object.
@@ -2090,16 +2090,16 @@ Reference to an object.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object_id | [ObjectId](#sui-types-ObjectId) | optional | The object ID of this object. |
+| object_id | [ObjectId](#iota-types-ObjectId) | optional | The object ID of this object. |
 | version | [uint64](#uint64) | optional | The version of this object. |
-| digest | [Digest](#sui-types-Digest) | optional | The digest of this object. |
+| digest | [Digest](#iota-types-Digest) | optional | The digest of this object. |
 
 
 
 
 
 
-<a name="sui-types-ObjectReferenceWithOwner"></a>
+<a name="iota-types-ObjectReferenceWithOwner"></a>
 
 ### ObjectReferenceWithOwner
 An object reference with owner information.
@@ -2107,15 +2107,15 @@ An object reference with owner information.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| reference | [ObjectReference](#sui-types-ObjectReference) | optional | Required. `ObjectReference`. |
-| owner | [Owner](#sui-types-Owner) | optional | Required. `Owner`. |
+| reference | [ObjectReference](#iota-types-ObjectReference) | optional | Required. `ObjectReference`. |
+| owner | [Owner](#iota-types-Owner) | optional | Required. `Owner`. |
 
 
 
 
 
 
-<a name="sui-types-ObjectWrite"></a>
+<a name="iota-types-ObjectWrite"></a>
 
 ### ObjectWrite
 Object write, including all of mutated, created, unwrapped.
@@ -2123,15 +2123,15 @@ Object write, including all of mutated, created, unwrapped.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| digest | [Digest](#sui-types-Digest) | optional | Required. Digest of the new version of the object. |
-| owner | [Owner](#sui-types-Owner) | optional | Required. Owner of the new version of the object. |
+| digest | [Digest](#iota-types-Digest) | optional | Required. Digest of the new version of the object. |
+| owner | [Owner](#iota-types-Owner) | optional | Required. Owner of the new version of the object. |
 
 
 
 
 
 
-<a name="sui-types-Owner"></a>
+<a name="iota-types-Owner"></a>
 
 ### Owner
 Enum of different types of ownership for an object.
@@ -2139,8 +2139,8 @@ Enum of different types of ownership for an object.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| address | [Address](#sui-types-Address) |  | Object is exclusively owned by a single address, and is mutable. |
-| object | [ObjectId](#sui-types-ObjectId) |  | Object is exclusively owned by a single object, and is mutable. |
+| address | [Address](#iota-types-Address) |  | Object is exclusively owned by a single address, and is mutable. |
+| object | [ObjectId](#iota-types-ObjectId) |  | Object is exclusively owned by a single object, and is mutable. |
 | shared | [uint64](#uint64) |  | Object is shared, can be used by any address, and is mutable. |
 | immutable | [google.protobuf.Empty](#google-protobuf-Empty) |  | Object is immutable, and hence ownership doesn&#39;t matter. |
 
@@ -2149,7 +2149,7 @@ Enum of different types of ownership for an object.
 
 
 
-<a name="sui-types-PackageIdDoesNotMatch"></a>
+<a name="iota-types-PackageIdDoesNotMatch"></a>
 
 ### PackageIdDoesNotMatch
 Package ID does not match `PackageId` in upgrade ticket.
@@ -2157,15 +2157,15 @@ Package ID does not match `PackageId` in upgrade ticket.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| package_id | [ObjectId](#sui-types-ObjectId) | optional | Required. The package ID. |
-| ticket_id | [ObjectId](#sui-types-ObjectId) | optional | Required. The ticket ID. |
+| package_id | [ObjectId](#iota-types-ObjectId) | optional | Required. The package ID. |
+| ticket_id | [ObjectId](#iota-types-ObjectId) | optional | Required. The ticket ID. |
 
 
 
 
 
 
-<a name="sui-types-PackageUpgradeError"></a>
+<a name="iota-types-PackageUpgradeError"></a>
 
 ### PackageUpgradeError
 An error with a upgrading a package.
@@ -2173,19 +2173,19 @@ An error with a upgrading a package.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| unable_to_fetch_package | [ObjectId](#sui-types-ObjectId) |  | Unable to fetch package. |
-| not_a_package | [ObjectId](#sui-types-ObjectId) |  | Object is not a package. |
+| unable_to_fetch_package | [ObjectId](#iota-types-ObjectId) |  | Unable to fetch package. |
+| not_a_package | [ObjectId](#iota-types-ObjectId) |  | Object is not a package. |
 | incompatible_upgrade | [google.protobuf.Empty](#google-protobuf-Empty) |  | Package upgrade is incompatible with previous version. |
-| digets_does_not_match | [Digest](#sui-types-Digest) |  | Digest in upgrade ticket and computed digest differ. |
+| digets_does_not_match | [Digest](#iota-types-Digest) |  | Digest in upgrade ticket and computed digest differ. |
 | unknown_upgrade_policy | [uint32](#uint32) |  | Upgrade policy is not valid. |
-| package_id_does_not_match | [PackageIdDoesNotMatch](#sui-types-PackageIdDoesNotMatch) |  | Package ID does not match `PackageId` in upgrade ticket. |
+| package_id_does_not_match | [PackageIdDoesNotMatch](#iota-types-PackageIdDoesNotMatch) |  | Package ID does not match `PackageId` in upgrade ticket. |
 
 
 
 
 
 
-<a name="sui-types-PackageWrite"></a>
+<a name="iota-types-PackageWrite"></a>
 
 ### PackageWrite
 Package write.
@@ -2194,20 +2194,20 @@ Package write.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | version | [uint64](#uint64) | optional | Version of the new package. |
-| digest | [Digest](#sui-types-Digest) | optional | Required. Digest of the new package. |
+| digest | [Digest](#iota-types-Digest) | optional | Required. Digest of the new package. |
 
 
 
 
 
 
-<a name="sui-types-PasskeyAuthenticator"></a>
+<a name="iota-types-PasskeyAuthenticator"></a>
 
 ### PasskeyAuthenticator
 A passkey authenticator.
 
 See
-[struct.PasskeyAuthenticator](https://mystenlabs.github.io/sui-rust-sdk/sui_sdk_types/struct.PasskeyAuthenticator.html#bcs)
+[struct.PasskeyAuthenticator](https://github.com/iotaledger/sui-rust-sdk/iota_sdk_types/struct.PasskeyAuthenticator.html#bcs)
 for more information on the requirements on the shape of the
 `client_data_json` field.
 
@@ -2220,14 +2220,14 @@ See [Authenticator Data](https://www.w3.org/TR/webauthn-2/#sctn-authenticator-da
 | client_data_json | [string](#string) | optional | Required. Structured, unparsed, JSON for this passkey signature.
 
 See [CollectedClientData](https://www.w3.org/TR/webauthn-2/#dictdef-collectedclientdata) for more information on this field. |
-| signature | [SimpleSignature](#sui-types-SimpleSignature) | optional | Required. A secp256r1 signature. |
+| signature | [SimpleSignature](#iota-types-SimpleSignature) | optional | Required. A secp256r1 signature. |
 
 
 
 
 
 
-<a name="sui-types-ProgrammableTransaction"></a>
+<a name="iota-types-ProgrammableTransaction"></a>
 
 ### ProgrammableTransaction
 A user transaction.
@@ -2238,15 +2238,15 @@ used in future commands.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| inputs | [Input](#sui-types-Input) | repeated | Input objects or primitive values. |
-| commands | [Command](#sui-types-Command) | repeated | The commands to be executed sequentially. A failure in any command results in the failure of the entire transaction. |
+| inputs | [Input](#iota-types-Input) | repeated | Input objects or primitive values. |
+| commands | [Command](#iota-types-Command) | repeated | The commands to be executed sequentially. A failure in any command results in the failure of the entire transaction. |
 
 
 
 
 
 
-<a name="sui-types-Publish"></a>
+<a name="iota-types-Publish"></a>
 
 ### Publish
 Command to publish a new Move package.
@@ -2255,14 +2255,14 @@ Command to publish a new Move package.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | modules | [bytes](#bytes) | repeated | The serialized Move modules. |
-| dependencies | [ObjectId](#sui-types-ObjectId) | repeated | Set of packages that the to-be published package depends on. |
+| dependencies | [ObjectId](#iota-types-ObjectId) | repeated | Set of packages that the to-be published package depends on. |
 
 
 
 
 
 
-<a name="sui-types-RandomnessStateUpdate"></a>
+<a name="iota-types-RandomnessStateUpdate"></a>
 
 ### RandomnessStateUpdate
 Randomness update.
@@ -2280,7 +2280,7 @@ Randomness update.
 
 
 
-<a name="sui-types-ReadOnlyRoot"></a>
+<a name="iota-types-ReadOnlyRoot"></a>
 
 ### ReadOnlyRoot
 Read-only shared object from the input.
@@ -2289,14 +2289,14 @@ Read-only shared object from the input.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | version | [uint64](#uint64) | optional | Required. Version of the shared object. |
-| digest | [Digest](#sui-types-Digest) | optional | Required. Digest of the shared object. |
+| digest | [Digest](#iota-types-Digest) | optional | Required. Digest of the shared object. |
 
 
 
 
 
 
-<a name="sui-types-RoaringBitmap"></a>
+<a name="iota-types-RoaringBitmap"></a>
 
 ### RoaringBitmap
 A RoaringBitmap. See
@@ -2313,7 +2313,7 @@ specification for the serialized format of `RoaringBitmap`s.
 
 
 
-<a name="sui-types-SharedObjectInput"></a>
+<a name="iota-types-SharedObjectInput"></a>
 
 ### SharedObjectInput
 A shared object input.
@@ -2321,7 +2321,7 @@ A shared object input.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object_id | [ObjectId](#sui-types-ObjectId) | optional | `ObjectId` of the shared object. |
+| object_id | [ObjectId](#iota-types-ObjectId) | optional | `ObjectId` of the shared object. |
 | initial_shared_version | [uint64](#uint64) | optional | Initial version of the object when it was shared. |
 | mutable | [bool](#bool) | optional | Controls whether the caller asks for a mutable reference to the shared object. |
 
@@ -2330,7 +2330,7 @@ A shared object input.
 
 
 
-<a name="sui-types-SimpleSignature"></a>
+<a name="iota-types-SimpleSignature"></a>
 
 ### SimpleSignature
 A basic signature.
@@ -2341,7 +2341,7 @@ corresponding public key.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| scheme | [SignatureScheme](#sui-types-SignatureScheme) | optional | Required. Signature scheme of the signature and public key. |
+| scheme | [SignatureScheme](#iota-types-SignatureScheme) | optional | Required. Signature scheme of the signature and public key. |
 | signature | [bytes](#bytes) | optional | Required. Signature bytes. |
 | public_key | [bytes](#bytes) | optional | Required. Public key bytes. |
 
@@ -2350,7 +2350,7 @@ corresponding public key.
 
 
 
-<a name="sui-types-SizeError"></a>
+<a name="iota-types-SizeError"></a>
 
 ### SizeError
 A size error.
@@ -2366,7 +2366,7 @@ A size error.
 
 
 
-<a name="sui-types-SplitCoins"></a>
+<a name="iota-types-SplitCoins"></a>
 
 ### SplitCoins
 Command to split a single coin object into multiple coins.
@@ -2374,15 +2374,15 @@ Command to split a single coin object into multiple coins.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| coin | [Argument](#sui-types-Argument) | optional | The coin to split. |
-| amounts | [Argument](#sui-types-Argument) | repeated | The amounts to split off. |
+| coin | [Argument](#iota-types-Argument) | optional | The coin to split. |
+| amounts | [Argument](#iota-types-Argument) | repeated | The amounts to split off. |
 
 
 
 
 
 
-<a name="sui-types-StructTag"></a>
+<a name="iota-types-StructTag"></a>
 
 ### StructTag
 Type information for a Move struct.
@@ -2390,17 +2390,17 @@ Type information for a Move struct.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| address | [Address](#sui-types-Address) | optional | Address of the package where this type was defined. |
-| module | [Identifier](#sui-types-Identifier) | optional | Name of the module where this type was defined. |
-| name | [Identifier](#sui-types-Identifier) | optional | Name of the type itself. |
-| type_parameters | [TypeTag](#sui-types-TypeTag) | repeated | List of type parameters, if any. |
+| address | [Address](#iota-types-Address) | optional | Address of the package where this type was defined. |
+| module | [Identifier](#iota-types-Identifier) | optional | Name of the module where this type was defined. |
+| name | [Identifier](#iota-types-Identifier) | optional | Name of the type itself. |
+| type_parameters | [TypeTag](#iota-types-TypeTag) | repeated | List of type parameters, if any. |
 
 
 
 
 
 
-<a name="sui-types-SystemPackage"></a>
+<a name="iota-types-SystemPackage"></a>
 
 ### SystemPackage
 System package.
@@ -2410,14 +2410,14 @@ System package.
 | ----- | ---- | ----- | ----------- |
 | version | [uint64](#uint64) | optional | Version of the package. |
 | modules | [bytes](#bytes) | repeated | Move modules. |
-| dependencies | [ObjectId](#sui-types-ObjectId) | repeated | Package dependencies. |
+| dependencies | [ObjectId](#iota-types-ObjectId) | repeated | Package dependencies. |
 
 
 
 
 
 
-<a name="sui-types-Transaction"></a>
+<a name="iota-types-Transaction"></a>
 
 ### Transaction
 A transaction.
@@ -2425,14 +2425,14 @@ A transaction.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| v1 | [Transaction.TransactionV1](#sui-types-Transaction-TransactionV1) |  |  |
+| v1 | [Transaction.TransactionV1](#iota-types-Transaction-TransactionV1) |  |  |
 
 
 
 
 
 
-<a name="sui-types-Transaction-TransactionV1"></a>
+<a name="iota-types-Transaction-TransactionV1"></a>
 
 ### Transaction.TransactionV1
 Version 1 of `Transaction`.
@@ -2440,17 +2440,17 @@ Version 1 of `Transaction`.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| kind | [TransactionKind](#sui-types-TransactionKind) | optional |  |
-| sender | [Address](#sui-types-Address) | optional |  |
-| gas_payment | [GasPayment](#sui-types-GasPayment) | optional |  |
-| expiration | [TransactionExpiration](#sui-types-TransactionExpiration) | optional |  |
+| kind | [TransactionKind](#iota-types-TransactionKind) | optional |  |
+| sender | [Address](#iota-types-Address) | optional |  |
+| gas_payment | [GasPayment](#iota-types-GasPayment) | optional |  |
+| expiration | [TransactionExpiration](#iota-types-TransactionExpiration) | optional |  |
 
 
 
 
 
 
-<a name="sui-types-TransactionEffects"></a>
+<a name="iota-types-TransactionEffects"></a>
 
 ### TransactionEffects
 The output or effects of executing a transaction.
@@ -2458,15 +2458,15 @@ The output or effects of executing a transaction.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| v1 | [TransactionEffectsV1](#sui-types-TransactionEffectsV1) |  |  |
-| v2 | [TransactionEffectsV2](#sui-types-TransactionEffectsV2) |  |  |
+| v1 | [TransactionEffectsV1](#iota-types-TransactionEffectsV1) |  |  |
+| v2 | [TransactionEffectsV2](#iota-types-TransactionEffectsV2) |  |  |
 
 
 
 
 
 
-<a name="sui-types-TransactionEffectsV1"></a>
+<a name="iota-types-TransactionEffectsV1"></a>
 
 ### TransactionEffectsV1
 Version 1 of `TransactionEffects`.
@@ -2474,28 +2474,28 @@ Version 1 of `TransactionEffects`.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| status | [ExecutionStatus](#sui-types-ExecutionStatus) | optional | The status of the execution. |
+| status | [ExecutionStatus](#iota-types-ExecutionStatus) | optional | The status of the execution. |
 | epoch | [uint64](#uint64) | optional | The epoch when this transaction was executed. |
-| gas_used | [GasCostSummary](#sui-types-GasCostSummary) | optional | The gas used by this transaction. |
-| modified_at_versions | [ModifiedAtVersion](#sui-types-ModifiedAtVersion) | repeated | The version that every modified (mutated or deleted) object had before it was modified by this transaction. |
-| shared_objects | [ObjectReference](#sui-types-ObjectReference) | repeated | The object references of the shared objects used in this transaction. Empty if no shared objects were used. |
-| transaction_digest | [Digest](#sui-types-Digest) | optional | The transaction digest. |
-| created | [ObjectReferenceWithOwner](#sui-types-ObjectReferenceWithOwner) | repeated | `ObjectReference` and owner of new objects created. |
-| mutated | [ObjectReferenceWithOwner](#sui-types-ObjectReferenceWithOwner) | repeated | `ObjectReference` and owner of mutated objects, including gas object. |
-| unwrapped | [ObjectReferenceWithOwner](#sui-types-ObjectReferenceWithOwner) | repeated | `ObjectReference` and owner of objects that are unwrapped in this transaction. Unwrapped objects are objects that were wrapped into other objects in the past, and just got extracted out. |
-| deleted | [ObjectReference](#sui-types-ObjectReference) | repeated | Object refs of objects now deleted (the new refs). |
-| unwrapped_then_deleted | [ObjectReference](#sui-types-ObjectReference) | repeated | Object refs of objects previously wrapped in other objects but now deleted. |
-| wrapped | [ObjectReference](#sui-types-ObjectReference) | repeated | Object refs of objects now wrapped in other objects. |
-| gas_object | [ObjectReferenceWithOwner](#sui-types-ObjectReferenceWithOwner) | optional | The updated gas object reference. Have a dedicated field for convenient access. It&#39;s also included in mutated. |
-| events_digest | [Digest](#sui-types-Digest) | optional | The digest of the events emitted during execution, can be `None` if the transaction does not emit any event. |
-| dependencies | [Digest](#sui-types-Digest) | repeated | The set of transaction digests this transaction depends on. |
+| gas_used | [GasCostSummary](#iota-types-GasCostSummary) | optional | The gas used by this transaction. |
+| modified_at_versions | [ModifiedAtVersion](#iota-types-ModifiedAtVersion) | repeated | The version that every modified (mutated or deleted) object had before it was modified by this transaction. |
+| shared_objects | [ObjectReference](#iota-types-ObjectReference) | repeated | The object references of the shared objects used in this transaction. Empty if no shared objects were used. |
+| transaction_digest | [Digest](#iota-types-Digest) | optional | The transaction digest. |
+| created | [ObjectReferenceWithOwner](#iota-types-ObjectReferenceWithOwner) | repeated | `ObjectReference` and owner of new objects created. |
+| mutated | [ObjectReferenceWithOwner](#iota-types-ObjectReferenceWithOwner) | repeated | `ObjectReference` and owner of mutated objects, including gas object. |
+| unwrapped | [ObjectReferenceWithOwner](#iota-types-ObjectReferenceWithOwner) | repeated | `ObjectReference` and owner of objects that are unwrapped in this transaction. Unwrapped objects are objects that were wrapped into other objects in the past, and just got extracted out. |
+| deleted | [ObjectReference](#iota-types-ObjectReference) | repeated | Object refs of objects now deleted (the new refs). |
+| unwrapped_then_deleted | [ObjectReference](#iota-types-ObjectReference) | repeated | Object refs of objects previously wrapped in other objects but now deleted. |
+| wrapped | [ObjectReference](#iota-types-ObjectReference) | repeated | Object refs of objects now wrapped in other objects. |
+| gas_object | [ObjectReferenceWithOwner](#iota-types-ObjectReferenceWithOwner) | optional | The updated gas object reference. Have a dedicated field for convenient access. It&#39;s also included in mutated. |
+| events_digest | [Digest](#iota-types-Digest) | optional | The digest of the events emitted during execution, can be `None` if the transaction does not emit any event. |
+| dependencies | [Digest](#iota-types-Digest) | repeated | The set of transaction digests this transaction depends on. |
 
 
 
 
 
 
-<a name="sui-types-TransactionEffectsV2"></a>
+<a name="iota-types-TransactionEffectsV2"></a>
 
 ### TransactionEffectsV2
 Version 2 of `TransactionEffects`.
@@ -2503,24 +2503,24 @@ Version 2 of `TransactionEffects`.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| status | [ExecutionStatus](#sui-types-ExecutionStatus) | optional | The status of the execution. |
+| status | [ExecutionStatus](#iota-types-ExecutionStatus) | optional | The status of the execution. |
 | epoch | [uint64](#uint64) | optional | The epoch when this transaction was executed. |
-| gas_used | [GasCostSummary](#sui-types-GasCostSummary) | optional | The gas used by this transaction. |
-| transaction_digest | [Digest](#sui-types-Digest) | optional | The transaction digest. |
+| gas_used | [GasCostSummary](#iota-types-GasCostSummary) | optional | The gas used by this transaction. |
+| transaction_digest | [Digest](#iota-types-Digest) | optional | The transaction digest. |
 | gas_object_index | [uint32](#uint32) | optional | The updated gas object reference, as an index into the `changed_objects` vector. Having a dedicated field for convenient access. System transaction that don&#39;t require gas will leave this as `None`. |
-| events_digest | [Digest](#sui-types-Digest) | optional | The digest of the events emitted during execution, can be `None` if the transaction does not emit any event. |
-| dependencies | [Digest](#sui-types-Digest) | repeated | The set of transaction digests this transaction depends on. |
+| events_digest | [Digest](#iota-types-Digest) | optional | The digest of the events emitted during execution, can be `None` if the transaction does not emit any event. |
+| dependencies | [Digest](#iota-types-Digest) | repeated | The set of transaction digests this transaction depends on. |
 | lamport_version | [uint64](#uint64) | optional | The version number of all the written Move objects by this transaction. |
-| changed_objects | [ChangedObject](#sui-types-ChangedObject) | repeated | Objects whose state are changed in the object store. |
-| unchanged_shared_objects | [UnchangedSharedObject](#sui-types-UnchangedSharedObject) | repeated | Shared objects that are not mutated in this transaction. Unlike owned objects, read-only shared objects&#39; version are not committed in the transaction, and in order for a node to catch up and execute it without consensus sequencing, the version needs to be committed in the effects. |
-| auxiliary_data_digest | [Digest](#sui-types-Digest) | optional | Auxiliary data that are not protocol-critical, generated as part of the effects but are stored separately. Storing it separately allows us to avoid bloating the effects with data that are not critical. It also provides more flexibility on the format and type of the data. |
+| changed_objects | [ChangedObject](#iota-types-ChangedObject) | repeated | Objects whose state are changed in the object store. |
+| unchanged_shared_objects | [UnchangedSharedObject](#iota-types-UnchangedSharedObject) | repeated | Shared objects that are not mutated in this transaction. Unlike owned objects, read-only shared objects&#39; version are not committed in the transaction, and in order for a node to catch up and execute it without consensus sequencing, the version needs to be committed in the effects. |
+| auxiliary_data_digest | [Digest](#iota-types-Digest) | optional | Auxiliary data that are not protocol-critical, generated as part of the effects but are stored separately. Storing it separately allows us to avoid bloating the effects with data that are not critical. It also provides more flexibility on the format and type of the data. |
 
 
 
 
 
 
-<a name="sui-types-TransactionEvents"></a>
+<a name="iota-types-TransactionEvents"></a>
 
 ### TransactionEvents
 Events emitted during the successful execution of a transaction.
@@ -2528,14 +2528,14 @@ Events emitted during the successful execution of a transaction.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| events | [Event](#sui-types-Event) | repeated |  |
+| events | [Event](#iota-types-Event) | repeated |  |
 
 
 
 
 
 
-<a name="sui-types-TransactionExpiration"></a>
+<a name="iota-types-TransactionExpiration"></a>
 
 ### TransactionExpiration
 A TTL for a transaction.
@@ -2551,7 +2551,7 @@ A TTL for a transaction.
 
 
 
-<a name="sui-types-TransactionKind"></a>
+<a name="iota-types-TransactionKind"></a>
 
 ### TransactionKind
 Transaction type.
@@ -2559,26 +2559,26 @@ Transaction type.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| programmable_transaction | [ProgrammableTransaction](#sui-types-ProgrammableTransaction) |  | A user transaction comprised of a list of native commands and Move calls. |
-| change_epoch | [ChangeEpoch](#sui-types-ChangeEpoch) |  | System transaction used to end an epoch.
+| programmable_transaction | [ProgrammableTransaction](#iota-types-ProgrammableTransaction) |  | A user transaction comprised of a list of native commands and Move calls. |
+| change_epoch | [ChangeEpoch](#iota-types-ChangeEpoch) |  | System transaction used to end an epoch.
 
 The `ChangeEpoch` variant is now deprecated (but the `ChangeEpoch` struct is still used by `EndOfEpochTransaction`). |
-| genesis | [GenesisTransaction](#sui-types-GenesisTransaction) |  | Transaction used to initialize the chain state.
+| genesis | [GenesisTransaction](#iota-types-GenesisTransaction) |  | Transaction used to initialize the chain state.
 
 Only valid if in the genesis checkpoint (0) and if this is the very first transaction ever executed on the chain. |
-| consensus_commit_prologue_v1 | [ConsensusCommitPrologue](#sui-types-ConsensusCommitPrologue) |  | V1 consensus commit update. |
-| authenticator_state_update | [AuthenticatorStateUpdate](#sui-types-AuthenticatorStateUpdate) |  | Update set of valid JWKs used for zklogin. |
-| end_of_epoch | [EndOfEpochTransaction](#sui-types-EndOfEpochTransaction) |  | Set of operations to run at the end of the epoch to close out the current epoch and start the next one. |
-| randomness_state_update | [RandomnessStateUpdate](#sui-types-RandomnessStateUpdate) |  | Randomness update. |
-| consensus_commit_prologue_v2 | [ConsensusCommitPrologue](#sui-types-ConsensusCommitPrologue) |  | V2 consensus commit update. |
-| consensus_commit_prologue_v3 | [ConsensusCommitPrologue](#sui-types-ConsensusCommitPrologue) |  | V3 consensus commit update. |
+| consensus_commit_prologue_v1 | [ConsensusCommitPrologue](#iota-types-ConsensusCommitPrologue) |  | V1 consensus commit update. |
+| authenticator_state_update | [AuthenticatorStateUpdate](#iota-types-AuthenticatorStateUpdate) |  | Update set of valid JWKs used for zklogin. |
+| end_of_epoch | [EndOfEpochTransaction](#iota-types-EndOfEpochTransaction) |  | Set of operations to run at the end of the epoch to close out the current epoch and start the next one. |
+| randomness_state_update | [RandomnessStateUpdate](#iota-types-RandomnessStateUpdate) |  | Randomness update. |
+| consensus_commit_prologue_v2 | [ConsensusCommitPrologue](#iota-types-ConsensusCommitPrologue) |  | V2 consensus commit update. |
+| consensus_commit_prologue_v3 | [ConsensusCommitPrologue](#iota-types-ConsensusCommitPrologue) |  | V3 consensus commit update. |
 
 
 
 
 
 
-<a name="sui-types-TransferObjects"></a>
+<a name="iota-types-TransferObjects"></a>
 
 ### TransferObjects
 Command to transfer ownership of a set of objects to an address.
@@ -2586,15 +2586,15 @@ Command to transfer ownership of a set of objects to an address.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| objects | [Argument](#sui-types-Argument) | repeated | Set of objects to transfer. |
-| address | [Argument](#sui-types-Argument) | optional | The address to transfer ownership to. |
+| objects | [Argument](#iota-types-Argument) | repeated | Set of objects to transfer. |
+| address | [Argument](#iota-types-Argument) | optional | The address to transfer ownership to. |
 
 
 
 
 
 
-<a name="sui-types-TypeArgumentError"></a>
+<a name="iota-types-TypeArgumentError"></a>
 
 ### TypeArgumentError
 Type argument error.
@@ -2611,7 +2611,7 @@ Type argument error.
 
 
 
-<a name="sui-types-TypeOrigin"></a>
+<a name="iota-types-TypeOrigin"></a>
 
 ### TypeOrigin
 Identifies a struct and the module it was defined in.
@@ -2619,16 +2619,16 @@ Identifies a struct and the module it was defined in.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| module_name | [Identifier](#sui-types-Identifier) | optional |  |
-| struct_name | [Identifier](#sui-types-Identifier) | optional |  |
-| package_id | [ObjectId](#sui-types-ObjectId) | optional |  |
+| module_name | [Identifier](#iota-types-Identifier) | optional |  |
+| struct_name | [Identifier](#iota-types-Identifier) | optional |  |
+| package_id | [ObjectId](#iota-types-ObjectId) | optional |  |
 
 
 
 
 
 
-<a name="sui-types-TypeTag"></a>
+<a name="iota-types-TypeTag"></a>
 
 ### TypeTag
 Type of a Move value.
@@ -2645,15 +2645,15 @@ Type of a Move value.
 | bool | [google.protobuf.Empty](#google-protobuf-Empty) |  |  |
 | address | [google.protobuf.Empty](#google-protobuf-Empty) |  |  |
 | signer | [google.protobuf.Empty](#google-protobuf-Empty) |  |  |
-| vector | [TypeTag](#sui-types-TypeTag) |  |  |
-| struct | [StructTag](#sui-types-StructTag) |  |  |
+| vector | [TypeTag](#iota-types-TypeTag) |  |  |
+| struct | [StructTag](#iota-types-StructTag) |  |  |
 
 
 
 
 
 
-<a name="sui-types-U128"></a>
+<a name="iota-types-U128"></a>
 
 ### U128
 An unsigned 128-bit integer encoded in little-endian using 16-bytes.
@@ -2668,7 +2668,7 @@ An unsigned 128-bit integer encoded in little-endian using 16-bytes.
 
 
 
-<a name="sui-types-U256"></a>
+<a name="iota-types-U256"></a>
 
 ### U256
 An unsigned 256-bit integer encoded in little-endian using 32-bytes.
@@ -2683,7 +2683,7 @@ An unsigned 256-bit integer encoded in little-endian using 32-bytes.
 
 
 
-<a name="sui-types-UnchangedSharedObject"></a>
+<a name="iota-types-UnchangedSharedObject"></a>
 
 ### UnchangedSharedObject
 A shared object that wasn&#39;t changed during execution.
@@ -2691,8 +2691,8 @@ A shared object that wasn&#39;t changed during execution.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object_id | [ObjectId](#sui-types-ObjectId) | optional | Required. ObjectId of the shared object. |
-| read_only_root | [ReadOnlyRoot](#sui-types-ReadOnlyRoot) |  | Read-only shared object from the input. |
+| object_id | [ObjectId](#iota-types-ObjectId) | optional | Required. ObjectId of the shared object. |
+| read_only_root | [ReadOnlyRoot](#iota-types-ReadOnlyRoot) |  | Read-only shared object from the input. |
 | mutate_deleted | [uint64](#uint64) |  | Deleted shared objects that appear mutably/owned in the input. |
 | read_deleted | [uint64](#uint64) |  | Deleted shared objects that appear as read-only in the input. |
 | cancelled | [uint64](#uint64) |  | Shared objects that was congested and resulted in this transaction being cancelled. |
@@ -2703,7 +2703,7 @@ A shared object that wasn&#39;t changed during execution.
 
 
 
-<a name="sui-types-Upgrade"></a>
+<a name="iota-types-Upgrade"></a>
 
 ### Upgrade
 Command to upgrade an already published package.
@@ -2712,16 +2712,16 @@ Command to upgrade an already published package.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | modules | [bytes](#bytes) | repeated | The serialized Move modules. |
-| dependencies | [ObjectId](#sui-types-ObjectId) | repeated | Set of packages that the to-be published package depends on. |
-| package | [ObjectId](#sui-types-ObjectId) | optional | Package ID of the package to upgrade. |
-| ticket | [Argument](#sui-types-Argument) | optional | Ticket authorizing the upgrade. |
+| dependencies | [ObjectId](#iota-types-ObjectId) | repeated | Set of packages that the to-be published package depends on. |
+| package | [ObjectId](#iota-types-ObjectId) | optional | Package ID of the package to upgrade. |
+| ticket | [Argument](#iota-types-Argument) | optional | Ticket authorizing the upgrade. |
 
 
 
 
 
 
-<a name="sui-types-UpgradeInfo"></a>
+<a name="iota-types-UpgradeInfo"></a>
 
 ### UpgradeInfo
 Upgraded package info for the linkage table.
@@ -2729,8 +2729,8 @@ Upgraded package info for the linkage table.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| original_id | [ObjectId](#sui-types-ObjectId) | optional | ID of the original package. |
-| upgraded_id | [ObjectId](#sui-types-ObjectId) | optional | ID of the upgraded package. |
+| original_id | [ObjectId](#iota-types-ObjectId) | optional | ID of the original package. |
+| upgraded_id | [ObjectId](#iota-types-ObjectId) | optional | ID of the upgraded package. |
 | upgraded_version | [uint64](#uint64) | optional | Version of the upgraded package. |
 
 
@@ -2738,7 +2738,7 @@ Upgraded package info for the linkage table.
 
 
 
-<a name="sui-types-UserSignature"></a>
+<a name="iota-types-UserSignature"></a>
 
 ### UserSignature
 A signature from a user.
@@ -2746,17 +2746,17 @@ A signature from a user.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| simple | [SimpleSignature](#sui-types-SimpleSignature) |  |  |
-| multisig | [MultisigAggregatedSignature](#sui-types-MultisigAggregatedSignature) |  |  |
-| zklogin | [ZkLoginAuthenticator](#sui-types-ZkLoginAuthenticator) |  |  |
-| passkey | [PasskeyAuthenticator](#sui-types-PasskeyAuthenticator) |  |  |
+| simple | [SimpleSignature](#iota-types-SimpleSignature) |  |  |
+| multisig | [MultisigAggregatedSignature](#iota-types-MultisigAggregatedSignature) |  |  |
+| zklogin | [ZkLoginAuthenticator](#iota-types-ZkLoginAuthenticator) |  |  |
+| passkey | [PasskeyAuthenticator](#iota-types-PasskeyAuthenticator) |  |  |
 
 
 
 
 
 
-<a name="sui-types-ValidatorAggregatedSignature"></a>
+<a name="iota-types-ValidatorAggregatedSignature"></a>
 
 ### ValidatorAggregatedSignature
 An aggregated signature from multiple validators.
@@ -2768,14 +2768,14 @@ An aggregated signature from multiple validators.
 
 This can be used to lookup the `ValidatorCommittee` from this epoch to verify this signature. |
 | signature | [bytes](#bytes) | optional | Required. The 48-byte Bls12381 aggregated signature. |
-| bitmap | [RoaringBitmap](#sui-types-RoaringBitmap) | optional | Required. Bitmap indicating which members of the committee contributed to this signature. |
+| bitmap | [RoaringBitmap](#iota-types-RoaringBitmap) | optional | Required. Bitmap indicating which members of the committee contributed to this signature. |
 
 
 
 
 
 
-<a name="sui-types-ValidatorCommittee"></a>
+<a name="iota-types-ValidatorCommittee"></a>
 
 ### ValidatorCommittee
 The validator set for a particular epoch.
@@ -2784,14 +2784,14 @@ The validator set for a particular epoch.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | epoch | [uint64](#uint64) | optional | Required. The epoch where this committee governs. |
-| members | [ValidatorCommitteeMember](#sui-types-ValidatorCommitteeMember) | repeated | The committee members. |
+| members | [ValidatorCommitteeMember](#iota-types-ValidatorCommitteeMember) | repeated | The committee members. |
 
 
 
 
 
 
-<a name="sui-types-ValidatorCommitteeMember"></a>
+<a name="iota-types-ValidatorCommitteeMember"></a>
 
 ### ValidatorCommitteeMember
 A member of a validator committee.
@@ -2807,7 +2807,7 @@ A member of a validator committee.
 
 
 
-<a name="sui-types-VersionAssignment"></a>
+<a name="iota-types-VersionAssignment"></a>
 
 ### VersionAssignment
 Object version assignment from consensus.
@@ -2815,7 +2815,7 @@ Object version assignment from consensus.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| object_id | [ObjectId](#sui-types-ObjectId) | optional | `ObjectId` of the object. |
+| object_id | [ObjectId](#iota-types-ObjectId) | optional | `ObjectId` of the object. |
 | version | [uint64](#uint64) | optional | Assigned version. |
 
 
@@ -2823,7 +2823,7 @@ Object version assignment from consensus.
 
 
 
-<a name="sui-types-ZkLoginAuthenticator"></a>
+<a name="iota-types-ZkLoginAuthenticator"></a>
 
 ### ZkLoginAuthenticator
 A zklogin authenticator.
@@ -2831,16 +2831,16 @@ A zklogin authenticator.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| inputs | [ZkLoginInputs](#sui-types-ZkLoginInputs) | optional | Required. Zklogin proof and inputs required to perform proof verification. |
+| inputs | [ZkLoginInputs](#iota-types-ZkLoginInputs) | optional | Required. Zklogin proof and inputs required to perform proof verification. |
 | max_epoch | [uint64](#uint64) | optional | Required. Maximum epoch for which the proof is valid. |
-| signature | [SimpleSignature](#sui-types-SimpleSignature) | optional | Required. User signature with the public key attested to by the provided proof. |
+| signature | [SimpleSignature](#iota-types-SimpleSignature) | optional | Required. User signature with the public key attested to by the provided proof. |
 
 
 
 
 
 
-<a name="sui-types-ZkLoginClaim"></a>
+<a name="iota-types-ZkLoginClaim"></a>
 
 ### ZkLoginClaim
 A claim of the iss in a zklogin proof.
@@ -2856,7 +2856,7 @@ A claim of the iss in a zklogin proof.
 
 
 
-<a name="sui-types-ZkLoginInputs"></a>
+<a name="iota-types-ZkLoginInputs"></a>
 
 ### ZkLoginInputs
 A zklogin groth16 proof and the required inputs to perform proof verification.
@@ -2864,17 +2864,17 @@ A zklogin groth16 proof and the required inputs to perform proof verification.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| proof_points | [ZkLoginProof](#sui-types-ZkLoginProof) | optional | Required. |
-| iss_base64_details | [ZkLoginClaim](#sui-types-ZkLoginClaim) | optional | Required. |
+| proof_points | [ZkLoginProof](#iota-types-ZkLoginProof) | optional | Required. |
+| iss_base64_details | [ZkLoginClaim](#iota-types-ZkLoginClaim) | optional | Required. |
 | header_base64 | [string](#string) | optional | Required. |
-| address_seed | [Bn254FieldElement](#sui-types-Bn254FieldElement) | optional | Required. |
+| address_seed | [Bn254FieldElement](#iota-types-Bn254FieldElement) | optional | Required. |
 
 
 
 
 
 
-<a name="sui-types-ZkLoginProof"></a>
+<a name="iota-types-ZkLoginProof"></a>
 
 ### ZkLoginProof
 A zklogin groth16 proof.
@@ -2882,16 +2882,16 @@ A zklogin groth16 proof.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| a | [CircomG1](#sui-types-CircomG1) | optional | Required. |
-| b | [CircomG2](#sui-types-CircomG2) | optional | Required. |
-| c | [CircomG1](#sui-types-CircomG1) | optional | Required. |
+| a | [CircomG1](#iota-types-CircomG1) | optional | Required. |
+| b | [CircomG2](#iota-types-CircomG2) | optional | Required. |
+| c | [CircomG1](#iota-types-CircomG1) | optional | Required. |
 
 
 
 
 
 
-<a name="sui-types-ZkLoginPublicIdentifier"></a>
+<a name="iota-types-ZkLoginPublicIdentifier"></a>
 
 ### ZkLoginPublicIdentifier
 Public key equivalent for zklogin authenticators.
@@ -2900,7 +2900,7 @@ Public key equivalent for zklogin authenticators.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | iss | [string](#string) | optional | Required. |
-| address_seed | [Bn254FieldElement](#sui-types-Bn254FieldElement) | optional | Required. |
+| address_seed | [Bn254FieldElement](#iota-types-Bn254FieldElement) | optional | Required. |
 
 
 
@@ -2909,14 +2909,14 @@ Public key equivalent for zklogin authenticators.
  
 
 
-<a name="sui-types-SignatureScheme"></a>
+<a name="iota-types-SignatureScheme"></a>
 
 ### SignatureScheme
-Flag use to disambiguate the signature schemes supported by Sui.
+Flag use to disambiguate the signature schemes supported by IOTA.
 
 Note: the enum values defined by this proto message do not match their BCS
 serialized values. See
-[enum.SignatureScheme](https://mystenlabs.github.io/sui-rust-sdk/sui_sdk_types/enum.SignatureScheme.html)
+[enum.SignatureScheme](https://github.com/iotaledger/sui-rust-sdk/iota_sdk_types/enum.SignatureScheme.html)
 for a mapping to their canonical serialized format.
 
 | Name | Number | Description |

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::BTreeSet, ops::Range, sync::Arc};
@@ -6,13 +7,13 @@ use std::{collections::BTreeSet, ops::Range, sync::Arc};
 use anyhow::{Context, Result};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use sui_indexer_alt_framework::{
+use iota_indexer_alt_framework::{
     models::cp_sequence_numbers::tx_interval,
     pipeline::{concurrent::Handler, Processor},
 };
-use sui_indexer_alt_schema::{events::StoredEvStructInst, schema::ev_struct_inst};
-use sui_pg_db as db;
-use sui_types::full_checkpoint_content::CheckpointData;
+use iota_indexer_alt_schema::{events::StoredEvStructInst, schema::ev_struct_inst};
+use iota_pg_db as db;
+use iota_types::full_checkpoint_content::CheckpointData;
 
 pub(crate) struct EvStructInst;
 
@@ -87,11 +88,11 @@ impl Handler for EvStructInst {
 mod tests {
     use super::*;
     use diesel_async::RunQueryDsl;
-    use sui_indexer_alt_framework::handlers::cp_sequence_numbers::CpSequenceNumbers;
-    use sui_indexer_alt_framework::Indexer;
-    use sui_indexer_alt_schema::MIGRATIONS;
-    use sui_types::event::Event;
-    use sui_types::test_checkpoint_data_builder::TestCheckpointDataBuilder;
+    use iota_indexer_alt_framework::handlers::cp_sequence_numbers::CpSequenceNumbers;
+    use iota_indexer_alt_framework::Indexer;
+    use iota_indexer_alt_schema::MIGRATIONS;
+    use iota_types::event::Event;
+    use iota_types::test_checkpoint_data_builder::TestCheckpointDataBuilder;
 
     async fn get_all_ev_struct_inst(
         conn: &mut db::Connection<'_>,

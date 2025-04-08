@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::path::PathBuf;
@@ -7,9 +8,9 @@ use std::path::PathBuf;
 use crate::benchmark::BenchmarkArgs;
 use crate::IndexerArgs;
 use clap::Subcommand;
-use sui_indexer_alt_framework::ingestion::ClientArgs;
-use sui_indexer_alt_metrics::MetricsArgs;
-use sui_pg_db::DbArgs;
+use iota_indexer_alt_framework::ingestion::ClientArgs;
+use iota_indexer_alt_metrics::MetricsArgs;
+use iota_pg_db::DbArgs;
 
 #[derive(clap::Parser, Debug, Clone)]
 pub struct Args {

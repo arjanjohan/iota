@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::schema::cp_sequence_numbers;
@@ -6,8 +7,8 @@ use anyhow::{bail, Result};
 use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use std::ops::Range;
-use sui_field_count::FieldCount;
-use sui_pg_db::Connection;
+use iota_field_count::FieldCount;
+use iota_pg_db::Connection;
 
 #[derive(Insertable, Selectable, Queryable, Debug, Clone, FieldCount)]
 #[diesel(table_name = cp_sequence_numbers)]

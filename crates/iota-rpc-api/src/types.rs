@@ -1,16 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use prost_types::FieldMask;
 
 /// Chain ID of the current chain
-pub const X_SUI_CHAIN_ID: &str = "x-sui-chain-id";
+pub const X_IOTA_CHAIN_ID: &str = "x-iota-chain-id";
 
 /// Chain name of the current chain
-pub const X_SUI_CHAIN: &str = "x-sui-chain";
+pub const X_IOTA_CHAIN: &str = "x-iota-chain";
 
 /// Current checkpoint height
-pub const X_SUI_CHECKPOINT_HEIGHT: &str = "x-sui-checkpoint-height";
+pub const X_IOTA_CHECKPOINT_HEIGHT: &str = "x-iota-checkpoint-height";
 
 /// Lowest available checkpoint for which transaction and checkpoint data can be requested.
 ///
@@ -19,53 +20,53 @@ pub const X_SUI_CHECKPOINT_HEIGHT: &str = "x-sui-checkpoint-height";
 ///  - transactions
 ///  - effects
 ///  - events
-pub const X_SUI_LOWEST_AVAILABLE_CHECKPOINT: &str = "x-sui-lowest-available-checkpoint";
+pub const X_IOTA_LOWEST_AVAILABLE_CHECKPOINT: &str = "x-iota-lowest-available-checkpoint";
 
 /// Lowest available checkpoint for which object data can be requested.
 ///
 /// Specifically this is the lowest checkpoint for which input/output object data will be
 /// available.
-pub const X_SUI_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS: &str =
-    "x-sui-lowest-available-checkpoint-objects";
+pub const X_IOTA_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS: &str =
+    "x-iota-lowest-available-checkpoint-objects";
 
 /// Current epoch of the chain
-pub const X_SUI_EPOCH: &str = "x-sui-epoch";
+pub const X_IOTA_EPOCH: &str = "x-iota-epoch";
 
 /// Cursor to be used for endpoints that support cursor-based pagination. Pass this to the start field of the endpoint on the next call to get the next page of results.
-pub const X_SUI_CURSOR: &str = "x-sui-cursor";
+pub const X_IOTA_CURSOR: &str = "x-iota-cursor";
 
 /// Current timestamp of the chain - represented as number of milliseconds from the Unix epoch
-pub const X_SUI_TIMESTAMP_MS: &str = "x-sui-timestamp-ms";
+pub const X_IOTA_TIMESTAMP_MS: &str = "x-iota-timestamp-ms";
 
 /// Basic information about the state of a Node
 #[serde_with::serde_as]
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct NodeInfo {
     /// The chain identifier of the chain that this Node is on
-    pub chain_id: sui_sdk_types::CheckpointDigest,
+    pub chain_id: iota_sdk_types::CheckpointDigest,
 
     /// Human readable name of the chain that this Node is on
     pub chain: std::borrow::Cow<'static, str>,
 
     /// Current epoch of the Node based on its highest executed checkpoint
-    #[serde_as(as = "sui_types::sui_serde::BigInt<u64>")]
+    #[serde_as(as = "iota_types::iota_serde::BigInt<u64>")]
     pub epoch: u64,
 
     /// Checkpoint height of the most recently executed checkpoint
-    #[serde_as(as = "sui_types::sui_serde::BigInt<u64>")]
+    #[serde_as(as = "iota_types::iota_serde::BigInt<u64>")]
     pub checkpoint_height: u64,
 
     /// Unix timestamp of the most recently executed checkpoint
-    #[serde_as(as = "sui_types::sui_serde::BigInt<u64>")]
+    #[serde_as(as = "iota_types::iota_serde::BigInt<u64>")]
     pub timestamp_ms: u64,
 
     /// The lowest checkpoint for which checkpoints and transaction data is available
-    #[serde_as(as = "Option<sui_types::sui_serde::BigInt<u64>>")]
+    #[serde_as(as = "Option<iota_types::iota_serde::BigInt<u64>>")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lowest_available_checkpoint: Option<u64>,
 
     /// The lowest checkpoint for which object data is available
-    #[serde_as(as = "Option<sui_types::sui_serde::BigInt<u64>>")]
+    #[serde_as(as = "Option<iota_types::iota_serde::BigInt<u64>>")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lowest_available_checkpoint_objects: Option<u64>,
     pub software_version: std::borrow::Cow<'static, str>,
@@ -74,13 +75,13 @@ pub struct NodeInfo {
 #[serde_with::serde_as]
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ObjectResponse {
-    pub object_id: sui_sdk_types::ObjectId,
-    #[serde_as(as = "sui_types::sui_serde::BigInt<u64>")]
-    pub version: sui_sdk_types::Version,
-    pub digest: sui_sdk_types::ObjectDigest,
+    pub object_id: iota_sdk_types::ObjectId,
+    #[serde_as(as = "iota_types::iota_serde::BigInt<u64>")]
+    pub version: iota_sdk_types::Version,
+    pub digest: iota_sdk_types::ObjectDigest,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub object: Option<sui_sdk_types::Object>,
+    pub object: Option<iota_sdk_types::Object>,
 
     #[serde_as(as = "Option<fastcrypto::encoding::Base64>")]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -128,23 +129,23 @@ impl GetObjectOptions {
 #[serde_with::serde_as]
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct CheckpointResponse {
-    #[serde_as(as = "sui_types::sui_serde::BigInt<u64>")]
-    pub sequence_number: sui_sdk_types::CheckpointSequenceNumber,
+    #[serde_as(as = "iota_types::iota_serde::BigInt<u64>")]
+    pub sequence_number: iota_sdk_types::CheckpointSequenceNumber,
 
-    pub digest: sui_sdk_types::CheckpointDigest,
+    pub digest: iota_sdk_types::CheckpointDigest,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub summary: Option<sui_sdk_types::CheckpointSummary>,
+    pub summary: Option<iota_sdk_types::CheckpointSummary>,
 
     #[serde_as(as = "Option<fastcrypto::encoding::Base64>")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub summary_bcs: Option<Vec<u8>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub signature: Option<sui_sdk_types::ValidatorAggregatedSignature>,
+    pub signature: Option<iota_sdk_types::ValidatorAggregatedSignature>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub contents: Option<sui_sdk_types::CheckpointContents>,
+    pub contents: Option<iota_sdk_types::CheckpointContents>,
 
     #[serde_as(as = "Option<fastcrypto::encoding::Base64>")]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -226,44 +227,44 @@ impl GetCheckpointOptions {
 #[serde_with::serde_as]
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct TransactionResponse {
-    pub digest: sui_sdk_types::TransactionDigest,
+    pub digest: iota_sdk_types::TransactionDigest,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub transaction: Option<sui_sdk_types::Transaction>,
+    pub transaction: Option<iota_sdk_types::Transaction>,
 
     #[serde_as(as = "Option<fastcrypto::encoding::Base64>")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub transaction_bcs: Option<Vec<u8>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub signatures: Option<Vec<sui_sdk_types::UserSignature>>,
+    pub signatures: Option<Vec<iota_sdk_types::UserSignature>>,
 
     #[serde_as(as = "Option<Vec<fastcrypto::encoding::Base64>>")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub signatures_bytes: Option<Vec<Vec<u8>>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub effects: Option<sui_sdk_types::TransactionEffects>,
+    pub effects: Option<iota_sdk_types::TransactionEffects>,
 
     #[serde_as(as = "Option<fastcrypto::encoding::Base64>")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub effects_bcs: Option<Vec<u8>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub events: Option<sui_sdk_types::TransactionEvents>,
+    pub events: Option<iota_sdk_types::TransactionEvents>,
 
     #[serde_as(as = "Option<fastcrypto::encoding::Base64>")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub events_bcs: Option<Vec<u8>>,
 
     #[serde_as(
-        as = "Option<sui_types::sui_serde::Readable<sui_types::sui_serde::BigInt<u64>, _>>"
+        as = "Option<iota_types::iota_serde::Readable<iota_types::iota_serde::BigInt<u64>, _>>"
     )]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub checkpoint: Option<u64>,
 
     #[serde_as(
-        as = "Option<sui_types::sui_serde::Readable<sui_types::sui_serde::BigInt<u64>, _>>"
+        as = "Option<iota_types::iota_serde::Readable<iota_types::iota_serde::BigInt<u64>, _>>"
     )]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timestamp_ms: Option<u64>,
@@ -462,23 +463,23 @@ pub struct ExecuteTransactionResponse {
     pub finality: EffectsFinality,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub effects: Option<sui_sdk_types::TransactionEffects>,
+    pub effects: Option<iota_sdk_types::TransactionEffects>,
 
     #[serde_as(as = "Option<fastcrypto::encoding::Base64>")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub effects_bcs: Option<Vec<u8>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub events: Option<sui_sdk_types::TransactionEvents>,
+    pub events: Option<iota_sdk_types::TransactionEvents>,
 
     #[serde_as(as = "Option<fastcrypto::encoding::Base64>")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub events_bcs: Option<Vec<u8>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub balance_changes: Option<Vec<sui_sdk_types::BalanceChange>>,
-    // pub input_objects: Option<Vec<sui_sdk_types::Object>>,
-    // pub output_objects: Option<Vec<sui_sdk_types::Object>>,
+    pub balance_changes: Option<Vec<iota_sdk_types::BalanceChange>>,
+    // pub input_objects: Option<Vec<iota_sdk_types::Object>>,
+    // pub output_objects: Option<Vec<iota_sdk_types::Object>>,
 }
 
 #[serde_with::serde_as]
@@ -487,11 +488,11 @@ pub struct ExecuteTransactionResponse {
 pub enum EffectsFinality {
     Certified {
         /// Validator aggregated signature
-        signature: sui_sdk_types::ValidatorAggregatedSignature,
+        signature: iota_sdk_types::ValidatorAggregatedSignature,
     },
     Checkpointed {
-        #[serde_as(as = "sui_types::sui_serde::Readable<sui_types::sui_serde::BigInt<u64>, _>")]
-        checkpoint: sui_sdk_types::CheckpointSequenceNumber,
+        #[serde_as(as = "iota_types::iota_serde::Readable<iota_types::iota_serde::BigInt<u64>, _>")]
+        checkpoint: iota_sdk_types::CheckpointSequenceNumber,
     },
     QuorumExecuted,
 }
@@ -703,13 +704,13 @@ impl GetFullCheckpointOptions {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FullCheckpointResponse {
-    pub sequence_number: sui_sdk_types::CheckpointSequenceNumber,
-    pub digest: sui_sdk_types::CheckpointDigest,
+    pub sequence_number: iota_sdk_types::CheckpointSequenceNumber,
+    pub digest: iota_sdk_types::CheckpointDigest,
 
-    pub summary: Option<sui_sdk_types::CheckpointSummary>,
+    pub summary: Option<iota_sdk_types::CheckpointSummary>,
     pub summary_bcs: Option<Vec<u8>>,
-    pub signature: Option<sui_sdk_types::ValidatorAggregatedSignature>,
-    pub contents: Option<sui_sdk_types::CheckpointContents>,
+    pub signature: Option<iota_sdk_types::ValidatorAggregatedSignature>,
+    pub contents: Option<iota_sdk_types::CheckpointContents>,
     pub contents_bcs: Option<Vec<u8>>,
 
     pub transactions: Vec<FullCheckpointTransaction>,
@@ -717,15 +718,15 @@ pub struct FullCheckpointResponse {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FullCheckpointTransaction {
-    pub digest: sui_sdk_types::TransactionDigest,
+    pub digest: iota_sdk_types::TransactionDigest,
 
-    pub transaction: Option<sui_sdk_types::Transaction>,
+    pub transaction: Option<iota_sdk_types::Transaction>,
     pub transaction_bcs: Option<Vec<u8>>,
 
-    pub effects: Option<sui_sdk_types::TransactionEffects>,
+    pub effects: Option<iota_sdk_types::TransactionEffects>,
     pub effects_bcs: Option<Vec<u8>>,
 
-    pub events: Option<sui_sdk_types::TransactionEvents>,
+    pub events: Option<iota_sdk_types::TransactionEvents>,
     pub events_bcs: Option<Vec<u8>>,
 
     pub input_objects: Option<Vec<FullCheckpointObject>>,
@@ -734,22 +735,22 @@ pub struct FullCheckpointTransaction {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FullCheckpointObject {
-    pub object_id: sui_sdk_types::ObjectId,
-    pub version: sui_sdk_types::Version,
-    pub digest: sui_sdk_types::ObjectDigest,
+    pub object_id: iota_sdk_types::ObjectId,
+    pub version: iota_sdk_types::Version,
+    pub digest: iota_sdk_types::ObjectDigest,
 
-    pub object: Option<sui_sdk_types::Object>,
+    pub object: Option<iota_sdk_types::Object>,
     pub object_bcs: Option<Vec<u8>>,
 }
 
 /// Response type for the transaction simulation endpoint
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct TransactionSimulationResponse {
-    pub effects: sui_sdk_types::TransactionEffects,
-    pub events: Option<sui_sdk_types::TransactionEvents>,
-    pub balance_changes: Option<Vec<sui_sdk_types::BalanceChange>>,
-    pub input_objects: Option<Vec<sui_sdk_types::Object>>,
-    pub output_objects: Option<Vec<sui_sdk_types::Object>>,
+    pub effects: iota_sdk_types::TransactionEffects,
+    pub events: Option<iota_sdk_types::TransactionEvents>,
+    pub balance_changes: Option<Vec<iota_sdk_types::BalanceChange>>,
+    pub input_objects: Option<Vec<iota_sdk_types::Object>>,
+    pub output_objects: Option<Vec<iota_sdk_types::Object>>,
 }
 
 /// Query parameters for the simulate transaction endpoint
@@ -772,7 +773,7 @@ pub struct SimulateTransactionQueryParameters {
 /// Response type for the execute transaction endpoint
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ResolveTransactionResponse {
-    pub transaction: sui_sdk_types::Transaction,
+    pub transaction: iota_sdk_types::Transaction,
     pub simulation: Option<TransactionSimulationResponse>,
 }
 

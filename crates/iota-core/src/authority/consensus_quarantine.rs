@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -8,10 +9,10 @@ use crate::authority::transaction_deferral::DeferralKey;
 use crate::epoch::randomness::SINGLETON_KEY;
 use fastcrypto_tbls::{dkg_v1, nodes::PartyId};
 use fastcrypto_zkp::bn254::zk_login::{JwkId, JWK};
-use sui_types::base_types::{AuthorityName, SequenceNumber};
-use sui_types::crypto::RandomnessRound;
-use sui_types::error::SuiResult;
-use sui_types::{
+use iota_types::base_types::{AuthorityName, SequenceNumber};
+use iota_types::crypto::RandomnessRound;
+use iota_types::error::IotaResult;
+use iota_types::{
     base_types::{ConsensusObjectSequenceKey, ObjectID},
     digests::TransactionDigest,
     messages_consensus::{Round, TimestampMs, VersionedDkgConfirmation},
@@ -191,7 +192,7 @@ impl ConsensusCommitOutput {
         self,
         epoch_store: &AuthorityPerEpochStore,
         batch: &mut DBBatch,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let tables = epoch_store.tables()?;
         batch.insert_batch(
             &tables.consensus_message_processed,

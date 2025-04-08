@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use async_trait::async_trait;
@@ -6,12 +7,12 @@ use move_core_types::account_address::AccountAddress;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
-use sui_package_resolver::{
+use iota_package_resolver::{
     error::Error as PackageResolverError, Package, PackageStore, PackageStoreWithLruCache, Result,
 };
-use sui_rpc_api::Client;
-use sui_types::base_types::ObjectID;
-use sui_types::object::{Data, Object};
+use iota_rpc_api::Client;
+use iota_types::base_types::ObjectID;
+use iota_types::object::{Data, Object};
 use thiserror::Error;
 use tokio::sync::RwLock;
 use typed_store::rocks::{DBMap, MetricConf};

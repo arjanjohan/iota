@@ -1,15 +1,16 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Context;
 use clap::Parser;
 use prometheus::Registry;
-use sui_indexer_alt_jsonrpc::{
+use iota_indexer_alt_jsonrpc::{
     args::{Args, Command},
     config::RpcConfig,
     start_rpc,
 };
-use sui_indexer_alt_metrics::MetricsService;
+use iota_indexer_alt_metrics::MetricsService;
 use tokio::fs;
 use tokio_util::sync::CancellationToken;
 

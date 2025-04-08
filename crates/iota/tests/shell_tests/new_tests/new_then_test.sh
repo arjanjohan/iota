@@ -1,17 +1,18 @@
 # Copyright (c) Mysten Labs, Inc.
+# Modifications Copyright (c) 2024 IOTA Stiftung
 # SPDX-License-Identifier: Apache-2.0
 
-# check that sui move new followed by sui move test succeeds
-sui move new example
+# check that iota move new followed by iota move test succeeds
+iota move new example
 
 # we mangle the generated toml file to replace the framework dependency with a local dependency
-FRAMEWORK_DIR=$(echo $CARGO_MANIFEST_DIR | sed 's#/crates/sui##g')
+FRAMEWORK_DIR=$(echo $CARGO_MANIFEST_DIR | sed 's#/crates/iota##g')
 cat example/Move.toml \
-  | sed 's#\(Sui = .*\)git = "[^"]*", \(.*\)#\1\2#' \
-  | sed 's#\(Sui = .*\), rev = "[^"]*"\(.*\)#\1\2#' \
-  | sed 's#\(Sui = .*\)subdir = "\([^"]*\)"\(.*\)#\1local = "FRAMEWORK/\2"\3#' \
-  | sed "s#\(Sui = .*\)FRAMEWORK\(.*\)#\1$FRAMEWORK_DIR\2#" \
+  | sed 's#\(IOTA = .*\)git = "[^"]*", \(.*\)#\1\2#' \
+  | sed 's#\(IOTA = .*\), rev = "[^"]*"\(.*\)#\1\2#' \
+  | sed 's#\(IOTA = .*\)subdir = "\([^"]*\)"\(.*\)#\1local = "FRAMEWORK/\2"\3#' \
+  | sed "s#\(IOTA = .*\)FRAMEWORK\(.*\)#\1$FRAMEWORK_DIR\2#" \
   > Move.toml
 mv Move.toml example/Move.toml
 
-cd example && sui move test
+cd example && iota move test

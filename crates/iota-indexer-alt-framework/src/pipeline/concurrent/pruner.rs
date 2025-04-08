@@ -1,11 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::BTreeMap, sync::Arc};
 
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
-use sui_pg_db::Db;
+use iota_pg_db::Db;
 use tokio::{
     sync::Semaphore,
     task::JoinHandle,

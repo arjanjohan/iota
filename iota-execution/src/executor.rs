@@ -1,19 +1,20 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use move_trace_format::format::MoveTraceBuilder;
 use std::{collections::HashSet, sync::Arc};
-use sui_protocol_config::ProtocolConfig;
-use sui_types::execution::ExecutionTiming;
-use sui_types::storage::BackingStore;
-use sui_types::{
-    base_types::{ObjectRef, SuiAddress},
+use iota_protocol_config::ProtocolConfig;
+use iota_types::execution::ExecutionTiming;
+use iota_types::storage::BackingStore;
+use iota_types::{
+    base_types::{ObjectRef, IotaAddress},
     committee::EpochId,
     digests::TransactionDigest,
     effects::TransactionEffects,
     error::ExecutionError,
     execution::{ExecutionResult, TypeLayoutStore},
-    gas::SuiGasStatus,
+    gas::IotaGasStatus,
     inner_temporary_store::InnerTemporaryStore,
     layout_resolver::LayoutResolver,
     metrics::LimitsMetrics,
@@ -37,15 +38,15 @@ pub trait Executor {
         input_objects: CheckedInputObjects,
         // Gas related
         gas_coins: Vec<ObjectRef>,
-        gas_status: SuiGasStatus,
+        gas_status: IotaGasStatus,
         // Transaction
         transaction_kind: TransactionKind,
-        transaction_signer: SuiAddress,
+        transaction_signer: IotaAddress,
         transaction_digest: TransactionDigest,
         trace_builder_opt: &mut Option<MoveTraceBuilder>,
     ) -> (
         InnerTemporaryStore,
-        SuiGasStatus,
+        IotaGasStatus,
         TransactionEffects,
         Vec<ExecutionTiming>,
         Result<(), ExecutionError>,
@@ -66,15 +67,15 @@ pub trait Executor {
         input_objects: CheckedInputObjects,
         // Gas related
         gas_coins: Vec<ObjectRef>,
-        gas_status: SuiGasStatus,
+        gas_status: IotaGasStatus,
         // Transaction
         transaction_kind: TransactionKind,
-        transaction_signer: SuiAddress,
+        transaction_signer: IotaAddress,
         transaction_digest: TransactionDigest,
         skip_all_checks: bool,
     ) -> (
         InnerTemporaryStore,
-        SuiGasStatus,
+        IotaGasStatus,
         TransactionEffects,
         Result<Vec<ExecutionResult>, ExecutionError>,
     );

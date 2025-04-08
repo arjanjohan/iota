@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::BTreeMap, sync::Arc};
@@ -6,11 +7,11 @@ use std::{collections::BTreeMap, sync::Arc};
 use anyhow::Result;
 use diesel::sql_query;
 use diesel_async::RunQueryDsl;
-use sui_field_count::FieldCount;
-use sui_indexer_alt_framework::pipeline::{concurrent::Handler, Processor};
-use sui_indexer_alt_schema::{objects::StoredObjInfo, schema::obj_info};
-use sui_pg_db as db;
-use sui_types::{base_types::ObjectID, full_checkpoint_content::CheckpointData, object::Object};
+use iota_field_count::FieldCount;
+use iota_indexer_alt_framework::pipeline::{concurrent::Handler, Processor};
+use iota_indexer_alt_schema::{objects::StoredObjInfo, schema::obj_info};
+use iota_pg_db as db;
+use iota_types::{base_types::ObjectID, full_checkpoint_content::CheckpointData, object::Object};
 
 use crate::consistent_pruning::{PruningInfo, PruningLookupTable};
 
@@ -112,7 +113,7 @@ impl Handler for ObjInfo {
         to_exclusive: u64,
         conn: &mut db::Connection<'_>,
     ) -> Result<usize> {
-        use sui_indexer_alt_schema::schema::obj_info::dsl;
+        use iota_indexer_alt_schema::schema::obj_info::dsl;
 
         let to_prune = self
             .pruning_lookup_table
@@ -182,9 +183,9 @@ impl TryInto<StoredObjInfo> for &ProcessedObjInfo {
 
 #[cfg(test)]
 mod tests {
-    use sui_indexer_alt_framework::Indexer;
-    use sui_indexer_alt_schema::{objects::StoredOwnerKind, MIGRATIONS};
-    use sui_types::{
+    use iota_indexer_alt_framework::Indexer;
+    use iota_indexer_alt_schema::{objects::StoredOwnerKind, MIGRATIONS};
+    use iota_types::{
         base_types::{dbg_addr, SequenceNumber},
         object::{Authenticator, Owner},
         test_checkpoint_data_builder::TestCheckpointDataBuilder,

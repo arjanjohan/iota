@@ -1,5 +1,6 @@
 #!/bin/bash
 # Copyright (c) Mysten Labs, Inc.
+# Modifications Copyright (c) 2024 IOTA Stiftung
 # SPDX-License-Identifier: Apache-2.0
 
 set -x
@@ -9,8 +10,8 @@ SCRIPT_PATH=$(realpath "$0")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
 
 PROTO_FILES=(
-proto/sui.node.v2.proto
-proto/sui.types.proto
+proto/iota.node.v2.proto
+proto/iota.types.proto
 proto/google/protobuf/empty.proto
 proto/google/protobuf/timestamp.proto
 )

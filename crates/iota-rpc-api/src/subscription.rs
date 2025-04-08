@@ -1,11 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::metrics::SubscriptionMetrics;
 use crate::proto::node::v2::GetFullCheckpointOptions;
 use crate::proto::node::v2::GetFullCheckpointResponse;
 use std::sync::Arc;
-use sui_types::full_checkpoint_content::CheckpointData;
+use iota_types::full_checkpoint_content::CheckpointData;
 use tap::Pipe;
 use tokio::sync::mpsc;
 use tokio::sync::oneshot;

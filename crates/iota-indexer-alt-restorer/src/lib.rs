@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 mod archives;
@@ -6,19 +7,19 @@ mod snapshot;
 
 use archives::ArchivalCheckpointInfo;
 use clap::Parser;
-use sui_pg_db::DbArgs;
+use iota_pg_db::DbArgs;
 
 use crate::snapshot::SnapshotRestorer;
 
 #[derive(Parser, Debug, Clone)]
-#[clap(name = "sui-indexer-alt-restorer")]
+#[clap(name = "iota-indexer-alt-restorer")]
 pub struct Args {
     /// Restore from end of this epoch.
     #[clap(long, env = "START_EPOCH", required = true)]
     pub start_epoch: u64,
 
     /// Url of the endpoint to fetch snapshot files from,
-    /// for example <https://formal-snapshot.mainnet.sui.io>
+    /// for example <https://formal-snapshot.mainnet.iota.io>
     #[clap(long, env = "ENDPOINT", required = true)]
     pub endpoint: String,
 
@@ -38,7 +39,7 @@ pub struct Args {
     #[clap(long, env = "CONCURRENCY", default_value_t = 50)]
     pub concurrency: usize,
 
-    /// Database connection arguments from `sui-pg-db`.
+    /// Database connection arguments from `iota-pg-db`.
     #[clap(flatten)]
     pub db_args: DbArgs,
 }

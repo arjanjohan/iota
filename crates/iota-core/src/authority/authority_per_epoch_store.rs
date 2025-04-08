@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque};
@@ -19,55 +20,55 @@ use futures::future::{join_all, select, Either};
 use futures::FutureExt;
 use itertools::{izip, Itertools};
 use move_bytecode_utils::module_cache::SyncModuleCache;
-use mysten_common::sync::notify_once::NotifyOnce;
-use mysten_common::sync::notify_read::NotifyRead;
-use mysten_common::{debug_fatal, fatal};
-use mysten_metrics::monitored_scope;
+use iota_common::sync::notify_once::NotifyOnce;
+use iota_common::sync::notify_read::NotifyRead;
+use iota_common::{debug_fatal, fatal};
+use iota_metrics::monitored_scope;
 use nonempty::NonEmpty;
 use parking_lot::RwLock;
 use parking_lot::{Mutex, RwLockReadGuard, RwLockWriteGuard};
 use prometheus::IntCounter;
 use serde::{Deserialize, Serialize};
-use sui_config::node::ExpensiveSafetyCheckConfig;
-use sui_execution::{self, Executor};
-use sui_macros::fail_point;
-use sui_macros::fail_point_arg;
-use sui_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-use sui_storage::mutex_table::{MutexGuard, MutexTable};
-use sui_types::accumulator::Accumulator;
-use sui_types::authenticator_state::{get_authenticator_state, ActiveJwk};
-use sui_types::base_types::{
+use iota_config::node::ExpensiveSafetyCheckConfig;
+use iota_execution::{self, Executor};
+use iota_macros::fail_point;
+use iota_macros::fail_point_arg;
+use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
+use iota_storage::mutex_table::{MutexGuard, MutexTable};
+use iota_types::accumulator::Accumulator;
+use iota_types::authenticator_state::{get_authenticator_state, ActiveJwk};
+use iota_types::base_types::{
     AuthorityName, ConsensusObjectSequenceKey, EpochId, FullObjectID, ObjectID, SequenceNumber,
     TransactionDigest,
 };
-use sui_types::base_types::{ConciseableName, ObjectRef};
-use sui_types::committee::Committee;
-use sui_types::committee::CommitteeTrait;
-use sui_types::crypto::{
+use iota_types::base_types::{ConciseableName, ObjectRef};
+use iota_types::committee::Committee;
+use iota_types::committee::CommitteeTrait;
+use iota_types::crypto::{
     AuthorityPublicKeyBytes, AuthoritySignInfo, AuthorityStrongQuorumSignInfo, RandomnessRound,
 };
-use sui_types::digests::{ChainIdentifier, TransactionEffectsDigest};
-use sui_types::effects::TransactionEffects;
-use sui_types::error::{SuiError, SuiResult};
-use sui_types::executable_transaction::{
+use iota_types::digests::{ChainIdentifier, TransactionEffectsDigest};
+use iota_types::effects::TransactionEffects;
+use iota_types::error::{IotaError, IotaResult};
+use iota_types::executable_transaction::{
     TrustedExecutableTransaction, VerifiedExecutableTransaction,
 };
-use sui_types::execution::ExecutionTiming;
-use sui_types::message_envelope::TrustedEnvelope;
-use sui_types::messages_checkpoint::{
+use iota_types::execution::ExecutionTiming;
+use iota_types::message_envelope::TrustedEnvelope;
+use iota_types::messages_checkpoint::{
     CheckpointContents, CheckpointSequenceNumber, CheckpointSignatureMessage, CheckpointSummary,
 };
-use sui_types::messages_consensus::{
+use iota_types::messages_consensus::{
     check_total_jwk_size, AuthorityCapabilitiesV1, AuthorityCapabilitiesV2, ConsensusTransaction,
     ConsensusTransactionKey, ConsensusTransactionKind, ExecutionTimeObservation, Round,
     TimestampMs, VersionedDkgConfirmation,
 };
-use sui_types::signature::GenericSignature;
-use sui_types::storage::{BackingPackageStore, InputKey, ObjectStore};
-use sui_types::sui_system_state::epoch_start_sui_system_state::{
+use iota_types::signature::GenericSignature;
+use iota_types::storage::{BackingPackageStore, InputKey, ObjectStore};
+use iota_types::iota_system_state::epoch_start_iota_system_state::{
     EpochStartSystemState, EpochStartSystemStateTrait,
 };
-use sui_types::transaction::{
+use iota_types::transaction::{
     AuthenticatorStateUpdate, CallArg, CertifiedTransaction, InputObjectKind, ObjectArg,
     ProgrammableTransaction, SenderSignedData, Transaction, TransactionData, TransactionDataAPI,
     TransactionKey, TransactionKind, VerifiedCertificate, VerifiedSignedTransaction,
@@ -168,7 +169,7 @@ pub enum ConsensusCertificateResult {
     /// The consensus message was ignored (e.g. because it has already been processed).
     Ignored,
     /// An executable transaction (can be a user tx or a system tx)
-    SuiTransaction(VerifiedExecutableTransaction),
+    IotaTransaction(VerifiedExecutableTransaction),
     /// The transaction should be re-processed at a future commit, specified by the DeferralKey
     Deferred(DeferralKey),
     /// A message was processed which updates randomness state.
@@ -692,7 +693,7 @@ impl AuthorityEpochTables {
         parent_path.join(format!("{}{}", EPOCH_DB_PREFIX, epoch))
     }
 
-    fn load_reconfig_state(&self) -> SuiResult<ReconfigState> {
+    fn load_reconfig_state(&self) -> IotaResult<ReconfigState> {
         let state = self
             .reconfig_state
             .get(&RECONFIG_STATE_INDEX)?
@@ -707,7 +708,7 @@ impl AuthorityEpochTables {
             .collect()
     }
 
-    pub fn reset_db_for_execution_since_genesis(&self) -> SuiResult {
+    pub fn reset_db_for_execution_since_genesis(&self) -> IotaResult {
         // TODO: Add new tables that get added to the db automatically
         self.executed_transactions_to_checkpoint.unsafe_clear()?;
         Ok(())
@@ -715,19 +716,19 @@ impl AuthorityEpochTables {
 
     /// WARNING: This method is very subtle and can corrupt the database if used incorrectly.
     /// It should only be used in one-off cases or tests after fully understanding the risk.
-    pub fn remove_executed_tx_subtle(&self, digest: &TransactionDigest) -> SuiResult {
+    pub fn remove_executed_tx_subtle(&self, digest: &TransactionDigest) -> IotaResult {
         self.executed_transactions_to_checkpoint.remove(digest)?;
         Ok(())
     }
 
-    pub fn get_last_consensus_index(&self) -> SuiResult<Option<ExecutionIndices>> {
+    pub fn get_last_consensus_index(&self) -> IotaResult<Option<ExecutionIndices>> {
         Ok(self
             .last_consensus_stats
             .get(&LAST_CONSENSUS_STATS_ADDR)?
             .map(|s| s.index))
     }
 
-    pub fn get_last_consensus_stats(&self) -> SuiResult<Option<ExecutionIndicesWithStats>> {
+    pub fn get_last_consensus_stats(&self) -> IotaResult<Option<ExecutionIndicesWithStats>> {
         Ok(self.last_consensus_stats.get(&LAST_CONSENSUS_STATS_ADDR)?)
     }
 
@@ -735,7 +736,7 @@ impl AuthorityEpochTables {
         &self,
         checkpoint_seq: CheckpointSequenceNumber,
         starting_index: u64,
-    ) -> SuiResult<
+    ) -> IotaResult<
         impl Iterator<Item = ((CheckpointSequenceNumber, u64), CheckpointSignatureMessage)> + '_,
     > {
         let key = (checkpoint_seq, starting_index);
@@ -744,10 +745,10 @@ impl AuthorityEpochTables {
             .pending_checkpoint_signatures
             .unbounded_iter()
             .skip_to(&key)?;
-        Ok::<_, SuiError>(iter)
+        Ok::<_, IotaError>(iter)
     }
 
-    pub fn get_locked_transaction(&self, obj_ref: &ObjectRef) -> SuiResult<Option<LockDetails>> {
+    pub fn get_locked_transaction(&self, obj_ref: &ObjectRef) -> IotaResult<Option<LockDetails>> {
         Ok(self
             .owned_object_locked_transactions
             .get(obj_ref)?
@@ -757,7 +758,7 @@ impl AuthorityEpochTables {
     pub fn multi_get_locked_transactions(
         &self,
         owned_input_objects: &[ObjectRef],
-    ) -> SuiResult<Vec<Option<LockDetails>>> {
+    ) -> IotaResult<Vec<Option<LockDetails>>> {
         Ok(self
             .owned_object_locked_transactions
             .multi_get(owned_input_objects)?
@@ -770,7 +771,7 @@ impl AuthorityEpochTables {
         &self,
         signed_transaction: Option<VerifiedSignedTransaction>,
         locks_to_write: impl Iterator<Item = (ObjectRef, LockDetails)>,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let mut batch = self.owned_object_locked_transactions.batch();
         batch.insert_batch(
             &self.owned_object_locked_transactions,
@@ -795,7 +796,7 @@ impl AuthorityEpochTables {
         for_randomness: bool,
         protocol_config: &ProtocolConfig,
         transactions: &[VerifiedSequencedConsensusTransaction],
-    ) -> SuiResult<impl IntoIterator<Item = (ObjectID, u64)>> {
+    ) -> IotaResult<impl IntoIterator<Item = (ObjectID, u64)>> {
         let default_per_commit_budget = protocol_config
             .max_accumulated_txn_cost_per_object_in_mysticeti_commit_as_option()
             .unwrap_or(0);
@@ -1012,10 +1013,10 @@ impl AuthorityPerEpochStore {
         s
     }
 
-    pub fn tables(&self) -> SuiResult<Arc<AuthorityEpochTables>> {
+    pub fn tables(&self) -> IotaResult<Arc<AuthorityEpochTables>> {
         match self.tables.load_full() {
             Some(tables) => Ok(tables),
-            None => Err(SuiError::EpochEnded(self.epoch())),
+            None => Err(IotaError::EpochEnded(self.epoch())),
         }
     }
 
@@ -1059,7 +1060,7 @@ impl AuthorityPerEpochStore {
     pub async fn set_randomness_manager(
         &self,
         mut randomness_manager: RandomnessManager,
-    ) -> SuiResult<()> {
+    ) -> IotaResult<()> {
         let reporter = randomness_manager.reporter();
         let result = randomness_manager.start_dkg().await;
         if self
@@ -1180,7 +1181,7 @@ impl AuthorityPerEpochStore {
     pub fn get_state_hash_for_checkpoint(
         &self,
         checkpoint: &CheckpointSequenceNumber,
-    ) -> SuiResult<Option<Accumulator>> {
+    ) -> IotaResult<Option<Accumulator>> {
         Ok(self.tables()?.state_hash_by_checkpoint.get(checkpoint)?)
     }
 
@@ -1188,7 +1189,7 @@ impl AuthorityPerEpochStore {
         &self,
         checkpoint: &CheckpointSequenceNumber,
         accumulator: &Accumulator,
-    ) -> SuiResult {
+    ) -> IotaResult {
         Ok(self
             .tables()?
             .state_hash_by_checkpoint
@@ -1198,13 +1199,13 @@ impl AuthorityPerEpochStore {
     pub fn get_running_root_accumulator(
         &self,
         checkpoint: &CheckpointSequenceNumber,
-    ) -> SuiResult<Option<Accumulator>> {
+    ) -> IotaResult<Option<Accumulator>> {
         Ok(self.tables()?.running_root_accumulators.get(checkpoint)?)
     }
 
     pub fn get_highest_running_root_accumulator(
         &self,
-    ) -> SuiResult<Option<(CheckpointSequenceNumber, Accumulator)>> {
+    ) -> IotaResult<Option<(CheckpointSequenceNumber, Accumulator)>> {
         Ok(self
             .tables()?
             .running_root_accumulators
@@ -1217,7 +1218,7 @@ impl AuthorityPerEpochStore {
         &self,
         checkpoint: &CheckpointSequenceNumber,
         acc: &Accumulator,
-    ) -> SuiResult {
+    ) -> IotaResult {
         self.tables()?
             .running_root_accumulators
             .insert(checkpoint, acc)?;
@@ -1288,7 +1289,7 @@ impl AuthorityPerEpochStore {
         }
     }
 
-    pub fn acquire_tx_guard(&self, cert: &VerifiedExecutableTransaction) -> SuiResult<CertTxGuard> {
+    pub fn acquire_tx_guard(&self, cert: &VerifiedExecutableTransaction) -> IotaResult<CertTxGuard> {
         let digest = cert.digest();
         Ok(CertTxGuard(self.acquire_tx_lock(digest)))
     }
@@ -1298,14 +1299,14 @@ impl AuthorityPerEpochStore {
         CertLockGuard(self.mutex_table.acquire_lock(*digest))
     }
 
-    pub fn store_reconfig_state(&self, new_state: &ReconfigState) -> SuiResult {
+    pub fn store_reconfig_state(&self, new_state: &ReconfigState) -> IotaResult {
         self.tables()?
             .reconfig_state
             .insert(&RECONFIG_STATE_INDEX, new_state)?;
         Ok(())
     }
 
-    pub fn insert_signed_transaction(&self, transaction: VerifiedSignedTransaction) -> SuiResult {
+    pub fn insert_signed_transaction(&self, transaction: VerifiedSignedTransaction) -> IotaResult {
         Ok(self
             .tables()?
             .signed_transactions
@@ -1335,7 +1336,7 @@ impl AuthorityPerEpochStore {
     pub fn get_signed_transaction(
         &self,
         tx_digest: &TransactionDigest,
-    ) -> SuiResult<Option<VerifiedSignedTransaction>> {
+    ) -> IotaResult<Option<VerifiedSignedTransaction>> {
         Ok(self
             .tables()?
             .signed_transactions
@@ -1348,7 +1349,7 @@ impl AuthorityPerEpochStore {
         &self,
         tx_digest: &TransactionDigest,
         cert_sig: &AuthorityStrongQuorumSignInfo,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let tables = self.tables()?;
         Ok(tables
             .transaction_cert_signatures
@@ -1360,7 +1361,7 @@ impl AuthorityPerEpochStore {
         &self,
         tx_key: &TransactionKey,
         tx_digest: &TransactionDigest,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let tables = self.tables()?;
         let mut batch = self.tables()?.executed_in_epoch.batch();
 
@@ -1377,7 +1378,7 @@ impl AuthorityPerEpochStore {
         Ok(())
     }
 
-    pub fn revert_executed_transaction(&self, tx_digest: &TransactionDigest) -> SuiResult {
+    pub fn revert_executed_transaction(&self, tx_digest: &TransactionDigest) -> IotaResult {
         let tables = self.tables()?;
         let mut batch = tables.effects_signatures.batch();
         batch.delete_batch(&tables.executed_in_epoch, [*tx_digest])?;
@@ -1391,7 +1392,7 @@ impl AuthorityPerEpochStore {
         tx_digest: &TransactionDigest,
         effects_digest: &TransactionEffectsDigest,
         effects_signature: &AuthoritySignInfo,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let tables = self.tables()?;
         let mut batch = tables.effects_signatures.batch();
         batch.insert_batch(&tables.effects_signatures, [(tx_digest, effects_signature)])?;
@@ -1406,7 +1407,7 @@ impl AuthorityPerEpochStore {
     pub fn transactions_executed_in_cur_epoch<'a>(
         &self,
         digests: impl IntoIterator<Item = &'a TransactionDigest>,
-    ) -> SuiResult<Vec<bool>> {
+    ) -> IotaResult<Vec<bool>> {
         Ok(self
             .tables()?
             .executed_in_epoch
@@ -1416,7 +1417,7 @@ impl AuthorityPerEpochStore {
     pub fn get_effects_signature(
         &self,
         tx_digest: &TransactionDigest,
-    ) -> SuiResult<Option<AuthoritySignInfo>> {
+    ) -> IotaResult<Option<AuthoritySignInfo>> {
         let tables = self.tables()?;
         Ok(tables.effects_signatures.get(tx_digest)?)
     }
@@ -1424,7 +1425,7 @@ impl AuthorityPerEpochStore {
     pub fn get_signed_effects_digest(
         &self,
         tx_digest: &TransactionDigest,
-    ) -> SuiResult<Option<TransactionEffectsDigest>> {
+    ) -> IotaResult<Option<TransactionEffectsDigest>> {
         let tables = self.tables()?;
         Ok(tables.signed_effects_digests.get(tx_digest)?)
     }
@@ -1432,7 +1433,7 @@ impl AuthorityPerEpochStore {
     pub fn get_transaction_cert_sig(
         &self,
         tx_digest: &TransactionDigest,
-    ) -> SuiResult<Option<AuthorityStrongQuorumSignInfo>> {
+    ) -> IotaResult<Option<AuthorityStrongQuorumSignInfo>> {
         Ok(self.tables()?.transaction_cert_signatures.get(tx_digest)?)
     }
 
@@ -1442,7 +1443,7 @@ impl AuthorityPerEpochStore {
         &self,
         key: &TransactionKey,
         objects: &[InputObjectKind],
-    ) -> SuiResult<BTreeSet<InputKey>> {
+    ) -> IotaResult<BTreeSet<InputKey>> {
         let assigned_shared_versions = once_cell::unsync::OnceCell::<
             Option<HashMap<ConsensusObjectSequenceKey, SequenceNumber>>,
         >::new();
@@ -1464,7 +1465,7 @@ impl AuthorityPerEpochStore {
                             .as_ref()
                             // Shared version assignments could have been deleted if the tx just
                             // finished executing concurrently.
-                            .ok_or(SuiError::GenericAuthorityError {
+                            .ok_or(IotaError::GenericAuthorityError {
                                 error: "no assigned shared versions".to_string(),
                             })?;
 
@@ -1500,11 +1501,11 @@ impl AuthorityPerEpochStore {
             .collect()
     }
 
-    pub fn get_last_consensus_stats(&self) -> SuiResult<ExecutionIndicesWithStats> {
+    pub fn get_last_consensus_stats(&self) -> IotaResult<ExecutionIndicesWithStats> {
         match self
             .tables()?
             .get_last_consensus_stats()
-            .map_err(SuiError::from)?
+            .map_err(IotaError::from)?
         {
             Some(stats) => Ok(stats),
             None => {
@@ -1512,7 +1513,7 @@ impl AuthorityPerEpochStore {
                     .tables()?
                     .get_last_consensus_index()
                     .map(|x| x.unwrap_or_default())
-                    .map_err(SuiError::from)?;
+                    .map_err(IotaError::from)?;
                 Ok(ExecutionIndicesWithStats {
                     index: indices,
                     hash: 0, // unused
@@ -1526,7 +1527,7 @@ impl AuthorityPerEpochStore {
         &self,
         from_checkpoint: CheckpointSequenceNumber,
         to_checkpoint: CheckpointSequenceNumber,
-    ) -> SuiResult<Vec<(CheckpointSequenceNumber, Accumulator)>> {
+    ) -> IotaResult<Vec<(CheckpointSequenceNumber, Accumulator)>> {
         self.tables()?
             .state_hash_by_checkpoint
             .safe_range_iter(from_checkpoint..=to_checkpoint)
@@ -1540,7 +1541,7 @@ impl AuthorityPerEpochStore {
     pub async fn notify_read_checkpoint_state_digests(
         &self,
         checkpoints: Vec<CheckpointSequenceNumber>,
-    ) -> SuiResult<Vec<Accumulator>> {
+    ) -> IotaResult<Vec<Accumulator>> {
         let tables = self.tables()?;
         Ok(self
             .checkpoint_state_notify_read
@@ -1556,7 +1557,7 @@ impl AuthorityPerEpochStore {
     pub async fn notify_read_running_root(
         &self,
         checkpoint: CheckpointSequenceNumber,
-    ) -> SuiResult<Accumulator> {
+    ) -> IotaResult<Accumulator> {
         let registration = self.running_root_notify_read.register_one(&checkpoint);
         let acc = self.tables()?.running_root_accumulators.get(&checkpoint)?;
 
@@ -1572,7 +1573,7 @@ impl AuthorityPerEpochStore {
     /// `pending_certificates` table related methods. Should only be used from TransactionManager.
 
     /// Gets all pending certificates. Used during recovery.
-    pub fn all_pending_execution(&self) -> SuiResult<Vec<VerifiedExecutableTransaction>> {
+    pub fn all_pending_execution(&self) -> IotaResult<Vec<VerifiedExecutableTransaction>> {
         Ok(self
             .tables()?
             .pending_execution
@@ -1583,12 +1584,12 @@ impl AuthorityPerEpochStore {
 
     /// Called when transaction outputs are committed to disk
     #[instrument(level = "trace", skip_all)]
-    pub fn handle_committed_transactions(&self, digests: &[TransactionDigest]) -> SuiResult<()> {
+    pub fn handle_committed_transactions(&self, digests: &[TransactionDigest]) -> IotaResult<()> {
         let tables = match self.tables() {
             Ok(tables) => tables,
             // After Epoch ends, it is no longer necessary to remove pending transactions
             // because the table will not be used anymore and be deleted eventually.
-            Err(SuiError::EpochEnded(_)) => return Ok(()),
+            Err(IotaError::EpochEnded(_)) => return Ok(()),
             Err(e) => return Err(e),
         };
         let mut batch = tables.pending_execution.batch();
@@ -1653,7 +1654,7 @@ impl AuthorityPerEpochStore {
         &self,
         tx_digest: &TransactionDigest,
         assigned_versions: Vec<(ConsensusObjectSequenceKey, SequenceNumber)>,
-    ) -> SuiResult {
+    ) -> IotaResult {
         if self.epoch_start_config().use_version_assignment_tables_v3() {
             self.tables()?
                 .assigned_shared_object_versions_v3
@@ -1674,7 +1675,7 @@ impl AuthorityPerEpochStore {
         &self,
         digests: &[TransactionDigest],
         sequence: CheckpointSequenceNumber,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let mut batch = self.tables()?.executed_transactions_to_checkpoint.batch();
         batch.insert_batch(
             &self.tables()?.executed_transactions_to_checkpoint,
@@ -1695,7 +1696,7 @@ impl AuthorityPerEpochStore {
     pub fn is_transaction_executed_in_checkpoint(
         &self,
         digest: &TransactionDigest,
-    ) -> SuiResult<bool> {
+    ) -> IotaResult<bool> {
         Ok(self
             .tables()?
             .executed_transactions_to_checkpoint
@@ -1705,7 +1706,7 @@ impl AuthorityPerEpochStore {
     pub fn transactions_executed_in_checkpoint(
         &self,
         digests: impl Iterator<Item = TransactionDigest>,
-    ) -> SuiResult<Vec<bool>> {
+    ) -> IotaResult<Vec<bool>> {
         Ok(self
             .tables()?
             .executed_transactions_to_checkpoint
@@ -1715,7 +1716,7 @@ impl AuthorityPerEpochStore {
     pub fn get_transaction_checkpoint(
         &self,
         digest: &TransactionDigest,
-    ) -> SuiResult<Option<CheckpointSequenceNumber>> {
+    ) -> IotaResult<Option<CheckpointSequenceNumber>> {
         Ok(self
             .tables()?
             .executed_transactions_to_checkpoint
@@ -1725,7 +1726,7 @@ impl AuthorityPerEpochStore {
     pub fn multi_get_transaction_checkpoint(
         &self,
         digests: &[TransactionDigest],
-    ) -> SuiResult<Vec<Option<CheckpointSequenceNumber>>> {
+    ) -> IotaResult<Vec<Option<CheckpointSequenceNumber>>> {
         Ok(self
             .tables()?
             .executed_transactions_to_checkpoint
@@ -1752,7 +1753,7 @@ impl AuthorityPerEpochStore {
         &self,
         objects_to_init: &[ConsensusObjectSequenceKey],
         cache_reader: &dyn ObjectCacheRead,
-    ) -> SuiResult<HashMap<ConsensusObjectSequenceKey, SequenceNumber>> {
+    ) -> IotaResult<HashMap<ConsensusObjectSequenceKey, SequenceNumber>> {
         // get_or_init_next_object_versions can be called
         // from consensus or checkpoint executor,
         // so we need to protect version assignment with a critical section
@@ -1844,7 +1845,7 @@ impl AuthorityPerEpochStore {
     pub fn get_assigned_shared_object_versions(
         &self,
         key: &TransactionKey,
-    ) -> SuiResult<Option<Vec<(ConsensusObjectSequenceKey, SequenceNumber)>>> {
+    ) -> IotaResult<Option<Vec<(ConsensusObjectSequenceKey, SequenceNumber)>>> {
         if self.epoch_start_config().use_version_assignment_tables_v3() {
             Ok(self.tables()?.assigned_shared_object_versions_v3.get(key)?)
         } else {
@@ -1865,7 +1866,7 @@ impl AuthorityPerEpochStore {
         &self,
         versions: AssignedTxAndVersions,
         db_batch: &mut DBBatch,
-    ) -> SuiResult {
+    ) -> IotaResult {
         debug!("set_assigned_shared_object_versions: {:?}", versions);
         if self.epoch_start_config().use_version_assignment_tables_v3() {
             db_batch.insert_batch(&self.tables()?.assigned_shared_object_versions_v3, versions)?;
@@ -1896,7 +1897,7 @@ impl AuthorityPerEpochStore {
         &self,
         cache_reader: &dyn ObjectCacheRead,
         certificates: &[VerifiedExecutableTransaction],
-    ) -> SuiResult {
+    ) -> IotaResult {
         let mut db_batch = self.tables()?.assigned_shared_object_versions_v2.batch();
         let assigned_versions = SharedObjVerManager::assign_versions_from_consensus(
             self,
@@ -1914,7 +1915,7 @@ impl AuthorityPerEpochStore {
     fn load_deferred_transactions_for_randomness(
         &self,
         output: &mut ConsensusCommitOutput,
-    ) -> SuiResult<Vec<(DeferralKey, Vec<VerifiedSequencedConsensusTransaction>)>> {
+    ) -> IotaResult<Vec<(DeferralKey, Vec<VerifiedSequencedConsensusTransaction>)>> {
         let (min, max) = DeferralKey::full_range_for_randomness();
         self.load_deferred_transactions(output, min, max)
     }
@@ -1924,7 +1925,7 @@ impl AuthorityPerEpochStore {
         output: &mut ConsensusCommitOutput,
         previously_deferred_tx_digests: &mut HashMap<TransactionDigest, DeferralKey>,
         sequenced_randomness_transactions: &mut Vec<VerifiedSequencedConsensusTransaction>,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let deferred_randomness_txs = self.load_deferred_transactions_for_randomness(output)?;
         trace!(
             "loading deferred randomness transactions: {:?}",
@@ -1951,7 +1952,7 @@ impl AuthorityPerEpochStore {
         &self,
         output: &mut ConsensusCommitOutput,
         consensus_round: u64,
-    ) -> SuiResult<Vec<(DeferralKey, Vec<VerifiedSequencedConsensusTransaction>)>> {
+    ) -> IotaResult<Vec<(DeferralKey, Vec<VerifiedSequencedConsensusTransaction>)>> {
         let (min, max) = DeferralKey::range_for_up_to_consensus_round(consensus_round);
         self.load_deferred_transactions(output, min, max)
     }
@@ -1962,7 +1963,7 @@ impl AuthorityPerEpochStore {
         output: &mut ConsensusCommitOutput,
         min: DeferralKey,
         max: DeferralKey,
-    ) -> SuiResult<Vec<(DeferralKey, Vec<VerifiedSequencedConsensusTransaction>)>> {
+    ) -> IotaResult<Vec<(DeferralKey, Vec<VerifiedSequencedConsensusTransaction>)>> {
         debug!("Query epoch store to load deferred txn {:?} {:?}", min, max);
         let mut keys = Vec::new();
         let mut txns = Vec::new();
@@ -2002,7 +2003,7 @@ impl AuthorityPerEpochStore {
 
     pub fn get_all_deferred_transactions_for_test(
         &self,
-    ) -> SuiResult<Vec<(DeferralKey, Vec<VerifiedSequencedConsensusTransaction>)>> {
+    ) -> IotaResult<Vec<(DeferralKey, Vec<VerifiedSequencedConsensusTransaction>)>> {
         Ok(self
             .tables()?
             .deferred_transactions
@@ -2065,7 +2066,7 @@ impl AuthorityPerEpochStore {
         certificate: &VerifiedExecutableTransaction,
         effects: &TransactionEffects,
         cache_reader: &dyn ObjectCacheRead,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let versions = SharedObjVerManager::assign_versions_from_effects(
             &[(certificate, effects)],
             self,
@@ -2083,7 +2084,7 @@ impl AuthorityPerEpochStore {
         &self,
         transactions: &[ConsensusTransaction],
         lock: Option<&RwLockReadGuard<ReconfigState>>,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let key_value_pairs = transactions.iter().map(|tx| (tx.key(), tx));
         self.tables()?
             .pending_consensus_transactions
@@ -2115,7 +2116,7 @@ impl AuthorityPerEpochStore {
     pub fn remove_pending_consensus_transactions(
         &self,
         keys: &[ConsensusTransactionKey],
-    ) -> SuiResult {
+    ) -> IotaResult {
         self.tables()?
             .pending_consensus_transactions
             .multi_remove(keys)?;
@@ -2158,7 +2159,7 @@ impl AuthorityPerEpochStore {
     pub fn is_any_tx_certs_consensus_message_processed<'a>(
         &self,
         certificates: impl Iterator<Item = &'a CertifiedTransaction>,
-    ) -> SuiResult<bool> {
+    ) -> IotaResult<bool> {
         let keys = certificates.map(|cert| {
             SequencedConsensusTransactionKey::External(ConsensusTransactionKey::Certificate(
                 *cert.digest(),
@@ -2174,7 +2175,7 @@ impl AuthorityPerEpochStore {
     pub fn all_external_consensus_messages_processed(
         &self,
         keys: impl Iterator<Item = ConsensusTransactionKey>,
-    ) -> SuiResult<bool> {
+    ) -> IotaResult<bool> {
         let keys = keys.map(SequencedConsensusTransactionKey::External);
         Ok(self
             .check_consensus_messages_processed(keys)?
@@ -2185,7 +2186,7 @@ impl AuthorityPerEpochStore {
     pub fn is_consensus_message_processed(
         &self,
         key: &SequencedConsensusTransactionKey,
-    ) -> SuiResult<bool> {
+    ) -> IotaResult<bool> {
         Ok(self
             .tables()?
             .consensus_message_processed
@@ -2195,7 +2196,7 @@ impl AuthorityPerEpochStore {
     pub fn check_consensus_messages_processed(
         &self,
         keys: impl Iterator<Item = SequencedConsensusTransactionKey>,
-    ) -> SuiResult<Vec<bool>> {
+    ) -> IotaResult<Vec<bool>> {
         Ok(self
             .tables()?
             .consensus_message_processed
@@ -2205,7 +2206,7 @@ impl AuthorityPerEpochStore {
     pub async fn consensus_messages_processed_notify(
         &self,
         keys: Vec<SequencedConsensusTransactionKey>,
-    ) -> Result<(), SuiError> {
+    ) -> Result<(), IotaError> {
         let registrations = self.consensus_notify_read.register_all(&keys);
 
         let unprocessed_keys_registrations = registrations
@@ -2222,7 +2223,7 @@ impl AuthorityPerEpochStore {
     pub async fn transactions_executed_in_checkpoint_notify(
         &self,
         digests: Vec<TransactionDigest>,
-    ) -> Result<(), SuiError> {
+    ) -> Result<(), IotaError> {
         let registrations = self
             .executed_transactions_to_checkpoint_notify_read
             .register_all(&digests);
@@ -2250,7 +2251,7 @@ impl AuthorityPerEpochStore {
     pub async fn synced_checkpoint_notify(
         &self,
         checkpoint_seq: CheckpointSequenceNumber,
-    ) -> Result<(), SuiError> {
+    ) -> Result<(), IotaError> {
         let registration = self
             .synced_checkpoint_notify_read
             .register_one(&checkpoint_seq);
@@ -2264,7 +2265,7 @@ impl AuthorityPerEpochStore {
         Ok(())
     }
 
-    pub fn has_sent_end_of_publish(&self, authority: &AuthorityName) -> SuiResult<bool> {
+    pub fn has_sent_end_of_publish(&self, authority: &AuthorityName) -> IotaResult<bool> {
         Ok(self
             .end_of_publish
             .try_lock()
@@ -2277,7 +2278,7 @@ impl AuthorityPerEpochStore {
     pub async fn notify_read_executed_digests(
         &self,
         keys: &[TransactionKey],
-    ) -> SuiResult<Vec<TransactionDigest>> {
+    ) -> IotaResult<Vec<TransactionDigest>> {
         let non_digest_keys: Vec<_> = keys
             .iter()
             .filter_map(|key| {
@@ -2325,7 +2326,7 @@ impl AuthorityPerEpochStore {
         &self,
         transactions: &[VerifiedTransaction],
         digests: &[TransactionDigest],
-    ) -> SuiResult<Vec<Vec<GenericSignature>>> {
+    ) -> IotaResult<Vec<Vec<GenericSignature>>> {
         assert_eq!(transactions.len(), digests.len());
         let signatures = self
             .tables()?
@@ -2344,7 +2345,7 @@ impl AuthorityPerEpochStore {
                 // so we can just pull it from the transaction.
                 transaction.tx_signatures().to_vec()
             } else {
-                return Err(SuiError::from(
+                return Err(IotaError::from(
                     format!(
                         "Can not find user signature for checkpoint for transaction {:?}",
                         transaction.key()
@@ -2357,7 +2358,7 @@ impl AuthorityPerEpochStore {
         Ok(result)
     }
 
-    pub fn clear_override_protocol_upgrade_buffer_stake(&self) -> SuiResult {
+    pub fn clear_override_protocol_upgrade_buffer_stake(&self) -> IotaResult {
         warn!(
             epoch = ?self.epoch(),
             "clearing buffer_stake_for_protocol_upgrade_bps override"
@@ -2369,7 +2370,7 @@ impl AuthorityPerEpochStore {
         Ok(())
     }
 
-    pub fn set_override_protocol_upgrade_buffer_stake(&self, new_stake_bps: u64) -> SuiResult {
+    pub fn set_override_protocol_upgrade_buffer_stake(&self, new_stake_bps: u64) -> IotaResult {
         warn!(
             ?new_stake_bps,
             epoch = ?self.epoch(),
@@ -2405,7 +2406,7 @@ impl AuthorityPerEpochStore {
     }
 
     /// Record most recently advertised capabilities of all authorities
-    pub fn record_capabilities(&self, capabilities: &AuthorityCapabilitiesV1) -> SuiResult {
+    pub fn record_capabilities(&self, capabilities: &AuthorityCapabilitiesV1) -> IotaResult {
         info!("received capabilities {:?}", capabilities);
         let authority = &capabilities.authority;
         let tables = self.tables()?;
@@ -2427,7 +2428,7 @@ impl AuthorityPerEpochStore {
     }
 
     /// Record most recently advertised capabilities of all authorities
-    pub fn record_capabilities_v2(&self, capabilities: &AuthorityCapabilitiesV2) -> SuiResult {
+    pub fn record_capabilities_v2(&self, capabilities: &AuthorityCapabilitiesV2) -> IotaResult {
         info!("received capabilities v2 {:?}", capabilities);
         let authority = &capabilities.authority;
         let tables = self.tables()?;
@@ -2448,7 +2449,7 @@ impl AuthorityPerEpochStore {
         Ok(())
     }
 
-    pub fn get_capabilities_v1(&self) -> SuiResult<Vec<AuthorityCapabilitiesV1>> {
+    pub fn get_capabilities_v1(&self) -> IotaResult<Vec<AuthorityCapabilitiesV1>> {
         assert!(!self.protocol_config.authority_capabilities_v2());
         let result: Result<Vec<AuthorityCapabilitiesV1>, TypedStoreError> = self
             .tables()?
@@ -2459,7 +2460,7 @@ impl AuthorityPerEpochStore {
         Ok(result?)
     }
 
-    pub fn get_capabilities_v2(&self) -> SuiResult<Vec<AuthorityCapabilitiesV2>> {
+    pub fn get_capabilities_v2(&self) -> IotaResult<Vec<AuthorityCapabilitiesV2>> {
         assert!(self.protocol_config.authority_capabilities_v2());
         let result: Result<Vec<AuthorityCapabilitiesV2>, TypedStoreError> = self
             .tables()?
@@ -2477,7 +2478,7 @@ impl AuthorityPerEpochStore {
         authority: AuthorityName,
         id: &JwkId,
         jwk: &JWK,
-    ) -> SuiResult {
+    ) -> IotaResult {
         info!(
             "received jwk vote from {:?} for jwk ({:?}, {:?})",
             authority.concise(),
@@ -2522,7 +2523,7 @@ impl AuthorityPerEpochStore {
         Ok(())
     }
 
-    pub(crate) fn get_new_jwks(&self, round: u64) -> SuiResult<Vec<ActiveJwk>> {
+    pub(crate) fn get_new_jwks(&self, round: u64) -> IotaResult<Vec<ActiveJwk>> {
         let epoch = self.epoch();
 
         let empty_jwk_id = JwkId::new(String::new(), String::new());
@@ -2577,7 +2578,7 @@ impl AuthorityPerEpochStore {
         &self,
         output: &mut ConsensusCommitOutput,
         certificates: &[VerifiedExecutableTransaction],
-    ) -> SuiResult {
+    ) -> IotaResult {
         output.insert_pending_execution(certificates);
         output.insert_user_signatures_for_checkpoints(certificates);
 
@@ -2665,7 +2666,7 @@ impl AuthorityPerEpochStore {
     }
 
     #[instrument(level = "trace", skip_all)]
-    pub fn verify_transaction(&self, tx: Transaction) -> SuiResult<VerifiedTransaction> {
+    pub fn verify_transaction(&self, tx: Transaction) -> IotaResult<VerifiedTransaction> {
         self.signature_verifier
             .verify_tx(tx.data())
             .map(|_| VerifiedTransaction::new_from_verified(tx))
@@ -2693,7 +2694,7 @@ impl AuthorityPerEpochStore {
             skipped_consensus_txns.inc();
             return None;
         }
-        // Signatures are verified as part of the consensus payload verification in SuiTxValidator
+        // Signatures are verified as part of the consensus payload verification in IotaTxValidator
         match &transaction.transaction {
             SequencedConsensusTransactionKind::External(ConsensusTransaction {
                 kind: ConsensusTransactionKind::CertifiedTransaction(_certificate),
@@ -2816,7 +2817,7 @@ impl AuthorityPerEpochStore {
         Some(VerifiedSequencedConsensusTransaction(transaction))
     }
 
-    fn db_batch(&self) -> SuiResult<DBBatch> {
+    fn db_batch(&self) -> IotaResult<DBBatch> {
         Ok(self.tables()?.last_consensus_stats.batch())
     }
 
@@ -2838,7 +2839,7 @@ impl AuthorityPerEpochStore {
         cache_reader: &dyn ObjectCacheRead,
         consensus_commit_info: &ConsensusCommitInfo,
         authority_metrics: &Arc<AuthorityMetrics>,
-    ) -> SuiResult<Vec<VerifiedExecutableTransaction>> {
+    ) -> IotaResult<Vec<VerifiedExecutableTransaction>> {
         // Split transactions into different types for processing.
         let verified_transactions: Vec<_> = transactions
             .into_iter()
@@ -3203,7 +3204,7 @@ impl AuthorityPerEpochStore {
         transactions: &mut VecDeque<VerifiedExecutableTransaction>,
         consensus_commit_info: &ConsensusCommitInfo,
         cancelled_txns: &BTreeMap<TransactionDigest, CancelConsensusCertificateReason>,
-    ) -> SuiResult<Option<TransactionKey>> {
+    ) -> IotaResult<Option<TransactionKey>> {
         {
             if consensus_commit_info.skip_consensus_commit_prologue_in_test() {
                 return Ok(None);
@@ -3243,7 +3244,7 @@ impl AuthorityPerEpochStore {
             version_assignment,
         );
         let consensus_commit_prologue_root = match self.process_consensus_system_transaction(&transaction) {
-            ConsensusCertificateResult::SuiTransaction(processed_tx) => {
+            ConsensusCertificateResult::IotaTransaction(processed_tx) => {
                 transactions.push_front(processed_tx.clone());
                 Some(processed_tx.key())
             }
@@ -3267,7 +3268,7 @@ impl AuthorityPerEpochStore {
         randomness_round: Option<RandomnessRound>,
         cancelled_txns: &BTreeMap<TransactionDigest, CancelConsensusCertificateReason>,
         output: &mut ConsensusCommitOutput,
-    ) -> SuiResult {
+    ) -> IotaResult {
         let ConsensusSharedObjVerAssignment {
             shared_input_next_versions,
             assigned_versions,
@@ -3304,7 +3305,7 @@ impl AuthorityPerEpochStore {
         cache_reader: &dyn ObjectCacheRead,
         authority_metrics: &Arc<AuthorityMetrics>,
         skip_consensus_commit_prologue_in_test: bool,
-    ) -> SuiResult<Vec<VerifiedExecutableTransaction>> {
+    ) -> IotaResult<Vec<VerifiedExecutableTransaction>> {
         self.process_consensus_transactions_and_commit_boundary(
             transactions,
             &ExecutionIndicesWithStats::default(),
@@ -3328,7 +3329,7 @@ impl AuthorityPerEpochStore {
         self: &Arc<Self>,
         cache_reader: &dyn ObjectCacheRead,
         transactions: &[VerifiedExecutableTransaction],
-    ) -> SuiResult {
+    ) -> IotaResult {
         let mut output = ConsensusCommitOutput::new(0);
         self.process_consensus_transaction_shared_object_versions(
             cache_reader,
@@ -3381,7 +3382,7 @@ impl AuthorityPerEpochStore {
         randomness_round: Option<RandomnessRound>,
         execution_time_estimator: &ExecutionTimeEstimator,
         authority_metrics: &Arc<AuthorityMetrics>,
-    ) -> SuiResult<(
+    ) -> IotaResult<(
         Vec<VerifiedExecutableTransaction>,    // transactions to schedule
         Vec<SequencedConsensusTransactionKey>, // keys to notify as complete
         Option<RwLockWriteGuard<ReconfigState>>,
@@ -3442,7 +3443,7 @@ impl AuthorityPerEpochStore {
                 )
                 .await?
             {
-                ConsensusCertificateResult::SuiTransaction(cert) => {
+                ConsensusCertificateResult::IotaTransaction(cert) => {
                     notifications.push(key.clone());
                     verified_certificates.push_back(cert);
                 }
@@ -3568,7 +3569,7 @@ impl AuthorityPerEpochStore {
         output: &mut ConsensusCommitOutput,
         transactions: &[VerifiedSequencedConsensusTransaction],
         commit_has_deferred_txns: bool,
-    ) -> SuiResult<(
+    ) -> IotaResult<(
         Option<RwLockWriteGuard<ReconfigState>>,
         bool, // true if final round
     )> {
@@ -3677,7 +3678,7 @@ impl AuthorityPerEpochStore {
         shared_object_congestion_tracker: &mut SharedObjectCongestionTracker,
         execution_time_estimator: &ExecutionTimeEstimator,
         authority_metrics: &Arc<AuthorityMetrics>,
-    ) -> SuiResult<ConsensusCertificateResult> {
+    ) -> IotaResult<ConsensusCertificateResult> {
         let _scope = monitored_scope("ConsensusCommitHandler::process_consensus_transaction");
 
         let VerifiedSequencedConsensusTransaction(SequencedConsensusTransaction {
@@ -3702,7 +3703,7 @@ impl AuthorityPerEpochStore {
                     );
                     return Ok(ConsensusCertificateResult::Ignored);
                 }
-                // Safe because signatures are verified when consensus called into SuiTxValidator::validate_batch.
+                // Safe because signatures are verified when consensus called into IotaTxValidator::validate_batch.
                 let certificate = VerifiedCertificate::new_unchecked(*certificate.clone());
                 let transaction = VerifiedExecutableTransaction::new_from_certificate(certificate);
 
@@ -3723,7 +3724,7 @@ impl AuthorityPerEpochStore {
                 kind: ConsensusTransactionKind::CheckpointSignature(info),
                 ..
             }) => {
-                // We usually call notify_checkpoint_signature in SuiTxValidator, but that step can
+                // We usually call notify_checkpoint_signature in IotaTxValidator, but that step can
                 // be skipped when a batch is already part of a certificate, so we must also
                 // notify here.
                 checkpoint_service.notify_checkpoint_signature(self, info)?;
@@ -3934,7 +3935,7 @@ impl AuthorityPerEpochStore {
 
         // If needed we can support owned object system transactions as well...
         assert!(system_transaction.contains_shared_object());
-        ConsensusCertificateResult::SuiTransaction(system_transaction.clone())
+        ConsensusCertificateResult::IotaTransaction(system_transaction.clone())
     }
 
     fn process_consensus_user_transaction(
@@ -3949,7 +3950,7 @@ impl AuthorityPerEpochStore {
         shared_object_congestion_tracker: &mut SharedObjectCongestionTracker,
         execution_time_estimator: &ExecutionTimeEstimator,
         authority_metrics: &Arc<AuthorityMetrics>,
-    ) -> SuiResult<ConsensusCertificateResult> {
+    ) -> IotaResult<ConsensusCertificateResult> {
         let _scope = monitored_scope("ConsensusCommitHandler::process_consensus_user_transaction");
 
         if self.has_sent_end_of_publish(block_author)?
@@ -4053,14 +4054,14 @@ impl AuthorityPerEpochStore {
                 .bump_object_execution_cost(execution_time_estimator, &transaction);
         }
 
-        Ok(ConsensusCertificateResult::SuiTransaction(transaction))
+        Ok(ConsensusCertificateResult::IotaTransaction(transaction))
     }
 
     pub(crate) fn write_pending_checkpoint(
         &self,
         output: &mut ConsensusCommitOutput,
         checkpoint: &PendingCheckpointV2,
-    ) -> SuiResult {
+    ) -> IotaResult {
         assert!(
             self.get_pending_checkpoint(&checkpoint.height())?.is_none(),
             "Duplicate pending checkpoint notification at height {:?}",
@@ -4086,7 +4087,7 @@ impl AuthorityPerEpochStore {
     pub fn get_pending_checkpoints(
         &self,
         last: Option<CheckpointHeight>,
-    ) -> SuiResult<Vec<(CheckpointHeight, PendingCheckpointV2)>> {
+    ) -> IotaResult<Vec<(CheckpointHeight, PendingCheckpointV2)>> {
         let tables = self.tables()?;
         let mut iter = tables.pending_checkpoints_v2.unbounded_iter();
         if let Some(last_processed_height) = last {
@@ -4098,7 +4099,7 @@ impl AuthorityPerEpochStore {
     pub fn get_pending_checkpoint(
         &self,
         index: &CheckpointHeight,
-    ) -> SuiResult<Option<PendingCheckpointV2>> {
+    ) -> IotaResult<Option<PendingCheckpointV2>> {
         Ok(self.tables()?.pending_checkpoints_v2.get(index)?)
     }
 
@@ -4106,7 +4107,7 @@ impl AuthorityPerEpochStore {
         &self,
         commit_height: CheckpointHeight,
         content_info: NonEmpty<(CheckpointSummary, CheckpointContents)>,
-    ) -> SuiResult<()> {
+    ) -> IotaResult<()> {
         let tables = self.tables()?;
         // All created checkpoints are inserted in builder_checkpoint_summary in a single batch.
         // This means that upon restart we can use BuilderCheckpointSummary::commit_height
@@ -4154,7 +4155,7 @@ impl AuthorityPerEpochStore {
         &self,
         summary: &CheckpointSummary,
         contents: &CheckpointContents,
-    ) -> SuiResult<()> {
+    ) -> IotaResult<()> {
         let sequence = summary.sequence_number;
         for transaction in contents.iter() {
             let digest = transaction.transaction;
@@ -4179,7 +4180,7 @@ impl AuthorityPerEpochStore {
 
     pub fn last_built_checkpoint_builder_summary(
         &self,
-    ) -> SuiResult<Option<BuilderCheckpointSummary>> {
+    ) -> IotaResult<Option<BuilderCheckpointSummary>> {
         Ok(self
             .tables()?
             .builder_checkpoint_summary_v2
@@ -4191,7 +4192,7 @@ impl AuthorityPerEpochStore {
 
     pub fn last_built_checkpoint_summary(
         &self,
-    ) -> SuiResult<Option<(CheckpointSequenceNumber, CheckpointSummary)>> {
+    ) -> IotaResult<Option<(CheckpointSequenceNumber, CheckpointSummary)>> {
         Ok(self
             .tables()?
             .builder_checkpoint_summary_v2
@@ -4204,7 +4205,7 @@ impl AuthorityPerEpochStore {
     pub fn get_built_checkpoint_summary(
         &self,
         sequence: CheckpointSequenceNumber,
-    ) -> SuiResult<Option<CheckpointSummary>> {
+    ) -> IotaResult<Option<CheckpointSummary>> {
         Ok(self
             .tables()?
             .builder_checkpoint_summary_v2
@@ -4215,14 +4216,14 @@ impl AuthorityPerEpochStore {
     pub fn builder_included_transactions_in_checkpoint<'a>(
         &self,
         digests: impl Iterator<Item = &'a TransactionDigest>,
-    ) -> SuiResult<Vec<bool>> {
+    ) -> IotaResult<Vec<bool>> {
         Ok(self
             .tables()?
             .builder_digest_to_checkpoint
             .multi_contains_keys(digests)?)
     }
 
-    pub fn get_last_checkpoint_signature_index(&self) -> SuiResult<u64> {
+    pub fn get_last_checkpoint_signature_index(&self) -> IotaResult<u64> {
         Ok(self
             .tables()?
             .pending_checkpoint_signatures
@@ -4238,7 +4239,7 @@ impl AuthorityPerEpochStore {
         checkpoint_seq: CheckpointSequenceNumber,
         index: u64,
         info: &CheckpointSignatureMessage,
-    ) -> SuiResult<()> {
+    ) -> IotaResult<()> {
         Ok(self
             .tables()?
             .pending_checkpoint_signatures
@@ -4371,7 +4372,7 @@ impl ExecutionComponents {
         _expensive_safety_check_config: &ExpensiveSafetyCheckConfig,
     ) -> Self {
         let silent = true;
-        let executor = sui_execution::executor(protocol_config, silent, None)
+        let executor = iota_execution::executor(protocol_config, silent, None)
             .expect("Creating an executor should not fail here");
 
         let module_cache = Arc::new(SyncModuleCache::new(ResolverWrapper::new(

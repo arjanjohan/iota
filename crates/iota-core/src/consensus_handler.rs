@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -12,16 +13,16 @@ use arc_swap::ArcSwap;
 use consensus_config::Committee as ConsensusCommittee;
 use consensus_core::{CommitConsumerMonitor, TransactionIndex, VerifiedBlock};
 use lru::LruCache;
-use mysten_common::debug_fatal;
-use mysten_metrics::{
+use iota_common::debug_fatal;
+use iota_metrics::{
     monitored_future,
     monitored_mpsc::{self, UnboundedReceiver},
     monitored_scope, spawn_monitored_task,
 };
 use serde::{Deserialize, Serialize};
-use sui_macros::{fail_point, fail_point_if};
-use sui_protocol_config::ProtocolConfig;
-use sui_types::{
+use iota_macros::{fail_point, fail_point_if};
+use iota_protocol_config::ProtocolConfig;
+use iota_types::{
     authenticator_state::ActiveJwk,
     base_types::{
         AuthorityName, ConsensusObjectSequenceKey, EpochId, SequenceNumber, TransactionDigest,
@@ -32,7 +33,7 @@ use sui_types::{
         AuthorityIndex, ConsensusDeterminedVersionAssignments, ConsensusTransaction,
         ConsensusTransactionKey, ConsensusTransactionKind, ExecutionTimeObservation,
     },
-    sui_system_state::epoch_start_sui_system_state::EpochStartSystemStateTrait,
+    iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
     transaction::{SenderSignedData, VerifiedTransaction},
 };
 use tokio::task::JoinSet;
@@ -448,8 +449,8 @@ impl<C: CheckpointServiceNotify + Send + Sync> ConsensusHandler<C> {
 
         fail_point_if!("correlated-crash-after-consensus-commit-boundary", || {
             let key = [commit_sub_dag_index, self.epoch_store.epoch()];
-            if sui_simulator::random::deterministic_probability(&key, 0.01) {
-                sui_simulator::task::kill_current_node(None);
+            if iota_simulator::random::deterministic_probability(&key, 0.01) {
+                iota_simulator::task::kill_current_node(None);
             }
         });
 
@@ -1033,9 +1034,9 @@ mod tests {
     };
     use futures::pin_mut;
     use prometheus::Registry;
-    use sui_protocol_config::ConsensusTransactionOrdering;
-    use sui_types::{
-        base_types::{random_object_ref, AuthorityName, ObjectID, SuiAddress},
+    use iota_protocol_config::ConsensusTransactionOrdering;
+    use iota_types::{
+        base_types::{random_object_ref, AuthorityName, ObjectID, IotaAddress},
         committee::Committee,
         crypto::deterministic_random_account_key,
         messages_consensus::{
@@ -1084,7 +1085,7 @@ mod tests {
         all_objects.extend(shared_objects.clone());
 
         let network_config =
-            sui_swarm_config::network_config_builder::ConfigBuilder::new_with_temp_dir()
+            iota_swarm_config::network_config_builder::ConfigBuilder::new_with_temp_dir()
                 .with_objects(all_objects.clone())
                 .build();
 
@@ -1296,7 +1297,7 @@ mod tests {
         all_objects.extend(shared_objects.clone());
 
         let network_config =
-            sui_swarm_config::network_config_builder::ConfigBuilder::new_with_temp_dir()
+            iota_swarm_config::network_config_builder::ConfigBuilder::new_with_temp_dir()
                 .with_objects(all_objects.clone())
                 .build();
 
@@ -1509,9 +1510,9 @@ mod tests {
         let (committee, keypairs) = Committee::new_simple_test_committee();
         let data = SenderSignedData::new(
             TransactionData::new_transfer(
-                SuiAddress::default(),
+                IotaAddress::default(),
                 random_object_ref(),
-                SuiAddress::default(),
+                IotaAddress::default(),
                 random_object_ref(),
                 1000 * gas_price,
                 gas_price,

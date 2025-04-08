@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::proto::node::v2alpha::DynamicField;
@@ -9,13 +10,13 @@ use crate::types::ObjectResponse;
 use crate::Result;
 use crate::RpcError;
 use crate::RpcService;
-use sui_sdk_types::ObjectId;
-use sui_sdk_types::TypeTag;
-use sui_sdk_types::Version;
-use sui_types::sui_sdk_types_conversions::type_tag_core_to_sdk;
-use sui_types::{
+use iota_sdk_types::ObjectId;
+use iota_sdk_types::TypeTag;
+use iota_sdk_types::Version;
+use iota_types::iota_sdk_types_conversions::type_tag_core_to_sdk;
+use iota_types::{
     storage::{DynamicFieldIndexInfo, DynamicFieldKey},
-    sui_sdk_types_conversions::SdkTypeConversionError,
+    iota_sdk_types_conversions::SdkTypeConversionError,
 };
 use tap::Pipe;
 

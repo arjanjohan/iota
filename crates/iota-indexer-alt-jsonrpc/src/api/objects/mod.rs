@@ -1,16 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use filter::SuiObjectResponseQuery;
+use filter::IotaObjectResponseQuery;
 use futures::future;
 use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use serde::{Deserialize, Serialize};
-use sui_json_rpc_types::{
-    Page, SuiGetPastObjectRequest, SuiObjectDataOptions, SuiObjectResponse, SuiPastObjectResponse,
+use iota_json_rpc_types::{
+    Page, IotaGetPastObjectRequest, IotaObjectDataOptions, IotaObjectResponse, IotaPastObjectResponse,
 };
-use sui_open_rpc::Module;
-use sui_open_rpc_macros::open_rpc;
-use sui_types::base_types::{ObjectID, SequenceNumber, SuiAddress};
+use iota_open_rpc::Module;
+use iota_open_rpc_macros::open_rpc;
+use iota_types::base_types::{ObjectID, SequenceNumber, IotaAddress};
 
 use crate::{
     context::Context,
@@ -25,8 +26,8 @@ mod error;
 mod filter;
 pub(crate) mod response;
 
-#[open_rpc(namespace = "sui", tag = "Objects API")]
-#[rpc(server, namespace = "sui")]
+#[open_rpc(namespace = "iota", tag = "Objects API")]
+#[rpc(server, namespace = "iota")]
 trait ObjectsApi {
     /// Return the object information for the latest version of an object.
     #[method(name = "getObject")]
@@ -35,8 +36,8 @@ trait ObjectsApi {
         /// The ID of the queried obect
         object_id: ObjectID,
         /// Options for specifying the content to be returned
-        options: Option<SuiObjectDataOptions>,
-    ) -> RpcResult<SuiObjectResponse>;
+        options: Option<IotaObjectDataOptions>,
+    ) -> RpcResult<IotaObjectResponse>;
 
     /// Return the object information for the latest versions of multiple objects.
     #[method(name = "multiGetObjects")]
@@ -45,8 +46,8 @@ trait ObjectsApi {
         /// the IDs of the queried objects
         object_ids: Vec<ObjectID>,
         /// Options for specifying the content to be returned
-        options: Option<SuiObjectDataOptions>,
-    ) -> RpcResult<Vec<SuiObjectResponse>>;
+        options: Option<IotaObjectDataOptions>,
+    ) -> RpcResult<Vec<IotaObjectResponse>>;
 
     /// Return the object information for a specified version.
     ///
@@ -61,8 +62,8 @@ trait ObjectsApi {
         /// The version of the queried object.
         version: SequenceNumber,
         /// Options for specifying the content to be returned
-        options: Option<SuiObjectDataOptions>,
-    ) -> RpcResult<SuiPastObjectResponse>;
+        options: Option<IotaObjectDataOptions>,
+    ) -> RpcResult<IotaPastObjectResponse>;
 
     /// Return the object information for multiple specified objects and versions.
     ///
@@ -73,14 +74,14 @@ trait ObjectsApi {
     async fn try_multi_get_past_objects(
         &self,
         /// A vector of object and versions to be queried
-        past_objects: Vec<SuiGetPastObjectRequest>,
+        past_objects: Vec<IotaGetPastObjectRequest>,
         /// Options for specifying the content to be returned
-        options: Option<SuiObjectDataOptions>,
-    ) -> RpcResult<Vec<SuiPastObjectResponse>>;
+        options: Option<IotaObjectDataOptions>,
+    ) -> RpcResult<Vec<IotaPastObjectResponse>>;
 }
 
-#[open_rpc(namespace = "suix", tag = "Query Objects API")]
-#[rpc(server, namespace = "suix")]
+#[open_rpc(namespace = "iotax", tag = "Query Objects API")]
+#[rpc(server, namespace = "iotax")]
 trait QueryObjectsApi {
     /// Query objects by their owner's address. Returns a paginated list of objects.
     ///
@@ -99,14 +100,14 @@ trait QueryObjectsApi {
     async fn get_owned_objects(
         &self,
         /// The owner's address.
-        address: SuiAddress,
+        address: IotaAddress,
         /// Additional querying criteria for the object.
-        query: Option<SuiObjectResponseQuery>,
+        query: Option<IotaObjectResponseQuery>,
         /// Cursor to start paginating from.
         cursor: Option<String>,
         /// Maximum number of objects to return per page.
         limit: Option<usize>,
-    ) -> RpcResult<Page<SuiObjectResponse, String>>;
+    ) -> RpcResult<Page<IotaObjectResponse, String>>;
 }
 
 pub(crate) struct Objects(pub Context, pub ObjectsConfig);
@@ -131,8 +132,8 @@ impl ObjectsApiServer for Objects {
     async fn get_object(
         &self,
         object_id: ObjectID,
-        options: Option<SuiObjectDataOptions>,
-    ) -> RpcResult<SuiObjectResponse> {
+        options: Option<IotaObjectDataOptions>,
+    ) -> RpcResult<IotaObjectResponse> {
         let Self(ctx, _) = self;
         let options = options.unwrap_or_default();
         Ok(response::live_object(ctx, object_id, &options)
@@ -145,8 +146,8 @@ impl ObjectsApiServer for Objects {
     async fn multi_get_objects(
         &self,
         object_ids: Vec<ObjectID>,
-        options: Option<SuiObjectDataOptions>,
-    ) -> RpcResult<Vec<SuiObjectResponse>> {
+        options: Option<IotaObjectDataOptions>,
+    ) -> RpcResult<Vec<IotaObjectResponse>> {
         let Self(ctx, config) = self;
         if object_ids.len() > config.max_multi_get_objects {
             return Err(invalid_params(Error::TooManyKeys {
@@ -176,8 +177,8 @@ impl ObjectsApiServer for Objects {
         &self,
         object_id: ObjectID,
         version: SequenceNumber,
-        options: Option<SuiObjectDataOptions>,
-    ) -> RpcResult<SuiPastObjectResponse> {
+        options: Option<IotaObjectDataOptions>,
+    ) -> RpcResult<IotaPastObjectResponse> {
         let Self(ctx, _) = self;
         let options = options.unwrap_or_default();
         Ok(response::past_object(ctx, object_id, version, &options)
@@ -192,9 +193,9 @@ impl ObjectsApiServer for Objects {
 
     async fn try_multi_get_past_objects(
         &self,
-        past_objects: Vec<SuiGetPastObjectRequest>,
-        options: Option<SuiObjectDataOptions>,
-    ) -> RpcResult<Vec<SuiPastObjectResponse>> {
+        past_objects: Vec<IotaGetPastObjectRequest>,
+        options: Option<IotaObjectDataOptions>,
+    ) -> RpcResult<Vec<IotaPastObjectResponse>> {
         let Self(ctx, config) = self;
         if past_objects.len() > config.max_multi_get_objects {
             return Err(invalid_params(Error::TooManyKeys {
@@ -227,11 +228,11 @@ impl ObjectsApiServer for Objects {
 impl QueryObjectsApiServer for QueryObjects {
     async fn get_owned_objects(
         &self,
-        address: SuiAddress,
-        query: Option<SuiObjectResponseQuery>,
+        address: IotaAddress,
+        query: Option<IotaObjectResponseQuery>,
         cursor: Option<String>,
         limit: Option<usize>,
-    ) -> RpcResult<Page<SuiObjectResponse, String>> {
+    ) -> RpcResult<Page<IotaObjectResponse, String>> {
         let Self(ctx, confige) = self;
 
         let query = query.unwrap_or_default();

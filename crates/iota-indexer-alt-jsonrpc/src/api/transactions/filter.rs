@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::{anyhow, Context as _};
@@ -13,12 +14,12 @@ use diesel::{
     sql_types::BigInt,
     AppearsOnTable, Column, Expression, ExpressionMethods, QueryDsl, QuerySource,
 };
-use sui_indexer_alt_schema::schema::{
+use iota_indexer_alt_schema::schema::{
     tx_affected_addresses, tx_affected_objects, tx_calls, tx_digests,
 };
-use sui_json_rpc_types::{Page as PageResponse, TransactionFilter};
-use sui_types::{
-    base_types::{ObjectID, SuiAddress},
+use iota_json_rpc_types::{Page as PageResponse, TransactionFilter};
+use iota_types::{
+    base_types::{ObjectID, IotaAddress},
     digests::TransactionDigest,
     messages_checkpoint::{CheckpointContents, CheckpointSummary},
 };
@@ -263,8 +264,8 @@ async fn tx_affected_objects(
 async fn tx_affected_addresses(
     ctx: &Context,
     page: &Page<Cursor>,
-    from: Option<SuiAddress>,
-    to: SuiAddress,
+    from: Option<IotaAddress>,
+    to: IotaAddress,
 ) -> Result<Digests, RpcError<Error>> {
     use tx_affected_addresses::dsl as a;
 

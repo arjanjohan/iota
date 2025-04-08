@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 const protocolInject = async function (source) {
@@ -105,13 +106,13 @@ const protocolInject = async function (source) {
 
       if (allFields.length > 0) {
         const attrStyle =
-          "text-lg before:pr-2 before:mr-2 before:text-sm before:border before:border-solid before:border-transparent before:border-r-sui-gray-65";
+          "text-lg before:pr-2 before:mr-2 before:text-sm before:border before:border-solid before:border-transparent before:border-r-iota-gray-65";
         const fieldStyle =
-          "p-2 font-medium text-lg rounded-lg bg-sui-ghost-white dark:bg-sui-ghost-dark";
+          "p-2 font-medium text-lg rounded-lg bg-iota-ghost-white dark:bg-iota-ghost-dark";
         const borderStyle =
-          "border border-solid border-y-transparent border-r-transparent border-l-sui-gray-65";
+          "border border-solid border-y-transparent border-r-transparent border-l-iota-gray-65";
         const leftArrowStyle =
-          "relative inline-flex items-center before:content-[''] before:border-t-transparent before:border-b-transparent before:border-solid before:border-y-5 before:border-r-0 before:border-l-8 before:border-l-sui-gray-65";
+          "relative inline-flex items-center before:content-[''] before:border-t-transparent before:border-b-transparent before:border-solid before:border-y-5 before:border-r-0 before:border-l-8 before:border-l-iota-gray-65";
         content.push(`<p class="ml-4 text-2xl">Fields</p>`);
         content.push(`<div class="ml-4">`);
         content.push(`<div class="grid grid-cols-12">`);
@@ -168,11 +169,11 @@ const protocolInject = async function (source) {
 
   content.push("\n## Scalar Value Types");
   const cellStyle =
-    "m-2 min-w-24 max-w-[13rem] rounded-lg border border-solid align-center text-center relative border-sui-gray-65";
+    "m-2 min-w-24 max-w-[13rem] rounded-lg border border-solid align-center text-center relative border-iota-gray-65";
   const titleStyle =
-    "p-4 pb-2 font-bold text-sui-ghost-dark dark:text-sui-ghost-white bg-sui-ghost-white dark:bg-sui-ghost-dark border border-solid border-transparent rounded-t-lg";
+    "p-4 pb-2 font-bold text-iota-ghost-dark dark:text-iota-ghost-white bg-iota-ghost-white dark:bg-iota-ghost-dark border border-solid border-transparent rounded-t-lg";
   const valStyle =
-    "p-4 pt-2 border border-solid border-transparent border-t-sui-gray-65 whitespace-break-spaces";
+    "p-4 pt-2 border border-solid border-transparent border-t-iota-gray-65 whitespace-break-spaces";
   for (const scalar of spec.scalarValueTypes) {
     content.push(`\n### ${scalar.protoType}`);
     content.push(

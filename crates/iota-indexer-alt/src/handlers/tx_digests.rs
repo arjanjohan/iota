@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::ops::Range;
@@ -7,13 +8,13 @@ use std::sync::Arc;
 use anyhow::Result;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use sui_indexer_alt_framework::{
+use iota_indexer_alt_framework::{
     models::cp_sequence_numbers::tx_interval,
     pipeline::{concurrent::Handler, Processor},
 };
-use sui_indexer_alt_schema::{schema::tx_digests, transactions::StoredTxDigest};
-use sui_pg_db as db;
-use sui_types::full_checkpoint_content::CheckpointData;
+use iota_indexer_alt_schema::{schema::tx_digests, transactions::StoredTxDigest};
+use iota_pg_db as db;
+use iota_types::full_checkpoint_content::CheckpointData;
 
 pub(crate) struct TxDigests;
 
@@ -76,9 +77,9 @@ impl Handler for TxDigests {
 mod tests {
     use super::*;
     use diesel_async::RunQueryDsl;
-    use sui_indexer_alt_framework::{handlers::cp_sequence_numbers::CpSequenceNumbers, Indexer};
-    use sui_indexer_alt_schema::MIGRATIONS;
-    use sui_types::test_checkpoint_data_builder::TestCheckpointDataBuilder;
+    use iota_indexer_alt_framework::{handlers::cp_sequence_numbers::CpSequenceNumbers, Indexer};
+    use iota_indexer_alt_schema::MIGRATIONS;
+    use iota_types::test_checkpoint_data_builder::TestCheckpointDataBuilder;
 
     async fn get_all_tx_digests(conn: &mut db::Connection<'_>) -> Result<Vec<i64>> {
         Ok(tx_digests::table

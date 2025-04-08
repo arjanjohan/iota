@@ -1,17 +1,18 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use diesel_async::RunQueryDsl;
-use sui_indexer_alt_framework::pipeline::{concurrent::Handler, Processor};
-use sui_indexer_alt_schema::{
+use iota_indexer_alt_framework::pipeline::{concurrent::Handler, Processor};
+use iota_indexer_alt_schema::{
     checkpoints::StoredGenesis, epochs::StoredProtocolConfig, schema::kv_protocol_configs,
 };
-use sui_pg_db as db;
-use sui_protocol_config::ProtocolConfig;
-use sui_types::full_checkpoint_content::CheckpointData;
+use iota_pg_db as db;
+use iota_protocol_config::ProtocolConfig;
+use iota_types::full_checkpoint_content::CheckpointData;
 
 pub(crate) struct KvProtocolConfigs(pub(crate) StoredGenesis);
 

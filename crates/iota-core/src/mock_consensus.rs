@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
@@ -9,10 +10,10 @@ use crate::consensus_handler::SequencedConsensusTransaction;
 use consensus_core::BlockRef;
 use prometheus::Registry;
 use std::sync::{Arc, Weak};
-use sui_types::error::SuiResult;
-use sui_types::executable_transaction::VerifiedExecutableTransaction;
-use sui_types::messages_consensus::{ConsensusTransaction, ConsensusTransactionKind};
-use sui_types::transaction::{VerifiedCertificate, VerifiedTransaction};
+use iota_types::error::IotaResult;
+use iota_types::executable_transaction::VerifiedExecutableTransaction;
+use iota_types::messages_consensus::{ConsensusTransaction, ConsensusTransactionKind};
+use iota_types::transaction::{VerifiedCertificate, VerifiedTransaction};
 use tokio::sync::{mpsc, oneshot};
 use tokio::task::JoinHandle;
 use tracing::debug;
@@ -97,7 +98,7 @@ impl MockConsensusClient {
         }
     }
 
-    fn submit_impl(&self, transactions: &[ConsensusTransaction]) -> SuiResult<BlockStatusReceiver> {
+    fn submit_impl(&self, transactions: &[ConsensusTransaction]) -> IotaResult<BlockStatusReceiver> {
         // TODO: maybe support multi-transactions and remove this check
         assert!(transactions.len() == 1);
         let transaction = &transactions[0];
@@ -115,7 +116,7 @@ impl SubmitToConsensus for MockConsensusClient {
         &self,
         transactions: &[ConsensusTransaction],
         _epoch_store: &Arc<AuthorityPerEpochStore>,
-    ) -> SuiResult {
+    ) -> IotaResult {
         self.submit_impl(transactions).map(|_response| ())
     }
 }
@@ -126,7 +127,7 @@ impl ConsensusClient for MockConsensusClient {
         &self,
         transactions: &[ConsensusTransaction],
         _epoch_store: &Arc<AuthorityPerEpochStore>,
-    ) -> SuiResult<BlockStatusReceiver> {
+    ) -> IotaResult<BlockStatusReceiver> {
         self.submit_impl(transactions)
     }
 }

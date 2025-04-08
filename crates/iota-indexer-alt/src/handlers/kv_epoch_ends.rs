@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::ops::Range;
@@ -7,13 +8,13 @@ use std::sync::Arc;
 use anyhow::{bail, Context, Result};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use sui_indexer_alt_framework::{
+use iota_indexer_alt_framework::{
     models::cp_sequence_numbers::epoch_interval,
     pipeline::{concurrent::Handler, Processor},
 };
-use sui_indexer_alt_schema::{epochs::StoredEpochEnd, schema::kv_epoch_ends};
-use sui_pg_db as db;
-use sui_types::{
+use iota_indexer_alt_schema::{epochs::StoredEpochEnd, schema::kv_epoch_ends};
+use iota_pg_db as db;
+use iota_types::{
     event::SystemEpochInfoEvent,
     full_checkpoint_content::CheckpointData,
     transaction::{TransactionDataAPI, TransactionKind},
@@ -155,10 +156,10 @@ impl Handler for KvEpochEnds {
 mod tests {
     use super::*;
     use anyhow::Result;
-    use sui_indexer_alt_framework::{handlers::cp_sequence_numbers::CpSequenceNumbers, Indexer};
-    use sui_indexer_alt_schema::MIGRATIONS;
-    use sui_pg_db::Connection;
-    use sui_types::test_checkpoint_data_builder::TestCheckpointDataBuilder;
+    use iota_indexer_alt_framework::{handlers::cp_sequence_numbers::CpSequenceNumbers, Indexer};
+    use iota_indexer_alt_schema::MIGRATIONS;
+    use iota_pg_db::Connection;
+    use iota_types::test_checkpoint_data_builder::TestCheckpointDataBuilder;
 
     async fn get_all_kv_epoch_ends(conn: &mut Connection<'_>) -> Result<Vec<StoredEpochEnd>> {
         let result = kv_epoch_ends::table

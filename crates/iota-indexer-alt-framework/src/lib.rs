@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::BTreeSet, sync::Arc};
@@ -18,8 +19,8 @@ use pipeline::{
     Processor,
 };
 use prometheus::Registry;
-use sui_indexer_alt_metrics::db::DbConnectionStatsCollector;
-use sui_pg_db::{temp::TempDb, Db, DbArgs};
+use iota_indexer_alt_metrics::db::DbConnectionStatsCollector;
+use iota_pg_db::{temp::TempDb, Db, DbArgs};
 use task::graceful_shutdown;
 use tempfile::tempdir;
 use tokio::task::JoinHandle;
@@ -428,9 +429,9 @@ impl Indexer {
 #[cfg(test)]
 mod tests {
     use async_trait::async_trait;
-    use sui_field_count::FieldCount;
-    use sui_pg_db as db;
-    use sui_types::full_checkpoint_content::CheckpointData;
+    use iota_field_count::FieldCount;
+    use iota_pg_db as db;
+    use iota_types::full_checkpoint_content::CheckpointData;
 
     use super::*;
 
