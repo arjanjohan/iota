@@ -1398,7 +1398,7 @@ fn get_value_from_move_struct(
                 }
             }
             _ => {
-                return Err(Error::UnexpectedError(format!(
+                Err(Error::UnexpectedError(format!(
                     "Unexpected move value type for field {}",
                     var_name
                 )))?;
