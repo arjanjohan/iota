@@ -80,3 +80,4 @@ path = "examples/sign_tx_guide.rs"
 name = "utils"
 path = "examples/utils.rs"
 crate-type = ["staticlib"]
+

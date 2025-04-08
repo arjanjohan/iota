@@ -39,3 +39,4 @@ test-cluster.workspace = true
 [[bin]]
 name = "sui-rpc-loadgen"
 path = "src/main.rs"
+

@@ -47,3 +47,4 @@ fastcrypto-zkp.workspace = true
 [dev-dependencies]
 sui-json-rpc-api.workspace = true
 sui-macros.workspace = true
+

@@ -47,3 +47,4 @@ tracing = [
     "move-vm-profiler/tracing",
     "move-vm-config/tracing",
 ]
+

@@ -29,3 +29,4 @@ bench = false
 [[bench]]
 name = "criterion"
 harness = false
+

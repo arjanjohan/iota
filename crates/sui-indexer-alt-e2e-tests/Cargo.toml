@@ -37,3 +37,4 @@ sui-indexer-alt-framework.workspace = true
 sui-indexer-alt-jsonrpc.workspace = true
 sui-pg-db.workspace = true
 sui-transactional-test-runner.workspace = true
+

@@ -34,3 +34,4 @@ telemetry-subscribers.workspace = true
 [[bin]]
 name = "sui-indexer-alt-restorer"
 path = "src/main.rs"
+

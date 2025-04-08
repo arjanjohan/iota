@@ -55,3 +55,4 @@ axum-server.workspace = true
 
 [build-dependencies]
 prost-build.workspace = true
+

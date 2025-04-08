@@ -53,3 +53,4 @@ sui-types.workspace = true
 [dev-dependencies]
 reqwest.workspace = true
 serde_json.workspace = true
+
