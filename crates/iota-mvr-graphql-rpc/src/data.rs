@@ -12,11 +12,10 @@ use std::sync::Arc;
 use async_graphql::dataloader::DataLoader as AGDataLoader;
 use async_trait::async_trait;
 use diesel::{
+    QueryResult,
     query_builder::{BoxedSelectStatement, FromClause, QueryFragment, QueryId},
     query_dsl::methods::LimitDsl,
-    QueryResult,
 };
-
 use diesel_async::{methods::LoadQuery, scoped_futures::ScopedBoxFuture};
 
 use crate::error::Error;

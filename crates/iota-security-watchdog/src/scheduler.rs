@@ -2,22 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::metrics::WatchdogMetrics;
-use crate::pagerduty::{Body, CreateIncident, Incident, Pagerduty, Service};
-use crate::query_runner::{QueryRunner, SnowflakeQueryRunner};
-use crate::SecurityWatchdogConfig;
+use std::{any::Any, collections::BTreeMap, fs::File, io::Read, sync::Arc};
+
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use prometheus::{IntGauge, Registry};
 use serde::{Deserialize, Serialize};
-use std::any::Any;
-use std::collections::BTreeMap;
-use std::fs::File;
-use std::io::Read;
-use std::sync::Arc;
 use tokio_cron_scheduler::{Job, JobScheduler};
 use tracing::{error, info};
 use uuid::Uuid;
+
+use crate::{
+    SecurityWatchdogConfig,
+    metrics::WatchdogMetrics,
+    pagerduty::{Body, CreateIncident, Incident, Pagerduty, Service},
+    query_runner::{QueryRunner, SnowflakeQueryRunner},
+};
 
 const NANOS_PER_IOTA: i128 = 1_000_000_000;
 

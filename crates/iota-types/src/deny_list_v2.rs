@@ -2,24 +2,31 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::base_types::{EpochId, ObjectID, IotaAddress};
-use crate::config::{Config, Setting};
-use crate::deny_list_v1::{
-    input_object_coin_types_for_denylist_check, DENY_LIST_COIN_TYPE_INDEX, DENY_LIST_MODULE,
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fmt,
 };
-use crate::dynamic_field::{get_dynamic_field_from_store, DOFWrapper};
-use crate::error::{ExecutionError, ExecutionErrorKind, UserInputError, UserInputResult};
-use crate::id::UID;
-use crate::object::Object;
-use crate::storage::{DenyListResult, ObjectStore};
-use crate::transaction::{CheckedInputObjects, ReceivingObjects};
-use crate::{MoveTypeTagTrait, IOTA_DENY_LIST_OBJECT_ID, IOTA_FRAMEWORK_PACKAGE_ID};
-use move_core_types::ident_str;
-use move_core_types::language_storage::{StructTag, TypeTag};
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
-use std::fmt;
+
+use move_core_types::{
+    ident_str,
+    language_storage::{StructTag, TypeTag},
+};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
+
+use crate::{
+    IOTA_DENY_LIST_OBJECT_ID, IOTA_FRAMEWORK_PACKAGE_ID, MoveTypeTagTrait,
+    base_types::{EpochId, IotaAddress, ObjectID},
+    config::{Config, Setting},
+    deny_list_v1::{
+        DENY_LIST_COIN_TYPE_INDEX, DENY_LIST_MODULE, input_object_coin_types_for_denylist_check,
+    },
+    dynamic_field::{DOFWrapper, get_dynamic_field_from_store},
+    error::{ExecutionError, ExecutionErrorKind, UserInputError, UserInputResult},
+    id::UID,
+    object::Object,
+    storage::{DenyListResult, ObjectStore},
+    transaction::{CheckedInputObjects, ReceivingObjects},
+};
 
 pub const CONFIG_SETTING_DYNAMIC_FIELD_SIZE_FOR_GAS: usize = 1000;
 

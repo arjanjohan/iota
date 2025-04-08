@@ -1,17 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use std::fmt::Write;
-
-use std::{collections::HashMap, str::FromStr, sync::Arc};
+use std::{collections::HashMap, fmt::Write, str::FromStr, sync::Arc};
 
 use async_graphql::dataloader::{DataLoader, Loader};
 use serde::{Deserialize, Serialize};
 
-use crate::metrics::Metrics;
 use crate::{
     config::MoveRegistryConfig,
     error::Error,
+    metrics::Metrics,
     types::{
         base64::Base64,
         move_registry::{

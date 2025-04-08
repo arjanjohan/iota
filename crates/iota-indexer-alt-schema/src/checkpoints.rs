@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use diesel::prelude::*;
 use iota_field_count::FieldCount;
 use iota_protocol_config::{Chain, ProtocolVersion};

@@ -6,9 +6,8 @@ use std::collections::BTreeMap;
 
 use async_trait::async_trait;
 use futures::{FutureExt, StreamExt};
-
-use serde::{Deserialize, Serialize};
 use iota_rpc_api::CheckpointData;
+use serde::{Deserialize, Serialize};
 use tokio_util::sync::CancellationToken;
 
 use crate::{

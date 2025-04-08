@@ -8,9 +8,9 @@ use std::{
 };
 
 use aws_config::profile::profile_file::{ProfileFileKind, ProfileFiles};
-use aws_sdk_ec2::primitives::Blob;
 use aws_sdk_ec2::{
     config::Region,
+    primitives::Blob,
     types::{
         BlockDeviceMapping, EbsBlockDevice, EphemeralNvmeSupport, Filter, ResourceType, Tag,
         TagSpecification, VolumeType,
@@ -19,12 +19,11 @@ use aws_sdk_ec2::{
 use aws_smithy_http::result::SdkError;
 use serde::Serialize;
 
+use super::{Instance, ServerProviderClient};
 use crate::{
     error::{CloudProviderError, CloudProviderResult},
     settings::Settings,
 };
-
-use super::{Instance, ServerProviderClient};
 
 // Make a request error from an AWS error message.
 impl<T> From<SdkError<T, aws_smithy_runtime_api::client::orchestrator::HttpResponse>>

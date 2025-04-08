@@ -2,19 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::base_types::{
-    random_object_ref, EpochId, ObjectID, ObjectRef, SequenceNumber, IotaAddress, TransactionDigest,
+use std::{
+    collections::{BTreeMap, HashSet},
+    fmt::{Display, Formatter, Write},
 };
-use crate::digests::{ObjectDigest, TransactionEventsDigest};
-use crate::effects::{InputSharedObject, TransactionEffectsAPI, UnchangedSharedKind};
-use crate::execution_status::ExecutionStatus;
-use crate::gas::GasCostSummary;
-use crate::object::Owner;
+
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashSet};
-use std::fmt::{Display, Formatter, Write};
 
 use super::{IDOperation, ObjectChange};
+use crate::{
+    base_types::{
+        EpochId, IotaAddress, ObjectID, ObjectRef, SequenceNumber, TransactionDigest,
+        random_object_ref,
+    },
+    digests::{ObjectDigest, TransactionEventsDigest},
+    effects::{InputSharedObject, TransactionEffectsAPI, UnchangedSharedKind},
+    execution_status::ExecutionStatus,
+    gas::GasCostSummary,
+    object::Owner,
+};
 
 /// The response from processing a transaction or a certified transaction
 #[derive(Eq, PartialEq, Clone, Debug, Serialize, Deserialize)]

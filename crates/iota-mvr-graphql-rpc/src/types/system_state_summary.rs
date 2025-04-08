@@ -2,12 +2,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use async_graphql::*;
+use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary as NativeSystemStateSummary;
+
 use super::{
     big_int::BigInt, gas::GasCostSummary, safe_mode::SafeMode, stake_subsidy::StakeSubsidy,
     storage_fund::StorageFund, system_parameters::SystemParameters, uint53::UInt53,
 };
-use async_graphql::*;
-use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary as NativeSystemStateSummary;
 
 #[derive(Clone, Debug)]
 pub(crate) struct SystemStateSummary {

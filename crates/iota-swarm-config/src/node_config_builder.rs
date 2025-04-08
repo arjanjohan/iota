@@ -2,33 +2,37 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::net::SocketAddr;
-use std::path::PathBuf;
-use std::time::Duration;
+use std::{net::SocketAddr, path::PathBuf, time::Duration};
 
-use fastcrypto::encoding::{Encoding, Hex};
-use fastcrypto::traits::KeyPair;
-use iota_config::node::{
-    default_enable_index_processing, default_end_of_epoch_broadcast_channel_capacity,
-    default_local_execution_time_channel_capacity, AuthorityKeyPairWithPath,
-    AuthorityOverloadConfig, AuthorityStorePruningConfig, CheckpointExecutorConfig,
-    DBCheckpointConfig, ExecutionCacheConfig, ExpensiveSafetyCheckConfig, Genesis, KeyPairWithPath,
-    StateArchiveConfig, StateSnapshotConfig, DEFAULT_GRPC_CONCURRENCY_LIMIT,
+use fastcrypto::{
+    encoding::{Encoding, Hex},
+    traits::KeyPair,
 };
-use iota_config::node::{default_zklogin_oauth_providers, RunWithRange};
-use iota_config::p2p::{P2pConfig, SeedPeer, StateSyncConfig};
-use iota_config::verifier_signing_config::VerifierSigningConfig;
 use iota_config::{
-    local_ip_utils, ConsensusConfig, NodeConfig, AUTHORITIES_DB_NAME, CONSENSUS_DB_NAME,
-    FULL_NODE_DB_PATH,
+    AUTHORITIES_DB_NAME, CONSENSUS_DB_NAME, ConsensusConfig, FULL_NODE_DB_PATH, NodeConfig,
+    local_ip_utils,
+    node::{
+        AuthorityKeyPairWithPath, AuthorityOverloadConfig, AuthorityStorePruningConfig,
+        CheckpointExecutorConfig, DBCheckpointConfig, DEFAULT_GRPC_CONCURRENCY_LIMIT,
+        ExecutionCacheConfig, ExpensiveSafetyCheckConfig, Genesis, KeyPairWithPath, RunWithRange,
+        StateArchiveConfig, StateSnapshotConfig, default_enable_index_processing,
+        default_end_of_epoch_broadcast_channel_capacity,
+        default_local_execution_time_channel_capacity, default_zklogin_oauth_providers,
+    },
+    p2p::{P2pConfig, SeedPeer, StateSyncConfig},
+    verifier_signing_config::VerifierSigningConfig,
 };
-use iota_types::crypto::{AuthorityKeyPair, AuthorityPublicKeyBytes, NetworkKeyPair, IotaKeyPair};
-use iota_types::multiaddr::Multiaddr;
-use iota_types::supported_protocol_versions::SupportedProtocolVersions;
-use iota_types::traffic_control::{PolicyConfig, RemoteFirewallConfig};
+use iota_types::{
+    crypto::{AuthorityKeyPair, AuthorityPublicKeyBytes, IotaKeyPair, NetworkKeyPair},
+    multiaddr::Multiaddr,
+    supported_protocol_versions::SupportedProtocolVersions,
+    traffic_control::{PolicyConfig, RemoteFirewallConfig},
+};
 
-use crate::genesis_config::{ValidatorGenesisConfig, ValidatorGenesisConfigBuilder};
-use crate::network_config::NetworkConfig;
+use crate::{
+    genesis_config::{ValidatorGenesisConfig, ValidatorGenesisConfigBuilder},
+    network_config::NetworkConfig,
+};
 
 /// This builder contains information that's not included in ValidatorGenesisConfig for building
 /// a validator NodeConfig. It can be used to build either a genesis validator or a new validator.
@@ -179,7 +183,9 @@ impl ValidatorConfigBuilder {
 
         NodeConfig {
             protocol_key_pair: AuthorityKeyPairWithPath::new(validator.key_pair),
-            network_key_pair: KeyPairWithPath::new(IotaKeyPair::Ed25519(validator.network_key_pair)),
+            network_key_pair: KeyPairWithPath::new(IotaKeyPair::Ed25519(
+                validator.network_key_pair,
+            )),
             account_key_pair: KeyPairWithPath::new(validator.account_key_pair),
             worker_key_pair: KeyPairWithPath::new(IotaKeyPair::Ed25519(validator.worker_key_pair)),
             db_path,

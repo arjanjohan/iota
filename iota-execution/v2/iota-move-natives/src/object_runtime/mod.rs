@@ -4,11 +4,26 @@
 
 pub(crate) mod object_store;
 
-use self::object_store::{ChildObjectEffect, ObjectResult};
-use super::get_object_id;
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    sync::Arc,
+};
+
 use better_any::{Tid, TidAble};
-use indexmap::map::IndexMap;
-use indexmap::set::IndexSet;
+use indexmap::{map::IndexMap, set::IndexSet};
+use iota_protocol_config::{LimitThresholdCrossed, ProtocolConfig, check_limit_by_meter};
+use iota_types::{
+    IOTA_AUTHENTICATOR_STATE_OBJECT_ID, IOTA_CLOCK_OBJECT_ID, IOTA_DENY_LIST_OBJECT_ID,
+    IOTA_RANDOMNESS_STATE_OBJECT_ID, IOTA_SYSTEM_STATE_OBJECT_ID,
+    base_types::{IotaAddress, MoveObjectType, ObjectID, SequenceNumber},
+    committee::EpochId,
+    error::{ExecutionError, ExecutionErrorKind, VMMemoryLimitExceededSubStatusCode},
+    execution::DynamicallyLoadedObjectMetadata,
+    id::UID,
+    metrics::LimitsMetrics,
+    object::{MoveObject, Owner},
+    storage::ChildObjectResolver,
+};
 use move_binary_format::errors::{PartialVMError, PartialVMResult};
 use move_core_types::{
     account_address::AccountAddress,
@@ -24,23 +39,9 @@ use move_vm_types::{
     values::{GlobalValue, Value},
 };
 use object_store::ChildObjectStore;
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    sync::Arc,
-};
-use iota_protocol_config::{check_limit_by_meter, LimitThresholdCrossed, ProtocolConfig};
-use iota_types::{
-    base_types::{MoveObjectType, ObjectID, SequenceNumber, IotaAddress},
-    committee::EpochId,
-    error::{ExecutionError, ExecutionErrorKind, VMMemoryLimitExceededSubStatusCode},
-    execution::DynamicallyLoadedObjectMetadata,
-    id::UID,
-    metrics::LimitsMetrics,
-    object::{MoveObject, Owner},
-    storage::ChildObjectResolver,
-    IOTA_AUTHENTICATOR_STATE_OBJECT_ID, IOTA_CLOCK_OBJECT_ID, IOTA_DENY_LIST_OBJECT_ID,
-    IOTA_RANDOMNESS_STATE_OBJECT_ID, IOTA_SYSTEM_STATE_OBJECT_ID,
-};
+
+use self::object_store::{ChildObjectEffect, ObjectResult};
+use super::get_object_id;
 
 pub enum ObjectEvent {
     /// Transfer to a new address or object. Or make it shared or immutable.
@@ -279,7 +280,7 @@ impl<'a> ObjectRuntime<'a> {
 
         if let LimitThresholdCrossed::Hard(_, lim) = check_limit_by_meter!(
             // TODO: is this not redundant? Metered TX implies framework obj cannot be transferred
-            self.is_metered && !is_framework_obj, // We have higher limits for unmetered transactions and framework obj
+            self.is_metered && !is_framework_obj, /* We have higher limits for unmetered transactions and framework obj */
             self.state.transfers.len(),
             self.protocol_config.max_num_transferred_move_object_ids(),
             self.protocol_config
@@ -419,11 +420,12 @@ impl<'a> ObjectRuntime<'a> {
     pub fn loaded_runtime_objects(&self) -> BTreeMap<ObjectID, DynamicallyLoadedObjectMetadata> {
         // The loaded child objects, and the received objects, should be disjoint. If they are not,
         // this is an error since it could lead to incorrect transaction dependency computations.
-        debug_assert!(self
-            .child_object_store
-            .cached_objects()
-            .keys()
-            .all(|id| !self.state.received.contains_key(id)));
+        debug_assert!(
+            self.child_object_store
+                .cached_objects()
+                .keys()
+                .all(|id| !self.state.received.contains_key(id))
+        );
         self.child_object_store
             .cached_objects()
             .iter()
@@ -581,7 +583,7 @@ impl ObjectRuntimeState {
                 None => {
                     return Err(ExecutionError::invariant_violation(format!(
                         "Failed to find received UID {received_object} in loaded child objects."
-                    )))
+                    )));
                 }
             }
         }

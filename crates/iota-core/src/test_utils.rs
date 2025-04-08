@@ -2,38 +2,37 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use fastcrypto::hash::MultisetHash;
-use fastcrypto::traits::KeyPair;
-use move_core_types::{account_address::AccountAddress, ident_str};
-use shared_crypto::intent::{Intent, IntentScope};
-use std::sync::Arc;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
+
+use fastcrypto::{hash::MultisetHash, traits::KeyPair};
 use iota_config::genesis::Genesis;
 use iota_macros::nondeterministic;
-use iota_types::base_types::{random_object_ref, ObjectID};
-use iota_types::crypto::AuthorityKeyPair;
-use iota_types::crypto::{AccountKeyPair, AuthorityPublicKeyBytes, Signer};
-use iota_types::effects::{SignedTransactionEffects, TestEffectsBuilder};
-use iota_types::error::IotaError;
-use iota_types::signature_verification::VerifiedDigestCache;
-use iota_types::transaction::ObjectArg;
-use iota_types::transaction::{
-    CallArg, SignedTransaction, Transaction, TransactionData, TEST_ONLY_GAS_UNIT_FOR_TRANSFER,
-};
-use iota_types::utils::create_fake_transaction;
-use iota_types::utils::to_sender_signed_transaction;
 use iota_types::{
-    base_types::{AuthorityName, ExecutionDigests, ObjectRef, IotaAddress, TransactionDigest},
+    base_types::{
+        AuthorityName, ExecutionDigests, IotaAddress, ObjectID, ObjectRef, TransactionDigest,
+        random_object_ref,
+    },
     committee::Committee,
-    crypto::{AuthoritySignInfo, AuthoritySignature},
+    crypto::{
+        AccountKeyPair, AuthorityKeyPair, AuthorityPublicKeyBytes, AuthoritySignInfo,
+        AuthoritySignature, Signer,
+    },
+    effects::{SignedTransactionEffects, TestEffectsBuilder},
+    error::IotaError,
     message_envelope::Message,
-    transaction::CertifiedTransaction,
+    signature_verification::VerifiedDigestCache,
+    transaction::{
+        CallArg, CertifiedTransaction, ObjectArg, SignedTransaction,
+        TEST_ONLY_GAS_UNIT_FOR_TRANSFER, Transaction, TransactionData,
+    },
+    utils::{create_fake_transaction, to_sender_signed_transaction},
 };
+use move_core_types::{account_address::AccountAddress, ident_str};
+use shared_crypto::intent::{Intent, IntentScope};
 use tokio::time::timeout;
 use tracing::{info, warn};
 
-use crate::authority::AuthorityState;
-use crate::state_accumulator::StateAccumulator;
+use crate::{authority::AuthorityState, state_accumulator::StateAccumulator};
 
 const WAIT_FOR_TX_TIMEOUT: Duration = Duration::from_secs(15);
 

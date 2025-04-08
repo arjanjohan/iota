@@ -2,9 +2,6 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    consistency::ConsistentIndexCursor, data::package_resolver::PackageResolver, error::Error,
-};
 use async_graphql::{
     connection::{Connection, ConnectionNameType, CursorType, Edge, EdgeNameType, EmptyFields},
     *,
@@ -40,6 +37,9 @@ use super::{
     transaction_block::{TransactionBlock, TransactionBlockInner},
     uint53::UInt53,
     unchanged_shared_object::UnchangedSharedObject,
+};
+use crate::{
+    consistency::ConsistentIndexCursor, data::package_resolver::PackageResolver, error::Error,
 };
 
 /// Wraps the actual transaction block effects data with the checkpoint sequence number at which the
@@ -298,7 +298,7 @@ impl TransactionBlockEffects {
                         .edges
                         .push(Edge::new(c.encode_cursor(), unchanged_shared_object));
                 }
-                Err(_shared_object_changed) => continue, // Only add unchanged shared objects to the connection.
+                Err(_shared_object_changed) => continue, /* Only add unchanged shared objects to the connection. */
             }
         }
 

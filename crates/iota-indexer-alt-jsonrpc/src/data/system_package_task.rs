@@ -4,7 +4,7 @@
 
 use std::time::Duration;
 
-use diesel::{sql_query, sql_types::BigInt, QueryableByName};
+use diesel::{QueryableByName, sql_query, sql_types::BigInt};
 use iota_types::SYSTEM_PACKAGE_ADDRESSES;
 use tokio::{task::JoinHandle, time};
 use tokio_util::sync::CancellationToken;

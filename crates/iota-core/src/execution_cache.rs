@@ -2,51 +2,51 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::authority::authority_store::{ExecutionLockWriteGuard, IotaLockResult};
-use crate::authority::backpressure::BackpressureManager;
-use crate::authority::epoch_start_configuration::EpochFlag;
-use crate::authority::epoch_start_configuration::EpochStartConfiguration;
-use crate::authority::AuthorityStore;
-use crate::state_accumulator::AccumulatorStore;
-use crate::transaction_outputs::TransactionOutputs;
-use iota_common::fatal;
-use iota_types::bridge::Bridge;
+use std::{collections::HashSet, path::Path, sync::Arc};
 
-use futures::{future::BoxFuture, FutureExt};
-use prometheus::Registry;
-use std::collections::HashSet;
-use std::path::Path;
-use std::sync::Arc;
+use futures::{FutureExt, future::BoxFuture};
+use iota_common::fatal;
 use iota_config::ExecutionCacheConfig;
 use iota_protocol_config::ProtocolVersion;
-use iota_types::base_types::{FullObjectID, VerifiedExecutionData};
-use iota_types::digests::{TransactionDigest, TransactionEffectsDigest, TransactionEventsDigest};
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::error::{IotaError, IotaResult, UserInputError};
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-use iota_types::object::Object;
-use iota_types::storage::{
-    BackingPackageStore, BackingStore, ChildObjectResolver, FullObjectKey, MarkerValue, ObjectKey,
-    ObjectOrTombstone, ObjectStore, PackageObject, ParentSync,
-};
-use iota_types::iota_system_state::IotaSystemState;
-use iota_types::transaction::{VerifiedSignedTransaction, VerifiedTransaction};
 use iota_types::{
-    base_types::{EpochId, ObjectID, ObjectRef, SequenceNumber},
-    object::Owner,
-    storage::InputKey,
+    base_types::{
+        EpochId, FullObjectID, ObjectID, ObjectRef, SequenceNumber, VerifiedExecutionData,
+    },
+    bridge::Bridge,
+    digests::{TransactionDigest, TransactionEffectsDigest, TransactionEventsDigest},
+    effects::{TransactionEffects, TransactionEvents},
+    error::{IotaError, IotaResult, UserInputError},
+    iota_system_state::IotaSystemState,
+    messages_checkpoint::CheckpointSequenceNumber,
+    object::{Object, Owner},
+    storage::{
+        BackingPackageStore, BackingStore, ChildObjectResolver, FullObjectKey, InputKey,
+        MarkerValue, ObjectKey, ObjectOrTombstone, ObjectStore, PackageObject, ParentSync,
+    },
+    transaction::{VerifiedSignedTransaction, VerifiedTransaction},
 };
+use prometheus::Registry;
 use tracing::instrument;
+
+use crate::{
+    authority::{
+        AuthorityStore,
+        authority_per_epoch_store::AuthorityPerEpochStore,
+        authority_store::{ExecutionLockWriteGuard, IotaLockResult},
+        backpressure::BackpressureManager,
+        epoch_start_configuration::{EpochFlag, EpochStartConfiguration},
+    },
+    state_accumulator::AccumulatorStore,
+    transaction_outputs::TransactionOutputs,
+};
 
 pub(crate) mod cache_types;
 pub mod metrics;
 mod object_locks;
 pub mod writeback_cache;
 
-pub use writeback_cache::WritebackCache;
-
 use metrics::ExecutionCacheMetrics;
+pub use writeback_cache::WritebackCache;
 
 // If you have Arc<ExecutionCache>, you cannot return a reference to it as
 // an &Arc<dyn ExecutionCacheRead> (for example), because the trait object is a fat pointer.

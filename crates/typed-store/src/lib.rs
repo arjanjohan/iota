@@ -88,8 +88,7 @@ pub type StoreError = typed_store_error::TypedStoreError;
 /// let _ = Tables::open_tables_read_write(primary_path, MetricConf::default(), None, Some(config.build()));
 /// Ok(())
 /// }
-///
-///```
+/// ```
 ///
 /// 2. Auto-generated `open` routine
 ///     The function `open_tables_read_write` is generated which allows for specifying DB wide options and custom table configs as mentioned above
@@ -98,16 +97,19 @@ pub type StoreError = typed_store_error::TypedStoreError;
 ///     This mode provides handle struct which opens the DB in read only mode and has certain features like dumping and counting the keys in the tables
 ///
 /// Use the function `Tables::get_read_only_handle` which returns a handle that only allows read only features
-///```
-/// use typed_store::rocks::DBOptions;
-/// use typed_store::rocks::DBMap;
-/// use typed_store::DBMapUtils;
-/// use typed_store::traits::TypedStoreDebug;
+/// ```
 /// use core::fmt::Error;
-/// use typed_store::traits::TableSummary;
+///
+/// use typed_store::{
+///     DBMapUtils,
+///     rocks::{DBMap, DBOptions},
+///     traits::{TableSummary, TypedStoreDebug},
+/// };
 /// /// Define a struct with all members having type DBMap<K, V>
 ///
-/// fn custom_fn_name1() -> DBOptions {DBOptions::default()}
+/// fn custom_fn_name1() -> DBOptions {
+///     DBOptions::default()
+/// }
 /// fn custom_fn_name2() -> DBOptions {
 ///     let mut op = custom_fn_name1();
 ///     op.options.set_write_buffer_size(123456);
@@ -127,16 +129,24 @@ pub type StoreError = typed_store_error::TypedStoreError;
 /// }
 /// #[tokio::main]
 /// async fn main() -> Result<(), Error> {
+///     use typed_store::rocks::MetricConf;
+///     let primary_path = tempfile::tempdir()
+///         .expect("Failed to open temporary directory")
+///         .into_path();
+///     let _ = Tables::open_tables_read_write(
+///         primary_path.clone(),
+///         typed_store::rocks::MetricConf::default(),
+///         None,
+///         None,
+///     );
 ///
-/// use typed_store::rocks::MetricConf;let primary_path = tempfile::tempdir().expect("Failed to open temporary directory").into_path();
-/// let _ = Tables::open_tables_read_write(primary_path.clone(), typed_store::rocks::MetricConf::default(), None, None);
-///
-/// // Get the read only handle
-/// let read_only_handle = Tables::get_read_only_handle(primary_path, None, None, MetricConf::default());
-/// // Use this handle for dumping
-/// let ret = read_only_handle.dump("table2", 100, 0).unwrap();
-/// let key_count = read_only_handle.count_keys("table1").unwrap();
-/// Ok(())
+///     // Get the read only handle
+///     let read_only_handle =
+///         Tables::get_read_only_handle(primary_path, None, None, MetricConf::default());
+///     // Use this handle for dumping
+///     let ret = read_only_handle.dump("table2", 100, 0).unwrap();
+///     let key_count = read_only_handle.count_keys("table1").unwrap();
+///     Ok(())
 /// }
 /// ```
 /// 4. Auto-generated memory stats method
@@ -154,5 +164,4 @@ pub type StoreError = typed_store_error::TypedStoreError;
 /// //     bad_field: u32,
 /// // #}
 pub use typed_store_derive::DBMapUtils;
-
 pub use typed_store_derive::SallyDB;

@@ -5,9 +5,9 @@
 use std::sync::Arc;
 
 use prometheus::{
+    Histogram, HistogramVec, IntCounter, IntCounterVec, Registry,
     register_histogram_vec_with_registry, register_histogram_with_registry,
-    register_int_counter_vec_with_registry, register_int_counter_with_registry, Histogram,
-    HistogramVec, IntCounter, IntCounterVec, Registry,
+    register_int_counter_vec_with_registry, register_int_counter_with_registry,
 };
 
 pub(crate) mod middleware;

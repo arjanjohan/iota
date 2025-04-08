@@ -2,28 +2,31 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anemo::types::PeerInfo;
-use anemo::{types::PeerEvent, Network, Peer, PeerId, Request, Response};
-use fastcrypto::ed25519::{Ed25519PublicKey, Ed25519Signature};
-use futures::StreamExt;
-use iota_common::debug_fatal;
-use serde::{Deserialize, Serialize};
-use shared_crypto::intent::IntentScope;
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
     time::Duration,
 };
+
+use anemo::{
+    Network, Peer, PeerId, Request, Response,
+    types::{PeerEvent, PeerInfo},
+};
+use fastcrypto::ed25519::{Ed25519PublicKey, Ed25519Signature};
+use futures::StreamExt;
+use iota_common::debug_fatal;
 use iota_config::p2p::{AccessType, DiscoveryConfig, P2pConfig, SeedPeer};
-use iota_types::crypto::{NetworkKeyPair, Signer, ToFromBytes, VerifyingKey};
-use iota_types::digests::Digest;
-use iota_types::message_envelope::{Envelope, Message, VerifiedEnvelope};
-use iota_types::multiaddr::Multiaddr;
+use iota_types::{
+    crypto::{NetworkKeyPair, Signer, ToFromBytes, VerifyingKey},
+    digests::Digest,
+    message_envelope::{Envelope, Message, VerifiedEnvelope},
+    multiaddr::Multiaddr,
+};
+use serde::{Deserialize, Serialize};
+use shared_crypto::intent::IntentScope;
 use tap::{Pipe, TapFallible};
-use tokio::sync::broadcast::error::RecvError;
-use tokio::sync::watch;
 use tokio::{
-    sync::oneshot,
+    sync::{broadcast::error::RecvError, oneshot, watch},
     task::{AbortHandle, JoinSet},
 };
 use tracing::{debug, info, trace};

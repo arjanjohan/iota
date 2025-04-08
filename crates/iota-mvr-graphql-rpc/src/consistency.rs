@@ -3,14 +3,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use async_graphql::connection::CursorType;
-use serde::{Deserialize, Serialize};
 use iota_indexer::models::objects::StoredHistoryObject;
+use serde::{Deserialize, Serialize};
 
-use crate::raw_query::RawQuery;
-use crate::types::available_range::AvailableRange;
-use crate::types::cursor::{JsonCursor, Page, ScanLimited};
-use crate::types::object::Cursor;
-use crate::{filter, query};
+use crate::{
+    filter, query,
+    raw_query::RawQuery,
+    types::{
+        available_range::AvailableRange,
+        cursor::{JsonCursor, Page, ScanLimited},
+        object::Cursor,
+    },
+};
 
 #[derive(Copy, Clone)]
 pub(crate) enum View {

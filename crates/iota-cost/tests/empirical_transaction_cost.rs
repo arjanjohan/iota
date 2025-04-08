@@ -2,26 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use insta::assert_json_snapshot;
-use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, path::PathBuf};
-use strum_macros::Display;
-use strum_macros::EnumString;
+
+use insta::assert_json_snapshot;
 use iota_json_rpc_types::IotaTransactionBlockEffectsAPI;
 use iota_swarm_config::genesis_config::{AccountConfig, DEFAULT_GAS_AMOUNT};
-use iota_test_transaction_builder::publish_basics_package_and_make_counter;
-use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::base_types::{ObjectRef, IotaAddress};
-use iota_types::coin::PAY_JOIN_FUNC_NAME;
-use iota_types::coin::PAY_MODULE_NAME;
-use iota_types::coin::PAY_SPLIT_VEC_FUNC_NAME;
-use iota_types::gas_coin::GAS;
-use iota_types::transaction::TransactionData;
-use iota_types::IOTA_FRAMEWORK_PACKAGE_ID;
-use iota_types::{
-    gas::GasCostSummary,
-    transaction::{CallArg, ObjectArg},
+use iota_test_transaction_builder::{
+    TestTransactionBuilder, publish_basics_package_and_make_counter,
 };
+use iota_types::{
+    IOTA_FRAMEWORK_PACKAGE_ID,
+    base_types::{IotaAddress, ObjectRef},
+    coin::{PAY_JOIN_FUNC_NAME, PAY_MODULE_NAME, PAY_SPLIT_VEC_FUNC_NAME},
+    gas::GasCostSummary,
+    gas_coin::GAS,
+    transaction::{CallArg, ObjectArg, TransactionData},
+};
+use serde::{Deserialize, Serialize};
+use strum_macros::{Display, EnumString};
 use test_cluster::{TestCluster, TestClusterBuilder};
 
 #[derive(
@@ -107,7 +105,6 @@ async fn create_txes(
     let (sender, mut gas_objects) = test_cluster.wallet.get_one_account().await.unwrap();
     let gas_price = test_cluster.get_reference_gas_price().await;
 
-    //
     // Publish
     //
     let mut package_path = PathBuf::from(TEST_DATA_DIR);
@@ -117,7 +114,6 @@ async fn create_txes(
         .build();
     ret.insert(CommonTransactionCosts::Publish, publish_tx);
 
-    //
     // Transfer Whole IOTA Coin and Transfer Portion of IOTA Coin
     //
     let whole_iota_coin_tx =
@@ -137,7 +133,6 @@ async fn create_txes(
         partial_iota_coin_tx,
     );
 
-    //
     // Transfer Whole Coin Object
     //
     let whole_coin_tx = TestTransactionBuilder::new(sender, gas_objects.pop().unwrap(), gas_price)
@@ -146,7 +141,6 @@ async fn create_txes(
 
     ret.insert(CommonTransactionCosts::TransferWholeCoin, whole_coin_tx);
 
-    //
     // Merge Two Coins
     //
     let c1 = gas_objects.pop().unwrap();
@@ -166,7 +160,6 @@ async fn create_txes(
         .build();
     ret.insert(CommonTransactionCosts::MergeCoin, merge_tx);
 
-    //
     // Split A Coin Into N Specific Amounts
     // Note splitting complexity does not depend on the amounts but only on the number of amounts
     //
@@ -177,7 +170,6 @@ async fn create_txes(
         ret.insert(CommonTransactionCosts::SplitCoin(n as usize), split_tx);
     }
 
-    //
     // Shared Object Section
     // Using the `counter` example
     //
@@ -223,8 +215,8 @@ async fn create_txes(
     ret
 }
 
-async fn run_actual_costs(
-) -> Result<BTreeMap<CommonTransactionCosts, GasCostSummary>, anyhow::Error> {
+async fn run_actual_costs()
+-> Result<BTreeMap<CommonTransactionCosts, GasCostSummary>, anyhow::Error> {
     let mut ret = BTreeMap::new();
     let test_cluster = TestClusterBuilder::new()
         .with_accounts(vec![AccountConfig {

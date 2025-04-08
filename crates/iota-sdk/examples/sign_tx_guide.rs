@@ -3,35 +3,32 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod utils;
-use crate::utils::request_tokens_from_faucet;
 use anyhow::anyhow;
-use fastcrypto::encoding::Encoding;
-use fastcrypto::hash::HashFunction;
 use fastcrypto::{
     ed25519::Ed25519KeyPair,
-    encoding::Base64,
+    encoding::{Base64, Encoding},
+    hash::HashFunction,
     secp256k1::Secp256k1KeyPair,
     secp256r1::Secp256r1KeyPair,
     traits::{EncodeDecodeBase64, KeyPair},
 };
-use rand::{rngs::StdRng, SeedableRng};
-use shared_crypto::intent::{Intent, IntentMessage};
 use iota_sdk::{
+    IotaClientBuilder,
     rpc_types::IotaTransactionBlockResponseOptions,
     types::{
         programmable_transaction_builder::ProgrammableTransactionBuilder,
         transaction::TransactionData,
     },
-    IotaClientBuilder,
 };
-use iota_types::crypto::Signer;
-use iota_types::crypto::IotaSignature;
-use iota_types::crypto::ToFromBytes;
-use iota_types::signature::GenericSignature;
 use iota_types::{
     base_types::IotaAddress,
-    crypto::{get_key_pair_from_rng, IotaKeyPair},
+    crypto::{IotaKeyPair, IotaSignature, Signer, ToFromBytes, get_key_pair_from_rng},
+    signature::GenericSignature,
 };
+use rand::{SeedableRng, rngs::StdRng};
+use shared_crypto::intent::{Intent, IntentMessage};
+
+use crate::utils::request_tokens_from_faucet;
 
 /// This example walks through the Rust SDK use case described in
 /// https://github.com/iotaledger/iota/blob/main/docs/content/guides/developer/iota-101/sign-and-send-txn.mdx

@@ -8,38 +8,37 @@ mod read_store;
 mod shared_in_memory_store;
 mod write_store;
 
-use crate::base_types::{
-    ConsensusObjectSequenceKey, FullObjectID, FullObjectRef, TransactionDigest, VersionNumber,
+use std::{
+    collections::BTreeMap,
+    fmt::{Display, Formatter},
+    sync::Arc,
 };
-use crate::committee::EpochId;
-use crate::error::{ExecutionError, IotaError};
-use crate::execution::{DynamicallyLoadedObjectMetadata, ExecutionResults};
-use crate::move_package::MovePackage;
-use crate::transaction::{SenderSignedData, TransactionDataAPI};
-use crate::{
-    base_types::{ObjectID, ObjectRef, SequenceNumber},
-    error::IotaResult,
-    object::Object,
-};
+
 use itertools::Itertools;
 use move_binary_format::CompiledModule;
 use move_core_types::language_storage::ModuleId;
 pub use object_store_trait::ObjectStore;
-pub use read_store::AccountOwnedObjectInfo;
-pub use read_store::CoinInfo;
-pub use read_store::DynamicFieldIndexInfo;
-pub use read_store::DynamicFieldKey;
-pub use read_store::ReadStore;
-pub use read_store::RpcIndexes;
-pub use read_store::RpcStateReader;
+pub use read_store::{
+    AccountOwnedObjectInfo, CoinInfo, DynamicFieldIndexInfo, DynamicFieldKey, ReadStore,
+    RpcIndexes, RpcStateReader,
+};
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-pub use shared_in_memory_store::SharedInMemoryStore;
-pub use shared_in_memory_store::SingleCheckpointSharedInMemoryStore;
-use std::collections::BTreeMap;
-use std::fmt::{Display, Formatter};
-use std::sync::Arc;
+pub use shared_in_memory_store::{SharedInMemoryStore, SingleCheckpointSharedInMemoryStore};
 pub use write_store::WriteStore;
+
+use crate::{
+    base_types::{
+        ConsensusObjectSequenceKey, FullObjectID, FullObjectRef, ObjectID, ObjectRef,
+        SequenceNumber, TransactionDigest, VersionNumber,
+    },
+    committee::EpochId,
+    error::{ExecutionError, IotaError, IotaResult},
+    execution::{DynamicallyLoadedObjectMetadata, ExecutionResults},
+    move_package::MovePackage,
+    object::Object,
+    transaction::{SenderSignedData, TransactionDataAPI},
+};
 
 /// A potential input to a transaction.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -596,7 +595,7 @@ impl FullObjectKey {
         match self {
             FullObjectKey::Fastpath(object_key) => object_key,
             FullObjectKey::Consensus(consensus_object_key) => {
-                ObjectKey(consensus_object_key.0 .0, consensus_object_key.1)
+                ObjectKey(consensus_object_key.0.0, consensus_object_key.1)
             }
         }
     }

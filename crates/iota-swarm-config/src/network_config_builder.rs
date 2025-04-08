@@ -2,26 +2,37 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::path::PathBuf;
-use std::time::Duration;
-use std::{num::NonZeroUsize, path::Path, sync::Arc};
+use std::{
+    num::NonZeroUsize,
+    path::{Path, PathBuf},
+    sync::Arc,
+    time::Duration,
+};
 
-use rand::rngs::OsRng;
-use iota_config::genesis::{TokenAllocation, TokenDistributionScheduleBuilder};
-use iota_config::node::AuthorityOverloadConfig;
-use iota_config::ExecutionCacheConfig;
+use iota_config::{
+    ExecutionCacheConfig,
+    genesis::{TokenAllocation, TokenDistributionScheduleBuilder},
+    node::AuthorityOverloadConfig,
+};
 use iota_macros::nondeterministic;
-use iota_types::base_types::{AuthorityName, IotaAddress};
-use iota_types::committee::{Committee, ProtocolVersion};
-use iota_types::crypto::{get_key_pair_from_rng, AccountKeyPair, KeypairTraits, PublicKey};
-use iota_types::object::Object;
-use iota_types::supported_protocol_versions::SupportedProtocolVersions;
-use iota_types::traffic_control::{PolicyConfig, RemoteFirewallConfig};
+use iota_types::{
+    base_types::{AuthorityName, IotaAddress},
+    committee::{Committee, ProtocolVersion},
+    crypto::{AccountKeyPair, KeypairTraits, PublicKey, get_key_pair_from_rng},
+    object::Object,
+    supported_protocol_versions::SupportedProtocolVersions,
+    traffic_control::{PolicyConfig, RemoteFirewallConfig},
+};
+use rand::rngs::OsRng;
 
-use crate::genesis_config::{AccountConfig, ValidatorGenesisConfigBuilder, DEFAULT_GAS_AMOUNT};
-use crate::genesis_config::{GenesisConfig, ValidatorGenesisConfig};
-use crate::network_config::NetworkConfig;
-use crate::node_config_builder::ValidatorConfigBuilder;
+use crate::{
+    genesis_config::{
+        AccountConfig, DEFAULT_GAS_AMOUNT, GenesisConfig, ValidatorGenesisConfig,
+        ValidatorGenesisConfigBuilder,
+    },
+    network_config::NetworkConfig,
+    node_config_builder::ValidatorConfigBuilder,
+};
 
 pub enum CommitteeConfig {
     Size(NonZeroUsize),
@@ -34,8 +45,8 @@ pub enum CommitteeConfig {
 
 pub type SupportedProtocolVersionsCallback = Arc<
     dyn Fn(
-            usize,                 /* validator idx */
-            Option<AuthorityName>, /* None for fullnode */
+            usize,                 // validator idx
+            Option<AuthorityName>, // None for fullnode
         ) -> SupportedProtocolVersions
         + Send
         + Sync
@@ -307,7 +318,7 @@ impl<R> ConfigBuilder<R> {
 }
 
 impl<R: rand::RngCore + rand::CryptoRng> ConfigBuilder<R> {
-    //TODO right now we always randomize ports, we may want to have a default port configuration
+    // TODO right now we always randomize ports, we may want to have a default port configuration
     pub fn build(self) -> NetworkConfig {
         let committee = self.committee;
 
@@ -553,16 +564,15 @@ mod tests {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashSet;
-    use std::sync::Arc;
+    use std::{collections::HashSet, sync::Arc};
+
     use iota_config::genesis::Genesis;
     use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-    use iota_types::epoch_data::EpochData;
-    use iota_types::gas::IotaGasStatus;
-    use iota_types::in_memory_storage::InMemoryStorage;
-    use iota_types::metrics::LimitsMetrics;
-    use iota_types::iota_system_state::IotaSystemStateTrait;
-    use iota_types::transaction::CheckedInputObjects;
+    use iota_types::{
+        epoch_data::EpochData, gas::IotaGasStatus, in_memory_storage::InMemoryStorage,
+        iota_system_state::IotaSystemStateTrait, metrics::LimitsMetrics,
+        transaction::CheckedInputObjects,
+    };
 
     #[test]
     fn roundtrip() {
@@ -582,7 +592,8 @@ mod test {
         let builder = crate::network_config_builder::ConfigBuilder::new_with_temp_dir();
         let network_config = builder.build();
         let genesis = network_config.genesis;
-        let protocol_version = ProtocolVersion::new(genesis.iota_system_object().protocol_version());
+        let protocol_version =
+            ProtocolVersion::new(genesis.iota_system_object().protocol_version());
         let protocol_config = ProtocolConfig::get_for_version(protocol_version, Chain::Unknown);
 
         let genesis_transaction = genesis.transaction().clone();

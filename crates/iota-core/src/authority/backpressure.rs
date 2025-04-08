@@ -169,11 +169,12 @@ impl BackpressureSubscriber {
 }
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::{sync::Arc, time::Duration};
+
     use futures::FutureExt;
     use parking_lot::Mutex;
-    use std::sync::Arc;
-    use std::time::Duration;
+
+    use super::*;
 
     #[tokio::test]
     async fn test_no_backpressure() {

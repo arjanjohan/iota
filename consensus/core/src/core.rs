@@ -4,26 +4,31 @@
 
 use std::{collections::BTreeSet, iter, sync::Arc, time::Duration, vec};
 
-#[cfg(test)]
-use consensus_config::{local_committee_and_keys, Stake};
 use consensus_config::{AuthorityIndex, ProtocolKeyPair};
-use itertools::Itertools as _;
+#[cfg(test)]
+use consensus_config::{Stake, local_committee_and_keys};
+use iota_macros::fail_point;
 #[cfg(test)]
 use iota_metrics::monitored_mpsc::UnboundedReceiver;
 use iota_metrics::monitored_scope;
+use itertools::Itertools as _;
 use parking_lot::RwLock;
-use iota_macros::fail_point;
 use tokio::{
     sync::{broadcast, watch},
     time::Instant,
 };
 use tracing::{debug, info, trace, warn};
 
+#[cfg(test)]
+use crate::{
+    CommitConsumer, TransactionClient, block_verifier::NoopBlockVerifier,
+    storage::mem_store::MemStore,
+};
 use crate::{
     ancestor::{AncestorState, AncestorStateManager},
     block::{
-        Block, BlockAPI, BlockRef, BlockTimestampMs, BlockV1, ExtendedBlock, Round, SignedBlock,
-        Slot, VerifiedBlock, GENESIS_ROUND,
+        Block, BlockAPI, BlockRef, BlockTimestampMs, BlockV1, ExtendedBlock, GENESIS_ROUND, Round,
+        SignedBlock, Slot, VerifiedBlock,
     },
     block_manager::BlockManager,
     commit::CommittedSubDag,
@@ -36,13 +41,8 @@ use crate::{
     stake_aggregator::{QuorumThreshold, StakeAggregator},
     transaction::TransactionConsumer,
     universal_committer::{
-        universal_committer_builder::UniversalCommitterBuilder, UniversalCommitter,
+        UniversalCommitter, universal_committer_builder::UniversalCommitterBuilder,
     },
-};
-#[cfg(test)]
-use crate::{
-    block_verifier::NoopBlockVerifier, storage::mem_store::MemStore, CommitConsumer,
-    TransactionClient,
 };
 
 // Maximum number of commit votes to include in a block.
@@ -219,7 +219,10 @@ impl Core {
             let last_proposed_block = self.dag_state.read().get_last_proposed_block();
 
             if self.should_propose() {
-                assert!(last_proposed_block.round() > GENESIS_ROUND, "At minimum a block of round higher than genesis should have been produced during recovery");
+                assert!(
+                    last_proposed_block.round() > GENESIS_ROUND,
+                    "At minimum a block of round higher than genesis should have been produced during recovery"
+                );
             }
 
             // if no new block proposed then just re-broadcast the last proposed one to ensure liveness.
@@ -677,7 +680,10 @@ impl Core {
             let Some(last_decided) = decided_leaders.last().cloned() else {
                 break;
             };
-            tracing::debug!("Decided {} leaders and {commits_until_update} commits can be made before next leader schedule change", decided_leaders.len());
+            tracing::debug!(
+                "Decided {} leaders and {commits_until_update} commits can be made before next leader schedule change",
+                decided_leaders.len()
+            );
 
             let mut sequenced_leaders = decided_leaders
                 .into_iter()
@@ -797,7 +803,9 @@ impl Core {
     /// if attempt to do multiple times.
     pub(crate) fn set_last_known_proposed_round(&mut self, round: Round) {
         if self.last_known_proposed_round.is_some() {
-            panic!("Should not attempt to set the last known proposed round if that has been already set");
+            panic!(
+                "Should not attempt to set the last known proposed round if that has been already set"
+            );
         }
         self.last_known_proposed_round = Some(round);
         info!("Last known proposed round set to {round}");
@@ -836,14 +844,18 @@ impl Core {
         }
 
         let Some(last_known_proposed_round) = self.last_known_proposed_round else {
-            debug!("Skip proposing for round {clock_round}, last known proposed round has not been synced yet.");
+            debug!(
+                "Skip proposing for round {clock_round}, last known proposed round has not been synced yet."
+            );
             core_skipped_proposals
                 .with_label_values(&["no_last_known_proposed_round"])
                 .inc();
             return false;
         };
         if clock_round <= last_known_proposed_round {
-            debug!("Skip proposing for round {clock_round} as last known proposed round is {last_known_proposed_round}");
+            debug!(
+                "Skip proposing for round {clock_round} as last known proposed round is {last_known_proposed_round}"
+            );
             core_skipped_proposals
                 .with_label_values(&["higher_last_known_proposed_round"])
                 .inc();
@@ -903,7 +915,11 @@ impl Core {
         {
             quorum.add(ancestor.author(), &self.context.committee);
         }
-        assert!(quorum.reached_threshold(&self.context.committee), "Fatal error, quorum not reached for parent round when proposing for round {}. Possible mismatch between DagState and Core.", clock_round);
+        assert!(
+            quorum.reached_threshold(&self.context.committee),
+            "Fatal error, quorum not reached for parent round when proposing for round {}. Possible mismatch between DagState and Core.",
+            clock_round
+        );
 
         ancestors
     }
@@ -995,7 +1011,10 @@ impl Core {
 
         if smart_select && !parent_round_quorum.reached_threshold(&self.context.committee) {
             node_metrics.smart_selection_wait.inc();
-            debug!("Only found {} stake of good ancestors to include for round {clock_round}, will wait for more.", parent_round_quorum.stake());
+            debug!(
+                "Only found {} stake of good ancestors to include for round {clock_round}, will wait for more.",
+                parent_round_quorum.stake()
+            );
             return (vec![], BTreeSet::new());
         }
 
@@ -1010,7 +1029,9 @@ impl Core {
             if !parent_round_quorum.reached_threshold(&self.context.committee)
                 && ancestor.round() == quorum_round
             {
-                debug!("Including temporarily excluded parent round ancestor {ancestor} with score {score} to propose for round {clock_round}");
+                debug!(
+                    "Including temporarily excluded parent round ancestor {ancestor} with score {score} to propose for round {clock_round}"
+                );
                 parent_round_quorum.add(ancestor.author(), &self.context.committee);
                 ancestors_to_propose.push(ancestor);
                 node_metrics
@@ -1050,7 +1071,10 @@ impl Core {
 
             if last_included_round >= accepted_low_quorum_round {
                 excluded_and_equivocating_ancestors.insert(ancestor.reference());
-                trace!("Excluded low score ancestor {} with score {score} to propose for round {clock_round}: last included round {last_included_round} >= accepted low quorum round {accepted_low_quorum_round}", ancestor.reference());
+                trace!(
+                    "Excluded low score ancestor {} with score {score} to propose for round {clock_round}: last included round {last_included_round} >= accepted low quorum round {accepted_low_quorum_round}",
+                    ancestor.reference()
+                );
                 node_metrics
                     .excluded_proposal_ancestors_count_by_authority
                     .with_label_values(&[block_hostname])
@@ -1064,7 +1088,11 @@ impl Core {
             } else {
                 // Exclude this ancestor since it hasn't been accepted by a strong quorum
                 excluded_and_equivocating_ancestors.insert(ancestor.reference());
-                trace!("Excluded low score ancestor {} with score {score} to propose for round {clock_round}: ancestor round {} > accepted low quorum round {accepted_low_quorum_round} ", ancestor.reference(), ancestor.round());
+                trace!(
+                    "Excluded low score ancestor {} with score {score} to propose for round {clock_round}: ancestor round {} > accepted low quorum round {accepted_low_quorum_round} ",
+                    ancestor.reference(),
+                    ancestor.round()
+                );
                 node_metrics
                     .excluded_proposal_ancestors_count_by_authority
                     .with_label_values(&[block_hostname])
@@ -1092,14 +1120,20 @@ impl Core {
             };
             self.last_included_ancestors[excluded_author] = Some(ancestor.reference());
             ancestors_to_propose.push(ancestor.clone());
-            trace!("Included low scoring ancestor {} with score {score} seen at accepted low quorum round {accepted_low_quorum_round} to propose for round {clock_round}", ancestor.reference());
+            trace!(
+                "Included low scoring ancestor {} with score {score} seen at accepted low quorum round {accepted_low_quorum_round} to propose for round {clock_round}",
+                ancestor.reference()
+            );
             node_metrics
                 .included_excluded_proposal_ancestors_count_by_authority
                 .with_label_values(&[block_hostname, "quorum"])
                 .inc();
         }
 
-        assert!(parent_round_quorum.reached_threshold(&self.context.committee), "Fatal error, quorum not reached for parent round when proposing for round {clock_round}. Possible mismatch between DagState and Core.");
+        assert!(
+            parent_round_quorum.reached_threshold(&self.context.committee),
+            "Fatal error, quorum not reached for parent round when proposing for round {clock_round}. Possible mismatch between DagState and Core."
+        );
 
         info!(
             "Included {} ancestors & excluded {} low performing or equivocating ancestors for proposal in round {clock_round}",
@@ -1326,22 +1360,22 @@ mod test {
     use std::{collections::BTreeSet, time::Duration};
 
     use consensus_config::{AuthorityIndex, Parameters};
-    use futures::{stream::FuturesUnordered, StreamExt};
-    use rstest::rstest;
+    use futures::{StreamExt, stream::FuturesUnordered};
     use iota_protocol_config::ProtocolConfig;
+    use rstest::rstest;
     use tokio::time::sleep;
 
     use super::*;
     use crate::{
-        block::{genesis_blocks, TestBlock},
+        CommitConsumer, CommitIndex,
+        block::{TestBlock, genesis_blocks},
         block_verifier::NoopBlockVerifier,
         commit::CommitAPI as _,
         leader_scoring::ReputationScores,
-        storage::{mem_store::MemStore, Store, WriteBatch},
+        storage::{Store, WriteBatch, mem_store::MemStore},
         test_dag_builder::DagBuilder,
         test_dag_parser::parse_dag,
         transaction::{BlockStatus, TransactionClient},
-        CommitConsumer, CommitIndex,
     };
 
     /// Recover Core and continue proposing from the last round which forms a quorum.

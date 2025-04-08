@@ -2,92 +2,79 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::abi::EthBridgeConfig;
-use crate::abi::{EthBridgeCommittee, EthBridgeEvent, EthERC20, EthIotaBridge, EthIotaBridgeEvents};
-use crate::config::default_ed25519_key_pair;
-use crate::crypto::BridgeAuthorityKeyPair;
-use crate::crypto::BridgeAuthorityPublicKeyBytes;
-use crate::crypto::BridgeAuthoritySignInfo;
-use crate::events::*;
-use crate::metrics::BridgeMetrics;
-use crate::server::BridgeNodePublicMetadata;
-use crate::iota_transaction_builder::build_add_tokens_on_iota_transaction;
-use crate::iota_transaction_builder::build_committee_register_transaction;
-use crate::types::BridgeCommitteeValiditySignInfo;
-use crate::types::CertifiedBridgeAction;
-use crate::types::VerifiedCertifiedBridgeAction;
-use crate::types::{BridgeAction, BridgeActionStatus, IotaToEthBridgeAction};
-use crate::utils::get_eth_signer_client;
-use crate::utils::publish_and_register_coins_return_add_coins_on_iota_action;
-use crate::utils::wait_for_server_to_be_up;
-use crate::utils::EthSigner;
-use ethers::types::Address as EthAddress;
-use futures::future::join_all;
-use futures::Future;
-use move_core_types::language_storage::{StructTag, TypeTag};
-use prometheus::Registry;
-use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
-use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
-use std::collections::{BTreeMap, HashMap};
-use std::fs::File;
-use std::fs::{self, DirBuilder};
-use std::io::{Read, Write};
-use std::path::Path;
-use std::path::PathBuf;
-use std::process::Command;
-use std::str::FromStr;
-use std::sync::Arc;
-use iota_json_rpc_api::BridgeReadApiClient;
-use iota_json_rpc_types::IotaEvent;
-use iota_json_rpc_types::IotaExecutionStatus;
-use iota_json_rpc_types::IotaTransactionBlockEffectsAPI;
-use iota_json_rpc_types::IotaTransactionBlockResponse;
-use iota_json_rpc_types::IotaTransactionBlockResponseOptions;
-use iota_json_rpc_types::IotaTransactionBlockResponseQuery;
-use iota_json_rpc_types::TransactionFilter;
-use iota_sdk::wallet_context::WalletContext;
-use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::base_types::{ObjectID, ObjectRef};
-use iota_types::bridge::get_bridge_obj_initial_shared_version;
-use iota_types::bridge::BridgeChainId;
-use iota_types::bridge::BridgeSummary;
-use iota_types::bridge::BridgeTrait;
-use iota_types::bridge::{get_bridge, BRIDGE_MODULE_NAME};
-use iota_types::bridge::{TOKEN_ID_BTC, TOKEN_ID_ETH, TOKEN_ID_USDC, TOKEN_ID_USDT};
-use iota_types::committee::TOTAL_VOTING_POWER;
-use iota_types::crypto::get_key_pair;
-use iota_types::crypto::ToFromBytes;
-use iota_types::digests::TransactionDigest;
-use iota_types::object::Object;
-use iota_types::transaction::{ObjectArg, Transaction, TransactionData};
-use iota_types::{BRIDGE_PACKAGE_ID, IOTA_BRIDGE_OBJECT_ID};
-use tokio::join;
-use tokio::task::JoinHandle;
-use tokio::time::Instant;
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    fs::{self, DirBuilder, File},
+    io::{Read, Write},
+    path::{Path, PathBuf},
+    process::{Child, Command},
+    str::FromStr,
+    sync::Arc,
+};
 
-use tracing::error;
-use tracing::info;
-
-use crate::config::{BridgeNodeConfig, EthConfig, IotaConfig};
-use crate::node::run_bridge_node;
-use crate::iota_client::IotaBridgeClient;
-use crate::BRIDGE_ENABLE_PROTOCOL_VERSION;
 use anyhow::anyhow;
-use ethers::prelude::*;
-use move_core_types::ident_str;
-use std::process::Child;
+use ethers::{prelude::*, types::Address as EthAddress};
+use futures::{Future, future::join_all};
 use iota_config::local_ip_utils::get_available_port;
-use iota_sdk::IotaClient;
-use iota_types::base_types::IotaAddress;
-use iota_types::crypto::EncodeDecodeBase64;
-use iota_types::crypto::KeypairTraits;
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
+use iota_json_rpc_api::BridgeReadApiClient;
+use iota_json_rpc_types::{
+    IotaEvent, IotaExecutionStatus, IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse,
+    IotaTransactionBlockResponseOptions, IotaTransactionBlockResponseQuery, TransactionFilter,
+};
+use iota_sdk::{IotaClient, wallet_context::WalletContext};
+use iota_test_transaction_builder::TestTransactionBuilder;
+use iota_types::{
+    BRIDGE_PACKAGE_ID, IOTA_BRIDGE_OBJECT_ID,
+    base_types::{IotaAddress, ObjectID, ObjectRef},
+    bridge::{
+        BRIDGE_MODULE_NAME, BridgeChainId, BridgeSummary, BridgeTrait, TOKEN_ID_BTC, TOKEN_ID_ETH,
+        TOKEN_ID_USDC, TOKEN_ID_USDT, get_bridge, get_bridge_obj_initial_shared_version,
+    },
+    committee::TOTAL_VOTING_POWER,
+    crypto::{EncodeDecodeBase64, KeypairTraits, ToFromBytes, get_key_pair},
+    digests::TransactionDigest,
+    object::Object,
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    transaction::{ObjectArg, Transaction, TransactionData},
+};
+use move_core_types::{
+    ident_str,
+    language_storage::{StructTag, TypeTag},
+};
+use prometheus::Registry;
+use rand::{Rng, SeedableRng, rngs::SmallRng};
+use serde::{Deserialize, Serialize};
 use tap::TapFallible;
 use tempfile::tempdir;
-use test_cluster::TestCluster;
-use test_cluster::TestClusterBuilder;
+use test_cluster::{TestCluster, TestClusterBuilder};
+use tokio::{join, task::JoinHandle, time::Instant};
+use tracing::{error, info};
+
+use crate::{
+    BRIDGE_ENABLE_PROTOCOL_VERSION,
+    abi::{
+        EthBridgeCommittee, EthBridgeConfig, EthBridgeEvent, EthERC20, EthIotaBridge,
+        EthIotaBridgeEvents,
+    },
+    config::{BridgeNodeConfig, EthConfig, IotaConfig, default_ed25519_key_pair},
+    crypto::{BridgeAuthorityKeyPair, BridgeAuthorityPublicKeyBytes, BridgeAuthoritySignInfo},
+    events::*,
+    iota_client::IotaBridgeClient,
+    iota_transaction_builder::{
+        build_add_tokens_on_iota_transaction, build_committee_register_transaction,
+    },
+    metrics::BridgeMetrics,
+    node::run_bridge_node,
+    server::BridgeNodePublicMetadata,
+    types::{
+        BridgeAction, BridgeActionStatus, BridgeCommitteeValiditySignInfo, CertifiedBridgeAction,
+        IotaToEthBridgeAction, VerifiedCertifiedBridgeAction,
+    },
+    utils::{
+        EthSigner, get_eth_signer_client,
+        publish_and_register_coins_return_add_coins_on_iota_action, wait_for_server_to_be_up,
+    },
+};
 
 const BRIDGE_COMMITTEE_NAME: &str = "BridgeCommittee";
 const IOTA_BRIDGE_NAME: &str = "IotaBridge";
@@ -416,18 +403,22 @@ impl BridgeTestCluster {
                 .iter()
                 .any(|e| &e.type_ == TokenTransferApproved.get().unwrap())
             {
-                assert!(events
-                    .iter()
-                    .any(|e| &e.type_ == TokenTransferClaimed.get().unwrap()
-                        || &e.type_ == TokenTransferApproved.get().unwrap()));
+                assert!(
+                    events
+                        .iter()
+                        .any(|e| &e.type_ == TokenTransferClaimed.get().unwrap()
+                            || &e.type_ == TokenTransferApproved.get().unwrap())
+                );
             } else if events
                 .iter()
                 .any(|e| &e.type_ == TokenTransferAlreadyClaimed.get().unwrap())
             {
-                assert!(events
-                    .iter()
-                    .all(|e| &e.type_ == TokenTransferAlreadyClaimed.get().unwrap()
-                        || &e.type_ == TokenTransferAlreadyApproved.get().unwrap()));
+                assert!(
+                    events
+                        .iter()
+                        .all(|e| &e.type_ == TokenTransferAlreadyClaimed.get().unwrap()
+                            || &e.type_ == TokenTransferAlreadyApproved.get().unwrap())
+                );
             }
             // TODO: check for other events e.g. TokenRegistrationEvent, NewTokenEvent etc
         }
@@ -553,7 +544,7 @@ pub(crate) async fn deploy_sol_contract(
         ],
         supported_tokens: vec![], // this is set up in the deploy script
         token_ids: vec![],        // this is set up in the deploy script
-        iota_decimals: vec![],     // this is set up in the deploy script
+        iota_decimals: vec![],    // this is set up in the deploy script
         token_prices: vec![12800, 432518900, 25969600, 10000, 10000],
         weth: "".to_string(), // this is set up in the deploy script
     };

@@ -2,12 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{net::SocketAddr, time::Duration};
+
 use anyhow::{Context, Result};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
-use serde_with::DurationSeconds;
-use std::{net::SocketAddr, time::Duration};
+use serde_with::{DurationSeconds, serde_as};
 use tracing::error;
 use url::Url;
 

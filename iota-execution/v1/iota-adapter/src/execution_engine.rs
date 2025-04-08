@@ -7,56 +7,61 @@ pub use checked::*;
 #[iota_macros::with_checked_arithmetic]
 mod checked {
 
-    use crate::execution_mode::{self, ExecutionMode};
-    use move_binary_format::CompiledModule;
-    use move_vm_runtime::move_vm::MoveVM;
     use std::{collections::HashSet, sync::Arc};
-    use iota_types::balance::{
-        BALANCE_CREATE_REWARDS_FUNCTION_NAME, BALANCE_DESTROY_REBATES_FUNCTION_NAME,
-        BALANCE_MODULE_NAME,
-    };
-    use iota_types::base_types::SequenceNumber;
-    use iota_types::gas_coin::GAS;
-    use iota_types::messages_checkpoint::CheckpointTimestamp;
-    use iota_types::metrics::LimitsMetrics;
-    use iota_types::object::OBJECT_START_VERSION;
-    use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-    use tracing::{info, instrument, trace, warn};
 
-    use crate::programmable_transactions;
-    use crate::type_layout_resolver::TypeLayoutResolver;
-    use crate::{gas_charger::GasCharger, temporary_store::TemporaryStore};
-    use iota_protocol_config::{check_limit_by_meter, LimitThresholdCrossed, ProtocolConfig};
-    use iota_types::authenticator_state::{
-        AUTHENTICATOR_STATE_CREATE_FUNCTION_NAME, AUTHENTICATOR_STATE_EXPIRE_JWKS_FUNCTION_NAME,
-        AUTHENTICATOR_STATE_MODULE_NAME, AUTHENTICATOR_STATE_UPDATE_FUNCTION_NAME,
-    };
-    use iota_types::clock::{CLOCK_MODULE_NAME, CONSENSUS_COMMIT_PROLOGUE_FUNCTION_NAME};
-    use iota_types::committee::EpochId;
-    use iota_types::effects::TransactionEffects;
-    use iota_types::error::{ExecutionError, ExecutionErrorKind};
-    use iota_types::execution::is_certificate_denied;
-    use iota_types::execution_config_utils::to_binary_config;
-    use iota_types::execution_status::{CongestedObjects, ExecutionStatus};
-    use iota_types::gas::GasCostSummary;
-    use iota_types::gas::IotaGasStatus;
-    use iota_types::inner_temporary_store::InnerTemporaryStore;
-    use iota_types::storage::BackingStore;
+    use iota_protocol_config::{LimitThresholdCrossed, ProtocolConfig, check_limit_by_meter};
     #[cfg(msim)]
     use iota_types::iota_system_state::advance_epoch_result_injection::maybe_modify_result_legacy;
-    use iota_types::iota_system_state::{AdvanceEpochParams, ADVANCE_EPOCH_SAFE_MODE_FUNCTION_NAME};
-    use iota_types::transaction::CheckedInputObjects;
-    use iota_types::transaction::{
-        Argument, AuthenticatorStateExpire, AuthenticatorStateUpdate, CallArg, ChangeEpoch,
-        Command, EndOfEpochTransactionKind, GenesisTransaction, ObjectArg, ProgrammableTransaction,
-        TransactionKind,
-    };
     use iota_types::{
-        base_types::{ObjectID, ObjectRef, IotaAddress, TransactionDigest, TxContext},
-        object::{Object, ObjectInner},
-        iota_system_state::{ADVANCE_EPOCH_FUNCTION_NAME, IOTA_SYSTEM_MODULE_NAME},
         IOTA_AUTHENTICATOR_STATE_OBJECT_ID, IOTA_FRAMEWORK_ADDRESS, IOTA_FRAMEWORK_PACKAGE_ID,
         IOTA_SYSTEM_PACKAGE_ID,
+        authenticator_state::{
+            AUTHENTICATOR_STATE_CREATE_FUNCTION_NAME,
+            AUTHENTICATOR_STATE_EXPIRE_JWKS_FUNCTION_NAME, AUTHENTICATOR_STATE_MODULE_NAME,
+            AUTHENTICATOR_STATE_UPDATE_FUNCTION_NAME,
+        },
+        balance::{
+            BALANCE_CREATE_REWARDS_FUNCTION_NAME, BALANCE_DESTROY_REBATES_FUNCTION_NAME,
+            BALANCE_MODULE_NAME,
+        },
+        base_types::{
+            IotaAddress, ObjectID, ObjectRef, SequenceNumber, TransactionDigest, TxContext,
+        },
+        clock::{CLOCK_MODULE_NAME, CONSENSUS_COMMIT_PROLOGUE_FUNCTION_NAME},
+        committee::EpochId,
+        effects::TransactionEffects,
+        error::{ExecutionError, ExecutionErrorKind},
+        execution::is_certificate_denied,
+        execution_config_utils::to_binary_config,
+        execution_status::{CongestedObjects, ExecutionStatus},
+        gas::{GasCostSummary, IotaGasStatus},
+        gas_coin::GAS,
+        inner_temporary_store::InnerTemporaryStore,
+        iota_system_state::{
+            ADVANCE_EPOCH_FUNCTION_NAME, ADVANCE_EPOCH_SAFE_MODE_FUNCTION_NAME, AdvanceEpochParams,
+            IOTA_SYSTEM_MODULE_NAME,
+        },
+        messages_checkpoint::CheckpointTimestamp,
+        metrics::LimitsMetrics,
+        object::{OBJECT_START_VERSION, Object, ObjectInner},
+        programmable_transaction_builder::ProgrammableTransactionBuilder,
+        storage::BackingStore,
+        transaction::{
+            Argument, AuthenticatorStateExpire, AuthenticatorStateUpdate, CallArg, ChangeEpoch,
+            CheckedInputObjects, Command, EndOfEpochTransactionKind, GenesisTransaction, ObjectArg,
+            ProgrammableTransaction, TransactionKind,
+        },
+    };
+    use move_binary_format::CompiledModule;
+    use move_vm_runtime::move_vm::MoveVM;
+    use tracing::{info, instrument, trace, warn};
+
+    use crate::{
+        execution_mode::{self, ExecutionMode},
+        gas_charger::GasCharger,
+        programmable_transactions,
+        temporary_store::TemporaryStore,
+        type_layout_resolver::TypeLayoutResolver,
     };
 
     #[instrument(name = "tx_execute_to_effects", level = "debug", skip_all)]
@@ -424,7 +429,7 @@ mod checked {
                 }
             }
         } // else, we're in the genesis transaction which mints the IOTA supply, and hence does not satisfy IOTA conservation, or
-          // we're in the non-production dev inspect mode which allows us to violate conservation
+        // we're in the non-production dev inspect mode which allows us to violate conservation
         result
     }
 
@@ -501,7 +506,7 @@ mod checked {
                             max_size: lim as u64,
                         },
                         "Written objects size crossed hard limit",
-                    ))
+                    ));
                 }
             };
         }
@@ -635,10 +640,14 @@ mod checked {
                             builder = setup_authenticator_state_expire(builder, expire);
                         }
                         EndOfEpochTransactionKind::RandomnessStateCreate => {
-                            panic!("EndOfEpochTransactionKind::RandomnessStateCreate should not exist in v1");
+                            panic!(
+                                "EndOfEpochTransactionKind::RandomnessStateCreate should not exist in v1"
+                            );
                         }
                         EndOfEpochTransactionKind::DenyListStateCreate => {
-                            panic!("EndOfEpochTransactionKind::CoinDenyListStateCreate should not exist in v1");
+                            panic!(
+                                "EndOfEpochTransactionKind::CoinDenyListStateCreate should not exist in v1"
+                            );
                         }
                         EndOfEpochTransactionKind::BridgeStateCreate(_) => {
                             panic!(
@@ -646,11 +655,15 @@ mod checked {
                             );
                         }
                         EndOfEpochTransactionKind::BridgeCommitteeInit(_) => {
-                            panic!("EndOfEpochTransactionKind::BridgeCommitteeInit should not exist in v1");
+                            panic!(
+                                "EndOfEpochTransactionKind::BridgeCommitteeInit should not exist in v1"
+                            );
                         }
                     }
                 }
-                unreachable!("EndOfEpochTransactionKind::ChangeEpoch should be the last transaction in the list")
+                unreachable!(
+                    "EndOfEpochTransactionKind::ChangeEpoch should be the last transaction in the list"
+                )
             }
             TransactionKind::AuthenticatorStateUpdate(auth_state_update) => {
                 setup_authenticator_state_update(
@@ -844,11 +857,11 @@ mod checked {
 
         if result.is_err() {
             tracing::error!(
-            "Failed to execute advance epoch transaction. Switching to safe mode. Error: {:?}. Input objects: {:?}. Tx data: {:?}",
-            result.as_ref().err(),
-            temporary_store.objects(),
-            change_epoch,
-        );
+                "Failed to execute advance epoch transaction. Switching to safe mode. Error: {:?}. Input objects: {:?}. Tx data: {:?}",
+                result.as_ref().err(),
+                temporary_store.objects(),
+                change_epoch,
+            );
             temporary_store.drop_writes();
             // Must reset the storage rebate since we are re-executing.
             gas_charger.reset_storage_cost_and_rebate();

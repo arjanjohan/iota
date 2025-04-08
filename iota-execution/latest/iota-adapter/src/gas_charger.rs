@@ -8,23 +8,23 @@ pub use checked::*;
 #[iota_macros::with_checked_arithmetic]
 pub mod checked {
 
-    use crate::iota_types::gas::IotaGasStatusAPI;
-    use crate::temporary_store::TemporaryStore;
     use iota_protocol_config::ProtocolConfig;
-    use iota_types::deny_list_v2::CONFIG_SETTING_DYNAMIC_FIELD_SIZE_FOR_GAS;
-    use iota_types::gas::{deduct_gas, GasCostSummary, IotaGasStatus};
-    use iota_types::gas_model::gas_predicates::{
-        charge_upgrades, dont_charge_budget_on_storage_oog,
-    };
     use iota_types::{
         base_types::{ObjectID, ObjectRef},
+        deny_list_v2::CONFIG_SETTING_DYNAMIC_FIELD_SIZE_FOR_GAS,
         digests::TransactionDigest,
         error::ExecutionError,
-        gas_model::tables::GasStatus,
+        gas::{GasCostSummary, IotaGasStatus, deduct_gas},
+        gas_model::{
+            gas_predicates::{charge_upgrades, dont_charge_budget_on_storage_oog},
+            tables::GasStatus,
+        },
         is_system_package,
         object::Data,
     };
     use tracing::trace;
+
+    use crate::{iota_types::gas::IotaGasStatusAPI, temporary_store::TemporaryStore};
 
     /// Tracks all gas operations for a single transaction.
     /// This is the main entry point for gas accounting.
@@ -198,7 +198,6 @@ pub mod checked {
             temporary_store.mutate_input_object(primary_gas_object);
         }
 
-        //
         // Gas charging operations
         //
 

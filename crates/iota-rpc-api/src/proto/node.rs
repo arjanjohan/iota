@@ -2,10 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::types::proto_to_timestamp_ms;
-use super::types::timestamp_ms_to_proto;
-use super::TryFromProtoError;
 use tap::Pipe;
+
+use super::{
+    TryFromProtoError,
+    types::{proto_to_timestamp_ms, timestamp_ms_to_proto},
+};
 
 pub mod v2 {
     include!("generated/iota.node.v2.rs");
@@ -15,8 +17,9 @@ pub mod v2 {
 
     #[cfg(test)]
     mod tests {
-        use super::FILE_DESCRIPTOR_SET;
         use prost::Message as _;
+
+        use super::FILE_DESCRIPTOR_SET;
 
         #[test]
         fn file_descriptor_set_is_valid() {
@@ -33,8 +36,9 @@ pub mod v2alpha {
 
     #[cfg(test)]
     mod tests {
-        use super::FILE_DESCRIPTOR_SET;
         use prost::Message as _;
+
+        use super::FILE_DESCRIPTOR_SET;
 
         #[test]
         fn file_descriptor_set_is_valid() {
@@ -45,7 +49,6 @@ pub mod v2alpha {
 
 use v2::*;
 
-//
 // BalanceChange
 //
 
@@ -86,7 +89,6 @@ impl TryFrom<&BalanceChange> for iota_sdk_types::BalanceChange {
     }
 }
 
-//
 // NodeInfo
 //
 
@@ -168,7 +170,6 @@ impl TryFrom<&GetNodeInfoResponse> for crate::types::NodeInfo {
     }
 }
 
-//
 // GetObjectOptions
 //
 
@@ -222,7 +223,6 @@ impl From<GetObjectOptions> for crate::types::GetObjectOptions {
     }
 }
 
-//
 // GetObjectRequest
 //
 
@@ -247,7 +247,6 @@ impl GetObjectRequest {
     }
 }
 
-//
 // ObjectResponse
 //
 
@@ -307,7 +306,6 @@ impl TryFrom<&GetObjectResponse> for crate::types::ObjectResponse {
     }
 }
 
-//
 // GetCheckpointOptions
 //
 
@@ -423,7 +421,6 @@ impl From<GetCheckpointOptions> for crate::types::GetCheckpointOptions {
     }
 }
 
-//
 // GetCheckpointRequest
 //
 
@@ -461,7 +458,6 @@ impl GetCheckpointRequest {
     }
 }
 
-//
 // GetTransactionOptions
 //
 
@@ -625,7 +621,6 @@ impl From<GetTransactionOptions> for crate::types::GetTransactionOptions {
     }
 }
 
-//
 // GetTransactionRequest
 //
 
@@ -644,7 +639,6 @@ impl GetTransactionRequest {
     }
 }
 
-//
 // ExecuteTransactionOptions
 //
 
@@ -688,7 +682,6 @@ impl From<ExecuteTransactionOptions> for crate::types::ExecuteTransactionOptions
     }
 }
 
-//
 // GetFullCheckpointOptions
 //
 
@@ -964,7 +957,6 @@ impl From<GetFullCheckpointOptions> for crate::types::GetFullCheckpointOptions {
     }
 }
 
-//
 // GetFullCheckpointRequest
 //
 
@@ -1002,7 +994,6 @@ impl GetFullCheckpointRequest {
     }
 }
 
-//
 // TransactionResponse
 //
 
@@ -1119,7 +1110,6 @@ impl TryFrom<&GetTransactionResponse> for crate::types::TransactionResponse {
     }
 }
 
-//
 // CheckpointResponse
 //
 
@@ -1189,7 +1179,6 @@ impl TryFrom<&GetCheckpointResponse> for crate::types::CheckpointResponse {
     }
 }
 
-//
 // FullCheckpointResponse
 //
 
@@ -1268,7 +1257,6 @@ impl TryFrom<&GetFullCheckpointResponse> for crate::types::FullCheckpointRespons
     }
 }
 
-//
 // FullCheckpointObject
 //
 
@@ -1328,7 +1316,6 @@ impl TryFrom<&FullCheckpointObject> for crate::types::FullCheckpointObject {
     }
 }
 
-//
 // FullCheckpointTransaction
 //
 
@@ -1441,7 +1428,6 @@ impl TryFrom<&FullCheckpointTransaction> for crate::types::FullCheckpointTransac
     }
 }
 
-//
 // ExecuteTransactionResponse
 //
 
@@ -1516,14 +1502,12 @@ impl TryFrom<&ExecuteTransactionResponse> for crate::types::ExecuteTransactionRe
     }
 }
 
-//
 // EffectsFinality
 //
 
 impl From<crate::types::EffectsFinality> for crate::proto::node::v2::EffectsFinality {
     fn from(value: crate::types::EffectsFinality) -> Self {
-        use crate::proto::node::v2::effects_finality::Finality;
-        use crate::types::EffectsFinality::*;
+        use crate::{proto::node::v2::effects_finality::Finality, types::EffectsFinality::*};
 
         let finality = match value {
             Certified { signature } => Finality::Certified(signature.into()),

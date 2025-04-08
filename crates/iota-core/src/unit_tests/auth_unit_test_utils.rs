@@ -2,16 +2,16 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_move_build::{BuildConfig, CompiledPackage};
+use iota_types::{
+    crypto::Signature, move_package::UpgradePolicy,
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    utils::to_sender_signed_transaction,
+};
 use move_core_types::account_address::AccountAddress;
 use move_symbol_pool::Symbol;
-use iota_move_build::{BuildConfig, CompiledPackage};
-use iota_types::crypto::Signature;
-use iota_types::move_package::UpgradePolicy;
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::utils::to_sender_signed_transaction;
 
-use super::authority_test_utils::*;
-use super::*;
+use super::{authority_test_utils::*, *};
 
 pub fn build_test_modules_with_dep_addr(
     path: &Path,
@@ -39,11 +39,13 @@ pub fn build_test_modules_with_dep_addr(
     for unpublished_dep in &package.dependency_ids.unpublished {
         let published_id = dep_id_mapping.get(unpublished_dep).unwrap();
         // Make sure we aren't overriding a package
-        assert!(package
-            .dependency_ids
-            .published
-            .insert(*unpublished_dep, *published_id)
-            .is_none())
+        assert!(
+            package
+                .dependency_ids
+                .published
+                .insert(*unpublished_dep, *published_id)
+                .is_none()
+        )
     }
 
     // No unpublished deps
@@ -97,7 +99,7 @@ pub async fn publish_package_on_single_authority(
         .find(|c| c.1 == Owner::Immutable)
         .unwrap()
         .0
-         .0;
+        .0;
     let cap_object = effects
         .data()
         .created()
@@ -149,6 +151,6 @@ pub async fn upgrade_package_on_single_authority(
         .find(|c| c.1 == Owner::Immutable)
         .unwrap()
         .0
-         .0;
+        .0;
     Ok((*effects.transaction_digest(), package_id))
 }

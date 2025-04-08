@@ -2,19 +2,27 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::authority_per_epoch_store::AuthorityEpochTables;
-use super::execution_time_estimator::ExecutionTimeEstimator;
-use crate::authority::transaction_deferral::DeferralKey;
-use crate::consensus_handler::VerifiedSequencedConsensusTransaction;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
 use iota_protocol_config::{PerObjectCongestionControlMode, ProtocolConfig};
-use iota_types::base_types::{ObjectID, TransactionDigest};
-use iota_types::error::IotaResult;
-use iota_types::executable_transaction::VerifiedExecutableTransaction;
-use iota_types::messages_consensus::Round;
-use iota_types::transaction::{Argument, SharedInputObject, TransactionDataAPI};
+use iota_types::{
+    base_types::{ObjectID, TransactionDigest},
+    error::IotaResult,
+    executable_transaction::VerifiedExecutableTransaction,
+    messages_consensus::Round,
+    transaction::{Argument, SharedInputObject, TransactionDataAPI},
+};
+use serde::{Deserialize, Serialize};
 use tracing::trace;
+
+use super::{
+    authority_per_epoch_store::AuthorityEpochTables,
+    execution_time_estimator::ExecutionTimeEstimator,
+};
+use crate::{
+    authority::transaction_deferral::DeferralKey,
+    consensus_handler::VerifiedSequencedConsensusTransaction,
+};
 
 // SharedObjectCongestionTracker stores the accumulated cost of executing transactions on an object, for
 // all transactions in a consensus commit.
@@ -50,7 +58,8 @@ impl SharedObjectCongestionTracker {
         allowed_txn_cost_overage_burst_per_object_in_commit: u64,
     ) -> Self {
         assert!(
-            allowed_txn_cost_overage_burst_per_object_in_commit <= max_txn_cost_overage_per_object_in_commit,
+            allowed_txn_cost_overage_burst_per_object_in_commit
+                <= max_txn_cost_overage_per_object_in_commit,
             "burst limit bust be <= absolute limit; allowed_txn_cost_overage_burst_per_object_in_commit = {allowed_txn_cost_overage_burst_per_object_in_commit}, max_txn_cost_overage_per_object_in_commit = {max_txn_cost_overage_per_object_in_commit}"
         );
 
@@ -323,15 +332,17 @@ impl CongestionPerObjectDebt {
 
 #[cfg(test)]
 mod object_cost_tests {
-    use super::*;
-
-    use rstest::rstest;
     use iota_test_transaction_builder::TestTransactionBuilder;
-    use iota_types::base_types::{random_object_ref, SequenceNumber};
-    use iota_types::crypto::{get_key_pair, AccountKeyPair};
-    use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-    use iota_types::transaction::{CallArg, ObjectArg, VerifiedTransaction};
-    use iota_types::Identifier;
+    use iota_types::{
+        Identifier,
+        base_types::{SequenceNumber, random_object_ref},
+        crypto::{AccountKeyPair, get_key_pair},
+        programmable_transaction_builder::ProgrammableTransactionBuilder,
+        transaction::{CallArg, ObjectArg, VerifiedTransaction},
+    };
+    use rstest::rstest;
+
+    use super::*;
 
     fn construct_shared_input_objects(objects: &[(ObjectID, bool)]) -> Vec<SharedInputObject> {
         objects
@@ -540,7 +551,7 @@ mod object_cost_tests {
                     [(shared_obj_0, 10), (shared_obj_1, 1)],
                     mode,
                     Some(max_accumulated_txn_cost_per_object_in_commit),
-                    Some(45), // Make the cap just less than the gas budget, there are 1 objects in tx.
+                    Some(45), /* Make the cap just less than the gas budget, there are 1 objects in tx. */
                     None,
                     0,
                     0,
@@ -586,14 +597,16 @@ mod object_cost_tests {
         // the cap should prevent the transaction from being deferred.
         for mutable in [true, false].iter() {
             let tx = build_transaction(&[(shared_obj_1, *mutable)], tx_gas_budget);
-            assert!(shared_object_congestion_tracker
-                .should_defer_due_to_object_congestion(
-                    &execution_time_estimator,
-                    &tx,
-                    &HashMap::new(),
-                    0
-                )
-                .is_none());
+            assert!(
+                shared_object_congestion_tracker
+                    .should_defer_due_to_object_congestion(
+                        &execution_time_estimator,
+                        &tx,
+                        &HashMap::new(),
+                        0
+                    )
+                    .is_none()
+            );
         }
 
         // Transactions touching both objects should be deferred, with object 0 as the congested object.
@@ -801,7 +814,7 @@ mod object_cost_tests {
                     [(shared_obj_0, 100), (shared_obj_1, 90)],
                     mode,
                     Some(max_accumulated_txn_cost_per_object_in_commit),
-                    Some(45), // Make the cap just less than the gas budget, there are 1 objects in tx.
+                    Some(45), /* Make the cap just less than the gas budget, there are 1 objects in tx. */
                     None,
                     max_accumulated_txn_cost_per_object_in_commit * 10,
                     0,
@@ -845,14 +858,16 @@ mod object_cost_tests {
         // Read/write to object 1 should go through even though the budget is exceeded.
         for mutable in [true, false].iter() {
             let tx = build_transaction(&[(shared_obj_1, *mutable)], tx_gas_budget);
-            assert!(shared_object_congestion_tracker
-                .should_defer_due_to_object_congestion(
-                    &execution_time_estimator,
-                    &tx,
-                    &HashMap::new(),
-                    0,
-                )
-                .is_none());
+            assert!(
+                shared_object_congestion_tracker
+                    .should_defer_due_to_object_congestion(
+                        &execution_time_estimator,
+                        &tx,
+                        &HashMap::new(),
+                        0,
+                    )
+                    .is_none()
+            );
         }
 
         // Transactions touching both objects should be deferred, with object 0 as the congested object.
@@ -967,7 +982,7 @@ mod object_cost_tests {
                     [(shared_obj_0, 301), (shared_obj_1, 250)],
                     mode,
                     Some(max_accumulated_txn_cost_per_object_in_commit),
-                    Some(45), // Make the cap just less than the gas budget, there are 1 objects in tx.
+                    Some(45), /* Make the cap just less than the gas budget, there are 1 objects in tx. */
                     None,
                     max_accumulated_txn_cost_per_object_in_commit * 10,
                     allowed_txn_cost_overage_burst_per_object_in_commit,
@@ -1015,14 +1030,16 @@ mod object_cost_tests {
         // even before the cost of this tx is considered.
         for mutable in [true, false].iter() {
             let tx = build_transaction(&[(shared_obj_1, *mutable)], tx_gas_budget);
-            assert!(shared_object_congestion_tracker
-                .should_defer_due_to_object_congestion(
-                    &execution_time_estimator,
-                    &tx,
-                    &HashMap::new(),
-                    0,
-                )
-                .is_none());
+            assert!(
+                shared_object_congestion_tracker
+                    .should_defer_due_to_object_congestion(
+                        &execution_time_estimator,
+                        &tx,
+                        &HashMap::new(),
+                        0,
+                    )
+                    .is_none()
+            );
         }
 
         // Transactions touching both objects should be deferred, with object 0 as the congested object.
@@ -1373,14 +1390,16 @@ mod object_cost_tests {
 
         // Verify that the transaction is allowed to execute.
         // 2000 gas budget would exceed overage limit of 1000 but is capped to 200 by the absolute cap.
-        assert!(shared_object_congestion_tracker
-            .should_defer_due_to_object_congestion(
-                &execution_time_estimator,
-                &tx,
-                &HashMap::new(),
-                0,
-            )
-            .is_none());
+        assert!(
+            shared_object_congestion_tracker
+                .should_defer_due_to_object_congestion(
+                    &execution_time_estimator,
+                    &tx,
+                    &HashMap::new(),
+                    0,
+                )
+                .is_none()
+        );
 
         // Verify max cost after bumping is limited by the absolute cap.
         shared_object_congestion_tracker.bump_object_execution_cost(&execution_time_estimator, &tx);

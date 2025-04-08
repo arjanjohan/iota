@@ -2,11 +2,11 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::proof::{Proof, ProofTarget, TransactionProof};
-
 use anyhow::anyhow;
 use iota_rpc_api::{CheckpointData, CheckpointTransaction};
 use iota_types::effects::TransactionEffectsAPI;
+
+use crate::proof::{Proof, ProofTarget, TransactionProof};
 
 /// Construct a proof from the given checkpoint data and proof targets.
 ///

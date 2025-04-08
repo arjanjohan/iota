@@ -2,14 +2,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use axum::{middleware::AddExtension, Extension};
+use std::{io, sync::Arc};
+
+use axum::{Extension, middleware::AddExtension};
 use axum_server::{
     accept::Accept,
     tls_rustls::{RustlsAcceptor, RustlsConfig},
 };
 use fastcrypto::ed25519::Ed25519PublicKey;
 use rustls::pki_types::CertificateDer;
-use std::{io, sync::Arc};
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_rustls::server::TlsStream;
 use tower_layer::Layer;

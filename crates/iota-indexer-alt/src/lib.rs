@@ -5,27 +5,29 @@
 use anyhow::Context;
 use bootstrap::bootstrap;
 use config::{IndexerConfig, PipelineLayer};
-use handlers::coin_balance_buckets::CoinBalanceBuckets;
 use handlers::{
-    ev_emit_mod::EvEmitMod, ev_struct_inst::EvStructInst, kv_checkpoints::KvCheckpoints,
-    kv_epoch_ends::KvEpochEnds, kv_epoch_starts::KvEpochStarts, kv_feature_flags::KvFeatureFlags,
-    kv_objects::KvObjects, kv_protocol_configs::KvProtocolConfigs, kv_transactions::KvTransactions,
-    obj_info::ObjInfo, obj_versions::ObjVersions, sum_displays::SumDisplays,
-    sum_packages::SumPackages, tx_affected_addresses::TxAffectedAddresses,
-    tx_affected_objects::TxAffectedObjects, tx_balance_changes::TxBalanceChanges,
-    tx_calls::TxCalls, tx_digests::TxDigests, tx_kinds::TxKinds,
+    coin_balance_buckets::CoinBalanceBuckets, ev_emit_mod::EvEmitMod, ev_struct_inst::EvStructInst,
+    kv_checkpoints::KvCheckpoints, kv_epoch_ends::KvEpochEnds, kv_epoch_starts::KvEpochStarts,
+    kv_feature_flags::KvFeatureFlags, kv_objects::KvObjects,
+    kv_protocol_configs::KvProtocolConfigs, kv_transactions::KvTransactions, obj_info::ObjInfo,
+    obj_versions::ObjVersions, sum_displays::SumDisplays, sum_packages::SumPackages,
+    tx_affected_addresses::TxAffectedAddresses, tx_affected_objects::TxAffectedObjects,
+    tx_balance_changes::TxBalanceChanges, tx_calls::TxCalls, tx_digests::TxDigests,
+    tx_kinds::TxKinds,
 };
-use prometheus::Registry;
-use iota_indexer_alt_framework::handlers::cp_sequence_numbers::CpSequenceNumbers;
-use iota_indexer_alt_framework::ingestion::{ClientArgs, IngestionConfig};
-use iota_indexer_alt_framework::pipeline::{
-    concurrent::{ConcurrentConfig, PrunerConfig},
-    sequential::SequentialConfig,
-    CommitterConfig,
+use iota_indexer_alt_framework::{
+    Indexer, IndexerArgs,
+    handlers::cp_sequence_numbers::CpSequenceNumbers,
+    ingestion::{ClientArgs, IngestionConfig},
+    pipeline::{
+        CommitterConfig,
+        concurrent::{ConcurrentConfig, PrunerConfig},
+        sequential::SequentialConfig,
+    },
 };
-use iota_indexer_alt_framework::{Indexer, IndexerArgs};
 use iota_indexer_alt_schema::MIGRATIONS;
 use iota_pg_db::DbArgs;
+use prometheus::Registry;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 

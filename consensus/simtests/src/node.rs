@@ -1,27 +1,25 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use arc_swap::ArcSwapOption;
-use iota_metrics::monitored_mpsc::UnboundedReceiver;
 use std::{
     net::{IpAddr, SocketAddr},
     sync::Arc,
     time::Duration,
 };
-use tracing::{info, trace};
 
 use anyhow::Result;
+use arc_swap::ArcSwapOption;
 use consensus_config::{AuthorityIndex, Committee, NetworkKeyPair, Parameters, ProtocolKeyPair};
-use parking_lot::Mutex;
-use prometheus::Registry;
-use iota_protocol_config::{ConsensusNetwork, ProtocolConfig};
-use tempfile::TempDir;
-
-use consensus_core::network::tonic_network::to_socket_addr;
-use consensus_core::transaction::NoopTransactionVerifier;
 use consensus_core::{
     CommitConsumer, CommitConsumerMonitor, CommittedSubDag, ConsensusAuthority, TransactionClient,
+    network::tonic_network::to_socket_addr, transaction::NoopTransactionVerifier,
 };
+use iota_metrics::monitored_mpsc::UnboundedReceiver;
+use iota_protocol_config::{ConsensusNetwork, ProtocolConfig};
+use parking_lot::Mutex;
+use prometheus::Registry;
+use tempfile::TempDir;
+use tracing::{info, trace};
 
 #[derive(Clone)]
 #[allow(unused)]

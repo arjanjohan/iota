@@ -5,13 +5,13 @@
 use std::fmt::{Display, Formatter};
 
 use anyhow::Result;
+use iota_macros::EnumVariantOrder;
 use move_core_types::{
     account_address::AccountAddress,
     identifier::Identifier,
     language_storage::{StructTag, TypeTag},
 };
 use serde::{Deserialize, Serialize};
-use iota_macros::EnumVariantOrder;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Hash, Eq, Clone, PartialOrd, Ord)]
 pub struct StructInput {
@@ -356,8 +356,9 @@ impl Display for TypeInput {
 
 #[cfg(test)]
 mod test {
-    use super::TypeInput;
     use iota_enum_compat_util::*;
+
+    use super::TypeInput;
 
     #[test]
     fn enforce_order_test() {

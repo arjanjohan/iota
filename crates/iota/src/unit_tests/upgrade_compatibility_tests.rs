@@ -1,23 +1,23 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+use std::{fs, path::PathBuf, str::FromStr, sync::Arc};
+
 use insta::assert_snapshot;
-use std::fs;
-use std::path::PathBuf;
-use std::str::FromStr;
-use std::sync::Arc;
-
-use crate::upgrade_compatibility::{compare_packages, missing_module_diag, FormattedField};
-
-use move_binary_format::normalized::{Field, Type};
-use move_binary_format::CompiledModule;
-use move_command_line_common::files::FileHash;
-use move_compiler::diagnostics::report_diagnostics_to_buffer;
-use move_compiler::shared::files::{FileName, FilesSourceText};
-use move_core_types::identifier::Identifier;
-use iota_move_build::BuildConfig;
-use iota_move_build::CompiledPackage;
+use iota_move_build::{BuildConfig, CompiledPackage};
 use iota_types::move_package::UpgradePolicy;
+use move_binary_format::{
+    CompiledModule,
+    normalized::{Field, Type},
+};
+use move_command_line_common::files::FileHash;
+use move_compiler::{
+    diagnostics::report_diagnostics_to_buffer,
+    shared::files::{FileName, FilesSourceText},
+};
+use move_core_types::identifier::Identifier;
+
+use crate::upgrade_compatibility::{FormattedField, compare_packages, missing_module_diag};
 
 #[test]
 fn test_all() {
@@ -203,7 +203,7 @@ fn get_packages(name: &str) -> (Vec<CompiledModule>, CompiledPackage, PathBuf) {
 
 /// Snapshots will differ on each machine, normalize to prevent test failures
 fn normalize_path(err_string: String) -> String {
-    //test
+    // test
     let re = regex::Regex::new(r"^(.*)┌─ .*(\/fixtures\/.*\.(move|toml):\d+:\d+)$").unwrap();
     err_string
         .lines()

@@ -5,22 +5,24 @@
 use std::collections::BTreeMap;
 
 use move_binary_format::errors::{PartialVMError, PartialVMResult};
-
-use move_core_types::gas_algebra::{AbstractMemorySize, InternalGas, NumArgs, NumBytes};
-use move_core_types::language_storage::ModuleId;
-
-use move_core_types::vm_status::StatusCode;
+use move_core_types::{
+    gas_algebra::{AbstractMemorySize, InternalGas, NumArgs, NumBytes},
+    language_storage::ModuleId,
+    vm_status::StatusCode,
+};
 use move_vm_profiler::GasProfiler;
-use move_vm_types::gas::{GasMeter, SimpleInstruction};
-use move_vm_types::loaded_data::runtime_types::Type;
-use move_vm_types::views::{TypeView, ValueView};
+use move_vm_types::{
+    gas::{GasMeter, SimpleInstruction},
+    loaded_data::runtime_types::Type,
+    views::{TypeView, ValueView},
+};
 use once_cell::sync::Lazy;
 
-use crate::gas_model::gas_predicates::native_function_threshold_exceeded;
-use crate::gas_model::units_types::{CostTable, Gas, GasCost};
-
-use super::gas_predicates::charge_input_as_memory;
-use super::gas_predicates::use_legacy_abstract_size;
+use super::gas_predicates::{charge_input_as_memory, use_legacy_abstract_size};
+use crate::gas_model::{
+    gas_predicates::native_function_threshold_exceeded,
+    units_types::{CostTable, Gas, GasCost},
+};
 
 /// VM flat fee
 pub const VM_FLAT_FEE: Gas = Gas::new(8_000);

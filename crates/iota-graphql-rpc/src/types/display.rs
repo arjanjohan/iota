@@ -3,18 +3,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use async_graphql::*;
-
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::scoped_futures::ScopedFutureExt;
-use move_core_types::annotated_value::{MoveStruct, MoveValue};
 use iota_indexer::{models::display::StoredDisplay, schema::display};
+use iota_json_rpc_types::IotaMoveValue;
 use iota_types::TypeTag;
+use move_core_types::annotated_value::{MoveStruct, MoveValue};
 
 use crate::{
     data::{Db, DbConnection, QueryExecutor},
     error::Error,
 };
-use iota_json_rpc_types::IotaMoveValue;
 
 pub(crate) struct Display {
     pub stored: StoredDisplay,

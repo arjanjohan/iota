@@ -2,21 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::base_types::{SequenceNumber, IotaAddress};
-use crate::collection_types::{Bag, Table, VecSet};
-use crate::dynamic_field::get_dynamic_field_from_store;
-use crate::error::{UserInputError, UserInputResult};
-use crate::id::{ID, UID};
-use crate::object::{Object, Owner};
-use crate::storage::ObjectStore;
-use crate::transaction::{CheckedInputObjects, ReceivingObjects};
-use crate::IOTA_DENY_LIST_OBJECT_ID;
-use move_core_types::ident_str;
-use move_core_types::identifier::IdentStr;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
-use tracing::debug;
-use tracing::error;
+
+use move_core_types::{ident_str, identifier::IdentStr};
+use serde::{Deserialize, Serialize};
+use tracing::{debug, error};
+
+use crate::{
+    IOTA_DENY_LIST_OBJECT_ID,
+    base_types::{IotaAddress, SequenceNumber},
+    collection_types::{Bag, Table, VecSet},
+    dynamic_field::get_dynamic_field_from_store,
+    error::{UserInputError, UserInputResult},
+    id::{ID, UID},
+    object::{Object, Owner},
+    storage::ObjectStore,
+    transaction::{CheckedInputObjects, ReceivingObjects},
+};
 
 pub const DENY_LIST_MODULE: &IdentStr = ident_str!("deny_list");
 pub const DENY_LIST_CREATE_FUNC: &IdentStr = ident_str!("create");

@@ -5,25 +5,22 @@
 use std::{time::Duration, vec};
 
 use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::executable_transaction::VerifiedExecutableTransaction;
-use iota_types::object::Owner;
-use iota_types::transaction::VerifiedTransaction;
 use iota_types::{
+    IOTA_FRAMEWORK_PACKAGE_ID,
     base_types::{ObjectID, SequenceNumber},
     crypto::deterministic_random_account_key,
-    object::Object,
+    executable_transaction::VerifiedExecutableTransaction,
+    object::{Object, Owner},
     storage::InputKey,
-    transaction::{CallArg, ObjectArg},
-    IOTA_FRAMEWORK_PACKAGE_ID,
+    transaction::{CallArg, ObjectArg, VerifiedTransaction},
 };
-use tokio::time::Instant;
 use tokio::{
-    sync::mpsc::{error::TryRecvError, unbounded_channel, UnboundedReceiver},
-    time::sleep,
+    sync::mpsc::{UnboundedReceiver, error::TryRecvError, unbounded_channel},
+    time::{Instant, sleep},
 };
 
 use crate::{
-    authority::{authority_tests::init_state_with_objects, AuthorityState},
+    authority::{AuthorityState, authority_tests::init_state_with_objects},
     transaction_manager::{PendingCertificate, TransactionManager},
 };
 
@@ -83,18 +80,22 @@ async fn transaction_manager_basics() {
     // transaction_manager output from rx_ready_certificates.
     let (transaction_manager, mut rx_ready_certificates) = make_transaction_manager(&state);
     // TM should output no transaction.
-    assert!(rx_ready_certificates
-        .try_recv()
-        .is_err_and(|err| err == TryRecvError::Empty));
+    assert!(
+        rx_ready_certificates
+            .try_recv()
+            .is_err_and(|err| err == TryRecvError::Empty)
+    );
     // TM should be empty at the beginning.
     transaction_manager.check_empty_for_testing();
 
     // Enqueue empty vec should not crash.
     transaction_manager.enqueue(vec![], &state.epoch_store_for_testing());
     // TM should output no transaction.
-    assert!(rx_ready_certificates
-        .try_recv()
-        .is_err_and(|err| err == TryRecvError::Empty));
+    assert!(
+        rx_ready_certificates
+            .try_recv()
+            .is_err_and(|err| err == TryRecvError::Empty)
+    );
 
     // Enqueue a transaction with existing gas object, empty input.
     let transaction = make_transaction(gas_objects[0].clone(), vec![]);
@@ -132,18 +133,22 @@ async fn transaction_manager_basics() {
     transaction_manager.enqueue(vec![transaction.clone()], &state.epoch_store_for_testing());
     // TM should output no transaction yet.
     sleep(Duration::from_secs(1)).await;
-    assert!(rx_ready_certificates
-        .try_recv()
-        .is_err_and(|err| err == TryRecvError::Empty));
+    assert!(
+        rx_ready_certificates
+            .try_recv()
+            .is_err_and(|err| err == TryRecvError::Empty)
+    );
 
     assert_eq!(transaction_manager.inflight_queue_len(), 1);
 
     // Duplicated enqueue is allowed.
     transaction_manager.enqueue(vec![transaction.clone()], &state.epoch_store_for_testing());
     sleep(Duration::from_secs(1)).await;
-    assert!(rx_ready_certificates
-        .try_recv()
-        .is_err_and(|err| err == TryRecvError::Empty));
+    assert!(
+        rx_ready_certificates
+            .try_recv()
+            .is_err_and(|err| err == TryRecvError::Empty)
+    );
 
     assert_eq!(transaction_manager.inflight_queue_len(), 1);
 
@@ -166,9 +171,11 @@ async fn transaction_manager_basics() {
     // Re-enqueue the same transaction should not result in another output.
     transaction_manager.enqueue(vec![transaction.clone()], &state.epoch_store_for_testing());
     sleep(Duration::from_secs(1)).await;
-    assert!(rx_ready_certificates
-        .try_recv()
-        .is_err_and(|err| err == TryRecvError::Empty));
+    assert!(
+        rx_ready_certificates
+            .try_recv()
+            .is_err_and(|err| err == TryRecvError::Empty)
+    );
 
     // Notify TM about transaction commit
     transaction_manager.notify_commit(

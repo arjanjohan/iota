@@ -2,26 +2,33 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::key_derive::{derive_key_pair_from_path, generate_new_key};
-use crate::random_names::{random_name, random_names};
-use anyhow::{anyhow, bail, ensure, Context};
+use std::{
+    collections::{BTreeMap, HashSet},
+    fmt::{Display, Formatter, Write},
+    fs,
+    fs::File,
+    io::BufReader,
+    path::{Path, PathBuf},
+};
+
+use anyhow::{Context, anyhow, bail, ensure};
 use bip32::DerivationPath;
 use bip39::{Language, Mnemonic, Seed};
-use rand::{rngs::StdRng, SeedableRng};
+use iota_types::{
+    base_types::IotaAddress,
+    crypto::{
+        EncodeDecodeBase64, IotaKeyPair, PublicKey, Signature, SignatureScheme, enum_dispatch,
+        get_key_pair_from_rng,
+    },
+};
+use rand::{SeedableRng, rngs::StdRng};
 use regex::Regex;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use shared_crypto::intent::{Intent, IntentMessage};
-use std::collections::{BTreeMap, HashSet};
-use std::fmt::Write;
-use std::fmt::{Display, Formatter};
-use std::fs;
-use std::fs::File;
-use std::io::BufReader;
-use std::path::{Path, PathBuf};
-use iota_types::base_types::IotaAddress;
-use iota_types::crypto::get_key_pair_from_rng;
-use iota_types::crypto::{
-    enum_dispatch, EncodeDecodeBase64, PublicKey, Signature, SignatureScheme, IotaKeyPair,
+
+use crate::{
+    key_derive::{derive_key_pair_from_path, generate_new_key},
+    random_names::{random_name, random_names},
 };
 
 #[derive(Serialize, Deserialize)]
@@ -32,11 +39,13 @@ pub enum Keystore {
 }
 #[enum_dispatch]
 pub trait AccountKeystore: Send + Sync {
-    fn add_key(&mut self, alias: Option<String>, keypair: IotaKeyPair) -> Result<(), anyhow::Error>;
+    fn add_key(&mut self, alias: Option<String>, keypair: IotaKeyPair)
+    -> Result<(), anyhow::Error>;
     fn keys(&self) -> Vec<PublicKey>;
     fn get_key(&self, address: &IotaAddress) -> Result<&IotaKeyPair, anyhow::Error>;
 
-    fn sign_hashed(&self, address: &IotaAddress, msg: &[u8]) -> Result<Signature, signature::Error>;
+    fn sign_hashed(&self, address: &IotaAddress, msg: &[u8])
+    -> Result<Signature, signature::Error>;
 
     fn sign_secure<T>(
         &self,
@@ -186,7 +195,11 @@ impl<'de> Deserialize<'de> for FileBasedKeystore {
 }
 
 impl AccountKeystore for FileBasedKeystore {
-    fn sign_hashed(&self, address: &IotaAddress, msg: &[u8]) -> Result<Signature, signature::Error> {
+    fn sign_hashed(
+        &self,
+        address: &IotaAddress,
+        msg: &[u8],
+    ) -> Result<Signature, signature::Error> {
         Ok(Signature::new_hashed(
             msg,
             self.keys.get(address).ok_or_else(|| {
@@ -211,7 +224,11 @@ impl AccountKeystore for FileBasedKeystore {
         ))
     }
 
-    fn add_key(&mut self, alias: Option<String>, keypair: IotaKeyPair) -> Result<(), anyhow::Error> {
+    fn add_key(
+        &mut self,
+        alias: Option<String>,
+        keypair: IotaKeyPair,
+    ) -> Result<(), anyhow::Error> {
         let address: IotaAddress = (&keypair.public()).into();
         let alias = self.create_alias(alias)?;
         self.aliases.insert(
@@ -449,7 +466,11 @@ pub struct InMemKeystore {
 }
 
 impl AccountKeystore for InMemKeystore {
-    fn sign_hashed(&self, address: &IotaAddress, msg: &[u8]) -> Result<Signature, signature::Error> {
+    fn sign_hashed(
+        &self,
+        address: &IotaAddress,
+        msg: &[u8],
+    ) -> Result<Signature, signature::Error> {
         Ok(Signature::new_hashed(
             msg,
             self.keys.get(address).ok_or_else(|| {
@@ -474,7 +495,11 @@ impl AccountKeystore for InMemKeystore {
         ))
     }
 
-    fn add_key(&mut self, alias: Option<String>, keypair: IotaKeyPair) -> Result<(), anyhow::Error> {
+    fn add_key(
+        &mut self,
+        alias: Option<String>,
+        keypair: IotaKeyPair,
+    ) -> Result<(), anyhow::Error> {
         let address: IotaAddress = (&keypair.public()).into();
         let alias = alias.unwrap_or_else(|| {
             random_name(

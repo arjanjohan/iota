@@ -2,9 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 use anyhow::Result;
-use prometheus::Registry;
 use iota_data_ingestion_core::{DataIngestionMetrics, IndexerExecutor, ReaderOptions, WorkerPool};
 use iota_kvstore::{BigTableClient, BigTableProgressStore, KvWorker};
+use prometheus::Registry;
 use telemetry_subscribers::TelemetryConfig;
 use tokio::sync::oneshot;
 

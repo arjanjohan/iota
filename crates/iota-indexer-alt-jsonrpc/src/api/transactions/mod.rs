@@ -3,24 +3,22 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use futures::future;
-use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-use serde::{Deserialize, Serialize};
 use iota_json_rpc_types::{
-    Page, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
-    IotaTransactionBlockResponseQuery,
+    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+    IotaTransactionBlockResponseQuery, Page,
 };
 use iota_open_rpc::Module;
 use iota_open_rpc_macros::open_rpc;
 use iota_types::digests::TransactionDigest;
+use jsonrpsee::{core::RpcResult, proc_macros::rpc};
+use serde::{Deserialize, Serialize};
 
 use self::error::Error;
-
+use super::rpc_module::RpcModule;
 use crate::{
     context::Context,
-    error::{rpc_bail, InternalContext, RpcError},
+    error::{InternalContext, RpcError, rpc_bail},
 };
-
-use super::rpc_module::RpcModule;
 
 mod error;
 mod filter;

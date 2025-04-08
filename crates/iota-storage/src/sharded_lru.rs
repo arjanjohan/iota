@@ -3,15 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
-    collections::hash_map::RandomState,
+    collections::{HashMap, hash_map::RandomState},
+    fmt::Debug,
     hash::{BuildHasher, Hash},
+    num::NonZeroUsize,
 };
 
 use lru::LruCache;
 use parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use std::collections::HashMap;
-use std::fmt::Debug;
-use std::num::NonZeroUsize;
 
 pub struct ShardedLruCache<K, V, S = RandomState> {
     shards: Vec<RwLock<LruCache<K, V>>>,

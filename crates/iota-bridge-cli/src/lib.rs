@@ -2,45 +2,46 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{path::PathBuf, str::FromStr, sync::Arc};
+
 use anyhow::anyhow;
 use clap::*;
-use ethers::providers::Middleware;
-use ethers::types::Address as EthAddress;
-use ethers::types::U256;
-use fastcrypto::encoding::Encoding;
-use fastcrypto::encoding::Hex;
-use fastcrypto::hash::{HashFunction, Keccak256};
-use move_core_types::ident_str;
-use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
-use shared_crypto::intent::Intent;
-use shared_crypto::intent::IntentMessage;
-use std::path::PathBuf;
-use std::str::FromStr;
-use std::sync::Arc;
-use iota_bridge::abi::EthBridgeCommittee;
-use iota_bridge::abi::{eth_iota_bridge, EthIotaBridge};
-use iota_bridge::crypto::BridgeAuthorityPublicKeyBytes;
-use iota_bridge::error::BridgeResult;
-use iota_bridge::iota_client::IotaBridgeClient;
-use iota_bridge::types::BridgeAction;
-use iota_bridge::types::{
-    AddTokensOnEvmAction, AddTokensOnIotaAction, AssetPriceUpdateAction, BlocklistCommitteeAction,
-    BlocklistType, EmergencyAction, EmergencyActionType, EvmContractUpgradeAction,
-    LimitUpdateAction,
+use ethers::{
+    providers::Middleware,
+    types::{Address as EthAddress, U256},
 };
-use iota_bridge::utils::{get_eth_signer_client, EthSigner};
+use fastcrypto::{
+    encoding::{Encoding, Hex},
+    hash::{HashFunction, Keccak256},
+};
+use iota_bridge::{
+    abi::{EthBridgeCommittee, EthIotaBridge, eth_iota_bridge},
+    crypto::BridgeAuthorityPublicKeyBytes,
+    error::BridgeResult,
+    iota_client::IotaBridgeClient,
+    types::{
+        AddTokensOnEvmAction, AddTokensOnIotaAction, AssetPriceUpdateAction,
+        BlocklistCommitteeAction, BlocklistType, BridgeAction, EmergencyAction,
+        EmergencyActionType, EvmContractUpgradeAction, LimitUpdateAction,
+    },
+    utils::{EthSigner, get_eth_signer_client},
+};
 use iota_config::Config;
 use iota_json_rpc_types::IotaObjectDataOptions;
 use iota_keys::keypair_file::read_key;
 use iota_sdk::IotaClientBuilder;
-use iota_types::base_types::IotaAddress;
-use iota_types::base_types::{ObjectID, ObjectRef};
-use iota_types::bridge::{BridgeChainId, BRIDGE_MODULE_NAME};
-use iota_types::crypto::{Signature, IotaKeyPair};
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::transaction::{ObjectArg, Transaction, TransactionData};
-use iota_types::{TypeTag, BRIDGE_PACKAGE_ID};
+use iota_types::{
+    BRIDGE_PACKAGE_ID, TypeTag,
+    base_types::{IotaAddress, ObjectID, ObjectRef},
+    bridge::{BRIDGE_MODULE_NAME, BridgeChainId},
+    crypto::{IotaKeyPair, Signature},
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    transaction::{ObjectArg, Transaction, TransactionData},
+};
+use move_core_types::ident_str;
+use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
+use shared_crypto::intent::{Intent, IntentMessage};
 use tracing::info;
 
 pub const SEPOLIA_BRIDGE_PROXY_ADDR: &str = "0xAE68F87938439afEEDd6552B0E83D2CbC2473623";
@@ -574,7 +575,8 @@ impl BridgeClientCommands {
                 let pending_tx = eth_tx.send().await.unwrap();
                 let tx_receipt = pending_tx.await.unwrap().unwrap();
                 info!(
-                    "Deposited {ether_amount} Ethers to {:?} (target chain {target_chain}). Receipt: {:?}", iota_recipient_address, tx_receipt,
+                    "Deposited {ether_amount} Ethers to {:?} (target chain {target_chain}). Receipt: {:?}",
+                    iota_recipient_address, tx_receipt,
                 );
                 Ok(())
             }

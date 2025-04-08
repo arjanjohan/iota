@@ -2,19 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::base_types::{AuthorityName, VerifiedExecutionData};
-use crate::committee::Committee;
-use crate::crypto::{AuthoritySignInfo, AuthoritySignature, IotaAuthoritySignature};
-use crate::effects::{TransactionEffects, TransactionEffectsAPI};
-use crate::gas::GasCostSummary;
-use crate::messages_checkpoint::{
-    CertifiedCheckpointSummary, CheckpointContents, CheckpointSummary,
-    CheckpointVersionSpecificData, EndOfEpochData, FullCheckpointContents, VerifiedCheckpoint,
-    VerifiedCheckpointContents,
-};
-use crate::transaction::VerifiedTransaction;
-use fastcrypto::traits::Signer;
 use std::mem;
+
+use fastcrypto::traits::Signer;
+
+use crate::{
+    base_types::{AuthorityName, VerifiedExecutionData},
+    committee::Committee,
+    crypto::{AuthoritySignInfo, AuthoritySignature, IotaAuthoritySignature},
+    effects::{TransactionEffects, TransactionEffectsAPI},
+    gas::GasCostSummary,
+    messages_checkpoint::{
+        CertifiedCheckpointSummary, CheckpointContents, CheckpointSummary,
+        CheckpointVersionSpecificData, EndOfEpochData, FullCheckpointContents, VerifiedCheckpoint,
+        VerifiedCheckpointContents,
+    },
+    transaction::VerifiedTransaction,
+};
 
 pub trait ValidatorKeypairProvider {
     fn get_validator_key(&self, name: &AuthorityName) -> &dyn Signer<AuthoritySignature>;

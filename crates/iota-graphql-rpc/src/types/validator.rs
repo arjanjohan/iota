@@ -2,31 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::consistency::ConsistentIndexCursor;
-use crate::data::apys::calculate_apy;
-use crate::data::{DataLoader, Db};
-use crate::types::cursor::{JsonCursor, Page};
-use async_graphql::connection::{Connection, CursorType, Edge};
-use async_graphql::dataloader::Loader;
 use std::collections::{BTreeMap, HashMap};
-use iota_indexer::apis::GovernanceReadApi;
-use iota_types::committee::EpochId;
-use iota_types::iota_system_state::PoolTokenExchangeRate;
 
-use iota_types::base_types::IotaAddress as NativeIotaAddress;
+use async_graphql::{
+    connection::{Connection, CursorType, Edge},
+    dataloader::Loader,
+    *,
+};
+use iota_indexer::apis::{GovernanceReadApi, governance_api::exchange_rates};
+use iota_types::{
+    base_types::IotaAddress as NativeIotaAddress,
+    committee::EpochId,
+    iota_system_state::{
+        PoolTokenExchangeRate,
+        iota_system_state_summary::IotaValidatorSummary as NativeIotaValidatorSummary,
+    },
+};
 
-use super::big_int::BigInt;
-use super::move_object::MoveObject;
-use super::object::Object;
-use super::owner::Owner;
-use super::iota_address::IotaAddress;
-use super::uint53::UInt53;
-use super::validator_credentials::ValidatorCredentials;
-use super::{address::Address, base64::Base64};
-use crate::error::Error;
-use async_graphql::*;
-use iota_indexer::apis::governance_api::exchange_rates;
-use iota_types::iota_system_state::iota_system_state_summary::IotaValidatorSummary as NativeIotaValidatorSummary;
+use super::{
+    address::Address, base64::Base64, big_int::BigInt, iota_address::IotaAddress,
+    move_object::MoveObject, object::Object, owner::Owner, uint53::UInt53,
+    validator_credentials::ValidatorCredentials,
+};
+use crate::{
+    consistency::ConsistentIndexCursor,
+    data::{DataLoader, Db, apys::calculate_apy},
+    error::Error,
+    types::cursor::{JsonCursor, Page},
+};
 #[derive(Clone, Debug)]
 pub(crate) struct Validator {
     pub validator_summary: NativeIotaValidatorSummary,

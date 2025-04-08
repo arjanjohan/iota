@@ -2,28 +2,30 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    collections::HashMap,
+    fs, io,
+    path::{Path, PathBuf},
+    str,
+};
+
 use expect_test::expect;
-use move_core_types::account_address::AccountAddress;
-use std::collections::HashMap;
-use std::{fs, io, path::Path};
-use std::{path::PathBuf, str};
 use iota_json_rpc_types::{
     get_new_package_obj_from_response, get_new_package_upgrade_cap_from_response,
 };
 use iota_move_build::{BuildConfig, CompiledPackage, IotaPackageHooks};
 use iota_sdk::wallet_context::WalletContext;
 use iota_test_transaction_builder::{make_publish_transaction, make_publish_transaction_with_deps};
-use iota_types::base_types::ObjectID;
-use iota_types::move_package::UpgradePolicy;
-use iota_types::transaction::TEST_ONLY_GAS_UNIT_FOR_PUBLISH;
 use iota_types::{
-    base_types::{ObjectRef, IotaAddress, TransactionDigest},
     IOTA_SYSTEM_STATE_OBJECT_ID,
+    base_types::{IotaAddress, ObjectID, ObjectRef, TransactionDigest},
+    move_package::UpgradePolicy,
+    transaction::TEST_ONLY_GAS_UNIT_FOR_PUBLISH,
 };
+use move_core_types::account_address::AccountAddress;
 use test_cluster::TestClusterBuilder;
 
-use crate::toolchain::CURRENT_COMPILER_VERSION;
-use crate::{BytecodeSourceVerifier, ValidationMode};
+use crate::{BytecodeSourceVerifier, ValidationMode, toolchain::CURRENT_COMPILER_VERSION};
 
 #[tokio::test]
 async fn successful_verification() -> anyhow::Result<()> {
@@ -269,32 +271,30 @@ async fn rpc_call_failed_during_verify() -> anyhow::Result<()> {
     let client = context.get_client().await?;
     let _verifier = BytecodeSourceVerifier::new(client.read_api());
 
-    /*
     // TODO: Dropping cluster no longer stops the network. Need to look into this and see
     // what we want to do with it.
     // Stop the network, so future RPC requests fail.
-    drop(cluster);
-
-    assert!(matches!(
-        verifier.verify_package_deps(&a_pkg).await,
-        Err(SourceVerificationError::DependencyObjectReadFailure(_)),
-    ),);
-
-    assert!(matches!(
-        verifier
-            .verify_package_root_and_deps(&a_pkg, a_addr.into())
-            .await,
-        Err(SourceVerificationError::DependencyObjectReadFailure(_)),
-    ),);
-
-    assert!(matches!(
-        verifier
-            .verify_package_root(&a_pkg, a_addr.into())
-            .await,
-        Err(SourceVerificationError::DependencyObjectReadFailure(_)),
-    ),);
-
-     */
+    // drop(cluster);
+    //
+    // assert!(matches!(
+    // verifier.verify_package_deps(&a_pkg).await,
+    // Err(SourceVerificationError::DependencyObjectReadFailure(_)),
+    // ),);
+    //
+    // assert!(matches!(
+    // verifier
+    // .verify_package_root_and_deps(&a_pkg, a_addr.into())
+    // .await,
+    // Err(SourceVerificationError::DependencyObjectReadFailure(_)),
+    // ),);
+    //
+    // assert!(matches!(
+    // verifier
+    // .verify_package_root(&a_pkg, a_addr.into())
+    // .await,
+    // Err(SourceVerificationError::DependencyObjectReadFailure(_)),
+    // ),);
+    //
 
     Ok(())
 }
@@ -370,7 +370,9 @@ async fn dependency_is_an_object() -> anyhow::Result<()> {
     };
 
     let client = context.get_client().await?;
-    let expected = expect!["Dependency ID contains a IOTA object, not a Move package: 0x0000000000000000000000000000000000000000000000000000000000000005"];
+    let expected = expect![
+        "Dependency ID contains a IOTA object, not a Move package: 0x0000000000000000000000000000000000000000000000000000000000000005"
+    ];
     expected.assert_eq(
         &BytecodeSourceVerifier::new(client.read_api())
             .verify(&a_pkg, ValidationMode::deps())

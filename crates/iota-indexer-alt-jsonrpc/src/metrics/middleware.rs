@@ -11,7 +11,7 @@ use std::{
     task::{Context, Poll},
 };
 
-use jsonrpsee::{server::middleware::rpc::RpcServiceT, types::Request, MethodResponse};
+use jsonrpsee::{MethodResponse, server::middleware::rpc::RpcServiceT, types::Request};
 use pin_project_lite::pin_project;
 use prometheus::{HistogramTimer, IntCounterVec};
 use tower_layer::Layer;

@@ -2,50 +2,52 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::faucet::write_ahead_log;
-use crate::metrics::FaucetMetrics;
-use async_recursion::async_recursion;
-use async_trait::async_trait;
-use iota_metrics::spawn_monitored_task;
-use prometheus::Registry;
-use shared_crypto::intent::Intent;
-use std::collections::HashMap;
 #[cfg(test)]
 use std::collections::HashSet;
-use std::fmt;
-use std::path::Path;
-use std::sync::{Arc, Weak};
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use tap::tap::TapFallible;
-use tokio::sync::oneshot;
-use ttl_cache::TtlCache;
-use typed_store::Map;
+use std::{
+    collections::HashMap,
+    fmt,
+    path::Path,
+    sync::{Arc, Weak},
+};
 
+use async_recursion::async_recursion;
+use async_trait::async_trait;
 use iota_json_rpc_types::{
-    OwnedObjectRef, IotaObjectDataOptions, IotaTransactionBlockEffectsAPI,
-    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+    IotaObjectDataOptions, IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse,
+    IotaTransactionBlockResponseOptions, OwnedObjectRef,
 };
 use iota_keys::keystore::AccountKeystore;
+use iota_metrics::spawn_monitored_task;
 use iota_sdk::wallet_context::WalletContext;
-use iota_types::object::Owner;
-use iota_types::quorum_driver_types::ExecuteTransactionRequestType;
 use iota_types::{
-    base_types::{ObjectID, IotaAddress, TransactionDigest},
+    base_types::{IotaAddress, ObjectID, TransactionDigest},
     gas_coin::GasCoin,
+    object::Owner,
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    quorum_driver_types::ExecuteTransactionRequestType,
     transaction::{Transaction, TransactionData},
 };
-use tokio::sync::{
-    mpsc::{self, Receiver, Sender},
-    Mutex,
+use prometheus::Registry;
+use shared_crypto::intent::Intent;
+use tap::tap::TapFallible;
+use tokio::{
+    sync::{
+        Mutex,
+        mpsc::{self, Receiver, Sender},
+        oneshot,
+    },
+    time::{Duration, timeout},
 };
-use tokio::time::{timeout, Duration};
 use tracing::{error, info, warn};
+use ttl_cache::TtlCache;
+use typed_store::Map;
 use uuid::Uuid;
 
 use super::write_ahead_log::WriteAheadLog;
 use crate::{
     BatchFaucetReceipt, BatchSendStatus, BatchSendStatusType, CoinInfo, Faucet, FaucetConfig,
-    FaucetError, FaucetReceipt,
+    FaucetError, FaucetReceipt, faucet::write_ahead_log, metrics::FaucetMetrics,
 };
 
 pub struct SimpleFaucet {
@@ -128,8 +130,9 @@ impl SimpleFaucet {
         let (producer, consumer) = mpsc::channel(coins.len());
         let (batch_producer, batch_consumer) = mpsc::channel(coins.len());
 
-        let (sender, mut receiver) =
-            mpsc::channel::<(Uuid, IotaAddress, Vec<u64>)>(config.max_request_queue_length as usize);
+        let (sender, mut receiver) = mpsc::channel::<(Uuid, IotaAddress, Vec<u64>)>(
+            config.max_request_queue_length as usize,
+        );
 
         // This is to handle the case where there is only 1 coin, we want it to go to the normal queue
         let split_point = if coins.len() > 10 {
@@ -604,7 +607,9 @@ impl SimpleFaucet {
         let mut retry_delay = Duration::from_millis(500);
 
         loop {
-            let res = self.execute_pay_iota_txn(tx, coin_id, recipient, uuid).await;
+            let res = self
+                .execute_pay_iota_txn(tx, coin_id, recipient, uuid)
+                .await;
 
             if let Ok(res) = res {
                 return res;
@@ -1113,15 +1118,14 @@ pub async fn batch_transfer_gases(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use anyhow::*;
-    use shared_crypto::intent::Intent;
-    use iota_json_rpc_types::IotaExecutionStatus;
-    use iota_json_rpc_types::IotaTransactionBlockEffects;
+    use iota_json_rpc_types::{IotaExecutionStatus, IotaTransactionBlockEffects};
     use iota_sdk::wallet_context::WalletContext;
-    use iota_types::transaction::SenderSignedData;
-    use iota_types::transaction::TransactionDataAPI;
+    use iota_types::transaction::{SenderSignedData, TransactionDataAPI};
+    use shared_crypto::intent::Intent;
     use test_cluster::TestClusterBuilder;
+
+    use super::*;
 
     async fn execute_tx(
         ctx: &mut WalletContext,

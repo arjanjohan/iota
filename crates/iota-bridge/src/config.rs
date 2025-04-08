@@ -2,41 +2,43 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::abi::EthBridgeConfig;
-use crate::crypto::BridgeAuthorityKeyPair;
-use crate::error::BridgeError;
-use crate::eth_client::EthClient;
-use crate::metered_eth_provider::new_metered_eth_provider;
-use crate::metered_eth_provider::MeteredEthHttpProvider;
-use crate::metrics::BridgeMetrics;
-use crate::iota_client::IotaClient;
-use crate::types::{is_route_valid, BridgeAction};
-use crate::utils::get_eth_contract_addresses;
+use std::{
+    collections::{BTreeMap, HashSet},
+    path::PathBuf,
+    str::FromStr,
+    sync::Arc,
+};
+
 use anyhow::anyhow;
-use ethers::providers::Middleware;
-use ethers::types::Address as EthAddress;
-use futures::{future, StreamExt};
-use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
-use std::collections::BTreeMap;
-use std::collections::HashSet;
-use std::path::PathBuf;
-use std::str::FromStr;
-use std::sync::Arc;
+use ethers::{providers::Middleware, types::Address as EthAddress};
+use futures::{StreamExt, future};
 use iota_config::Config;
 use iota_json_rpc_types::Coin;
 use iota_keys::keypair_file::read_key;
-use iota_sdk::apis::CoinReadApi;
-use iota_sdk::{IotaClient as IotaSdkClient, IotaClientBuilder};
-use iota_types::base_types::ObjectRef;
-use iota_types::base_types::{ObjectID, IotaAddress};
-use iota_types::bridge::BridgeChainId;
-use iota_types::crypto::KeypairTraits;
-use iota_types::crypto::{get_key_pair_from_rng, NetworkKeyPair, IotaKeyPair};
-use iota_types::digests::{get_mainnet_chain_identifier, get_testnet_chain_identifier};
-use iota_types::event::EventID;
-use iota_types::object::Owner;
+use iota_sdk::{IotaClient as IotaSdkClient, IotaClientBuilder, apis::CoinReadApi};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef},
+    bridge::BridgeChainId,
+    crypto::{IotaKeyPair, KeypairTraits, NetworkKeyPair, get_key_pair_from_rng},
+    digests::{get_mainnet_chain_identifier, get_testnet_chain_identifier},
+    event::EventID,
+    object::Owner,
+};
+use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use tracing::info;
+
+use crate::{
+    abi::EthBridgeConfig,
+    crypto::BridgeAuthorityKeyPair,
+    error::BridgeError,
+    eth_client::EthClient,
+    iota_client::IotaClient,
+    metered_eth_provider::{MeteredEthHttpProvider, new_metered_eth_provider},
+    metrics::BridgeMetrics,
+    types::{BridgeAction, is_route_valid},
+    utils::get_eth_contract_addresses,
+};
 
 #[serde_as]
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -170,8 +172,9 @@ impl BridgeNodeConfig {
 
         // we do this check here instead of `prepare_for_iota` below because
         // that is only called when `run_client` is true.
-        let iota_client =
-            Arc::new(IotaClient::<IotaSdkClient>::new(&self.iota.iota_rpc_url, metrics.clone()).await?);
+        let iota_client = Arc::new(
+            IotaClient::<IotaSdkClient>::new(&self.iota.iota_rpc_url, metrics.clone()).await?,
+        );
         let bridge_committee = iota_client
             .get_bridge_committee()
             .await
@@ -389,7 +392,12 @@ impl BridgeNodeConfig {
             .get_gas_data_panic_if_not_gas(gas_object_id)
             .await;
         if owner != Owner::AddressOwner(client_iota_address) {
-            return Err(anyhow!("Gas object {:?} is not owned by bridge client key's associated iota address {:?}, but {:?}", gas_object_id, client_iota_address, owner));
+            return Err(anyhow!(
+                "Gas object {:?} is not owned by bridge client key's associated iota address {:?}, but {:?}",
+                gas_object_id,
+                client_iota_address,
+                owner
+            ));
         }
         let balance = gas_coin.value();
         metrics.gas_coin_balance.set(balance as i64);

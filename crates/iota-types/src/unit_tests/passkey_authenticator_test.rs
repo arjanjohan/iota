@@ -4,25 +4,16 @@
 
 use std::sync::Arc;
 
-use super::to_signing_message;
-use crate::crypto::DefaultHash;
-use crate::passkey_authenticator::{PasskeyAuthenticator, RawPasskeyAuthenticator};
-use crate::{
-    base_types::{dbg_addr, ObjectID, IotaAddress},
-    crypto::{PublicKey, Signature, SignatureScheme},
-    error::IotaError,
-    object::Object,
-    signature::GenericSignature,
-    signature_verification::VerifiedDigestCache,
-    transaction::{TransactionData, TEST_ONLY_GAS_UNIT_FOR_TRANSFER},
+use fastcrypto::{
+    hash::HashFunction,
+    rsa::{Base64UrlUnpadded, Encoding as _},
+    traits::ToFromBytes,
 };
-use fastcrypto::hash::HashFunction;
-use fastcrypto::rsa::{Base64UrlUnpadded, Encoding as _};
-use fastcrypto::traits::ToFromBytes;
 use p256::pkcs8::DecodePublicKey;
 use passkey_authenticator::{Authenticator, UserValidationMethod};
 use passkey_client::Client;
 use passkey_types::{
+    Bytes, Passkey,
     ctap2::Aaguid,
     rand::random_vec,
     webauthn::{
@@ -31,10 +22,21 @@ use passkey_types::{
         PublicKeyCredentialRequestOptions, PublicKeyCredentialRpEntity, PublicKeyCredentialType,
         PublicKeyCredentialUserEntity, UserVerificationRequirement,
     },
-    Bytes, Passkey,
 };
 use shared_crypto::intent::{Intent, IntentMessage};
 use url::Url;
+
+use super::to_signing_message;
+use crate::{
+    base_types::{IotaAddress, ObjectID, dbg_addr},
+    crypto::{DefaultHash, PublicKey, Signature, SignatureScheme},
+    error::IotaError,
+    object::Object,
+    passkey_authenticator::{PasskeyAuthenticator, RawPasskeyAuthenticator},
+    signature::GenericSignature,
+    signature_verification::VerifiedDigestCache,
+    transaction::{TEST_ONLY_GAS_UNIT_FOR_TRANSFER, TransactionData},
+};
 
 /// Helper struct to initialize passkey client.
 pub struct MyUserValidationMethod {}

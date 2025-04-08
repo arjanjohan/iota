@@ -2,8 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use rand::{rngs::ThreadRng, thread_rng, Rng};
 use std::collections::HashSet;
+
+use rand::{Rng, rngs::ThreadRng, thread_rng};
 
 /// This library provides two functions to generate
 /// a random combination of an adjective

@@ -2,71 +2,77 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::{BTreeMap, HashMap};
-use std::io::Cursor;
-use std::time::Duration;
+use core::result::Result::Ok;
+use std::{
+    collections::{BTreeMap, HashMap},
+    io::Cursor,
+    time::Duration,
+};
 
 use async_trait::async_trait;
-use core::result::Result::Ok;
 use csv::{ReaderBuilder, Writer};
-use diesel::dsl::{max, min};
-use diesel::ExpressionMethods;
-use diesel::OptionalExtension;
-use diesel::QueryDsl;
+use diesel::{
+    ExpressionMethods, OptionalExtension, QueryDsl,
+    dsl::{max, min},
+    upsert::excluded,
+};
 use diesel_async::scoped_futures::ScopedFutureExt;
 use futures::future::Either;
-use itertools::Itertools;
-use object_store::path::Path;
-use strum::IntoEnumIterator;
-use iota_types::base_types::ObjectID;
-use tap::TapFallible;
-use tracing::{info, warn};
-
 use iota_config::object_storage_config::{ObjectStoreConfig, ObjectStoreType};
 use iota_protocol_config::ProtocolConfig;
 use iota_storage::object_store::util::put;
-
-use crate::config::UploadOptions;
-use crate::database::ConnectionPool;
-use crate::errors::{Context, IndexerError};
-use crate::handlers::pruner::PrunableTable;
-use crate::handlers::TransactionObjectChangesToCommit;
-use crate::handlers::{CommitterWatermark, EpochToCommit};
-use crate::metrics::IndexerMetrics;
-use crate::models::checkpoints::StoredChainIdentifier;
-use crate::models::checkpoints::StoredCheckpoint;
-use crate::models::checkpoints::StoredCpTx;
-use crate::models::display::StoredDisplay;
-use crate::models::epoch::StoredEpochInfo;
-use crate::models::epoch::{StoredFeatureFlag, StoredProtocolConfig};
-use crate::models::events::StoredEvent;
-use crate::models::obj_indices::StoredObjectVersion;
-use crate::models::objects::{
-    StoredDeletedObject, StoredFullHistoryObject, StoredHistoryObject, StoredObject,
-    StoredObjectSnapshot,
+use iota_types::{
+    base_types::ObjectID,
+    digests::{ChainIdentifier, CheckpointDigest},
 };
-use crate::models::packages::StoredPackage;
-use crate::models::transactions::StoredTransaction;
-use crate::models::watermarks::StoredWatermark;
-use crate::schema::{
-    chain_identifier, checkpoints, display, epochs, event_emit_module, event_emit_package,
-    event_senders, event_struct_instantiation, event_struct_module, event_struct_name,
-    event_struct_package, events, feature_flags, full_objects_history, objects, objects_history,
-    objects_snapshot, objects_version, packages, protocol_configs, pruner_cp_watermark,
-    raw_checkpoints, transactions, tx_affected_addresses, tx_affected_objects, tx_calls_fun,
-    tx_calls_mod, tx_calls_pkg, tx_changed_objects, tx_digests, tx_input_objects, tx_kinds,
-    watermarks,
+use itertools::Itertools;
+use object_store::path::Path;
+use strum::IntoEnumIterator;
+use tap::TapFallible;
+use tracing::{info, warn};
+
+use super::{
+    IndexerStore,
+    pg_partition_manager::{EpochPartitionData, PgPartitionManager},
 };
-use crate::store::{read_with_retry, transaction_with_retry};
-use crate::types::{EventIndex, IndexedDeletedObject, IndexedObject};
-use crate::types::{IndexedCheckpoint, IndexedEvent, IndexedPackage, IndexedTransaction, TxIndex};
-
-use super::pg_partition_manager::{EpochPartitionData, PgPartitionManager};
-use super::IndexerStore;
-
-use crate::models::raw_checkpoints::StoredRawCheckpoint;
-use diesel::upsert::excluded;
-use iota_types::digests::{ChainIdentifier, CheckpointDigest};
+use crate::{
+    config::UploadOptions,
+    database::ConnectionPool,
+    errors::{Context, IndexerError},
+    handlers::{
+        CommitterWatermark, EpochToCommit, TransactionObjectChangesToCommit, pruner::PrunableTable,
+    },
+    metrics::IndexerMetrics,
+    models::{
+        checkpoints::{StoredChainIdentifier, StoredCheckpoint, StoredCpTx},
+        display::StoredDisplay,
+        epoch::{StoredEpochInfo, StoredFeatureFlag, StoredProtocolConfig},
+        events::StoredEvent,
+        obj_indices::StoredObjectVersion,
+        objects::{
+            StoredDeletedObject, StoredFullHistoryObject, StoredHistoryObject, StoredObject,
+            StoredObjectSnapshot,
+        },
+        packages::StoredPackage,
+        raw_checkpoints::StoredRawCheckpoint,
+        transactions::StoredTransaction,
+        watermarks::StoredWatermark,
+    },
+    schema::{
+        chain_identifier, checkpoints, display, epochs, event_emit_module, event_emit_package,
+        event_senders, event_struct_instantiation, event_struct_module, event_struct_name,
+        event_struct_package, events, feature_flags, full_objects_history, objects,
+        objects_history, objects_snapshot, objects_version, packages, protocol_configs,
+        pruner_cp_watermark, raw_checkpoints, transactions, tx_affected_addresses,
+        tx_affected_objects, tx_calls_fun, tx_calls_mod, tx_calls_pkg, tx_changed_objects,
+        tx_digests, tx_input_objects, tx_kinds, watermarks,
+    },
+    store::{read_with_retry, transaction_with_retry},
+    types::{
+        EventIndex, IndexedCheckpoint, IndexedDeletedObject, IndexedEvent, IndexedObject,
+        IndexedPackage, IndexedTransaction, TxIndex,
+    },
+};
 
 #[macro_export]
 macro_rules! chunk {
@@ -1615,8 +1621,7 @@ impl PgIndexerStore {
 
         transaction_with_retry(&self.pool, PG_DB_COMMIT_SLEEP_DURATION, |conn| {
             async {
-                use diesel::dsl::sql;
-                use diesel::query_dsl::methods::FilterDsl;
+                use diesel::{dsl::sql, query_dsl::methods::FilterDsl};
 
                 diesel::insert_into(watermarks::table)
                     .values(lower_bound_updates)

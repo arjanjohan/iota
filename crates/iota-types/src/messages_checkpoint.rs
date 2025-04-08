@@ -2,45 +2,46 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::accumulator::Accumulator;
-use crate::base_types::{
-    random_object_ref, ExecutionData, ExecutionDigests, VerifiedExecutionData,
+use std::{
+    fmt::{Debug, Display, Formatter},
+    slice::Iter,
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
-use crate::committee::{EpochId, ProtocolVersion, StakeUnit};
-use crate::crypto::{
-    default_hash, get_key_pair, AccountKeyPair, AggregateAuthoritySignature, AuthoritySignInfo,
-    AuthoritySignInfoTrait, AuthorityStrongQuorumSignInfo, RandomnessRound,
-};
-use crate::digests::Digest;
-use crate::effects::{TestEffectsBuilder, TransactionEffectsAPI};
-use crate::error::IotaResult;
-use crate::gas::GasCostSummary;
-use crate::message_envelope::{Envelope, Message, TrustedEnvelope, VerifiedEnvelope};
-use crate::signature::GenericSignature;
-use crate::storage::ReadStore;
-use crate::iota_serde::AsProtocolVersion;
-use crate::iota_serde::BigInt;
-use crate::iota_serde::Readable;
-use crate::transaction::{Transaction, TransactionData};
-use crate::{base_types::AuthorityName, committee::Committee, error::IotaError};
+
 use anyhow::Result;
 use fastcrypto::hash::MultisetHash;
 use iota_metrics::histogram::Histogram as IotaHistogram;
+use iota_protocol_config::ProtocolConfig;
 use once_cell::sync::OnceCell;
 use prometheus::Histogram;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use shared_crypto::intent::{Intent, IntentScope};
-use std::fmt::{Debug, Display, Formatter};
-use std::slice::Iter;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use iota_protocol_config::ProtocolConfig;
 use tap::TapFallible;
 use tracing::warn;
 
-pub use crate::digests::CheckpointContentsDigest;
-pub use crate::digests::CheckpointDigest;
+pub use crate::digests::{CheckpointContentsDigest, CheckpointDigest};
+use crate::{
+    accumulator::Accumulator,
+    base_types::{
+        AuthorityName, ExecutionData, ExecutionDigests, VerifiedExecutionData, random_object_ref,
+    },
+    committee::{Committee, EpochId, ProtocolVersion, StakeUnit},
+    crypto::{
+        AccountKeyPair, AggregateAuthoritySignature, AuthoritySignInfo, AuthoritySignInfoTrait,
+        AuthorityStrongQuorumSignInfo, RandomnessRound, default_hash, get_key_pair,
+    },
+    digests::Digest,
+    effects::{TestEffectsBuilder, TransactionEffectsAPI},
+    error::{IotaError, IotaResult},
+    gas::GasCostSummary,
+    iota_serde::{AsProtocolVersion, BigInt, Readable},
+    message_envelope::{Envelope, Message, TrustedEnvelope, VerifiedEnvelope},
+    signature::GenericSignature,
+    storage::ReadStore,
+    transaction::{Transaction, TransactionData},
+};
 
 pub type CheckpointSequenceNumber = u64;
 pub type CheckpointTimestamp = u64;
@@ -353,7 +354,14 @@ impl CertifiedCheckpointSummary {
             let content_digest = *contents.digest();
             fp_ensure!(
                 content_digest == self.data().content_digest,
-                IotaError::GenericAuthorityError{error:format!("Checkpoint contents digest mismatch: summary={:?}, received content digest {:?}, received {} transactions", self.data(), content_digest, contents.size())}
+                IotaError::GenericAuthorityError {
+                    error: format!(
+                        "Checkpoint contents digest mismatch: summary={:?}, received content digest {:?}, received {} transactions",
+                        self.data(),
+                        content_digest,
+                        contents.size()
+                    )
+                }
             );
         }
 
@@ -774,15 +782,16 @@ pub struct CheckpointVersionSpecificDataV1 {
 
 #[cfg(test)]
 mod tests {
-    use crate::digests::{ConsensusCommitDigest, TransactionDigest, TransactionEffectsDigest};
-    use crate::messages_consensus::ConsensusDeterminedVersionAssignments;
-    use crate::transaction::VerifiedTransaction;
     use fastcrypto::traits::KeyPair;
-    use rand::prelude::StdRng;
-    use rand::SeedableRng;
+    use rand::{SeedableRng, prelude::StdRng};
 
     use super::*;
-    use crate::utils::make_committee_key;
+    use crate::{
+        digests::{ConsensusCommitDigest, TransactionDigest, TransactionEffectsDigest},
+        messages_consensus::ConsensusDeterminedVersionAssignments,
+        transaction::VerifiedTransaction,
+        utils::make_committee_key,
+    };
 
     // TODO use the file name as a seed
     const RNG_SEED: [u8; 32] = [
@@ -869,9 +878,11 @@ mod tests {
             CertifiedCheckpointSummary::new(summary, sign_infos, &committee).expect("Cert is OK");
 
         // Signature is correct on proposal, and with same transactions
-        assert!(checkpoint_cert
-            .verify_with_contents(&committee, Some(&set))
-            .is_ok());
+        assert!(
+            checkpoint_cert
+                .verify_with_contents(&committee, Some(&set))
+                .is_ok()
+        );
 
         // Make a bad proposal
         let signed_checkpoints: Vec<_> = keys

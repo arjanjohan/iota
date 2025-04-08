@@ -2,8 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
+
+use clap::{Parser, Subcommand, ValueEnum};
 use strum_macros::EnumIter;
 
 #[derive(Parser)]

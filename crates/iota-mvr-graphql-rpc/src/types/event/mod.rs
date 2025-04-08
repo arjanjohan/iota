@@ -4,26 +4,38 @@
 
 use std::str::FromStr;
 
-use super::cursor::{Page, Target};
-use super::{
-    address::Address, base64::Base64, date_time::DateTime, move_module::MoveModule,
-    move_value::MoveValue, transaction_block::TransactionBlock,
+use async_graphql::{
+    connection::{Connection, CursorType, Edge},
+    *,
 };
-use crate::data::{self, DbConnection, QueryExecutor};
-use crate::query;
-use crate::{data::Db, error::Error};
-use async_graphql::connection::{Connection, CursorType, Edge};
-use async_graphql::*;
 use cursor::EvLookup;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::scoped_futures::ScopedFutureExt;
-use lookups::{add_bounds, select_emit_module, select_event_type, select_sender};
-use iota_indexer::models::{events::StoredEvent, transactions::StoredTransaction};
-use iota_indexer::schema::{checkpoints, events};
-use iota_types::base_types::ObjectID;
-use iota_types::Identifier;
+use iota_indexer::{
+    models::{events::StoredEvent, transactions::StoredTransaction},
+    schema::{checkpoints, events},
+};
 use iota_types::{
-    base_types::IotaAddress as NativeIotaAddress, event::Event as NativeEvent, parse_iota_struct_tag,
+    Identifier,
+    base_types::{IotaAddress as NativeIotaAddress, ObjectID},
+    event::Event as NativeEvent,
+    parse_iota_struct_tag,
+};
+use lookups::{add_bounds, select_emit_module, select_event_type, select_sender};
+
+use super::{
+    address::Address,
+    base64::Base64,
+    cursor::{Page, Target},
+    date_time::DateTime,
+    move_module::MoveModule,
+    move_value::MoveValue,
+    transaction_block::TransactionBlock,
+};
+use crate::{
+    data::{self, Db, DbConnection, QueryExecutor},
+    error::Error,
+    query,
 };
 
 mod cursor;
@@ -153,7 +165,7 @@ impl Event {
             (_, Some(_), Some(_)) => {
                 return Err(Error::Client(
                     "Filtering by both emitting module and event type is not supported".to_string(),
-                ))
+                ));
             }
         };
 
@@ -285,8 +297,8 @@ impl Event {
             .map_err(|e| Error::Internal(e.to_string()))?;
         let package_id =
             ObjectID::from_bytes(&stored.package).map_err(|e| Error::Internal(e.to_string()))?;
-        let type_ =
-            parse_iota_struct_tag(&stored.event_type).map_err(|e| Error::Internal(e.to_string()))?;
+        let type_ = parse_iota_struct_tag(&stored.event_type)
+            .map_err(|e| Error::Internal(e.to_string()))?;
         let transaction_module =
             Identifier::from_str(&stored.module).map_err(|e| Error::Internal(e.to_string()))?;
         let contents = stored.bcs.clone();

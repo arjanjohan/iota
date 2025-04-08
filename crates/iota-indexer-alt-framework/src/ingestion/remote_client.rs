@@ -2,11 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::ingestion::client::{FetchError, FetchResult, IngestionClientTrait};
-use crate::ingestion::Result as IngestionResult;
 use reqwest::{Client, StatusCode};
 use tracing::{debug, error};
 use url::Url;
+
+use crate::ingestion::{
+    Result as IngestionResult,
+    client::{FetchError, FetchResult, IngestionClientTrait},
+};
 
 #[derive(thiserror::Error, Debug, Eq, PartialEq)]
 pub enum HttpError {
@@ -108,17 +111,19 @@ impl IngestionClientTrait for RemoteIngestionClient {
 
 #[cfg(test)]
 pub(crate) mod tests {
-    use super::*;
-    use crate::ingestion::client::IngestionClient;
-    use crate::ingestion::error::Error;
-    use crate::ingestion::test_utils::test_checkpoint_data;
-    use crate::metrics::tests::test_metrics;
-    use axum::http::StatusCode;
     use std::sync::Mutex;
+
+    use axum::http::StatusCode;
     use tokio_util::sync::CancellationToken;
     use wiremock::{
-        matchers::{method, path_regex},
         Mock, MockServer, Request, Respond, ResponseTemplate,
+        matchers::{method, path_regex},
+    };
+
+    use super::*;
+    use crate::{
+        ingestion::{client::IngestionClient, error::Error, test_utils::test_checkpoint_data},
+        metrics::tests::test_metrics,
     };
 
     pub(crate) async fn respond_with(server: &MockServer, response: impl Respond + 'static) {

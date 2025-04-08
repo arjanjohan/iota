@@ -2,41 +2,43 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use async_trait::async_trait;
-use lru::LruCache;
-use move_binary_format::file_format::{
-    AbilitySet, DatatypeTyParameter, EnumDefinitionIndex, FunctionDefinitionIndex,
-    Signature as MoveSignature, SignatureIndex, Visibility,
+use std::{
+    borrow::Cow,
+    collections::{BTreeMap, BTreeSet},
+    num::NonZeroUsize,
+    sync::{Arc, Mutex},
 };
-use move_command_line_common::display::RenderResult;
-use move_command_line_common::{display::try_render_constant, error_bitset::ErrorBitset};
-use move_core_types::annotated_value::MoveEnumLayout;
-use move_core_types::language_storage::ModuleId;
-use std::collections::BTreeSet;
-use std::num::NonZeroUsize;
-use std::sync::{Arc, Mutex};
-use std::{borrow::Cow, collections::BTreeMap};
-use iota_types::base_types::is_primitive_type_tag;
-use iota_types::transaction::{Argument, CallArg, Command, ProgrammableTransaction};
-use iota_types::type_input::{StructInput, TypeInput};
 
-use crate::error::Error;
-use move_binary_format::errors::Location;
+use async_trait::async_trait;
+use iota_types::{
+    Identifier,
+    base_types::{SequenceNumber, is_primitive_type_tag},
+    move_package::{MovePackage, TypeOrigin},
+    object::Object,
+    transaction::{Argument, CallArg, Command, ProgrammableTransaction},
+    type_input::{StructInput, TypeInput},
+};
+use lru::LruCache;
 use move_binary_format::{
-    file_format::{
-        DatatypeHandleIndex, SignatureToken, StructDefinitionIndex, StructFieldInformation,
-        TableIndex,
-    },
     CompiledModule,
+    errors::Location,
+    file_format::{
+        AbilitySet, DatatypeHandleIndex, DatatypeTyParameter, EnumDefinitionIndex,
+        FunctionDefinitionIndex, Signature as MoveSignature, SignatureIndex, SignatureToken,
+        StructDefinitionIndex, StructFieldInformation, TableIndex, Visibility,
+    },
+};
+use move_command_line_common::{
+    display::{RenderResult, try_render_constant},
+    error_bitset::ErrorBitset,
 };
 use move_core_types::{
     account_address::AccountAddress,
-    annotated_value::{MoveFieldLayout, MoveStructLayout, MoveTypeLayout},
-    language_storage::{StructTag, TypeTag},
+    annotated_value::{MoveEnumLayout, MoveFieldLayout, MoveStructLayout, MoveTypeLayout},
+    language_storage::{ModuleId, StructTag, TypeTag},
 };
-use iota_types::move_package::{MovePackage, TypeOrigin};
-use iota_types::object::Object;
-use iota_types::{base_types::SequenceNumber, Identifier};
+
+use crate::error::Error;
 
 pub mod error;
 
@@ -366,8 +368,10 @@ impl<S: PackageStore> Resolver<S> {
             .add_type_tag(
                 &mut tag,
                 &self.package_store,
-                /* visit_fields */ false,
-                /* visit_phantoms */ true,
+                // visit_fields
+                false,
+                // visit_phantoms
+                true,
             )
             .await?;
 
@@ -388,8 +392,10 @@ impl<S: PackageStore> Resolver<S> {
             .add_type_tag(
                 &mut tag,
                 &self.package_store,
-                /* visit_fields */ true,
-                /* visit_phantoms */ true,
+                // visit_fields
+                true,
+                // visit_phantoms
+                true,
             )
             .await?;
 
@@ -416,8 +422,10 @@ impl<S: PackageStore> Resolver<S> {
             .add_type_tag(
                 &mut tag,
                 &self.package_store,
-                /* visit_fields */ false,
-                /* visit_phantoms */ false,
+                // visit_fields
+                false,
+                // visit_phantoms
+                false,
             )
             .await?;
 
@@ -454,7 +462,8 @@ impl<S: PackageStore> Resolver<S> {
                     sig.body.clone(),
                     &self.package_store,
                     package.as_ref(),
-                    /* visit_fields */ false,
+                    // visit_fields
+                    false,
                 )
                 .await?;
         }
@@ -1386,7 +1395,7 @@ impl<'l> ResolutionContext<'l> {
         match tag {
             T::Signer => return Err(Error::UnexpectedSigner),
             T::Address | T::Bool | T::U8 | T::U16 | T::U32 | T::U64 | T::U128 | T::U256 => {
-                /* nop */
+                // nop
             }
 
             T::Vector(tag) => self.canonicalize_type(tag.as_mut())?,
@@ -1694,7 +1703,7 @@ impl<'l> ResolutionContext<'l> {
 
         match sig {
             O::Address | O::Bool | O::U8 | O::U16 | O::U32 | O::U64 | O::U128 | O::U256 => {
-                /* nop */
+                // nop
             }
 
             O::TypeParameter(_) => { /* nop */ }
@@ -1778,16 +1787,18 @@ fn read_signature(idx: SignatureIndex, bytecode: &CompiledModule) -> Result<Vec<
 
 #[cfg(test)]
 mod tests {
-    use async_trait::async_trait;
-    use move_binary_format::file_format::Ability;
-    use move_core_types::ident_str;
-    use std::sync::Arc;
-    use std::{path::PathBuf, str::FromStr, sync::RwLock};
-    use iota_types::base_types::random_object_ref;
-    use iota_types::transaction::ObjectArg;
+    use std::{
+        path::PathBuf,
+        str::FromStr,
+        sync::{Arc, RwLock},
+    };
 
-    use move_compiler::compiled_unit::NamedCompiledModule;
+    use async_trait::async_trait;
     use iota_move_build::{BuildConfig, CompiledPackage};
+    use iota_types::{base_types::random_object_ref, transaction::ObjectArg};
+    use move_binary_format::file_format::Ability;
+    use move_compiler::compiled_unit::NamedCompiledModule;
+    use move_core_types::ident_str;
 
     use super::*;
 
@@ -2903,7 +2914,7 @@ mod tests {
         );
     }
 
-    /***** Test Helpers ***************************************************************************/
+    /// *** Test Helpers **************************************************************************
 
     type TypeOriginTable = Vec<DatatypeKey>;
 

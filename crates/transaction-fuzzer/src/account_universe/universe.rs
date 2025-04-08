@@ -6,20 +6,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use proptest::{
+    collection::{SizeRange, vec},
+    prelude::*,
+};
+use proptest_derive::Arbitrary;
+
 use crate::{
     account_universe::{
         account::{AccountCurrent, AccountData},
         default_num_accounts, default_num_transactions,
-        helpers::{pick_slice_idxs, Index},
+        helpers::{Index, pick_slice_idxs},
     },
     executor::Executor,
 };
-
-use proptest::{
-    collection::{vec, SizeRange},
-    prelude::*,
-};
-use proptest_derive::Arbitrary;
 
 const PICK_SIZE: usize = 3;
 

@@ -2,24 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use move_trace_format::format::MoveTraceBuilder;
 use std::{collections::HashSet, sync::Arc};
+
 use iota_protocol_config::ProtocolConfig;
-use iota_types::execution::ExecutionTiming;
-use iota_types::storage::BackingStore;
 use iota_types::{
-    base_types::{ObjectRef, IotaAddress},
+    base_types::{IotaAddress, ObjectRef},
     committee::EpochId,
     digests::TransactionDigest,
     effects::TransactionEffects,
     error::ExecutionError,
-    execution::{ExecutionResult, TypeLayoutStore},
+    execution::{ExecutionResult, ExecutionTiming, TypeLayoutStore},
     gas::IotaGasStatus,
     inner_temporary_store::InnerTemporaryStore,
     layout_resolver::LayoutResolver,
     metrics::LimitsMetrics,
+    storage::BackingStore,
     transaction::{CheckedInputObjects, ProgrammableTransaction, TransactionKind},
 };
+use move_trace_format::format::MoveTraceBuilder;
 
 /// Abstracts over access to the VM across versions of the execution layer.
 pub trait Executor {

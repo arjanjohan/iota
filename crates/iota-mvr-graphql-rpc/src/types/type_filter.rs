@@ -2,16 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{string_input::impl_string_input, iota_address::IotaAddress};
-use crate::filter;
-use crate::raw_query::RawQuery;
-use async_graphql::*;
-use move_core_types::language_storage::StructTag;
 use std::{fmt, result::Result, str::FromStr};
+
+use async_graphql::*;
 use iota_types::{
-    parse_iota_address, parse_iota_fq_name, parse_iota_module_id, parse_iota_struct_tag,
-    parse_iota_type_tag, TypeTag,
+    TypeTag, parse_iota_address, parse_iota_fq_name, parse_iota_module_id, parse_iota_struct_tag,
+    parse_iota_type_tag,
 };
+use move_core_types::language_storage::StructTag;
+
+use super::{iota_address::IotaAddress, string_input::impl_string_input};
+use crate::{filter, raw_query::RawQuery};
 
 /// A GraphQL scalar containing a filter on types that requires an exact match.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -330,8 +331,9 @@ impl From<StructTag> for TypeFilter {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use expect_test::expect;
+
+    use super::*;
 
     #[test]
     fn test_valid_exact_type_filters() {

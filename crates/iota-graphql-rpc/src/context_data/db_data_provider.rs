@@ -2,17 +2,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    error::Error,
-    types::{address::Address, iota_address::IotaAddress, validator::Validator},
-};
 use std::{collections::BTreeMap, time::Duration};
-use iota_indexer::db::ConnectionPoolConfig;
-use iota_indexer::{apis::GovernanceReadApi, indexer_reader::IndexerReader};
+
+use iota_indexer::{
+    apis::GovernanceReadApi, db::ConnectionPoolConfig, indexer_reader::IndexerReader,
+};
 use iota_json_rpc_types::Stake as RpcStakedIota;
 use iota_types::{
     governance::StakedIota as NativeStakedIota,
     iota_system_state::iota_system_state_summary::IotaSystemStateSummary as NativeIotaSystemStateSummary,
+};
+
+use crate::{
+    error::Error,
+    types::{address::Address, iota_address::IotaAddress, validator::Validator},
 };
 
 pub(crate) struct PgManager {

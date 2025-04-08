@@ -4,18 +4,19 @@
 
 use std::{collections::BTreeMap, sync::Arc};
 
-use move_core_types::{identifier::Identifier, language_storage::TypeTag};
 use iota_types::{
-    base_types::{ObjectID, ObjectRef, IotaAddress},
+    base_types::{IotaAddress, ObjectID, ObjectRef},
     crypto::AccountKeyPair,
     object::Owner,
-    transaction::{CallArg, Transaction, TransactionData, TransactionDataAPI},
+    transaction::{CallArg, Command, Transaction, TransactionData, TransactionDataAPI},
     utils::to_sender_signed_transaction,
 };
+use move_core_types::{identifier::Identifier, language_storage::TypeTag};
 
-use crate::ProgrammableTransactionBuilder;
-use crate::{convert_move_call_args, workloads::Gas, BenchMoveCallArg, ExecutionEffects};
-use iota_types::transaction::Command;
+use crate::{
+    BenchMoveCallArg, ExecutionEffects, ProgrammableTransactionBuilder, convert_move_call_args,
+    workloads::Gas,
+};
 
 /// A IOTA account and all of the objects it owns
 #[derive(Debug)]
@@ -61,7 +62,7 @@ impl IotaAccount {
 /// Utility struct tracking keys for known accounts, owned objects, shared objects, and immutable objects
 #[derive(Debug, Default)]
 pub struct InMemoryWallet {
-    accounts: BTreeMap<IotaAddress, IotaAccount>, // TODO: track shared and immutable objects as well
+    accounts: BTreeMap<IotaAddress, IotaAccount>, /* TODO: track shared and immutable objects as well */
 }
 
 impl InMemoryWallet {

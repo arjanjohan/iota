@@ -13,6 +13,10 @@ pub mod eth_client;
 pub mod eth_syncer;
 pub mod eth_transaction_builder;
 pub mod events;
+pub mod iota_bridge_watchdog;
+pub mod iota_client;
+pub mod iota_syncer;
+pub mod iota_transaction_builder;
 pub mod metered_eth_provider;
 pub mod metrics;
 pub mod monitor;
@@ -20,10 +24,6 @@ pub mod node;
 pub mod orchestrator;
 pub mod server;
 pub mod storage;
-pub mod iota_bridge_watchdog;
-pub mod iota_client;
-pub mod iota_syncer;
-pub mod iota_transaction_builder;
 pub mod types;
 pub mod utils;
 
@@ -76,8 +76,9 @@ macro_rules! retry_with_max_elapsed_time {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::time::Duration;
+
+    use super::*;
 
     async fn example_func_ok() -> anyhow::Result<()> {
         Ok(())

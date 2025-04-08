@@ -7,15 +7,16 @@ use std::{pin::Pin, sync::Arc, time::Duration};
 use async_trait::async_trait;
 use bytes::Bytes;
 use consensus_config::AuthorityIndex;
-use futures::{ready, stream, task, Stream, StreamExt};
-use parking_lot::RwLock;
+use futures::{Stream, StreamExt, ready, stream, task};
 use iota_macros::fail_point_async;
+use parking_lot::RwLock;
 use tokio::{sync::broadcast, time::sleep};
 use tokio_util::sync::ReusableBoxFuture;
 use tracing::{debug, info, warn};
 
 use crate::{
-    block::{BlockAPI as _, BlockRef, ExtendedBlock, SignedBlock, VerifiedBlock, GENESIS_ROUND},
+    CommitIndex, Round,
+    block::{BlockAPI as _, BlockRef, ExtendedBlock, GENESIS_ROUND, SignedBlock, VerifiedBlock},
     block_verifier::BlockVerifier,
     commit::{CommitAPI as _, CommitRange, TrustedCommit},
     commit_vote_monitor::CommitVoteMonitor,
@@ -27,7 +28,6 @@ use crate::{
     stake_aggregator::{QuorumThreshold, StakeAggregator},
     storage::Store,
     synchronizer::SynchronizerHandle,
-    CommitIndex, Round,
 };
 
 pub(crate) const COMMIT_LAG_MULTIPLIER: u32 = 5;
@@ -190,9 +190,7 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
                 .inc();
             debug!(
                 "Block {:?} is rejected because last commit index is lagging quorum commit index too much ({} < {})",
-                block_ref,
-                last_commit_index,
-                quorum_commit_index,
+                block_ref, last_commit_index, quorum_commit_index,
             );
             return Err(ConsensusError::BlockRejected {
                 block_ref,
@@ -289,8 +287,8 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
                     .await
                 {
                     warn!(
-                            "Errored while trying to fetch missing excluded ancestors via synchronizer: {err}"
-                        );
+                        "Errored while trying to fetch missing excluded ancestors via synchronizer: {err}"
+                    );
                 }
             });
         }
@@ -683,7 +681,16 @@ async fn make_recv_future<T: Clone>(
 
 #[cfg(test)]
 mod tests {
+    use std::{collections::BTreeSet, sync::Arc, time::Duration};
+
+    use async_trait::async_trait;
+    use bytes::Bytes;
+    use consensus_config::AuthorityIndex;
+    use parking_lot::{Mutex, RwLock};
+    use tokio::{sync::broadcast, time::sleep};
+
     use crate::{
+        Round,
         authority_service::AuthorityService,
         block::{BlockAPI, BlockRef, SignedBlock, TestBlock, VerifiedBlock},
         commit::CommitRange,
@@ -697,17 +704,7 @@ mod tests {
         storage::mem_store::MemStore,
         synchronizer::Synchronizer,
         test_dag_builder::DagBuilder,
-        Round,
     };
-    use async_trait::async_trait;
-    use bytes::Bytes;
-    use consensus_config::AuthorityIndex;
-    use parking_lot::{Mutex, RwLock};
-    use std::collections::BTreeSet;
-    use std::sync::Arc;
-    use std::time::Duration;
-    use tokio::sync::broadcast;
-    use tokio::time::sleep;
 
     struct FakeCoreThreadDispatcher {
         blocks: Mutex<Vec<VerifiedBlock>>,

@@ -4,27 +4,27 @@
 
 use anyhow::Context as _;
 use futures::future::OptionFuture;
-use move_core_types::annotated_value::MoveTypeLayout;
 use iota_json_rpc_types::{
-    IotaData, IotaObjectData, IotaObjectDataOptions, IotaObjectRef, IotaObjectResponse, IotaParsedData,
-    IotaPastObjectResponse, IotaRawData,
+    IotaData, IotaObjectData, IotaObjectDataOptions, IotaObjectRef, IotaObjectResponse,
+    IotaParsedData, IotaPastObjectResponse, IotaRawData,
 };
 use iota_types::{
+    TypeTag,
     base_types::{ObjectID, ObjectType, SequenceNumber},
     digests::ObjectDigest,
     error::IotaObjectResponseError,
     object::{Data, Object},
-    TypeTag,
 };
+use move_core_types::annotated_value::MoveTypeLayout;
 use tokio::join;
 
 use crate::{
     context::Context,
     data::{
         object_info::LatestObjectInfoKey,
-        objects::{load_latest, VersionedObjectKey},
+        objects::{VersionedObjectKey, load_latest},
     },
-    error::{internal_error, rpc_bail, RpcError},
+    error::{RpcError, internal_error, rpc_bail},
 };
 
 /// Fetch the necessary data from the stores in `ctx` and transform it to build a response for a
@@ -182,13 +182,13 @@ async fn object_data<D: IotaData>(ctx: &Context, object: &Object) -> Result<D, R
                 .with_context(|| {
                     format!(
                         "Failed to resolve type layout for {}",
-                        type_.to_canonical_display(/*with_prefix */ true)
+                        type_.to_canonical_display(/* with_prefix */ true)
                     )
                 })?
             else {
                 rpc_bail!(
                     "Type {} is not a struct",
-                    type_.to_canonical_display(/*with_prefix */ true)
+                    type_.to_canonical_display(/* with_prefix */ true)
                 );
             };
 

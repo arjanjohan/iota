@@ -2,37 +2,44 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::Node;
-use anyhow::Result;
-use futures::future::try_join_all;
-use rand::rngs::OsRng;
-use std::collections::HashMap;
-use std::net::SocketAddr;
-use std::num::NonZeroUsize;
-use std::time::Duration;
 use std::{
+    collections::HashMap,
+    net::SocketAddr,
+    num::NonZeroUsize,
     ops,
     path::{Path, PathBuf},
+    time::Duration,
 };
-use iota_types::traffic_control::{PolicyConfig, RemoteFirewallConfig};
 
-use iota_config::node::{AuthorityOverloadConfig, DBCheckpointConfig, RunWithRange};
-use iota_config::{ExecutionCacheConfig, NodeConfig};
+use anyhow::Result;
+use futures::future::try_join_all;
+use iota_config::{
+    ExecutionCacheConfig, NodeConfig,
+    node::{AuthorityOverloadConfig, DBCheckpointConfig, RunWithRange},
+};
 use iota_macros::nondeterministic;
 use iota_node::IotaNodeHandle;
 use iota_protocol_config::ProtocolVersion;
-use iota_swarm_config::genesis_config::{AccountConfig, GenesisConfig, ValidatorGenesisConfig};
-use iota_swarm_config::network_config::NetworkConfig;
-use iota_swarm_config::network_config_builder::{
-    CommitteeConfig, ConfigBuilder, ProtocolVersionsConfig, StateAccumulatorV2EnabledConfig,
-    SupportedProtocolVersionsCallback,
+use iota_swarm_config::{
+    genesis_config::{AccountConfig, GenesisConfig, ValidatorGenesisConfig},
+    network_config::NetworkConfig,
+    network_config_builder::{
+        CommitteeConfig, ConfigBuilder, ProtocolVersionsConfig, StateAccumulatorV2EnabledConfig,
+        SupportedProtocolVersionsCallback,
+    },
+    node_config_builder::FullnodeConfigBuilder,
 };
-use iota_swarm_config::node_config_builder::FullnodeConfigBuilder;
-use iota_types::base_types::AuthorityName;
-use iota_types::object::Object;
-use iota_types::supported_protocol_versions::SupportedProtocolVersions;
+use iota_types::{
+    base_types::AuthorityName,
+    object::Object,
+    supported_protocol_versions::SupportedProtocolVersions,
+    traffic_control::{PolicyConfig, RemoteFirewallConfig},
+};
+use rand::rngs::OsRng;
 use tempfile::TempDir;
 use tracing::info;
+
+use super::Node;
 
 pub struct SwarmBuilder<R = OsRng> {
     rng: R,
@@ -583,8 +590,9 @@ impl AsRef<Path> for SwarmDirectory {
 
 #[cfg(test)]
 mod test {
-    use super::Swarm;
     use std::num::NonZeroUsize;
+
+    use super::Swarm;
 
     #[tokio::test]
     async fn launch() {

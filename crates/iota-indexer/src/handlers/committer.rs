@@ -7,15 +7,13 @@ use std::collections::{BTreeMap, HashMap};
 use iota_types::messages_checkpoint::CheckpointSequenceNumber;
 use tap::tap::TapFallible;
 use tokio_util::sync::CancellationToken;
-use tracing::instrument;
-use tracing::{error, info};
-
-use crate::metrics::IndexerMetrics;
-use crate::models::raw_checkpoints::StoredRawCheckpoint;
-use crate::store::IndexerStore;
-use crate::types::IndexerResult;
+use tracing::{error, info, instrument};
 
 use super::{CheckpointDataToCommit, CommitterTables, CommitterWatermark, EpochToCommit};
+use crate::{
+    metrics::IndexerMetrics, models::raw_checkpoints::StoredRawCheckpoint, store::IndexerStore,
+    types::IndexerResult,
+};
 
 pub(crate) const CHECKPOINT_COMMIT_BATCH_SIZE: usize = 100;
 

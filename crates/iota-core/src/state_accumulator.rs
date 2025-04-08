@@ -2,30 +2,33 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use itertools::Itertools;
-use iota_metrics::monitored_scope;
-use prometheus::{register_int_gauge_with_registry, IntGauge, Registry};
-use serde::Serialize;
-use iota_protocol_config::ProtocolConfig;
-use iota_types::base_types::{ObjectID, ObjectRef, SequenceNumber, VersionNumber};
-use iota_types::committee::EpochId;
-use iota_types::digests::{ObjectDigest, TransactionDigest};
-use iota_types::in_memory_storage::InMemoryStorage;
-use iota_types::storage::{ObjectKey, ObjectStore};
-use tracing::debug;
-
-use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 use fastcrypto::hash::MultisetHash;
-use iota_types::accumulator::Accumulator;
-use iota_types::effects::TransactionEffects;
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::error::IotaResult;
-use iota_types::messages_checkpoint::{CheckpointSequenceNumber, ECMHLiveObjectSetDigest};
+use iota_metrics::monitored_scope;
+use iota_protocol_config::ProtocolConfig;
+use iota_types::{
+    accumulator::Accumulator,
+    base_types::{ObjectID, ObjectRef, SequenceNumber, VersionNumber},
+    committee::EpochId,
+    digests::{ObjectDigest, TransactionDigest},
+    effects::{TransactionEffects, TransactionEffectsAPI},
+    error::IotaResult,
+    in_memory_storage::InMemoryStorage,
+    messages_checkpoint::{CheckpointSequenceNumber, ECMHLiveObjectSetDigest},
+    storage::{ObjectKey, ObjectStore},
+};
+use itertools::Itertools;
+use prometheus::{IntGauge, Registry, register_int_gauge_with_registry};
+use serde::Serialize;
+use tracing::debug;
 
-use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::authority::authority_store_tables::LiveObject;
+use crate::authority::{
+    authority_per_epoch_store::AuthorityPerEpochStore, authority_store_tables::LiveObject,
+};
 
 pub struct StateAccumulatorMetrics {
     inconsistent_state: IntGauge,
@@ -94,7 +97,9 @@ impl AccumulatorStore for InMemoryStorage {
         _object_id: &ObjectID,
         _version: VersionNumber,
     ) -> IotaResult<Option<ObjectRef>> {
-        unreachable!("get_object_ref_prior_to_key is only called by accumulate_effects_v1, while InMemoryStorage is used by testing and genesis only, which always uses latest protocol ")
+        unreachable!(
+            "get_object_ref_prior_to_key is only called by accumulate_effects_v1, while InMemoryStorage is used by testing and genesis only, which always uses latest protocol "
+        )
     }
 
     fn get_root_state_accumulator_for_epoch(

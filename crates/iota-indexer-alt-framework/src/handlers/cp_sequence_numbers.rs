@@ -4,13 +4,16 @@
 
 use std::sync::Arc;
 
-use crate::models::cp_sequence_numbers::StoredCpSequenceNumbers;
-use crate::pipeline::{concurrent::Handler, Processor};
-use crate::schema::cp_sequence_numbers;
 use anyhow::Result;
 use diesel_async::RunQueryDsl;
 use iota_pg_db::{self as db};
 use iota_types::full_checkpoint_content::CheckpointData;
+
+use crate::{
+    models::cp_sequence_numbers::StoredCpSequenceNumbers,
+    pipeline::{Processor, concurrent::Handler},
+    schema::cp_sequence_numbers,
+};
 
 pub struct CpSequenceNumbers;
 

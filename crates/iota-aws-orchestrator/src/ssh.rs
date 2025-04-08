@@ -2,21 +2,19 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use async_trait::async_trait;
-use std::io::Write;
-use std::sync::Arc;
 use std::{
+    io::Write,
     net::SocketAddr,
     path::{Path, PathBuf},
+    sync::Arc,
     time::Duration,
 };
 
+use async_trait::async_trait;
 use futures::future::try_join_all;
-use russh::client::Msg;
-use russh::{client, Channel};
+use russh::{Channel, client, client::Msg};
 use russh_keys::key;
-use tokio::task::JoinHandle;
-use tokio::time::sleep;
+use tokio::{task::JoinHandle, time::sleep};
 
 use crate::{
     client::Instance,

@@ -7,41 +7,49 @@ pub use metrics::*;
 
 pub mod reconfig_observer;
 
+use std::{
+    fmt::{Debug, Formatter, Write},
+    net::SocketAddr,
+    sync::Arc,
+    time::Duration,
+};
+
 use arc_swap::ArcSwap;
-use std::fmt::{Debug, Formatter};
-use std::net::SocketAddr;
-use std::sync::Arc;
-use std::time::Duration;
-use iota_types::base_types::TransactionDigest;
-use iota_types::committee::{Committee, EpochId};
-use iota_types::messages_grpc::HandleCertificateRequestV3;
-use iota_types::quorum_driver_types::{
-    ExecuteTransactionRequestV3, QuorumDriverEffectsQueueResult, QuorumDriverError,
-    QuorumDriverResponse, QuorumDriverResult,
+use iota_common::sync::notify_read::{NotifyRead, Registration};
+use iota_macros::fail_point;
+use iota_metrics::{
+    GaugeGuard, TX_TYPE_SHARED_OBJ_TX, TX_TYPE_SINGLE_WRITER_TX, spawn_monitored_task,
+};
+use iota_types::{
+    base_types::TransactionDigest,
+    committee::{Committee, EpochId},
+    error::{IotaError, IotaResult},
+    messages_grpc::HandleCertificateRequestV3,
+    quorum_driver_types::{
+        ExecuteTransactionRequestV3, QuorumDriverEffectsQueueResult, QuorumDriverError,
+        QuorumDriverResponse, QuorumDriverResult,
+    },
+    transaction::{CertifiedTransaction, Transaction},
 };
 use tap::TapFallible;
-use tokio::sync::Semaphore;
-use tokio::time::{sleep_until, Instant};
-
-use tokio::sync::mpsc::{self, Receiver, Sender};
-use tokio::task::JoinHandle;
+use tokio::{
+    sync::{
+        Semaphore,
+        mpsc::{self, Receiver, Sender},
+    },
+    task::JoinHandle,
+    time::{Instant, sleep_until},
+};
 use tracing::{debug, error, info, instrument, trace_span, warn};
 
-use crate::authority_aggregator::{
-    AggregatorProcessCertificateError, AggregatorProcessTransactionError, AuthorityAggregator,
-    ProcessTransactionResult,
-};
-use crate::authority_client::AuthorityAPI;
-use iota_common::sync::notify_read::{NotifyRead, Registration};
-use iota_metrics::{
-    spawn_monitored_task, GaugeGuard, TX_TYPE_SHARED_OBJ_TX, TX_TYPE_SINGLE_WRITER_TX,
-};
-use std::fmt::Write;
-use iota_macros::fail_point;
-use iota_types::error::{IotaError, IotaResult};
-use iota_types::transaction::{CertifiedTransaction, Transaction};
-
 use self::reconfig_observer::ReconfigObserver;
+use crate::{
+    authority_aggregator::{
+        AggregatorProcessCertificateError, AggregatorProcessTransactionError, AuthorityAggregator,
+        ProcessTransactionResult,
+    },
+    authority_client::AuthorityAPI,
+};
 
 #[cfg(test)]
 mod tests;

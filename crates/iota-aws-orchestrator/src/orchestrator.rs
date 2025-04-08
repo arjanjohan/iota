@@ -12,7 +12,6 @@ use std::{
 
 use tokio::time::{self, Instant};
 
-use crate::monitor::Monitor;
 use crate::{
     benchmark::{BenchmarkParameters, BenchmarkParametersGenerator, BenchmarkType},
     client::Instance,
@@ -21,6 +20,7 @@ use crate::{
     faults::CrashRecoverySchedule,
     logs::LogsAnalyzer,
     measurement::{Measurement, MeasurementsCollection},
+    monitor::Monitor,
     protocol::{ProtocolCommands, ProtocolMetrics},
     settings::Settings,
     ssh::{CommandContext, CommandStatus, SshConnectionManager},
@@ -620,7 +620,7 @@ impl<P: ProtocolCommands<T> + ProtocolMetrics, T: BenchmarkType> Orchestrator<P,
             let aggregator = self.run(&parameters).await?;
             aggregator.display_summary();
             generator.register_result(aggregator);
-            //drop(monitor);
+            // drop(monitor);
 
             // Kill the nodes and clients (without deleting the log files).
             self.cleanup(false).await?;

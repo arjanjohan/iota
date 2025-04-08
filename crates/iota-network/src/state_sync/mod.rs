@@ -48,15 +48,17 @@
 //! channel will always be made in order. StateSync will also send out a notification to its peers
 //! of the newly synchronized checkpoint so that it can help other peers synchronize.
 
-use anemo::{types::PeerEvent, PeerId, Request, Response, Result};
-use futures::{stream::FuturesOrdered, FutureExt, StreamExt};
-use rand::Rng;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::{
     collections::{HashMap, VecDeque},
-    sync::{Arc, RwLock},
+    sync::{
+        Arc, RwLock,
+        atomic::{AtomicU64, Ordering},
+    },
     time::Duration,
 };
+
+use anemo::{PeerId, Request, Response, Result, types::PeerEvent};
+use futures::{FutureExt, StreamExt, stream::FuturesOrdered};
 use iota_config::p2p::StateSyncConfig;
 use iota_types::{
     committee::Committee,
@@ -67,10 +69,10 @@ use iota_types::{
     },
     storage::WriteStore,
 };
+use rand::Rng;
 use tap::{Pipe, TapFallible, TapOptional};
-use tokio::sync::oneshot;
 use tokio::{
-    sync::{broadcast, mpsc, watch},
+    sync::{broadcast, mpsc, oneshot, watch},
     task::{AbortHandle, JoinSet},
 };
 use tracing::{debug, info, instrument, trace, warn};
@@ -89,10 +91,9 @@ pub use generated::{
     state_sync_client::StateSyncClient,
     state_sync_server::{StateSync, StateSyncServer},
 };
-pub use server::GetCheckpointAvailabilityResponse;
-pub use server::GetCheckpointSummaryRequest;
 use iota_archival::reader::ArchiveReaderBalancer;
 use iota_storage::verify_checkpoint;
+pub use server::{GetCheckpointAvailabilityResponse, GetCheckpointSummaryRequest};
 
 use self::{metrics::Metrics, server::CheckpointContentsDownloadLimitLayer};
 
@@ -526,7 +527,12 @@ where
             .unwrap_or_else(|| panic!("Got checkpoint {} from consensus but cannot find checkpoint {} in certified_checkpoints", checkpoint.sequence_number(), checkpoint.sequence_number() - 1))
             .digest();
         if checkpoint.previous_digest != Some(prev_digest) {
-            panic!("Checkpoint {} from consensus has mismatched previous_digest, expected: {:?}, actual: {:?}", checkpoint.sequence_number(), Some(prev_digest), checkpoint.previous_digest);
+            panic!(
+                "Checkpoint {} from consensus has mismatched previous_digest, expected: {:?}, actual: {:?}",
+                checkpoint.sequence_number(),
+                Some(prev_digest),
+                checkpoint.previous_digest
+            );
         }
 
         let latest_checkpoint = self
@@ -1145,7 +1151,10 @@ async fn sync_checkpoint_contents_from_archive<S>(
         } else {
             false
         };
-        debug!("Syncing checkpoint contents from archive: {sync_from_archive},  highest_synced: {highest_synced},  lowest_checkpoint_on_peers: {}", lowest_checkpoint_on_peers.map_or_else(|| "None".to_string(), |l| l.to_string()));
+        debug!(
+            "Syncing checkpoint contents from archive: {sync_from_archive},  highest_synced: {highest_synced},  lowest_checkpoint_on_peers: {}",
+            lowest_checkpoint_on_peers.map_or_else(|| "None".to_string(), |l| l.to_string())
+        );
         if sync_from_archive {
             let start = highest_synced
                 .checked_add(1)
@@ -1169,7 +1178,11 @@ async fn sync_checkpoint_contents_from_archive<S>(
                 {
                     warn!("State sync from archive failed with error: {:?}", err);
                 } else {
-                    info!("State sync from archive is complete. Checkpoints downloaded = {:?}, Txns downloaded = {:?}", checkpoint_counter.load(Ordering::Relaxed), txn_counter.load(Ordering::Relaxed));
+                    info!(
+                        "State sync from archive is complete. Checkpoints downloaded = {:?}, Txns downloaded = {:?}",
+                        checkpoint_counter.load(Ordering::Relaxed),
+                        txn_counter.load(Ordering::Relaxed)
+                    );
                 }
             } else {
                 warn!("Failed to find an archive reader to complete the state sync request");

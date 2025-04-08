@@ -2,31 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::base_types::{ObjectDigest, IotaAddress};
-use crate::crypto::DefaultHash;
-use crate::error::{IotaError, IotaResult};
-use crate::id::UID;
-use crate::object::Object;
-use crate::storage::ObjectStore;
-use crate::iota_serde::Readable;
-use crate::iota_serde::IotaTypeTag;
-use crate::{MoveTypeTagTrait, ObjectID, SequenceNumber, IOTA_FRAMEWORK_ADDRESS};
-use fastcrypto::encoding::Base64;
-use fastcrypto::hash::HashFunction;
-use move_core_types::annotated_value::{MoveStruct, MoveValue};
-use move_core_types::ident_str;
-use move_core_types::identifier::IdentStr;
-use move_core_types::language_storage::{StructTag, TypeTag};
+use std::{
+    fmt,
+    fmt::{Display, Formatter},
+};
+
+use fastcrypto::{encoding::Base64, hash::HashFunction};
+use move_core_types::{
+    annotated_value::{MoveStruct, MoveValue},
+    ident_str,
+    identifier::IdentStr,
+    language_storage::{StructTag, TypeTag},
+};
 use schemars::JsonSchema;
-use serde::de::DeserializeOwned;
-use serde::Deserialize;
-use serde::Serialize;
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::Value;
-use serde_with::serde_as;
-use serde_with::DisplayFromStr;
+use serde_with::{DisplayFromStr, serde_as};
 use shared_crypto::intent::HashingIntentScope;
-use std::fmt;
-use std::fmt::{Display, Formatter};
+
+use crate::{
+    IOTA_FRAMEWORK_ADDRESS, MoveTypeTagTrait, ObjectID, SequenceNumber,
+    base_types::{IotaAddress, ObjectDigest},
+    crypto::DefaultHash,
+    error::{IotaError, IotaResult},
+    id::UID,
+    iota_serde::{IotaTypeTag, Readable},
+    object::Object,
+    storage::ObjectStore,
+};
 
 pub mod visitor;
 
@@ -144,7 +147,10 @@ impl DynamicFieldInfo {
         }
     }
 
-    pub fn try_extract_field_name(tag: &StructTag, type_: &DynamicFieldType) -> IotaResult<TypeTag> {
+    pub fn try_extract_field_name(
+        tag: &StructTag,
+        type_: &DynamicFieldType,
+    ) -> IotaResult<TypeTag> {
         match (type_, tag.type_params.first()) {
             (DynamicFieldType::DynamicField, Some(name_type)) => Ok(name_type.clone()),
             (DynamicFieldType::DynamicObject, Some(TypeTag::Struct(s))) => Ok(s

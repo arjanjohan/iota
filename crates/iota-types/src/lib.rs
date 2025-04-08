@@ -8,21 +8,24 @@
     rust_2021_compatibility
 )]
 
-use base_types::{SequenceNumber, IotaAddress};
-use move_binary_format::file_format::{AbilitySet, SignatureToken};
-use move_binary_format::CompiledModule;
+use base_types::{IotaAddress, ObjectID, SequenceNumber};
+pub use iota_network_stack::multiaddr;
+use move_binary_format::{
+    CompiledModule,
+    file_format::{AbilitySet, SignatureToken},
+};
 use move_bytecode_utils::resolve_struct;
-use move_core_types::language_storage::ModuleId;
-use move_core_types::{account_address::AccountAddress, language_storage::StructTag};
+use move_core_types::{
+    account_address::AccountAddress,
+    language_storage::{ModuleId, StructTag},
+};
 pub use move_core_types::{identifier::Identifier, language_storage::TypeTag};
 use object::OBJECT_START_VERSION;
 
-use base_types::ObjectID;
-
-pub use iota_network_stack::multiaddr;
-
-use crate::base_types::{RESOLVED_ASCII_STR, RESOLVED_UTF8_STR};
-use crate::{base_types::RESOLVED_STD_OPTION, id::RESOLVED_IOTA_ID};
+use crate::{
+    base_types::{RESOLVED_ASCII_STR, RESOLVED_STD_OPTION, RESOLVED_UTF8_STR},
+    id::RESOLVED_IOTA_ID,
+};
 
 #[macro_use]
 pub mod error;
@@ -58,6 +61,9 @@ pub mod governance;
 pub mod id;
 pub mod in_memory_storage;
 pub mod inner_temporary_store;
+pub mod iota_sdk_types_conversions;
+pub mod iota_serde;
+pub mod iota_system_state;
 pub mod layout_resolver;
 pub mod message_envelope;
 pub mod messages_checkpoint;
@@ -78,9 +84,6 @@ pub mod randomness_state;
 pub mod signature;
 pub mod signature_verification;
 pub mod storage;
-pub mod iota_sdk_types_conversions;
-pub mod iota_serde;
-pub mod iota_system_state;
 pub mod supported_protocol_versions;
 pub mod test_checkpoint_data_builder;
 pub mod traffic_control;
@@ -322,8 +325,9 @@ fn is_object_struct(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use expect_test::expect;
+
+    use super::*;
 
     #[test]
     fn test_parse_iota_numeric_address() {
@@ -370,8 +374,9 @@ mod tests {
         let expected = expect!["0x2::iota::IOTA"];
         expected.assert_eq(&result.to_string());
 
-        let expected =
-            expect!["0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA"];
+        let expected = expect![
+            "0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA"
+        ];
         expected.assert_eq(&result.to_canonical_string(/* with_prefix */ true));
     }
 
@@ -385,8 +390,9 @@ mod tests {
         let expected = expect!["0x2::iota::IOTA"];
         expected.assert_eq(&result.to_string());
 
-        let expected =
-            expect!["0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA"];
+        let expected = expect![
+            "0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA"
+        ];
         expected.assert_eq(&result.to_canonical_string(/* with_prefix */ true));
     }
 
@@ -398,7 +404,9 @@ mod tests {
         let expected = expect!["0x2::coin::COIN<0x2::iota::IOTA>"];
         expected.assert_eq(&result.to_string());
 
-        let expected = expect!["0x0000000000000000000000000000000000000000000000000000000000000002::coin::COIN<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>"];
+        let expected = expect![
+            "0x0000000000000000000000000000000000000000000000000000000000000002::coin::COIN<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>"
+        ];
         expected.assert_eq(&result.to_canonical_string(/* with_prefix */ true));
     }
 
@@ -410,20 +418,25 @@ mod tests {
         let expected = expect!["0x2::coin::COIN<0x2::iota::IOTA>"];
         expected.assert_eq(&result.to_string());
 
-        let expected = expect!["0x0000000000000000000000000000000000000000000000000000000000000002::coin::COIN<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>"];
+        let expected = expect![
+            "0x0000000000000000000000000000000000000000000000000000000000000002::coin::COIN<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>"
+        ];
         expected.assert_eq(&result.to_canonical_string(/* with_prefix */ true));
     }
 
     #[test]
     fn test_complex_struct_tag_with_short_addr() {
-        let result =
-            parse_iota_struct_tag("0xe7::vec_coin::VecCoin<vector<0x2::coin::Coin<0x2::iota::IOTA>>>")
-                .expect("should not error");
+        let result = parse_iota_struct_tag(
+            "0xe7::vec_coin::VecCoin<vector<0x2::coin::Coin<0x2::iota::IOTA>>>",
+        )
+        .expect("should not error");
 
         let expected = expect!["0xe7::vec_coin::VecCoin<vector<0x2::coin::Coin<0x2::iota::IOTA>>>"];
         expected.assert_eq(&result.to_string());
 
-        let expected = expect!["0x00000000000000000000000000000000000000000000000000000000000000e7::vec_coin::VecCoin<vector<0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>>>"];
+        let expected = expect![
+            "0x00000000000000000000000000000000000000000000000000000000000000e7::vec_coin::VecCoin<vector<0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>>>"
+        ];
         expected.assert_eq(&result.to_canonical_string(/* with_prefix */ true));
     }
 
@@ -435,7 +448,9 @@ mod tests {
         let expected = expect!["0xe7::vec_coin::VecCoin<vector<0x2::coin::Coin<0x2::iota::IOTA>>>"];
         expected.assert_eq(&result.to_string());
 
-        let expected = expect!["0x00000000000000000000000000000000000000000000000000000000000000e7::vec_coin::VecCoin<vector<0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>>>"];
+        let expected = expect![
+            "0x00000000000000000000000000000000000000000000000000000000000000e7::vec_coin::VecCoin<vector<0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>>>"
+        ];
         expected.assert_eq(&result.to_canonical_string(/* with_prefix */ true));
     }
 
@@ -451,7 +466,9 @@ mod tests {
         ];
         expected.assert_eq(&result.to_string());
 
-        let expected = expect!["0x0000000000000000000000000000000000000000000000000000000000000002::dynamic_field::Field<address,0x000000000000000000000000000000000000000000000000000000000000dee9::custodian_v2::Account<0x0000000000000000000000000000000000000000000000000000000000000234::coin::COIN>>"];
+        let expected = expect![
+            "0x0000000000000000000000000000000000000000000000000000000000000002::dynamic_field::Field<address,0x000000000000000000000000000000000000000000000000000000000000dee9::custodian_v2::Account<0x0000000000000000000000000000000000000000000000000000000000000234::coin::COIN>>"
+        ];
         expected.assert_eq(&result.to_canonical_string(/* with_prefix */ true));
     }
 
@@ -467,7 +484,9 @@ mod tests {
         ];
         expected.assert_eq(&result.to_string());
 
-        let expected = expect!["0x0000000000000000000000000000000000000000000000000000000000000002::dynamic_field::Field<address,0x000000000000000000000000000000000000000000000000000000000000dee9::custodian_v2::Account<0x0000000000000000000000000000000000000000000000000000000000000234::coin::COIN>>"];
+        let expected = expect![
+            "0x0000000000000000000000000000000000000000000000000000000000000002::dynamic_field::Field<address,0x000000000000000000000000000000000000000000000000000000000000dee9::custodian_v2::Account<0x0000000000000000000000000000000000000000000000000000000000000234::coin::COIN>>"
+        ];
         expected.assert_eq(&result.to_canonical_string(/* with_prefix */ true));
     }
 }

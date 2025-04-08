@@ -10,16 +10,14 @@ use std::sync::Arc;
 
 pub use acceptor::{TlsAcceptor, TlsConnectionInfo};
 pub use certgen::SelfSignedCertificate;
-use rustls::ClientConfig;
-pub use verifier::{
-    public_key_from_certificate, AllowAll, AllowPublicKeys, Allower, ClientCertVerifier,
-    ServerCertVerifier,
-};
-
-pub use rustls;
-
 use fastcrypto::ed25519::{Ed25519PrivateKey, Ed25519PublicKey};
+pub use rustls;
+use rustls::ClientConfig;
 use tokio_rustls::rustls::ServerConfig;
+pub use verifier::{
+    AllowAll, AllowPublicKeys, Allower, ClientCertVerifier, ServerCertVerifier,
+    public_key_from_certificate,
+};
 
 pub const IOTA_VALIDATOR_SERVER_NAME: &str = "iota";
 
@@ -84,13 +82,14 @@ pub fn create_rustls_client_config(
 mod tests {
     use std::collections::BTreeSet;
 
+    use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair};
+    use rustls::{
+        client::danger::ServerCertVerifier as _,
+        pki_types::{ServerName, UnixTime},
+        server::danger::ClientCertVerifier as _,
+    };
+
     use super::*;
-    use fastcrypto::ed25519::Ed25519KeyPair;
-    use fastcrypto::traits::KeyPair;
-    use rustls::client::danger::ServerCertVerifier as _;
-    use rustls::pki_types::ServerName;
-    use rustls::pki_types::UnixTime;
-    use rustls::server::danger::ClientCertVerifier as _;
 
     #[test]
     fn verify_allowall() {
@@ -167,7 +166,8 @@ mod tests {
         let disallowed = Ed25519KeyPair::generate(&mut rng);
 
         let allowed_public_keys = BTreeSet::from([allowed.public().to_owned()]);
-        let allowed_cert = SelfSignedCertificate::new(allowed.private(), IOTA_VALIDATOR_SERVER_NAME);
+        let allowed_cert =
+            SelfSignedCertificate::new(allowed.private(), IOTA_VALIDATOR_SERVER_NAME);
 
         let disallowed_cert =
             SelfSignedCertificate::new(disallowed.private(), IOTA_VALIDATOR_SERVER_NAME);
@@ -244,8 +244,7 @@ mod tests {
 
     #[tokio::test]
     async fn axum_acceptor() {
-        use fastcrypto::ed25519::Ed25519KeyPair;
-        use fastcrypto::traits::KeyPair;
+        use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair};
 
         let mut rng = rand::thread_rng();
         let client_keypair = Ed25519KeyPair::generate(&mut rng);

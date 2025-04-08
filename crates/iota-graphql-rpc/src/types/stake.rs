@@ -2,33 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::connection::ScanConnection;
-use crate::error::Error;
-use crate::{context_data::db_data_provider::PgManager, data::Db};
-
-use super::balance::{self, Balance};
-use super::base64::Base64;
-use super::coin::Coin;
-use super::cursor::Page;
-use super::display::DisplayEntry;
-use super::dynamic_field::{DynamicField, DynamicFieldName};
-use super::move_object::MoveObjectImpl;
-use super::move_value::MoveValue;
-use super::object::{Object, ObjectFilter, ObjectImpl, ObjectOwner, ObjectStatus};
-use super::owner::OwnerImpl;
-use super::iotans_registration::{DomainFormat, IotaNSRegistration};
-use super::transaction_block::{self, TransactionBlock, TransactionBlockFilter};
-use super::type_filter::ExactTypeFilter;
-use super::uint53::UInt53;
-use super::{
-    big_int::BigInt, epoch::Epoch, move_object::MoveObject, object, iota_address::IotaAddress,
-};
-use async_graphql::connection::Connection;
-use async_graphql::*;
-use move_core_types::language_storage::StructTag;
+use async_graphql::{connection::Connection, *};
 use iota_json_rpc_types::{Stake as RpcStakedIota, StakeStatus as RpcStakeStatus};
-use iota_types::base_types::MoveObjectType;
-use iota_types::governance::StakedIota as NativeStakedIota;
+use iota_types::{base_types::MoveObjectType, governance::StakedIota as NativeStakedIota};
+use move_core_types::language_storage::StructTag;
+
+use super::{
+    balance::{self, Balance},
+    base64::Base64,
+    big_int::BigInt,
+    coin::Coin,
+    cursor::Page,
+    display::DisplayEntry,
+    dynamic_field::{DynamicField, DynamicFieldName},
+    epoch::Epoch,
+    iota_address::IotaAddress,
+    iotans_registration::{DomainFormat, IotaNSRegistration},
+    move_object::{MoveObject, MoveObjectImpl},
+    move_value::MoveValue,
+    object,
+    object::{Object, ObjectFilter, ObjectImpl, ObjectOwner, ObjectStatus},
+    owner::OwnerImpl,
+    transaction_block::{self, TransactionBlock, TransactionBlockFilter},
+    type_filter::ExactTypeFilter,
+    uint53::UInt53,
+};
+use crate::{
+    connection::ScanConnection, context_data::db_data_provider::PgManager, data::Db, error::Error,
+};
 
 #[derive(Copy, Clone, Enum, PartialEq, Eq)]
 /// The stake's possible status: active, pending, or unstaked.
@@ -106,7 +107,7 @@ impl StakedIota {
 
     /// The coin objects for this object.
     ///
-    ///`type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
+    /// `type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
     pub(crate) async fn coins(
         &self,
         ctx: &Context<'_>,

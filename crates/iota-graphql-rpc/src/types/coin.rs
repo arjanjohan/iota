@@ -2,38 +2,41 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::connection::ScanConnection;
-use crate::consistency::{build_objects_query, View};
-use crate::data::{Db, QueryExecutor};
-use crate::error::Error;
-use crate::filter;
-use crate::raw_query::RawQuery;
-
-use super::available_range::AvailableRange;
-use super::balance::{self, Balance};
-use super::base64::Base64;
-use super::big_int::BigInt;
-use super::cursor::{Page, Target};
-use super::display::DisplayEntry;
-use super::dynamic_field::{DynamicField, DynamicFieldName};
-use super::move_object::{MoveObject, MoveObjectImpl};
-use super::move_value::MoveValue;
-use super::object::{self, Object, ObjectFilter, ObjectImpl, ObjectOwner, ObjectStatus};
-use super::owner::OwnerImpl;
-use super::stake::StakedIota;
-use super::iota_address::IotaAddress;
-use super::iotans_registration::{DomainFormat, IotaNSRegistration};
-use super::transaction_block::{self, TransactionBlock, TransactionBlockFilter};
-use super::type_filter::ExactTypeFilter;
-use super::uint53::UInt53;
-use async_graphql::*;
-
-use async_graphql::connection::{Connection, CursorType, Edge};
+use async_graphql::{
+    connection::{Connection, CursorType, Edge},
+    *,
+};
 use diesel_async::scoped_futures::ScopedFutureExt;
-use iota_indexer::models::objects::StoredHistoryObject;
-use iota_indexer::types::OwnerType;
-use iota_types::coin::Coin as NativeCoin;
-use iota_types::TypeTag;
+use iota_indexer::{models::objects::StoredHistoryObject, types::OwnerType};
+use iota_types::{TypeTag, coin::Coin as NativeCoin};
+
+use super::{
+    available_range::AvailableRange,
+    balance::{self, Balance},
+    base64::Base64,
+    big_int::BigInt,
+    cursor::{Page, Target},
+    display::DisplayEntry,
+    dynamic_field::{DynamicField, DynamicFieldName},
+    iota_address::IotaAddress,
+    iotans_registration::{DomainFormat, IotaNSRegistration},
+    move_object::{MoveObject, MoveObjectImpl},
+    move_value::MoveValue,
+    object::{self, Object, ObjectFilter, ObjectImpl, ObjectOwner, ObjectStatus},
+    owner::OwnerImpl,
+    stake::StakedIota,
+    transaction_block::{self, TransactionBlock, TransactionBlockFilter},
+    type_filter::ExactTypeFilter,
+    uint53::UInt53,
+};
+use crate::{
+    connection::ScanConnection,
+    consistency::{View, build_objects_query},
+    data::{Db, QueryExecutor},
+    error::Error,
+    filter,
+    raw_query::RawQuery,
+};
 
 #[derive(Clone)]
 pub(crate) struct Coin {
@@ -99,7 +102,7 @@ impl Coin {
 
     /// The coin objects for this object.
     ///
-    ///`type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
+    /// `type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
     pub(crate) async fn coins(
         &self,
         ctx: &Context<'_>,

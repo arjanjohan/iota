@@ -2,11 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use prometheus::{
-    register_int_counter_with_registry, register_int_gauge_with_registry, IntCounter, IntGauge,
-    Registry,
-};
 use std::sync::Arc;
+
+use prometheus::{
+    IntCounter, IntGauge, Registry, register_int_counter_with_registry,
+    register_int_gauge_with_registry,
+};
 
 pub struct EpochMetrics {
     /// The current epoch ID. This is updated only when the AuthorityState finishes reconfiguration.

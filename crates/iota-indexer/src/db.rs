@@ -2,20 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::database::Connection;
-use crate::errors::IndexerError;
-use crate::handlers::pruner::PrunableTable;
+use std::{
+    collections::{BTreeSet, HashSet},
+    time::Duration,
+};
+
 use clap::Args;
-use diesel::migration::{Migration, MigrationSource, MigrationVersion};
-use diesel::pg::Pg;
-use diesel::prelude::QueryableByName;
-use diesel::table;
-use diesel::QueryDsl;
-use diesel_migrations::{embed_migrations, EmbeddedMigrations};
-use std::collections::{BTreeSet, HashSet};
-use std::time::Duration;
+use diesel::{
+    QueryDsl,
+    migration::{Migration, MigrationSource, MigrationVersion},
+    pg::Pg,
+    prelude::QueryableByName,
+    table,
+};
+use diesel_migrations::{EmbeddedMigrations, embed_migrations};
 use strum::IntoEnumIterator;
 use tracing::info;
+
+use crate::{database::Connection, errors::IndexerError, handlers::pruner::PrunableTable};
 
 table! {
     __diesel_schema_migrations (version) {
@@ -190,10 +194,11 @@ pub async fn check_prunable_tables_valid(conn: &mut Connection<'_>) -> Result<()
 pub use setup_postgres::{reset_database, run_migrations};
 
 pub mod setup_postgres {
-    use crate::{database::Connection, db::MIGRATIONS};
     use anyhow::anyhow;
     use diesel_async::RunQueryDsl;
     use tracing::info;
+
+    use crate::{database::Connection, db::MIGRATIONS};
 
     pub async fn reset_database(mut conn: Connection<'static>) -> Result<(), anyhow::Error> {
         info!("Resetting PG database ...");
@@ -258,15 +263,20 @@ pub mod setup_postgres {
 
 #[cfg(test)]
 mod tests {
-    use crate::database::{Connection, ConnectionPool};
-    use crate::db::{
-        check_db_migration_consistency, check_db_migration_consistency_impl, reset_database,
-        ConnectionPoolConfig, MIGRATIONS,
+    use diesel::{
+        migration::{Migration, MigrationSource},
+        pg::Pg,
     };
-    use diesel::migration::{Migration, MigrationSource};
-    use diesel::pg::Pg;
     use diesel_migrations::MigrationHarness;
     use iota_pg_db::temp::TempDb;
+
+    use crate::{
+        database::{Connection, ConnectionPool},
+        db::{
+            ConnectionPoolConfig, MIGRATIONS, check_db_migration_consistency,
+            check_db_migration_consistency_impl, reset_database,
+        },
+    };
 
     // Check that the migration records in the database created from the local schema
     // pass the consistency check.
@@ -323,9 +333,11 @@ mod tests {
         .unwrap();
         // Local migrations is one record more than the applied migrations.
         // This will fail the consistency check since it's not a prefix.
-        assert!(check_db_migration_consistency(&mut connection)
-            .await
-            .is_err());
+        assert!(
+            check_db_migration_consistency(&mut connection)
+                .await
+                .is_err()
+        );
 
         pool.dedicated_connection()
             .await
@@ -396,9 +408,10 @@ mod tests {
 
     #[tokio::test]
     async fn temp_db_smoketest() {
-        use crate::database::Connection;
         use diesel_async::RunQueryDsl;
         use iota_pg_db::temp::TempDb;
+
+        use crate::database::Connection;
 
         telemetry_subscribers::init_for_testing();
 

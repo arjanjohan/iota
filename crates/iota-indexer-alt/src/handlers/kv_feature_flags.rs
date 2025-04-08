@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use diesel_async::RunQueryDsl;
-use iota_indexer_alt_framework::pipeline::{concurrent::Handler, Processor};
+use iota_indexer_alt_framework::pipeline::{Processor, concurrent::Handler};
 use iota_indexer_alt_schema::{
     checkpoints::StoredGenesis, epochs::StoredFeatureFlag, schema::kv_feature_flags,
 };

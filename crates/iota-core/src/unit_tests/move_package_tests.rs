@@ -2,9 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use move_binary_format::{file_format::CompiledModule, file_format_common::VERSION_MAX};
-
 use std::{collections::BTreeMap, path::PathBuf};
+
 use iota_move_build::{BuildConfig, CompiledPackage};
 use iota_protocol_config::{Chain, ProtocolConfig};
 use iota_types::{
@@ -13,8 +12,9 @@ use iota_types::{
     error::ExecutionErrorKind,
     execution_status::PackageUpgradeError,
     move_package::{MovePackage, TypeOrigin, UpgradeInfo},
-    object::{Data, Object, OBJECT_START_VERSION},
+    object::{Data, OBJECT_START_VERSION, Object},
 };
+use move_binary_format::{file_format::CompiledModule, file_format_common::VERSION_MAX};
 
 macro_rules! type_origin_table {
     {} => { Vec::new() };

@@ -2,12 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    collections::HashMap,
+    fs,
+    io::{Read, Write},
+    path::PathBuf,
+    str::FromStr,
+    sync::{Arc, Mutex},
+};
+
 use anyhow::anyhow;
 use async_trait::async_trait;
-use move_core_types::account_address::AccountAddress;
+use clap::{Parser, Subcommand};
+use iota_config::genesis::Genesis;
 use iota_json_rpc_types::{IotaObjectDataOptions, IotaTransactionBlockResponseOptions};
-
+use iota_package_resolver::{Package, PackageStore, Resolver, Result as ResolverResult};
 use iota_rpc_api::CheckpointData;
+use iota_sdk::IotaClientBuilder;
 use iota_types::{
     base_types::ObjectID,
     committee::Committee,
@@ -16,24 +27,12 @@ use iota_types::{
     effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents},
     message_envelope::Envelope,
     messages_checkpoint::{CertifiedCheckpointSummary, CheckpointSummary, EndOfEpochData},
-    object::{bounded_visitor::BoundedVisitor, Data, Object},
+    object::{Data, Object, bounded_visitor::BoundedVisitor},
 };
-
-use iota_config::genesis::Genesis;
-
-use iota_package_resolver::Result as ResolverResult;
-use iota_package_resolver::{Package, PackageStore, Resolver};
-use iota_sdk::IotaClientBuilder;
-
-use clap::{Parser, Subcommand};
-use std::{collections::HashMap, fs, io::Write, path::PathBuf, str::FromStr, sync::Mutex};
-use std::{io::Read, sync::Arc};
-
 use log::info;
-use object_store::parse_url;
-use object_store::path::Path;
-use serde_json::json;
-use serde_json::Value;
+use move_core_types::account_address::AccountAddress;
+use object_store::{parse_url, path::Path};
+use serde_json::{Value, json};
 use url::Url;
 
 /// A light client for the IOTA blockchain
@@ -629,10 +628,11 @@ pub async fn main() {
 // Make a test namespace
 #[cfg(test)]
 mod tests {
+    use std::path::{Path, PathBuf};
+
     use iota_types::messages_checkpoint::FullCheckpointContents;
 
     use super::*;
-    use std::path::{Path, PathBuf};
 
     async fn read_full_checkpoint(checkpoint_path: &PathBuf) -> anyhow::Result<CheckpointData> {
         let mut reader = fs::File::open(checkpoint_path.clone())?;
@@ -710,24 +710,30 @@ mod tests {
         // Change committee
         committee.epoch += 10;
 
-        assert!(extract_verified_effects_and_events(
-            &full_checkpoint,
-            &committee,
-            TransactionDigest::from_str("8RiKBwuAbtu8zNCtz8SrcfHyEUzto6zi6cMVA9t4WhWk").unwrap(),
-        )
-        .is_err());
+        assert!(
+            extract_verified_effects_and_events(
+                &full_checkpoint,
+                &committee,
+                TransactionDigest::from_str("8RiKBwuAbtu8zNCtz8SrcfHyEUzto6zi6cMVA9t4WhWk")
+                    .unwrap(),
+            )
+            .is_err()
+        );
     }
 
     #[tokio::test]
     async fn test_checkpoint_no_transaction() {
         let (committee, full_checkpoint) = read_data().await;
 
-        assert!(extract_verified_effects_and_events(
-            &full_checkpoint,
-            &committee,
-            TransactionDigest::from_str("8RiKBwuAbtu8zNCtz8SrcfHyEUzto6zj6cMVA9t4WhWk").unwrap(),
-        )
-        .is_err());
+        assert!(
+            extract_verified_effects_and_events(
+                &full_checkpoint,
+                &committee,
+                TransactionDigest::from_str("8RiKBwuAbtu8zNCtz8SrcfHyEUzto6zj6cMVA9t4WhWk")
+                    .unwrap(),
+            )
+            .is_err()
+        );
     }
 
     #[tokio::test]
@@ -738,12 +744,15 @@ mod tests {
         let random_contents = FullCheckpointContents::random_for_testing();
         full_checkpoint.checkpoint_contents = random_contents.checkpoint_contents();
 
-        assert!(extract_verified_effects_and_events(
-            &full_checkpoint,
-            &committee,
-            TransactionDigest::from_str("8RiKBwuAbtu8zNCtz8SrcfHyEUzto6zj6cMVA9t4WhWk").unwrap(),
-        )
-        .is_err());
+        assert!(
+            extract_verified_effects_and_events(
+                &full_checkpoint,
+                &committee,
+                TransactionDigest::from_str("8RiKBwuAbtu8zNCtz8SrcfHyEUzto6zj6cMVA9t4WhWk")
+                    .unwrap(),
+            )
+            .is_err()
+        );
     }
 
     #[tokio::test]
@@ -763,11 +772,14 @@ mod tests {
             }
         }
 
-        assert!(extract_verified_effects_and_events(
-            &full_checkpoint,
-            &committee,
-            TransactionDigest::from_str("8RiKBwuAbtu8zNCtz8SrcfHyEUzto6zj6cMVA9t4WhWk").unwrap(),
-        )
-        .is_err());
+        assert!(
+            extract_verified_effects_and_events(
+                &full_checkpoint,
+                &committee,
+                TransactionDigest::from_str("8RiKBwuAbtu8zNCtz8SrcfHyEUzto6zj6cMVA9t4WhWk")
+                    .unwrap(),
+            )
+            .is_err()
+        );
     }
 }

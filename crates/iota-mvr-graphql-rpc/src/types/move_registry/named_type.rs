@@ -2,21 +2,19 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use async_graphql::Context;
 use futures::future;
+use iota_types::{TypeTag, base_types::ObjectID};
 use regex::{Captures, Regex};
-use iota_types::{base_types::ObjectID, TypeTag};
-
-use crate::{data::package_resolver::PackageResolver, error::Error};
 
 use super::{
     error::MoveRegistryError,
     named_move_package::NamedMovePackage,
-    on_chain::{VersionedName, VERSIONED_NAME_UNBOUND_REG},
+    on_chain::{VERSIONED_NAME_UNBOUND_REG, VersionedName},
 };
+use crate::{data::package_resolver::PackageResolver, error::Error};
 
 pub(crate) struct NamedType;
 

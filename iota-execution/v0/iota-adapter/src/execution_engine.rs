@@ -6,52 +6,53 @@ pub use checked::*;
 
 #[iota_macros::with_checked_arithmetic]
 mod checked {
-    use crate::execution_mode::{self, ExecutionMode};
-    use crate::gas_charger::GasCharger;
-    use crate::programmable_transactions;
-    use crate::temporary_store::TemporaryStore;
-    use crate::type_layout_resolver::TypeLayoutResolver;
-    use move_binary_format::CompiledModule;
-    use move_vm_runtime::move_vm::MoveVM;
     use std::{collections::HashSet, sync::Arc};
-    use iota_protocol_config::{check_limit_by_meter, LimitThresholdCrossed, ProtocolConfig};
-    use iota_types::balance::{
-        BALANCE_CREATE_REWARDS_FUNCTION_NAME, BALANCE_DESTROY_REBATES_FUNCTION_NAME,
-        BALANCE_MODULE_NAME,
-    };
-    use iota_types::clock::{CLOCK_MODULE_NAME, CONSENSUS_COMMIT_PROLOGUE_FUNCTION_NAME};
-    use iota_types::committee::EpochId;
-    use iota_types::effects::TransactionEffects;
-    use iota_types::error::{ExecutionError, ExecutionErrorKind};
-    use iota_types::execution::is_certificate_denied;
-    use iota_types::execution_config_utils::to_binary_config;
-    use iota_types::execution_status::ExecutionStatus;
-    use iota_types::gas::GasCostSummary;
-    use iota_types::gas::IotaGasStatus;
-    use iota_types::gas_coin::GAS;
-    use iota_types::inner_temporary_store::InnerTemporaryStore;
-    use iota_types::messages_checkpoint::CheckpointTimestamp;
-    use iota_types::metrics::LimitsMetrics;
-    use iota_types::object::OBJECT_START_VERSION;
-    use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-    use iota_types::storage::BackingStore;
-    use iota_types::storage::WriteKind;
+
+    use iota_protocol_config::{LimitThresholdCrossed, ProtocolConfig, check_limit_by_meter};
     #[cfg(msim)]
     use iota_types::iota_system_state::advance_epoch_result_injection::maybe_modify_result_legacy;
-    use iota_types::iota_system_state::{AdvanceEpochParams, ADVANCE_EPOCH_SAFE_MODE_FUNCTION_NAME};
-    use iota_types::transaction::CheckedInputObjects;
-    use iota_types::transaction::{
-        Argument, CallArg, ChangeEpoch, Command, GenesisTransaction, ProgrammableTransaction,
-        TransactionKind,
-    };
     use iota_types::{
-        base_types::{ObjectRef, IotaAddress, TransactionDigest, TxContext},
-        object::{Object, ObjectInner},
-        iota_system_state::{ADVANCE_EPOCH_FUNCTION_NAME, IOTA_SYSTEM_MODULE_NAME},
-        IOTA_FRAMEWORK_ADDRESS,
+        IOTA_FRAMEWORK_ADDRESS, IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_PACKAGE_ID,
+        balance::{
+            BALANCE_CREATE_REWARDS_FUNCTION_NAME, BALANCE_DESTROY_REBATES_FUNCTION_NAME,
+            BALANCE_MODULE_NAME,
+        },
+        base_types::{IotaAddress, ObjectRef, TransactionDigest, TxContext},
+        clock::{CLOCK_MODULE_NAME, CONSENSUS_COMMIT_PROLOGUE_FUNCTION_NAME},
+        committee::EpochId,
+        effects::TransactionEffects,
+        error::{ExecutionError, ExecutionErrorKind},
+        execution::is_certificate_denied,
+        execution_config_utils::to_binary_config,
+        execution_status::ExecutionStatus,
+        gas::{GasCostSummary, IotaGasStatus},
+        gas_coin::GAS,
+        inner_temporary_store::InnerTemporaryStore,
+        iota_system_state::{
+            ADVANCE_EPOCH_FUNCTION_NAME, ADVANCE_EPOCH_SAFE_MODE_FUNCTION_NAME, AdvanceEpochParams,
+            IOTA_SYSTEM_MODULE_NAME,
+        },
+        messages_checkpoint::CheckpointTimestamp,
+        metrics::LimitsMetrics,
+        object::{OBJECT_START_VERSION, Object, ObjectInner},
+        programmable_transaction_builder::ProgrammableTransactionBuilder,
+        storage::{BackingStore, WriteKind},
+        transaction::{
+            Argument, CallArg, ChangeEpoch, CheckedInputObjects, Command, GenesisTransaction,
+            ProgrammableTransaction, TransactionKind,
+        },
     };
-    use iota_types::{IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_PACKAGE_ID};
+    use move_binary_format::CompiledModule;
+    use move_vm_runtime::move_vm::MoveVM;
     use tracing::{info, instrument, trace, warn};
+
+    use crate::{
+        execution_mode::{self, ExecutionMode},
+        gas_charger::GasCharger,
+        programmable_transactions,
+        temporary_store::TemporaryStore,
+        type_layout_resolver::TypeLayoutResolver,
+    };
 
     #[instrument(name = "tx_execute_to_effects", level = "debug", skip_all)]
     pub fn execute_transaction_to_effects<Mode: ExecutionMode>(
@@ -382,8 +383,8 @@ mod checked {
                 }
             }
         } // else, we're in the genesis transaction which mints the IOTA supply, and hence does not satisfy IOTA conservation, or
-          // we're in the non-production dev inspect mode which allows us to violate conservation
-          // === end IOTA conservation checks ===
+        // we're in the non-production dev inspect mode which allows us to violate conservation
+        // === end IOTA conservation checks ===
         (cost_summary, result)
     }
 
@@ -662,11 +663,11 @@ mod checked {
 
         if result.is_err() {
             tracing::error!(
-            "Failed to execute advance epoch transaction. Switching to safe mode. Error: {:?}. Input objects: {:?}. Tx data: {:?}",
-            result.as_ref().err(),
-            temporary_store.objects(),
-            change_epoch,
-        );
+                "Failed to execute advance epoch transaction. Switching to safe mode. Error: {:?}. Input objects: {:?}. Tx data: {:?}",
+                result.as_ref().err(),
+                temporary_store.objects(),
+                change_epoch,
+            );
             temporary_store.drop_writes();
             // Must reset the storage rebate since we are re-executing.
             gas_charger.reset_storage_cost_and_rebate();

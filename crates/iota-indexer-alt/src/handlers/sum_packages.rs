@@ -4,12 +4,12 @@
 
 use std::{collections::BTreeMap, sync::Arc};
 
-use anyhow::{anyhow, Result};
-use diesel::{upsert::excluded, ExpressionMethods};
+use anyhow::{Result, anyhow};
+use diesel::{ExpressionMethods, upsert::excluded};
 use diesel_async::RunQueryDsl;
 use futures::future::try_join_all;
 use iota_field_count::FieldCount;
-use iota_indexer_alt_framework::pipeline::{sequential::Handler, Processor};
+use iota_indexer_alt_framework::pipeline::{Processor, sequential::Handler};
 use iota_indexer_alt_schema::{packages::StoredPackage, schema::sum_packages};
 use iota_pg_db as db;
 use iota_types::full_checkpoint_content::CheckpointData;

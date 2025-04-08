@@ -2,37 +2,31 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::BTreeMap;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
-use crate::reader::StateReader;
-use crate::service::objects::ObjectNotFoundError;
-use crate::types::ResolveTransactionQueryParameters;
-use crate::types::ResolveTransactionResponse;
-use crate::Result;
-use crate::RpcError;
-use crate::RpcService;
-use itertools::Itertools;
-use move_binary_format::normalized;
 use iota_protocol_config::ProtocolConfig;
 use iota_sdk_transaction_builder::unresolved;
-use iota_sdk_types::Argument;
-use iota_sdk_types::Command;
-use iota_sdk_types::ObjectId;
-use iota_types::base_types::ObjectID;
-use iota_types::base_types::ObjectRef;
-use iota_types::base_types::IotaAddress;
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::gas::GasCostSummary;
-use iota_types::gas_coin::GasCoin;
-use iota_types::move_package::MovePackage;
-use iota_types::transaction::CallArg;
-use iota_types::transaction::GasData;
-use iota_types::transaction::ObjectArg;
-use iota_types::transaction::ProgrammableTransaction;
-use iota_types::transaction::TransactionData;
-use iota_types::transaction::TransactionDataAPI;
+use iota_sdk_types::{Argument, Command, ObjectId};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef},
+    effects::TransactionEffectsAPI,
+    gas::GasCostSummary,
+    gas_coin::GasCoin,
+    move_package::MovePackage,
+    transaction::{
+        CallArg, GasData, ObjectArg, ProgrammableTransaction, TransactionData, TransactionDataAPI,
+    },
+};
+use itertools::Itertools;
+use move_binary_format::normalized;
 use tap::Pipe;
+
+use crate::{
+    Result, RpcError, RpcService,
+    reader::StateReader,
+    service::objects::ObjectNotFoundError,
+    types::{ResolveTransactionQueryParameters, ResolveTransactionResponse},
+};
 
 mod literal;
 
@@ -271,7 +265,7 @@ fn resolve_object_reference_with_object(
             return Err(RpcError::new(
                 tonic::Code::InvalidArgument,
                 format!("object {object_id} is not Immutable or AddressOwned"),
-            ))
+            ));
         }
     }
 
@@ -342,8 +336,7 @@ fn resolve_arg(
     arg: unresolved::Input,
     arg_idx: usize,
 ) -> Result<CallArg> {
-    use fastcrypto::encoding::Base64;
-    use fastcrypto::encoding::Encoding;
+    use fastcrypto::encoding::{Base64, Encoding};
     use iota_sdk_transaction_builder::unresolved::InputKind::*;
 
     let unresolved::Input {
@@ -431,7 +424,7 @@ fn resolve_arg(
             return Err(RpcError::new(
                 tonic::Code::InvalidArgument,
                 "invalid unresolved input argument",
-            ))
+            ));
         }
     }
     .pipe(Ok)
@@ -481,7 +474,8 @@ fn resolve_object(
             }
             .pipe(Ok)
         }
-        iota_types::object::Owner::Shared { .. } | iota_types::object::Owner::ConsensusV2 { .. } => {
+        iota_types::object::Owner::Shared { .. }
+        | iota_types::object::Owner::ConsensusV2 { .. } => {
             resolve_shared_input_with_object(called_packages, commands, arg_idx, object)
         }
         iota_types::object::Owner::ObjectOwner(_) => Err(RpcError::new(
@@ -536,7 +530,7 @@ fn is_input_argument_receiving(
             }
         }
 
-        //XXX do we want to ensure its only used once as receiving?
+        // XXX do we want to ensure its only used once as receiving?
         if receiving {
             break;
         }
@@ -723,7 +717,7 @@ fn select_gas(
     max_gas_payment_objects: u32,
     input_objects: &[ObjectID],
 ) -> Result<Vec<ObjectRef>> {
-    //TODO implement index of gas coins sorted in order of decreasing value
+    // TODO implement index of gas coins sorted in order of decreasing value
     let gas_coins = reader
         .inner()
         .indexes()

@@ -37,6 +37,7 @@ fn test_macro_shows_feature_enabled() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_profiler() {
     use std::fs;
+
     use iota_replay::ReplayToolCommand;
     use tempfile::tempdir;
 

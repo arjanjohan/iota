@@ -2,14 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use serde::{Deserialize, Serialize};
+
+use super::IDOperation;
 use crate::{
     base_types::VersionDigest,
     digests::ObjectDigest,
     object::{Object, Owner},
 };
-use serde::{Deserialize, Serialize};
-
-use super::IDOperation;
 
 #[derive(Eq, PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct EffectsObjectChange {

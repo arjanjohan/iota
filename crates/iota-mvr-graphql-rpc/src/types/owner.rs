@@ -2,27 +2,30 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::address::Address;
-use super::coin_metadata::CoinMetadata;
-use super::cursor::Page;
-use super::dynamic_field::DynamicField;
-use super::dynamic_field::DynamicFieldName;
-use super::move_package::MovePackage;
-use super::stake::StakedIota;
-use super::iotans_registration::{DomainFormat, NameService, IotaNSRegistration};
-use crate::data::Db;
-use crate::types::balance::{self, Balance};
-use crate::types::coin::Coin;
-use crate::types::move_object::MoveObject;
-use crate::types::object::{self, Object, ObjectFilter};
-use crate::types::iota_address::IotaAddress;
-use crate::types::type_filter::ExactTypeFilter;
-
-use async_graphql::connection::Connection;
-use async_graphql::*;
+use async_graphql::{connection::Connection, *};
 use iota_json_rpc::name_service::NameServiceConfig;
-use iota_types::dynamic_field::DynamicFieldType;
-use iota_types::gas_coin::GAS;
+use iota_types::{dynamic_field::DynamicFieldType, gas_coin::GAS};
+
+use super::{
+    address::Address,
+    coin_metadata::CoinMetadata,
+    cursor::Page,
+    dynamic_field::{DynamicField, DynamicFieldName},
+    iotans_registration::{DomainFormat, IotaNSRegistration, NameService},
+    move_package::MovePackage,
+    stake::StakedIota,
+};
+use crate::{
+    data::Db,
+    types::{
+        balance::{self, Balance},
+        coin::Coin,
+        iota_address::IotaAddress,
+        move_object::MoveObject,
+        object::{self, Object, ObjectFilter},
+        type_filter::ExactTypeFilter,
+    },
+};
 
 #[derive(Clone, Debug)]
 pub(crate) struct Owner {
@@ -188,7 +191,7 @@ impl Owner {
 
     /// The coin objects for this object or address.
     ///
-    ///`type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
+    /// `type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
     pub(crate) async fn coins(
         &self,
         ctx: &Context<'_>,

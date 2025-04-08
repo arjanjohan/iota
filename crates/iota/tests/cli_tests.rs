@@ -2,63 +2,62 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::BTreeSet;
-use std::io::Read;
-use std::net::SocketAddr;
-use std::os::unix::prelude::FileExt;
-use std::{fmt::Write, fs::read_dir, path::PathBuf, str, thread, time::Duration};
-
-use std::env;
 #[cfg(not(msim))]
 use std::str::FromStr;
+use std::{
+    collections::BTreeSet, env, fmt::Write, fs::read_dir, io::Read, net::SocketAddr,
+    os::unix::prelude::FileExt, path::PathBuf, str, thread, time::Duration,
+};
 
 use expect_test::expect;
-use move_package::{lock_file::schema::ManagedPackage, BuildConfig as MoveBuildConfig};
-use serde_json::json;
-use iota::client_ptb::ptb::PTB;
-use iota::key_identity::{get_identity_address, KeyIdentity};
-use iota::iota_commands::IndexerArgs;
-use iota_sdk::IotaClient;
-use iota_test_transaction_builder::batch_make_transfer_transactions;
-use iota_types::object::Owner;
-use iota_types::transaction::{
-    TEST_ONLY_GAS_UNIT_FOR_GENERIC, TEST_ONLY_GAS_UNIT_FOR_OBJECT_BASICS,
-    TEST_ONLY_GAS_UNIT_FOR_PUBLISH, TEST_ONLY_GAS_UNIT_FOR_SPLIT_COIN,
-    TEST_ONLY_GAS_UNIT_FOR_TRANSFER,
-};
-use tokio::time::sleep;
-
 use iota::{
     client_commands::{
-        estimate_gas_budget, Opts, OptsWithGas, IotaClientCommandResult, IotaClientCommands,
-        SwitchResponse,
+        IotaClientCommandResult, IotaClientCommands, Opts, OptsWithGas, SwitchResponse,
+        estimate_gas_budget,
     },
-    iota_commands::{parse_host_port, IotaCommand},
+    client_ptb::ptb::PTB,
+    iota_commands::{IndexerArgs, IotaCommand, parse_host_port},
+    key_identity::{KeyIdentity, get_identity_address},
 };
 use iota_config::{
-    PersistedConfig, IOTA_CLIENT_CONFIG, IOTA_FULLNODE_CONFIG, IOTA_GENESIS_FILENAME,
-    IOTA_KEYSTORE_ALIASES_FILENAME, IOTA_KEYSTORE_FILENAME, IOTA_NETWORK_CONFIG,
+    IOTA_CLIENT_CONFIG, IOTA_FULLNODE_CONFIG, IOTA_GENESIS_FILENAME,
+    IOTA_KEYSTORE_ALIASES_FILENAME, IOTA_KEYSTORE_FILENAME, IOTA_NETWORK_CONFIG, PersistedConfig,
 };
 use iota_json::IotaJsonValue;
 use iota_json_rpc_types::{
-    get_new_package_obj_from_response, OwnedObjectRef, IotaExecutionStatus, IotaObjectData,
-    IotaObjectDataFilter, IotaObjectDataOptions, IotaObjectResponse, IotaObjectResponseQuery,
-    IotaTransactionBlockDataAPI, IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI,
+    IotaExecutionStatus, IotaObjectData, IotaObjectDataFilter, IotaObjectDataOptions,
+    IotaObjectResponse, IotaObjectResponseQuery, IotaTransactionBlockDataAPI,
+    IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI, OwnedObjectRef,
+    get_new_package_obj_from_response,
 };
 use iota_keys::keystore::AccountKeystore;
 use iota_macros::sim_test;
 use iota_move_build::{BuildConfig, IotaPackageHooks};
-use iota_sdk::iota_client_config::IotaClientConfig;
-use iota_sdk::wallet_context::WalletContext;
-use iota_swarm_config::genesis_config::{AccountConfig, GenesisConfig};
-use iota_swarm_config::network_config::NetworkConfig;
-use iota_types::base_types::IotaAddress;
-use iota_types::crypto::{
-    Ed25519IotaSignature, Secp256k1IotaSignature, SignatureScheme, IotaKeyPair, IotaSignatureInner,
+use iota_sdk::{IotaClient, iota_client_config::IotaClientConfig, wallet_context::WalletContext};
+use iota_swarm_config::{
+    genesis_config::{AccountConfig, GenesisConfig},
+    network_config::NetworkConfig,
 };
-use iota_types::error::IotaObjectResponseError;
-use iota_types::{base_types::ObjectID, crypto::get_key_pair, gas_coin::GasCoin};
+use iota_test_transaction_builder::batch_make_transfer_transactions;
+use iota_types::{
+    base_types::{IotaAddress, ObjectID},
+    crypto::{
+        Ed25519IotaSignature, IotaKeyPair, IotaSignatureInner, Secp256k1IotaSignature,
+        SignatureScheme, get_key_pair,
+    },
+    error::IotaObjectResponseError,
+    gas_coin::GasCoin,
+    object::Owner,
+    transaction::{
+        TEST_ONLY_GAS_UNIT_FOR_GENERIC, TEST_ONLY_GAS_UNIT_FOR_OBJECT_BASICS,
+        TEST_ONLY_GAS_UNIT_FOR_PUBLISH, TEST_ONLY_GAS_UNIT_FOR_SPLIT_COIN,
+        TEST_ONLY_GAS_UNIT_FOR_TRANSFER,
+    },
+};
+use move_package::{BuildConfig as MoveBuildConfig, lock_file::schema::ManagedPackage};
+use serde_json::json;
 use test_cluster::{TestCluster, TestClusterBuilder};
+use tokio::time::sleep;
 
 const TEST_DATA_DIR: &str = "tests/data/";
 
@@ -1379,8 +1378,8 @@ async fn test_receive_argument_by_mut_ref() -> Result<(), anyhow::Error> {
 }
 
 #[sim_test]
-async fn test_package_publish_command_with_unpublished_dependency_succeeds(
-) -> Result<(), anyhow::Error> {
+async fn test_package_publish_command_with_unpublished_dependency_succeeds()
+-> Result<(), anyhow::Error> {
     let with_unpublished_dependencies = true; // Value under test, results in successful response.
 
     let mut test_cluster = TestClusterBuilder::new().build().await;
@@ -1450,8 +1449,8 @@ async fn test_package_publish_command_with_unpublished_dependency_succeeds(
 }
 
 #[sim_test]
-async fn test_package_publish_command_with_unpublished_dependency_fails(
-) -> Result<(), anyhow::Error> {
+async fn test_package_publish_command_with_unpublished_dependency_fails()
+-> Result<(), anyhow::Error> {
     let with_unpublished_dependencies = false; // Value under test, results in error response.
 
     let mut test_cluster = TestClusterBuilder::new().build().await;
@@ -2416,7 +2415,9 @@ async fn test_active_address_command() -> Result<(), anyhow::Error> {
     let addr1 = context.active_address()?;
 
     // Run a command with address omitted
-    let os = IotaClientCommands::ActiveAddress {}.execute(context).await?;
+    let os = IotaClientCommands::ActiveAddress {}
+        .execute(context)
+        .await?;
 
     let a = if let IotaClientCommandResult::ActiveAddress(Some(v)) = os {
         v
@@ -3736,10 +3737,12 @@ async fn test_transfer_iota() -> Result<(), anyhow::Error> {
             2,
             "Expected to have two coins when calling transfer iota the 2nd time"
         );
-        assert!(objs_refs
-            .data
-            .iter()
-            .any(|x| x.object().unwrap().object_id == object_id1));
+        assert!(
+            objs_refs
+                .data
+                .iter()
+                .any(|x| x.object().unwrap().object_id == object_id1)
+        );
     } else {
         panic!("TransferIota test failed");
     }

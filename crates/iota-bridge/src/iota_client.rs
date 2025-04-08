@@ -2,59 +2,50 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use core::panic;
+use std::{collections::HashMap, str::from_utf8, sync::Arc, time::Duration};
+
 use anyhow::anyhow;
 use async_trait::async_trait;
-use core::panic;
 use fastcrypto::traits::ToFromBytes;
-use serde::de::DeserializeOwned;
-use std::collections::HashMap;
-use std::str::from_utf8;
-use std::sync::Arc;
-use std::time::Duration;
 use iota_json_rpc_api::BridgeReadApiClient;
-use iota_json_rpc_types::DevInspectResults;
-use iota_json_rpc_types::{EventFilter, Page, IotaEvent};
 use iota_json_rpc_types::{
-    EventPage, IotaObjectDataOptions, IotaTransactionBlockResponse,
-    IotaTransactionBlockResponseOptions,
+    DevInspectResults, EventFilter, EventPage, IotaEvent, IotaObjectDataOptions,
+    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions, Page,
 };
 use iota_sdk::{IotaClient as IotaSdkClient, IotaClientBuilder};
-use iota_types::base_types::ObjectRef;
-use iota_types::base_types::SequenceNumber;
-use iota_types::bridge::BridgeSummary;
-use iota_types::bridge::BridgeTreasurySummary;
-use iota_types::bridge::MoveTypeCommitteeMember;
-use iota_types::bridge::MoveTypeParsedTokenTransferMessage;
-use iota_types::gas_coin::GasCoin;
-use iota_types::object::Owner;
-use iota_types::parse_iota_type_tag;
-use iota_types::transaction::Argument;
-use iota_types::transaction::CallArg;
-use iota_types::transaction::Command;
-use iota_types::transaction::ObjectArg;
-use iota_types::transaction::ProgrammableTransaction;
-use iota_types::transaction::Transaction;
-use iota_types::transaction::TransactionKind;
-use iota_types::TypeTag;
-use iota_types::BRIDGE_PACKAGE_ID;
-use iota_types::IOTA_BRIDGE_OBJECT_ID;
 use iota_types::{
-    base_types::{ObjectID, IotaAddress},
+    BRIDGE_PACKAGE_ID, IOTA_BRIDGE_OBJECT_ID, Identifier, TypeTag,
+    base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber},
+    bridge::{
+        BridgeSummary, BridgeTreasurySummary, MoveTypeCommitteeMember,
+        MoveTypeParsedTokenTransferMessage,
+    },
     digests::TransactionDigest,
     event::EventID,
-    Identifier,
+    gas_coin::GasCoin,
+    object::Owner,
+    parse_iota_type_tag,
+    transaction::{
+        Argument, CallArg, Command, ObjectArg, ProgrammableTransaction, Transaction,
+        TransactionKind,
+    },
 };
+use serde::de::DeserializeOwned;
 use tokio::sync::OnceCell;
 use tracing::{error, warn};
 
-use crate::crypto::BridgeAuthorityPublicKey;
-use crate::error::{BridgeError, BridgeResult};
-use crate::events::IotaBridgeEvent;
-use crate::metrics::BridgeMetrics;
-use crate::retry_with_max_elapsed_time;
-use crate::types::BridgeActionStatus;
-use crate::types::ParsedTokenTransferMessage;
-use crate::types::{BridgeAction, BridgeAuthority, BridgeCommittee};
+use crate::{
+    crypto::BridgeAuthorityPublicKey,
+    error::{BridgeError, BridgeResult},
+    events::IotaBridgeEvent,
+    metrics::BridgeMetrics,
+    retry_with_max_elapsed_time,
+    types::{
+        BridgeAction, BridgeActionStatus, BridgeAuthority, BridgeCommittee,
+        ParsedTokenTransferMessage,
+    },
+};
 
 pub struct IotaClient<P> {
     inner: P,
@@ -138,11 +129,13 @@ where
         let events = self.inner.query_events(filter.clone(), cursor).await?;
 
         // Safeguard check that all events are emitted from requested package and module
-        assert!(events
-            .data
-            .iter()
-            .all(|event| event.type_.address.as_ref() == package.as_ref()
-                && event.type_.module == module));
+        assert!(
+            events
+                .data
+                .iter()
+                .all(|event| event.type_.address.as_ref() == package.as_ref()
+                    && event.type_.module == module)
+        );
         Ok(events)
     }
 
@@ -644,27 +637,32 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::crypto::BridgeAuthorityKeyPair;
-    use crate::e2e_tests::test_utils::TestClusterWrapperBuilder;
+    use std::str::FromStr;
+
+    use ethers::types::Address as EthAddress;
+    use iota_json_rpc_types::BcsEvent;
+    use iota_types::{
+        bridge::{BridgeChainId, TOKEN_ID_IOTA, TOKEN_ID_USDC},
+        crypto::get_key_pair,
+    };
+    use move_core_types::account_address::AccountAddress;
+    use serde::{Deserialize, Serialize};
+
+    use super::*;
     use crate::{
-        events::{EmittedIotaToEthTokenBridgeV1, MoveTokenDepositedEvent},
+        crypto::BridgeAuthorityKeyPair,
+        e2e_tests::test_utils::TestClusterWrapperBuilder,
+        events::{
+            EmittedIotaToEthTokenBridgeV1, IotaToEthTokenBridgeV1, MoveTokenDepositedEvent,
+            init_all_struct_tags,
+        },
         iota_mock_client::IotaMockClient,
         test_utils::{
-            approve_action_with_validator_secrets, bridge_token, get_test_eth_to_iota_bridge_action,
-            get_test_iota_to_eth_bridge_action,
+            approve_action_with_validator_secrets, bridge_token,
+            get_test_eth_to_iota_bridge_action, get_test_iota_to_eth_bridge_action,
         },
         types::IotaToEthBridgeAction,
     };
-    use ethers::types::Address as EthAddress;
-    use move_core_types::account_address::AccountAddress;
-    use serde::{Deserialize, Serialize};
-    use std::str::FromStr;
-    use iota_json_rpc_types::BcsEvent;
-    use iota_types::bridge::{BridgeChainId, TOKEN_ID_IOTA, TOKEN_ID_USDC};
-    use iota_types::crypto::get_key_pair;
-
-    use super::*;
-    use crate::events::{init_all_struct_tags, IotaToEthTokenBridgeV1};
 
     #[tokio::test]
     async fn get_bridge_action_by_tx_digest_and_event_idx_maybe() {
@@ -817,7 +815,8 @@ mod tests {
         let id_token_map = iota_client.get_token_id_map().await.unwrap();
 
         // 1. Create a Eth -> IOTA Transfer (recipient is sender address), approve with validator secrets and assert its status to be Claimed
-        let action = get_test_eth_to_iota_bridge_action(None, Some(usdc_amount), Some(sender), None);
+        let action =
+            get_test_eth_to_iota_bridge_action(None, Some(usdc_amount), Some(sender), None);
         let usdc_object_ref = approve_action_with_validator_secrets(
             context,
             bridge_object_arg,

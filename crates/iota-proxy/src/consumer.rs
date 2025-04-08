@@ -2,23 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::admin::ReqwestClient;
-use crate::prom_to_mimir::Mimir;
-use crate::remote_write::WriteRequest;
+use std::io::Read;
+
 use anyhow::Result;
-use axum::body::Bytes;
-use axum::http::StatusCode;
+use axum::{body::Bytes, http::StatusCode};
 use bytes::buf::Reader;
 use fastcrypto::ed25519::Ed25519PublicKey;
 use multiaddr::Multiaddr;
 use once_cell::sync::Lazy;
-use prometheus::proto::{self, MetricFamily};
-use prometheus::{register_counter, register_counter_vec, register_histogram_vec};
-use prometheus::{Counter, CounterVec, HistogramVec};
+use prometheus::{
+    Counter, CounterVec, HistogramVec,
+    proto::{self, MetricFamily},
+    register_counter, register_counter_vec, register_histogram_vec,
+};
 use prost::Message;
 use protobuf::CodedInputStream;
-use std::io::Read;
 use tracing::{debug, error};
+
+use crate::{admin::ReqwestClient, prom_to_mimir::Mimir, remote_write::WriteRequest};
 
 static CONSUMER_OPS_SUBMITTED: Lazy<Counter> = Lazy::new(|| {
     register_counter!(

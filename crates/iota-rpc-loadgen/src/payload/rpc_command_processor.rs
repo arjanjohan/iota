@@ -2,42 +2,45 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{anyhow, Result};
+use std::{
+    fmt,
+    fs::{self, File},
+    path::PathBuf,
+    sync::Arc,
+    time::{Duration, Instant},
+};
+
+use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use dashmap::{DashMap, DashSet};
 use futures::future::join_all;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use shared_crypto::intent::{Intent, IntentMessage};
-use std::fmt;
-use std::fs::{self, File};
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::{Duration, Instant};
 use iota_json_rpc_types::{
     IotaExecutionStatus, IotaObjectDataOptions, IotaTransactionBlockDataAPI,
-    IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+    IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse,
+    IotaTransactionBlockResponseOptions,
 };
-use iota_types::digests::TransactionDigest;
-use tokio::sync::RwLock;
-use tokio::time::sleep;
+use iota_sdk::{IotaClient, IotaClientBuilder};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef},
+    crypto::{AccountKeyPair, EncodeDecodeBase64, IotaKeyPair, Signature, get_key_pair},
+    digests::TransactionDigest,
+    quorum_driver_types::ExecuteTransactionRequestType,
+    transaction::{Transaction, TransactionData},
+};
+use serde::{Serialize, de::DeserializeOwned};
+use shared_crypto::intent::{Intent, IntentMessage};
+use tokio::{sync::RwLock, time::sleep};
 use tracing::{debug, info};
 
-use crate::load_test::LoadTestConfig;
-use iota_sdk::{IotaClient, IotaClientBuilder};
-use iota_types::base_types::{ObjectID, ObjectRef, IotaAddress};
-use iota_types::crypto::{get_key_pair, AccountKeyPair, EncodeDecodeBase64, Signature, IotaKeyPair};
-use iota_types::quorum_driver_types::ExecuteTransactionRequestType;
-use iota_types::transaction::{Transaction, TransactionData};
-
-use crate::payload::checkpoint_utils::get_latest_checkpoint_stats;
-use crate::payload::validation::chunk_entities;
-use crate::payload::{
-    Command, CommandData, DryRun, GetAllBalances, GetCheckpoints, GetObject, MultiGetObjects,
-    Payload, ProcessPayload, Processor, QueryTransactionBlocks, SignerInfo,
-};
-
 use super::MultiGetTransactionBlocks;
+use crate::{
+    load_test::LoadTestConfig,
+    payload::{
+        Command, CommandData, DryRun, GetAllBalances, GetCheckpoints, GetObject, MultiGetObjects,
+        Payload, ProcessPayload, Processor, QueryTransactionBlocks, SignerInfo,
+        checkpoint_utils::get_latest_checkpoint_stats, validation::chunk_entities,
+    },
+};
 
 pub(crate) const DEFAULT_GAS_BUDGET: u64 = 500_000_000;
 pub(crate) const DEFAULT_LARGE_GAS_BUDGET: u64 = 50_000_000_000;
@@ -242,7 +245,10 @@ impl Processor for RpcCommandProcessor {
                 }
                 let clients = self.get_clients().await?;
                 let checkpoint_stats = get_latest_checkpoint_stats(&clients, None).await;
-                info!("Repeat {i}: Checkpoint stats {checkpoint_stats}, elapse {:.4} since last repeat", elapsed_time.as_secs_f64());
+                info!(
+                    "Repeat {i}: Checkpoint stats {checkpoint_stats}, elapse {:.4} since last repeat",
+                    elapsed_time.as_secs_f64()
+                );
             }
         }
         Ok(())
@@ -563,7 +569,9 @@ async fn prepare_new_signer_and_coins(
     // 2. gas fee for splitting the primary coin into `num_coins`
     let required_balance = pay_amount + gas_fee_for_split + gas_fee_for_pay_iota;
     if required_balance > balance {
-        panic!("Current balance {balance} is smaller than require amount of NANOS to fund the operation {required_balance}");
+        panic!(
+            "Current balance {balance} is smaller than require amount of NANOS to fund the operation {required_balance}"
+        );
     }
 
     // There is a limit for the number of new objects in a transactions, therefore we need
@@ -812,8 +820,9 @@ pub(crate) async fn sign_and_execute(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::{assert_eq, vec};
+
+    use super::*;
 
     #[test]
     fn test_calculate_split_amounts_no_split_needed() {

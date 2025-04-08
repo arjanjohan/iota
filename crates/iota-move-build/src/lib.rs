@@ -12,14 +12,25 @@ use std::{
 };
 
 use fastcrypto::encoding::Base64;
-use move_binary_format::{
-    normalized::{self, Type},
-    CompiledModule,
+use iota_package_management::{PublishedAtError, resolve_published_id};
+use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
+use iota_types::{
+    BRIDGE_ADDRESS, DEEPBOOK_ADDRESS, IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS,
+    MOVE_STDLIB_ADDRESS,
+    base_types::ObjectID,
+    error::{IotaError, IotaResult},
+    is_system_package,
+    move_package::{FnInfo, FnInfoKey, FnInfoMap, MovePackage},
 };
-use move_bytecode_utils::{layout::SerdeLayoutBuilder, module_cache::GetModule, Modules};
+use iota_verifier::verifier as iota_bytecode_verifier;
+use move_binary_format::{
+    CompiledModule,
+    normalized::{self, Type},
+};
+use move_bytecode_utils::{Modules, layout::SerdeLayoutBuilder, module_cache::GetModule};
 use move_compiler::{
     compiled_unit::AnnotatedCompiledModule,
-    diagnostics::{report_diagnostics_to_buffer, report_warnings, Diagnostics},
+    diagnostics::{Diagnostics, report_diagnostics_to_buffer, report_warnings},
     editions::Edition,
     linters::LINT_WARNING_PREFIX,
     shared::files::MappedFiles,
@@ -29,38 +40,25 @@ use move_core_types::{
     language_storage::{ModuleId, StructTag, TypeTag},
 };
 use move_package::{
+    BuildConfig as MoveBuildConfig,
     compilation::{
         build_plan::BuildPlan, compiled_package::CompiledPackage as MoveCompiledPackage,
     },
     package_hooks::{PackageHooks, PackageIdentifier},
     resolution::resolution_graph::ResolvedGraph,
-    source_package::parsed_manifest::PackageName,
-    BuildConfig as MoveBuildConfig,
-};
-use move_package::{
-    source_package::parsed_manifest::OnChainInfo, source_package::parsed_manifest::SourceManifest,
+    source_package::parsed_manifest::{OnChainInfo, PackageName, SourceManifest},
 };
 use move_symbol_pool::Symbol;
 use serde_reflection::Registry;
-use iota_package_management::{resolve_published_id, PublishedAtError};
-use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-use iota_types::{
-    base_types::ObjectID,
-    error::{IotaError, IotaResult},
-    is_system_package,
-    move_package::{FnInfo, FnInfoKey, FnInfoMap, MovePackage},
-    BRIDGE_ADDRESS, DEEPBOOK_ADDRESS, MOVE_STDLIB_ADDRESS, IOTA_FRAMEWORK_ADDRESS,
-    IOTA_SYSTEM_ADDRESS,
-};
-use iota_verifier::verifier as iota_bytecode_verifier;
 
 #[cfg(test)]
 #[path = "unit_tests/build_tests.rs"]
 mod build_tests;
 
 pub mod test_utils {
-    use crate::{BuildConfig, CompiledPackage, IotaPackageHooks};
     use std::path::PathBuf;
+
+    use crate::{BuildConfig, CompiledPackage, IotaPackageHooks};
 
     pub fn compile_basics_package() -> CompiledPackage {
         compile_example_package("../../examples/move/basics")
@@ -231,7 +229,9 @@ pub fn decorate_warnings(warning_diags: Diagnostics, files: Option<&MappedFiles>
         eprintln!("Please report feedback on the linter warnings at https://forums.iota.io\n");
     }
     if filtered_diags_num > 0 {
-        eprintln!("Total number of linter warnings suppressed: {filtered_diags_num} (unique lints: {unique})");
+        eprintln!(
+            "Total number of linter warnings suppressed: {filtered_diags_num} (unique lints: {unique})"
+        );
     }
 }
 
@@ -303,7 +303,7 @@ pub fn build_from_resolution_graph(
         Err(error) => {
             return Err(IotaError::ModuleBuildFailure {
                 error: format!("{:?}", error),
-            })
+            });
         }
         Ok((package, fn_info)) => (package, fn_info),
     };

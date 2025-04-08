@@ -2,12 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority_state::StateRead;
-use crate::error::{Error, IotaRpcInputError};
-use crate::{with_tracing, IotaRpcModule};
+use std::{collections::BTreeMap, sync::Arc};
+
 use async_trait::async_trait;
-use jsonrpsee::core::RpcResult;
-use jsonrpsee::RpcModule;
+use iota_core::authority::AuthorityState;
+use iota_json_rpc_api::{MoveUtilsOpenRpc, MoveUtilsServer};
+use iota_json_rpc_types::{
+    IotaMoveNormalizedFunction, IotaMoveNormalizedModule, IotaMoveNormalizedStruct,
+    MoveFunctionArgType, ObjectValueKind,
+};
+use iota_open_rpc::Module;
+use iota_types::{
+    base_types::ObjectID,
+    move_package::normalize_modules,
+    object::{Data, ObjectRead},
+};
+use jsonrpsee::{RpcModule, core::RpcResult};
 #[cfg(test)]
 use mockall::automock;
 use move_binary_format::{
@@ -15,20 +25,15 @@ use move_binary_format::{
     normalized::{Module as NormalizedModule, Type},
 };
 use move_core_types::identifier::Identifier;
-use std::collections::BTreeMap;
-use std::sync::Arc;
-use iota_core::authority::AuthorityState;
-use iota_json_rpc_api::{MoveUtilsOpenRpc, MoveUtilsServer};
-use iota_json_rpc_types::{
-    MoveFunctionArgType, ObjectValueKind, IotaMoveNormalizedFunction, IotaMoveNormalizedModule,
-    IotaMoveNormalizedStruct,
-};
-use iota_open_rpc::Module;
-use iota_types::base_types::ObjectID;
-use iota_types::move_package::normalize_modules;
-use iota_types::object::{Data, ObjectRead};
 use tap::TapFallible;
 use tracing::{error, instrument, warn};
+
+use crate::{
+    IotaRpcModule,
+    authority_state::StateRead,
+    error::{Error, IotaRpcInputError},
+    with_tracing,
+};
 
 #[cfg_attr(test, automock)]
 #[async_trait]
@@ -285,8 +290,9 @@ impl MoveUtilsServer for MoveUtils {
 mod tests {
 
     mod get_normalized_move_module_tests {
-        use super::super::*;
         use move_binary_format::file_format::basic_test_module;
+
+        use super::super::*;
 
         fn setup() -> (ObjectID, String) {
             (ObjectID::random(), String::from("test_module"))

@@ -2,13 +2,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{num::NonZeroUsize, sync::Arc};
+
+use iota_types::{
+    base_types::ObjectID,
+    error::{IotaError, IotaResult, UserInputError},
+    storage::{ObjectStore, PackageObject},
+};
 use lru::LruCache;
 use parking_lot::RwLock;
-use std::num::NonZeroUsize;
-use std::sync::Arc;
-use iota_types::base_types::ObjectID;
-use iota_types::error::{IotaError, IotaResult, UserInputError};
-use iota_types::storage::{ObjectStore, PackageObject};
 
 pub struct PackageObjectCache {
     cache: RwLock<LruCache<ObjectID, PackageObject>>,

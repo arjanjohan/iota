@@ -2,23 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{IotaSystemState, IotaSystemStateTrait};
-use crate::base_types::{AuthorityName, ObjectID, IotaAddress};
-use crate::committee::{CommitteeWithNetworkMetadata, NetworkMetadata};
-use crate::crypto::NetworkPublicKey;
-use crate::dynamic_field::get_dynamic_field_from_store;
-use crate::error::IotaError;
-use crate::id::ID;
-use crate::multiaddr::Multiaddr;
-use crate::storage::ObjectStore;
-use crate::iota_serde::BigInt;
-use crate::iota_serde::Readable;
-use crate::iota_system_state::get_validator_from_table;
-use fastcrypto::encoding::Base64;
-use fastcrypto::traits::ToFromBytes;
+use fastcrypto::{encoding::Base64, traits::ToFromBytes};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
+
+use super::{IotaSystemState, IotaSystemStateTrait};
+use crate::{
+    base_types::{AuthorityName, IotaAddress, ObjectID},
+    committee::{CommitteeWithNetworkMetadata, NetworkMetadata},
+    crypto::NetworkPublicKey,
+    dynamic_field::get_dynamic_field_from_store,
+    error::IotaError,
+    id::ID,
+    iota_serde::{BigInt, Readable},
+    iota_system_state::get_validator_from_table,
+    multiaddr::Multiaddr,
+    storage::ObjectStore,
+};
 
 /// This is the JSON-RPC type for the IOTA system state object.
 /// It flattens all fields to make them top-level fields such that it as minimum

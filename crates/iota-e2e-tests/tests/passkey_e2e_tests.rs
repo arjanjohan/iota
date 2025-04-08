@@ -1,11 +1,25 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+use std::net::SocketAddr;
+
 use fastcrypto::traits::ToFromBytes;
+use iota_core::authority_client::AuthorityAPI;
+use iota_macros::sim_test;
+use iota_test_transaction_builder::TestTransactionBuilder;
+use iota_types::{
+    base_types::IotaAddress,
+    crypto::{PublicKey, Signature, SignatureScheme},
+    error::{IotaError, IotaResult, UserInputError},
+    passkey_authenticator::{PasskeyAuthenticator, to_signing_message},
+    signature::GenericSignature,
+    transaction::{Transaction, TransactionData},
+};
 use p256::pkcs8::DecodePublicKey;
 use passkey_authenticator::{Authenticator, UserValidationMethod};
 use passkey_client::Client;
 use passkey_types::{
+    Bytes, Passkey,
     ctap2::Aaguid,
     rand::random_vec,
     webauthn::{
@@ -14,26 +28,9 @@ use passkey_types::{
         PublicKeyCredentialRequestOptions, PublicKeyCredentialRpEntity, PublicKeyCredentialType,
         PublicKeyCredentialUserEntity, UserVerificationRequirement,
     },
-    Bytes, Passkey,
 };
 use shared_crypto::intent::{Intent, IntentMessage};
-use std::net::SocketAddr;
-use iota_core::authority_client::AuthorityAPI;
-use iota_macros::sim_test;
-use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::crypto::Signature;
-use iota_types::error::UserInputError;
-use iota_types::error::{IotaError, IotaResult};
-use iota_types::signature::GenericSignature;
-use iota_types::transaction::Transaction;
-use iota_types::{
-    base_types::IotaAddress,
-    crypto::{PublicKey, SignatureScheme},
-    passkey_authenticator::{to_signing_message, PasskeyAuthenticator},
-    transaction::TransactionData,
-};
-use test_cluster::TestCluster;
-use test_cluster::TestClusterBuilder;
+use test_cluster::{TestCluster, TestClusterBuilder};
 use url::Url;
 
 struct MyUserValidationMethod {}

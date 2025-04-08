@@ -2,28 +2,33 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::base_types::ObjectID;
-use crate::committee::CommitteeWithNetworkMetadata;
-use crate::dynamic_field::{
-    get_dynamic_field_from_store, get_dynamic_field_object_from_store, Field,
-};
-use crate::error::IotaError;
-use crate::object::{MoveObject, Object};
-use crate::storage::ObjectStore;
-use crate::iota_system_state::epoch_start_iota_system_state::EpochStartSystemState;
-use crate::iota_system_state::iota_system_state_inner_v2::IotaSystemStateInnerV2;
-use crate::versioned::Versioned;
-use crate::{id::UID, MoveTypeTagTrait, IOTA_SYSTEM_ADDRESS, IOTA_SYSTEM_STATE_OBJECT_ID};
+use std::fmt;
+
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
-use move_core_types::{ident_str, identifier::IdentStr, language_storage::StructTag};
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
-use std::fmt;
 use iota_protocol_config::{ProtocolConfig, ProtocolVersion};
+use move_core_types::{ident_str, identifier::IdentStr, language_storage::StructTag};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
-use self::iota_system_state_inner_v1::{IotaSystemStateInnerV1, ValidatorV1};
-use self::iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary};
+use self::{
+    iota_system_state_inner_v1::{IotaSystemStateInnerV1, ValidatorV1},
+    iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary},
+};
+use crate::{
+    IOTA_SYSTEM_ADDRESS, IOTA_SYSTEM_STATE_OBJECT_ID, MoveTypeTagTrait,
+    base_types::ObjectID,
+    committee::CommitteeWithNetworkMetadata,
+    dynamic_field::{Field, get_dynamic_field_from_store, get_dynamic_field_object_from_store},
+    error::IotaError,
+    id::UID,
+    iota_system_state::{
+        epoch_start_iota_system_state::EpochStartSystemState,
+        iota_system_state_inner_v2::IotaSystemStateInnerV2,
+    },
+    object::{MoveObject, Object},
+    storage::ObjectStore,
+    versioned::Versioned,
+};
 
 pub mod epoch_start_iota_system_state;
 pub mod iota_system_state_inner_v1;
@@ -229,7 +234,9 @@ pub fn get_iota_system_state_wrapper(
         .get_object(&IOTA_SYSTEM_STATE_OBJECT_ID)
         // Don't panic here on None because object_store is a generic store.
         .ok_or_else(|| {
-            IotaError::IotaSystemStateReadError("IotaSystemStateWrapper object not found".to_owned())
+            IotaError::IotaSystemStateReadError(
+                "IotaSystemStateWrapper object not found".to_owned(),
+            )
         })?;
     let move_object = wrapper.data.try_as_move().ok_or_else(|| {
         IotaError::IotaSystemStateReadError(
@@ -446,12 +453,13 @@ pub struct AdvanceEpochParams {
 
 #[cfg(msim)]
 pub mod advance_epoch_result_injection {
+    use std::cell::RefCell;
+
     use crate::{
         committee::EpochId,
         error::{ExecutionError, ExecutionErrorKind},
         execution::ResultWithTimings,
     };
-    use std::cell::RefCell;
 
     thread_local! {
         /// Override the result of advance_epoch in the range [start, end).

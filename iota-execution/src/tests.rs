@@ -49,8 +49,9 @@ fn test_encapsulation() {
 
         for exec_crate in &exec_crates {
             let paths = all_simple_paths::<Vec<&str>, &PackageGraph>(
-                &graph, root, exec_crate, /* min_intermediate_nodes */ 0,
-                /* max_intermediate_nodes */ None,
+                &graph, root, exec_crate, // min_intermediate_nodes
+                0, // max_intermediate_nodes
+                None,
             );
 
             examples.extend(paths.map(|p| p.join(" -> ")));

@@ -9,7 +9,7 @@ use parking_lot::RwLock;
 
 use crate::{
     block::{BlockAPI, BlockRef, Round, Slot, VerifiedBlock},
-    commit::{LeaderStatus, WaveNumber, DEFAULT_WAVE_LENGTH, MINIMUM_WAVE_LENGTH},
+    commit::{DEFAULT_WAVE_LENGTH, LeaderStatus, MINIMUM_WAVE_LENGTH, WaveNumber},
     context::Context,
     dag_state::DagState,
     leader_schedule::LeaderSchedule,
@@ -248,7 +248,11 @@ impl BaseCommitter {
                     if let Some(potential_vote) = potential_vote {
                         self.is_vote(&potential_vote, leader_block)
                     } else {
-                        assert!(reference.round <= gc_round, "Block not found in storage: {:?} , and is not below gc_round: {gc_round}", reference);
+                        assert!(
+                            reference.round <= gc_round,
+                            "Block not found in storage: {:?} , and is not below gc_round: {gc_round}",
+                            reference
+                        );
                         false
                     }
                 } else {

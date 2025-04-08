@@ -2,19 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::SecurityWatchdogConfig;
+use std::{any::Any, collections::HashMap};
+
 use anyhow::anyhow;
-use arrow_array::cast::AsArray;
-use arrow_array::types::{
-    Decimal128Type, Float16Type, Float32Type, Float64Type, Int16Type, Int32Type, Int64Type,
-    Int8Type, UInt16Type, UInt32Type, UInt64Type, UInt8Type,
+use arrow_array::{
+    Array, Float32Array, RecordBatch,
+    cast::AsArray,
+    types::{
+        Decimal128Type, Float16Type, Float32Type, Float64Type, Int8Type, Int16Type, Int32Type,
+        Int64Type, UInt8Type, UInt16Type, UInt32Type, UInt64Type,
+    },
 };
-use arrow_array::{Array, Float32Array, RecordBatch};
 use lexical_util::num::AsPrimitive;
 use snowflake_api::{QueryResult, SnowflakeApi};
-use std::any::Any;
-use std::collections::HashMap;
 use tracing::info;
+
+use crate::SecurityWatchdogConfig;
 
 pub type Row = HashMap<String, Box<dyn Any + Send>>;
 

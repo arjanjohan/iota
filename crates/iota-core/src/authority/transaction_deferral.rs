@@ -2,8 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use serde::{Deserialize, Serialize};
 use iota_types::{base_types::ObjectID, messages_consensus::Round};
+use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum DeferralKey {
@@ -100,13 +100,13 @@ pub fn transaction_deferral_within_limit(
 
 #[cfg(test)]
 mod object_cost_tests {
-    use super::*;
-    use typed_store::DBMapUtils;
-    use typed_store::Map;
     use typed_store::{
+        DBMapUtils, Map,
         rocks::{DBMap, MetricConf},
         traits::{TableSummary, TypedStoreDebug},
     };
+
+    use super::*;
 
     #[tokio::test]
     async fn test_deferral_key_sort_order() {

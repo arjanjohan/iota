@@ -123,11 +123,7 @@ impl<S: Stream + Sized + 'static> TrySpawnStreamExt for S {
             }
         }
 
-        if let Some(e) = error {
-            Err(e)
-        } else {
-            Ok(())
-        }
+        if let Some(e) = error { Err(e) } else { Ok(()) }
     }
 }
 
@@ -175,8 +171,8 @@ pub async fn graceful_shutdown<T>(
 mod tests {
     use std::{
         sync::{
-            atomic::{AtomicUsize, Ordering},
             Arc, Mutex,
+            atomic::{AtomicUsize, Ordering},
         },
         time::Duration,
     };

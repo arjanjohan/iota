@@ -2,39 +2,42 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{
-    workload::{Workload, WorkloadBuilder, MAX_GAS_FOR_TESTING},
-    WorkloadBuilderInfo, WorkloadParams,
-};
-use crate::drivers::Interval;
-use crate::in_memory_wallet::move_call_pt_impl;
-use crate::in_memory_wallet::InMemoryWallet;
-use crate::system_state_observer::{SystemState, SystemStateObserver};
-use crate::workloads::payload::Payload;
-use crate::workloads::{workload::ExpectedFailureType, Gas, GasCoinConfig};
-use crate::ProgrammableTransactionBuilder;
-use crate::{convert_move_call_args, BenchMoveCallArg, ExecutionEffects, ValidatorProxy};
+use std::{path::PathBuf, str::FromStr, sync::Arc};
+
 use anyhow::anyhow;
 use async_trait::async_trait;
-use move_core_types::identifier::Identifier;
-use rand::distributions::{Distribution, Standard};
-use rand::Rng;
-use regex::Regex;
-use std::path::PathBuf;
-use std::str::FromStr;
-use std::sync::Arc;
-use strum::{EnumCount, IntoEnumIterator};
-use strum_macros::{EnumCount as EnumCountMacro, EnumIter};
 use iota_protocol_config::ProtocolConfig;
 use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::base_types::{random_object_ref, ObjectRef};
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::transaction::Command;
-use iota_types::transaction::{CallArg, ObjectArg};
-use iota_types::{base_types::ObjectID, object::Owner};
-use iota_types::{base_types::IotaAddress, crypto::get_key_pair, transaction::Transaction};
-use iota_types::{transaction::TransactionData, utils::to_sender_signed_transaction};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef, random_object_ref},
+    crypto::get_key_pair,
+    effects::TransactionEffectsAPI,
+    object::Owner,
+    transaction::{CallArg, Command, ObjectArg, Transaction, TransactionData},
+    utils::to_sender_signed_transaction,
+};
+use move_core_types::identifier::Identifier;
+use rand::{
+    Rng,
+    distributions::{Distribution, Standard},
+};
+use regex::Regex;
+use strum::{EnumCount, IntoEnumIterator};
+use strum_macros::{EnumCount as EnumCountMacro, EnumIter};
 use tracing::debug;
+
+use super::{
+    WorkloadBuilderInfo, WorkloadParams,
+    workload::{MAX_GAS_FOR_TESTING, Workload, WorkloadBuilder},
+};
+use crate::{
+    BenchMoveCallArg, ExecutionEffects, ProgrammableTransactionBuilder, ValidatorProxy,
+    convert_move_call_args,
+    drivers::Interval,
+    in_memory_wallet::{InMemoryWallet, move_call_pt_impl},
+    system_state_observer::{SystemState, SystemStateObserver},
+    workloads::{Gas, GasCoinConfig, payload::Payload, workload::ExpectedFailureType},
+};
 
 /// Number of vectors to create in LargeTransientRuntimeVectors workload
 const NUM_VECTORS: u64 = 1_000;
@@ -486,7 +489,7 @@ impl Workload<dyn Payload> for AdversarialWorkload {
             .unwrap();
 
         for o in &created {
-            let obj = proxy.get_object(o.0 .0).await.unwrap();
+            let obj = proxy.get_object(o.0.0).await.unwrap();
             if let Some(tag) = obj.data.struct_tag() {
                 if tag.to_string().contains("::adversarial::Obj") {
                     self.df_parent_obj_ref = o.0;
@@ -497,10 +500,10 @@ impl Workload<dyn Payload> for AdversarialWorkload {
             self.df_parent_obj_ref.0 != ObjectID::ZERO,
             "Dynamic field parent must be created"
         );
-        self.package_id = package_obj.0 .0;
+        self.package_id = package_obj.0.0;
 
         let gas_ref = proxy
-            .get_object(gas.0 .0)
+            .get_object(gas.0.0)
             .await
             .unwrap()
             .compute_object_reference();
@@ -510,7 +513,7 @@ impl Workload<dyn Payload> for AdversarialWorkload {
         let transaction = move_call_pt_impl(
             gas.1,
             &gas.2,
-            package_obj.0 .0,
+            package_obj.0.0,
             "adversarial",
             "create_min_size_shared_objects",
             vec![],
@@ -528,7 +531,7 @@ impl Workload<dyn Payload> for AdversarialWorkload {
         // We've seen that the shared objects are indeed created,we store them so we can read them in MaxReads workload
         self.shared_objs = created
             .iter()
-            .map(|o| BenchMoveCallArg::Shared((o.0 .0, o.0 .1, false)))
+            .map(|o| BenchMoveCallArg::Shared((o.0.0, o.0.1, false)))
             .collect();
     }
 

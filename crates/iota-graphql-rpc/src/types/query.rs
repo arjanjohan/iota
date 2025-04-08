@@ -6,21 +6,16 @@ use std::str::FromStr;
 
 use async_graphql::{connection::Connection, *};
 use fastcrypto::encoding::{Base64, Encoding};
-use move_core_types::account_address::AccountAddress;
-use serde::de::DeserializeOwned;
 use iota_json_rpc_types::DevInspectArgs;
 use iota_sdk::IotaClient;
-use iota_types::transaction::{TransactionData, TransactionKind};
-use iota_types::{gas_coin::GAS, transaction::TransactionDataAPI, TypeTag};
-
-use super::move_package::{
-    self, MovePackage, MovePackageCheckpointFilter, MovePackageVersionFilter,
+use iota_types::{
+    TypeTag,
+    gas_coin::GAS,
+    transaction::{TransactionData, TransactionDataAPI, TransactionKind},
 };
-use super::move_registry::named_move_package::NamedMovePackage;
-use super::move_registry::named_type::NamedType;
-use super::object::ObjectKey;
-use super::iotans_registration::NameService;
-use super::uint53::UInt53;
+use move_core_types::account_address::AccountAddress;
+use serde::de::DeserializeOwned;
+
 use super::{
     address::Address,
     available_range::AvailableRange,
@@ -33,23 +28,32 @@ use super::{
     dry_run_result::DryRunResult,
     epoch::{self, Epoch},
     event::{self, Event, EventFilter},
+    iota_address::IotaAddress,
+    iotans_registration::{Domain, NameService},
+    move_package::{self, MovePackage, MovePackageCheckpointFilter, MovePackageVersionFilter},
+    move_registry::{named_move_package::NamedMovePackage, named_type::NamedType},
     move_type::MoveType,
-    object::{self, Object, ObjectFilter},
+    object::{self, Object, ObjectFilter, ObjectKey},
     owner::Owner,
     protocol_config::ProtocolConfigs,
-    iota_address::IotaAddress,
-    iotans_registration::Domain,
     transaction_block::{self, TransactionBlock, TransactionBlockFilter},
     transaction_metadata::TransactionMetadata,
     type_filter::ExactTypeFilter,
+    uint53::UInt53,
 };
-use crate::connection::ScanConnection;
-use crate::server::watermark_task::Watermark;
-use crate::types::base64::Base64 as GraphQLBase64;
-use crate::types::zklogin_verify_signature::verify_zklogin_signature;
-use crate::types::zklogin_verify_signature::ZkLoginIntentScope;
-use crate::types::zklogin_verify_signature::ZkLoginVerifyResult;
-use crate::{config::ServiceConfig, error::Error, mutation::Mutation};
+use crate::{
+    config::ServiceConfig,
+    connection::ScanConnection,
+    error::Error,
+    mutation::Mutation,
+    server::watermark_task::Watermark,
+    types::{
+        base64::Base64 as GraphQLBase64,
+        zklogin_verify_signature::{
+            ZkLoginIntentScope, ZkLoginVerifyResult, verify_zklogin_signature,
+        },
+    },
+};
 
 pub(crate) struct Query;
 pub(crate) type IotaGraphQLSchema = async_graphql::Schema<Query, Mutation, EmptySubscription>;
@@ -370,7 +374,8 @@ impl Query {
             ctx.data_unchecked(),
             page,
             coin,
-            /* owner */ None,
+            // owner
+            None,
             hi_cp,
         )
         .await

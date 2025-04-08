@@ -4,21 +4,21 @@
 
 use std::{collections::BTreeMap, sync::Arc};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use diesel::sql_query;
 use diesel_async::RunQueryDsl;
 use iota_field_count::FieldCount;
-use iota_indexer_alt_framework::pipeline::{concurrent::Handler, Processor};
+use iota_indexer_alt_framework::pipeline::{Processor, concurrent::Handler};
 use iota_indexer_alt_schema::{
     objects::{StoredCoinBalanceBucket, StoredCoinOwnerKind},
     schema::coin_balance_buckets,
 };
 use iota_pg_db as db;
 use iota_types::{
-    base_types::{ObjectID, IotaAddress},
+    TypeTag,
+    base_types::{IotaAddress, ObjectID},
     full_checkpoint_content::CheckpointData,
     object::{Object, Owner},
-    TypeTag,
 };
 
 use crate::consistent_pruning::{PruningInfo, PruningLookupTable};
@@ -289,16 +289,19 @@ pub(crate) fn get_coin_balance_bucket(coin: &Object) -> anyhow::Result<i16> {
 mod tests {
     use std::str::FromStr;
 
-    use super::*;
     use diesel::QueryDsl;
     use iota_indexer_alt_framework::Indexer;
     use iota_indexer_alt_schema::MIGRATIONS;
     use iota_protocol_config::ProtocolConfig;
-    use iota_types::base_types::{dbg_addr, MoveObjectType, ObjectID, SequenceNumber, IotaAddress};
-    use iota_types::digests::TransactionDigest;
-    use iota_types::gas_coin::GAS;
-    use iota_types::object::{Authenticator, MoveObject, Object};
-    use iota_types::test_checkpoint_data_builder::TestCheckpointDataBuilder;
+    use iota_types::{
+        base_types::{IotaAddress, MoveObjectType, ObjectID, SequenceNumber, dbg_addr},
+        digests::TransactionDigest,
+        gas_coin::GAS,
+        object::{Authenticator, MoveObject, Object},
+        test_checkpoint_data_builder::TestCheckpointDataBuilder,
+    };
+
+    use super::*;
 
     // Get all balance buckets from the database, sorted by object_id and cp_sequence_number.
     async fn get_all_balance_buckets(

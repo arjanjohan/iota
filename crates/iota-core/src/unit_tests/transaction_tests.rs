@@ -2,43 +2,50 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::test_authority_builder::TestAuthorityBuilder;
-use crate::mock_consensus::with_block_status;
+use std::{
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    ops::Deref,
+};
+
 use consensus_core::{BlockRef, BlockStatus};
 use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair};
-use fastcrypto_zkp::bn254::zk_login::{parse_jwks, OIDCProvider, ZkLoginInputs};
-use move_core_types::ident_str;
-use rand::{rngs::StdRng, SeedableRng};
-use shared_crypto::intent::{Intent, IntentMessage};
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::ops::Deref;
-use iota_types::crypto::{PublicKey, IotaSignature, ToFromBytes, ZkLoginPublicIdentifier};
-use iota_types::messages_grpc::HandleSoftBundleCertificatesRequestV3;
-use iota_types::utils::get_one_zklogin_inputs;
+use fastcrypto_zkp::bn254::zk_login::{OIDCProvider, ZkLoginInputs, parse_jwks};
+use iota_macros::sim_test;
+use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
 use iota_types::{
+    IOTA_SYSTEM_PACKAGE_ID,
     authenticator_state::ActiveJwk,
     base_types::dbg_addr,
-    crypto::{get_key_pair, AccountKeyPair, Signature, IotaKeyPair},
+    crypto::{
+        AccountKeyPair, IotaKeyPair, IotaSignature, PublicKey, Signature, ToFromBytes,
+        ZkLoginPublicIdentifier, get_key_pair,
+    },
     error::{IotaError, UserInputError},
+    iota_system_state::IOTA_SYSTEM_MODULE_NAME,
     messages_consensus::ConsensusDeterminedVersionAssignments,
+    messages_grpc::HandleSoftBundleCertificatesRequestV3,
     multisig::{MultiSig, MultiSigPublicKey},
     signature::GenericSignature,
     transaction::{
         AuthenticatorStateUpdate, GenesisTransaction, TransactionDataAPI, TransactionKind,
     },
-    utils::{load_test_vectors, to_sender_signed_transaction},
+    utils::{get_one_zklogin_inputs, load_test_vectors, to_sender_signed_transaction},
     zk_login_authenticator::ZkLoginAuthenticator,
     zk_login_util::DEFAULT_JWK_BYTES,
 };
+use move_core_types::ident_str;
+use rand::{SeedableRng, rngs::StdRng};
+use shared_crypto::intent::{Intent, IntentMessage};
 
-use crate::authority::authority_test_utils::send_batch_consensus_no_execution;
-use crate::authority::authority_tests::{call_move_, create_gas_objects, publish_object_basics};
-use crate::consensus_adapter::consensus_tests::make_consensus_adapter_for_test;
-use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-use iota_types::iota_system_state::IOTA_SYSTEM_MODULE_NAME;
-use iota_types::IOTA_SYSTEM_PACKAGE_ID;
-
-use iota_macros::sim_test;
+use crate::{
+    authority::{
+        authority_test_utils::send_batch_consensus_no_execution,
+        authority_tests::{call_move_, create_gas_objects, publish_object_basics},
+        test_authority_builder::TestAuthorityBuilder,
+    },
+    consensus_adapter::consensus_tests::make_consensus_adapter_for_test,
+    mock_consensus::with_block_status,
+};
 macro_rules! assert_matches {
     ($expression:expr, $pattern:pat $(if $guard: expr)?) => {
         match $expression {
@@ -53,21 +60,22 @@ macro_rules! assert_matches {
     };
 }
 
+use fastcrypto::traits::AggregateAuthenticator;
+use iota_types::{
+    digests::ConsensusCommitDigest,
+    messages_consensus::{
+        ConsensusCommitPrologue, ConsensusCommitPrologueV2, ConsensusCommitPrologueV3,
+    },
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+};
+
+use super::*;
+pub use crate::authority::authority_test_utils::init_state_with_ids;
 use crate::{
     authority_client::{AuthorityAPI, NetworkAuthorityClient},
     authority_server::{AuthorityServer, AuthorityServerHandle},
     stake_aggregator::{InsertResult, StakeAggregator},
 };
-
-use super::*;
-use fastcrypto::traits::AggregateAuthenticator;
-use iota_types::digests::ConsensusCommitDigest;
-use iota_types::messages_consensus::{
-    ConsensusCommitPrologue, ConsensusCommitPrologueV2, ConsensusCommitPrologueV3,
-};
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-
-pub use crate::authority::authority_test_utils::init_state_with_ids;
 
 #[sim_test]
 async fn test_handle_transfer_transaction_bad_signature() {
@@ -572,10 +580,12 @@ async fn test_zklogin_transfer_with_large_address_seed() {
     )
     .await;
 
-    assert!(client
-        .handle_transaction(tx, Some(make_socket_addr()))
-        .await
-        .is_err());
+    assert!(
+        client
+            .handle_transaction(tx, Some(make_socket_addr()))
+            .await
+            .is_err()
+    );
 }
 
 #[sim_test]
@@ -684,10 +694,12 @@ async fn zklogin_test_caching_scenarios() {
     )
     .await;
 
-    assert!(client
-        .handle_transaction(txn3, Some(socket_addr))
-        .await
-        .is_ok());
+    assert!(
+        client
+            .handle_transaction(txn3, Some(socket_addr))
+            .await
+            .is_ok()
+    );
 
     assert_eq!(
         epoch_store
@@ -714,10 +726,12 @@ async fn zklogin_test_caching_scenarios() {
         multisig_pk.clone(),
     )
     .await;
-    assert!(client
-        .handle_transaction(multisig_txn, Some(socket_addr))
-        .await
-        .is_ok());
+    assert!(
+        client
+            .handle_transaction(multisig_txn, Some(socket_addr))
+            .await
+            .is_ok()
+    );
 
     assert_eq!(
         epoch_store
@@ -910,10 +924,12 @@ async fn do_zklogin_transaction_test(
 
     post_sign_mutations(&mut transfer_transaction);
 
-    assert!(client
-        .handle_transaction(transfer_transaction, Some(make_socket_addr()))
-        .await
-        .is_err());
+    assert!(
+        client
+            .handle_transaction(transfer_transaction, Some(make_socket_addr()))
+            .await
+            .is_err()
+    );
 
     assert_eq!(
         epoch_store
@@ -932,14 +948,16 @@ async fn do_zklogin_transaction_test(
 async fn check_locks(authority_state: Arc<AuthorityState>, object_ids: Vec<ObjectID>) {
     for object_id in object_ids {
         let object = authority_state.get_object(&object_id).await.unwrap();
-        assert!(authority_state
-            .get_transaction_lock(
-                &object.compute_object_reference(),
-                &authority_state.epoch_store_for_testing()
-            )
-            .await
-            .unwrap()
-            .is_none());
+        assert!(
+            authority_state
+                .get_transaction_lock(
+                    &object.compute_object_reference(),
+                    &authority_state.epoch_store_for_testing()
+                )
+                .await
+                .unwrap()
+                .is_none()
+        );
     }
 }
 
@@ -1381,11 +1399,12 @@ async fn test_oversized_txn() {
         .handle_transaction(txn, Some(make_socket_addr()))
         .await;
     // The txn should be rejected due to its size.
-    assert!(res
-        .err()
-        .unwrap()
-        .to_string()
-        .contains("serialized transaction size exceeded maximum"));
+    assert!(
+        res.err()
+            .unwrap()
+            .to_string()
+            .contains("serialized transaction size exceeded maximum")
+    );
 }
 
 #[tokio::test]
@@ -1663,7 +1682,7 @@ async fn test_handle_soft_bundle_certificates() {
         .await
         .unwrap();
         effects.status().unwrap();
-        let shared_object_id = effects.created()[0].0 .0;
+        let shared_object_id = effects.created()[0].0.0;
         authority.get_object(&shared_object_id).await.unwrap()
     };
     let initial_shared_version = shared_object.version();
@@ -1722,9 +1741,10 @@ async fn test_handle_soft_bundle_certificates() {
                 package.0,
                 ident_str!("object_basics").to_owned(),
                 ident_str!("set_value").to_owned(),
-                /* type_args */ vec![],
+                // type_args
+                vec![],
                 gas_object_ref,
-                /* args */
+                // args
                 vec![
                     CallArg::Object(ObjectArg::SharedObject {
                         id: shared_object.id(),
@@ -1764,9 +1784,12 @@ async fn test_handle_soft_bundle_certificates() {
     let mut expected_object_version = initial_shared_version;
     for response in responses {
         let input_objects = response.input_objects.unwrap();
-        assert!(input_objects
-            .iter()
-            .any(|obj| obj.id() == shared_object.id() && obj.version() == expected_object_version));
+        assert!(
+            input_objects
+                .iter()
+                .any(|obj| obj.id() == shared_object.id()
+                    && obj.version() == expected_object_version)
+        );
 
         let output_objects = response.output_objects.unwrap();
         let output_object = output_objects
@@ -1823,7 +1846,7 @@ async fn test_handle_soft_bundle_certificates_errors() {
         .await
         .unwrap();
         effects.status().unwrap();
-        let shared_object_id = effects.created()[0].0 .0;
+        let shared_object_id = effects.created()[0].0.0;
         authority.get_object(&shared_object_id).await.unwrap()
     };
     let initial_shared_version = shared_object.version();
@@ -1996,9 +2019,10 @@ async fn test_handle_soft_bundle_certificates_errors() {
                 package.0,
                 ident_str!("object_basics").to_owned(),
                 ident_str!("set_value").to_owned(),
-                /* type_args */ vec![],
+                // type_args
+                vec![],
                 gas_object_ref,
-                /* args */
+                // args
                 vec![
                     CallArg::Object(ObjectArg::SharedObject {
                         id: shared_object.id(),
@@ -2025,9 +2049,10 @@ async fn test_handle_soft_bundle_certificates_errors() {
                 package.0,
                 ident_str!("object_basics").to_owned(),
                 ident_str!("set_value").to_owned(),
-                /* type_args */ vec![],
+                // type_args
+                vec![],
                 gas_object_ref,
-                /* args */
+                // args
                 vec![
                     CallArg::Object(ObjectArg::SharedObject {
                         id: shared_object.id(),
@@ -2080,9 +2105,10 @@ async fn test_handle_soft_bundle_certificates_errors() {
                 package.0,
                 ident_str!("object_basics").to_owned(),
                 ident_str!("set_value").to_owned(),
-                /* type_args */ vec![],
+                // type_args
+                vec![],
                 gas_object_ref,
-                /* args */
+                // args
                 vec![
                     CallArg::Object(ObjectArg::SharedObject {
                         id: shared_object.id(),
@@ -2109,9 +2135,10 @@ async fn test_handle_soft_bundle_certificates_errors() {
                 package.0,
                 ident_str!("object_basics").to_owned(),
                 ident_str!("set_value").to_owned(),
-                /* type_args */ vec![],
+                // type_args
+                vec![],
                 gas_object_ref,
-                /* args */
+                // args
                 vec![
                     CallArg::Object(ObjectArg::SharedObject {
                         id: shared_object.id(),

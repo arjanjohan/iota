@@ -491,7 +491,9 @@ pub enum EffectsFinality {
         signature: iota_sdk_types::ValidatorAggregatedSignature,
     },
     Checkpointed {
-        #[serde_as(as = "iota_types::iota_serde::Readable<iota_types::iota_serde::BigInt<u64>, _>")]
+        #[serde_as(
+            as = "iota_types::iota_serde::Readable<iota_types::iota_serde::BigInt<u64>, _>"
+        )]
         checkpoint: iota_sdk_types::CheckpointSequenceNumber,
     },
     QuorumExecuted,

@@ -302,15 +302,14 @@ impl Default for BoundedVisitor {
 pub(crate) mod tests {
     use std::str::FromStr;
 
-    use super::*;
-
     use expect_test::expect;
     use move_core_types::{identifier::Identifier, language_storage::StructTag};
 
+    use super::*;
+
     #[test]
     fn test_success() {
-        use A::MoveTypeLayout as T;
-        use A::MoveValue as V;
+        use A::{MoveTypeLayout as T, MoveValue as V};
 
         let type_layout = layout_(
             "0x0::foo::Bar",
@@ -339,8 +338,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_env_variable_override() {
-        use A::MoveTypeLayout as T;
-        use A::MoveValue as V;
+        use A::{MoveTypeLayout as T, MoveValue as V};
 
         let type_layout = layout_(
             "0x0::foo::Bar",
@@ -393,8 +391,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_too_deep() {
-        use A::MoveTypeLayout as T;
-        use A::MoveValue as V;
+        use A::{MoveTypeLayout as T, MoveValue as V};
 
         let mut layout = T::U64;
         let mut value = V::U64(42);
@@ -421,8 +418,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_too_wide() {
-        use A::MoveTypeLayout as T;
-        use A::MoveValue as V;
+        use A::{MoveTypeLayout as T, MoveValue as V};
 
         const WIDTH: usize = 10;
         let mut idents = vec![];
@@ -463,8 +459,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_big_types() {
-        use A::MoveTypeLayout as T;
-        use A::MoveValue as V;
+        use A::{MoveTypeLayout as T, MoveValue as V};
 
         let big_mod_ = "m".repeat(128);
         let big_name = "T".repeat(128);

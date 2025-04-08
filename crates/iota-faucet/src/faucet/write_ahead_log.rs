@@ -4,15 +4,17 @@
 
 use std::path::Path;
 
+use iota_types::{
+    base_types::{IotaAddress, ObjectID},
+    transaction::TransactionData,
+};
 use serde::{Deserialize, Serialize};
-use iota_types::base_types::IotaAddress;
-use iota_types::{base_types::ObjectID, transaction::TransactionData};
-use typed_store::traits::{TableSummary, TypedStoreDebug};
-use typed_store::Map;
-use typed_store::{rocks::DBMap, TypedStoreError};
-
 use tracing::info;
-use typed_store::DBMapUtils;
+use typed_store::{
+    DBMapUtils, Map, TypedStoreError,
+    rocks::DBMap,
+    traits::{TableSummary, TypedStoreDebug},
+};
 use uuid::Uuid;
 
 /// Persistent log of transactions paying out iota from the faucet, keyed by the coin serving the
@@ -134,7 +136,7 @@ impl WriteAheadLog {
 #[cfg(test)]
 mod tests {
     use iota_types::{
-        base_types::{random_object_ref, ObjectRef},
+        base_types::{ObjectRef, random_object_ref},
         transaction::TEST_ONLY_GAS_UNIT_FOR_TRANSFER,
     };
 

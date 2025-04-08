@@ -2,29 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    collections::{BTreeSet, HashSet},
+    sync::Arc,
+    time::Duration,
+};
+
 use futures::future::join_all;
-use rand::rngs::OsRng;
-use std::collections::{BTreeSet, HashSet};
-use std::sync::Arc;
-use std::time::Duration;
 use iota_core::consensus_adapter::position_submit_certificate;
 use iota_json_rpc_types::IotaTransactionBlockEffectsAPI;
 use iota_macros::sim_test;
 use iota_node::IotaNodeHandle;
 use iota_protocol_config::ProtocolConfig;
 use iota_swarm_config::genesis_config::{ValidatorGenesisConfig, ValidatorGenesisConfigBuilder};
-use iota_test_transaction_builder::{make_transfer_iota_transaction, TestTransactionBuilder};
-use iota_types::base_types::IotaAddress;
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::error::IotaError;
-use iota_types::gas::GasCostSummary;
-use iota_types::governance::MIN_VALIDATOR_JOINING_STAKE_NANOS;
-use iota_types::message_envelope::Message;
-use iota_types::iota_system_state::{
-    get_validator_from_table, iota_system_state_summary::get_validator_by_pool_id,
-    IotaSystemStateTrait,
+use iota_test_transaction_builder::{TestTransactionBuilder, make_transfer_iota_transaction};
+use iota_types::{
+    base_types::IotaAddress,
+    effects::TransactionEffectsAPI,
+    error::IotaError,
+    gas::GasCostSummary,
+    governance::MIN_VALIDATOR_JOINING_STAKE_NANOS,
+    iota_system_state::{
+        IotaSystemStateTrait, get_validator_from_table,
+        iota_system_state_summary::get_validator_by_pool_id,
+    },
+    message_envelope::Message,
+    transaction::{TransactionDataAPI, TransactionExpiration, VerifiedTransaction},
 };
-use iota_types::transaction::{TransactionDataAPI, TransactionExpiration, VerifiedTransaction};
+use rand::rngs::OsRng;
 use test_cluster::{TestCluster, TestClusterBuilder};
 use tokio::time::sleep;
 
@@ -50,13 +55,15 @@ async fn advance_epoch_tx_test() {
                 .await
                 .unwrap();
             // Check that the validator didn't commit the transaction yet.
-            assert!(state
-                .get_signed_effects_and_maybe_resign(
-                    effects.transaction_digest(),
-                    &state.epoch_store_for_testing()
-                )
-                .unwrap()
-                .is_none());
+            assert!(
+                state
+                    .get_signed_effects_and_maybe_resign(
+                        effects.transaction_digest(),
+                        &state.epoch_store_for_testing()
+                    )
+                    .unwrap()
+                    .is_none()
+            );
             effects
         })
         .collect();
@@ -100,10 +107,12 @@ async fn test_transaction_expiration() {
         .wallet
         .execute_transaction_may_fail(expired_transaction)
         .await;
-    assert!(result
-        .unwrap_err()
-        .to_string()
-        .contains(&IotaError::TransactionExpired.to_string()));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains(&IotaError::TransactionExpired.to_string())
+    );
 
     // Non expired transaction signed without issue
     *data.expiration_mut_for_testing() = TransactionExpiration::Epoch(10);
@@ -365,6 +374,7 @@ async fn test_expired_locks() {
 #[sim_test]
 async fn test_create_advance_epoch_tx_race() {
     use std::sync::Arc;
+
     use iota_macros::{register_fail_point, register_fail_point_async};
     use tokio::sync::broadcast;
     use tracing::info;
@@ -566,9 +576,10 @@ async fn test_inactive_validator_pool_read() {
 
     // Check that this node is no longer a validator.
     validator.with(|node| {
-        assert!(node
-            .state()
-            .is_fullnode(&node.state().epoch_store_for_testing()));
+        assert!(
+            node.state()
+                .is_fullnode(&node.state().epoch_store_for_testing())
+        );
     });
 
     // Check that the validator that just left now shows up in the inactive_validators,
@@ -627,9 +638,10 @@ async fn test_reconfig_with_committee_change_basic() {
     test_cluster.wait_for_epoch_all_nodes(1).await;
 
     new_validator_handle.with(|node| {
-        assert!(node
-            .state()
-            .is_validator(&node.state().epoch_store_for_testing()));
+        assert!(
+            node.state()
+                .is_validator(&node.state().epoch_store_for_testing())
+        );
     });
 
     execute_remove_validator_tx(&test_cluster, &new_validator_handle).await;
@@ -723,8 +735,8 @@ async fn do_test_reconfig_with_committee_change_stress() {
 #[sim_test]
 async fn test_epoch_flag_upgrade() {
     use std::sync::Mutex;
-    use iota_core::authority::epoch_start_configuration::EpochFlag;
-    use iota_core::authority::epoch_start_configuration::EpochStartConfigTrait;
+
+    use iota_core::authority::epoch_start_configuration::{EpochFlag, EpochStartConfigTrait};
     use iota_macros::register_fail_point_arg;
 
     let initial_flags_nodes = Arc::new(Mutex::new(HashSet::new()));

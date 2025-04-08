@@ -7,16 +7,21 @@ use std::collections::BTreeMap;
 use async_trait::async_trait;
 use strum::IntoEnumIterator;
 
-use crate::errors::IndexerError;
-use crate::handlers::pruner::PrunableTable;
-use crate::handlers::{CommitterWatermark, EpochToCommit, TransactionObjectChangesToCommit};
-use crate::models::display::StoredDisplay;
-use crate::models::obj_indices::StoredObjectVersion;
-use crate::models::objects::{StoredDeletedObject, StoredObject};
-use crate::models::raw_checkpoints::StoredRawCheckpoint;
-use crate::models::watermarks::StoredWatermark;
-use crate::types::{
-    EventIndex, IndexedCheckpoint, IndexedEvent, IndexedPackage, IndexedTransaction, TxIndex,
+use crate::{
+    errors::IndexerError,
+    handlers::{
+        CommitterWatermark, EpochToCommit, TransactionObjectChangesToCommit, pruner::PrunableTable,
+    },
+    models::{
+        display::StoredDisplay,
+        obj_indices::StoredObjectVersion,
+        objects::{StoredDeletedObject, StoredObject},
+        raw_checkpoints::StoredRawCheckpoint,
+        watermarks::StoredWatermark,
+    },
+    types::{
+        EventIndex, IndexedCheckpoint, IndexedEvent, IndexedPackage, IndexedTransaction, TxIndex,
+    },
 };
 
 #[allow(clippy::large_enum_variant)]

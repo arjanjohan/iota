@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use http::{request, response, HeaderMap};
+use http::{HeaderMap, request, response};
 
 mod body;
 mod future;

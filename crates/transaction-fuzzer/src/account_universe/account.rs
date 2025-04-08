@@ -8,12 +8,12 @@
 
 use std::sync::Arc;
 
-use proptest::prelude::*;
 use iota_types::{
-    base_types::{ObjectID, IotaAddress},
-    crypto::{get_key_pair, AccountKeyPair},
+    base_types::{IotaAddress, ObjectID},
+    crypto::{AccountKeyPair, get_key_pair},
     object::Object,
 };
+use proptest::prelude::*;
 
 use crate::executor::Executor;
 

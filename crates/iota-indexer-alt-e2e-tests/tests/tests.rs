@@ -7,33 +7,33 @@ use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     path::Path,
     sync::{
-        atomic::{AtomicUsize, Ordering},
         Arc,
+        atomic::{AtomicUsize, Ordering},
     },
     time::Duration,
 };
 
-use anyhow::{anyhow, bail, Context};
-use diesel::{dsl, ExpressionMethods, QueryDsl};
+use anyhow::{Context, anyhow, bail};
+use diesel::{ExpressionMethods, QueryDsl, dsl};
 use diesel_async::RunQueryDsl;
-use prometheus::Registry;
-use reqwest::Client;
-use serde_json::{json, Value};
 use iota_indexer_alt::{config::IndexerConfig, start_indexer};
-use iota_indexer_alt_framework::{ingestion::ClientArgs, schema::watermarks, IndexerArgs};
+use iota_indexer_alt_framework::{IndexerArgs, ingestion::ClientArgs, schema::watermarks};
 use iota_indexer_alt_jsonrpc::{
-    config::RpcConfig, data::system_package_task::SystemPackageTaskArgs, start_rpc, RpcArgs,
+    RpcArgs, config::RpcConfig, data::system_package_task::SystemPackageTaskArgs, start_rpc,
 };
 use iota_pg_db::{
-    temp::{get_available_port, TempDb},
     Db, DbArgs,
+    temp::{TempDb, get_available_port},
 };
 use iota_transactional_test_runner::{
     create_adapter,
     offchain_state::{OffchainStateReader, TestResponse},
     run_tasks_with_adapter,
-    test_adapter::{OffChainConfig, IotaTestAdapter, PRE_COMPILED},
+    test_adapter::{IotaTestAdapter, OffChainConfig, PRE_COMPILED},
 };
+use prometheus::Registry;
+use reqwest::Client;
+use serde_json::{Value, json};
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use url::Url;
@@ -216,7 +216,9 @@ impl OffchainStateReader for OffchainReader {
     }
 
     async fn wait_for_pruned_checkpoint(&self, _: u64, _: Duration) {
-        unimplemented!("Waiting for pruned checkpoints is not supported in these tests (add it if you need it)");
+        unimplemented!(
+            "Waiting for pruned checkpoints is not supported in these tests (add it if you need it)"
+        );
     }
 
     async fn execute_graphql(&self, _: String, _: bool) -> anyhow::Result<TestResponse> {

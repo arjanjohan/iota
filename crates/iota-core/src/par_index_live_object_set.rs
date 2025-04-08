@@ -2,13 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::authority_store_tables::LiveObject;
-use crate::authority::AuthorityStore;
 use std::time::Instant;
-use iota_types::base_types::ObjectID;
-use iota_types::object::Object;
-use iota_types::storage::error::Error as StorageError;
+
+use iota_types::{base_types::ObjectID, object::Object, storage::error::Error as StorageError};
 use tracing::info;
+
+use crate::authority::{AuthorityStore, authority_store_tables::LiveObject};
 
 /// Make `LiveObjectIndexer`s for parallel indexing of the live object set
 pub trait ParMakeLiveObjectIndexer: Sync {

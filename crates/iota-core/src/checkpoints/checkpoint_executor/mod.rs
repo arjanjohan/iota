@@ -19,33 +19,32 @@
 //! CheckpointExecutor enforces the invariant that if `run` returns successfully, we have reached the
 //! end of epoch. This allows us to use it as a signal for reconfig.
 
-use std::path::PathBuf;
 use std::{
     collections::HashMap,
+    path::PathBuf,
     sync::Arc,
     time::{Duration, Instant},
 };
 
 use either::Either;
 use futures::stream::FuturesOrdered;
-use itertools::izip;
-use iota_metrics::spawn_monitored_task;
 use iota_config::node::{CheckpointExecutorConfig, RunWithRange};
 use iota_macros::{fail_point, fail_point_async};
-use iota_types::accumulator::Accumulator;
-use iota_types::crypto::RandomnessRound;
-use iota_types::effects::{TransactionEffects, TransactionEffectsAPI};
-use iota_types::executable_transaction::VerifiedExecutableTransaction;
-use iota_types::full_checkpoint_content::CheckpointData;
-use iota_types::inner_temporary_store::PackageStoreWithFallback;
-use iota_types::message_envelope::Message;
-use iota_types::transaction::TransactionKind;
+use iota_metrics::spawn_monitored_task;
 use iota_types::{
+    accumulator::Accumulator,
     base_types::{ExecutionDigests, TransactionDigest, TransactionEffectsDigest},
+    crypto::RandomnessRound,
+    effects::{TransactionEffects, TransactionEffectsAPI},
+    error::IotaResult,
+    executable_transaction::VerifiedExecutableTransaction,
+    full_checkpoint_content::CheckpointData,
+    inner_temporary_store::PackageStoreWithFallback,
+    message_envelope::Message,
     messages_checkpoint::{CheckpointSequenceNumber, VerifiedCheckpoint},
-    transaction::VerifiedTransaction,
+    transaction::{TransactionDataAPI, TransactionKind, VerifiedTransaction},
 };
-use iota_types::{error::IotaResult, transaction::TransactionDataAPI};
+use itertools::izip;
 use tap::{TapFallible, TapOptional};
 use tokio::{
     sync::broadcast::{self, error::RecvError},
@@ -56,17 +55,20 @@ use tokio_stream::StreamExt;
 use tracing::{debug, error, info, instrument, trace, warn};
 
 use self::metrics::CheckpointExecutorMetrics;
-use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::authority::backpressure::BackpressureManager;
-use crate::authority::AuthorityState;
-use crate::checkpoints::checkpoint_executor::data_ingestion_handler::{
-    load_checkpoint_data, store_checkpoint_locally,
-};
-use crate::state_accumulator::StateAccumulator;
-use crate::transaction_manager::TransactionManager;
 use crate::{
-    checkpoints::CheckpointStore,
+    authority::{
+        AuthorityState, authority_per_epoch_store::AuthorityPerEpochStore,
+        backpressure::BackpressureManager,
+    },
+    checkpoints::{
+        CheckpointStore,
+        checkpoint_executor::data_ingestion_handler::{
+            load_checkpoint_data, store_checkpoint_locally,
+        },
+    },
     execution_cache::{ObjectCacheRead, TransactionCacheRead},
+    state_accumulator::StateAccumulator,
+    transaction_manager::TransactionManager,
 };
 
 mod data_ingestion_handler;
@@ -629,7 +631,7 @@ impl CheckpointExecutor {
                             checkpoint_acc,
                             checkpoint_data,
                             randomness_rounds,
-                        )
+                        );
                     }
                 }
             };
@@ -919,8 +921,7 @@ async fn handle_execution_effects(
                 if checkpoint.sequence_number > highest_seq + 1 {
                     trace!(
                         "Checkpoint {} is still executing. Highest executed = {}",
-                        checkpoint.sequence_number,
-                        highest_seq
+                        checkpoint.sequence_number, highest_seq
                     );
                     continue;
                 }
@@ -941,11 +942,7 @@ async fn handle_execution_effects(
                     .zip(all_tx_digests.clone())
                     .filter_map(
                         |(fx, digest)| {
-                            if fx.is_none() {
-                                Some(digest)
-                            } else {
-                                None
-                            }
+                            if fx.is_none() { Some(digest) } else { None }
                         },
                     )
                     .collect();
@@ -1083,11 +1080,13 @@ fn extract_end_of_epoch_tx(
         *checkpoint_sequence,
     );
 
-    assert!(change_epoch_tx
-        .data()
-        .intent_message()
-        .value
-        .is_end_of_epoch_tx());
+    assert!(
+        change_epoch_tx
+            .data()
+            .intent_message()
+            .value
+            .is_end_of_epoch_tx()
+    );
 
     Some((*digests, change_epoch_tx))
 }

@@ -11,13 +11,12 @@ use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, error, info, warn};
 
+use super::{BatchedRows, Handler};
 use crate::{
     metrics::{CheckpointLagMetricReporter, IndexerMetrics},
     pipeline::{Break, CommitterConfig, WatermarkPart},
     task::TrySpawnStreamExt,
 };
-
-use super::{BatchedRows, Handler};
 
 /// If the committer needs to retry a commit, it will wait this long initially.
 const INITIAL_RETRY_INTERVAL: Duration = Duration::from_millis(100);

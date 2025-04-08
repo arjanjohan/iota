@@ -4,17 +4,15 @@
 
 use std::sync::Arc;
 
-use serde::{Deserialize, Serialize};
 use iota_pg_db::{self as db, Db};
 use iota_types::full_checkpoint_content::CheckpointData;
+use serde::{Deserialize, Serialize};
 use tokio::{sync::mpsc, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 
-use super::{processor::processor, CommitterConfig, Processor, PIPELINE_BUFFER};
-
-use crate::{metrics::IndexerMetrics, models::watermarks::CommitterWatermark};
-
 use self::committer::committer;
+use super::{CommitterConfig, PIPELINE_BUFFER, Processor, processor::processor};
+use crate::{metrics::IndexerMetrics, models::watermarks::CommitterWatermark};
 
 mod committer;
 

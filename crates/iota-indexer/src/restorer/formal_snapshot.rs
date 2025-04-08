@@ -2,32 +2,33 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::BTreeMap;
-use std::num::NonZeroUsize;
-use std::path::PathBuf;
-use std::sync::Arc;
+use std::{collections::BTreeMap, num::NonZeroUsize, path::PathBuf, sync::Arc};
 
 use futures::future::{AbortHandle, AbortRegistration, Abortable};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use object_store::path::Path;
-use tokio::sync::{Mutex, Semaphore};
-use tokio::task;
-use tracing::info;
-
 use iota_config::object_storage_config::{ObjectStoreConfig, ObjectStoreType};
 use iota_core::authority::authority_store_tables::LiveObject;
-use iota_snapshot::reader::{download_bytes, LiveObjectIter, StateSnapshotReaderV1};
-use iota_snapshot::FileMetadata;
-use iota_storage::object_store::util::get;
-use iota_storage::object_store::ObjectStoreGetExt;
+use iota_snapshot::{
+    FileMetadata,
+    reader::{LiveObjectIter, StateSnapshotReaderV1, download_bytes},
+};
+use iota_storage::object_store::{ObjectStoreGetExt, util::get};
 use iota_types::accumulator::Accumulator;
+use object_store::path::Path;
+use tokio::{
+    sync::{Mutex, Semaphore},
+    task,
+};
+use tracing::info;
 
-use crate::config::RestoreConfig;
-use crate::errors::IndexerError;
-use crate::handlers::TransactionObjectChangesToCommit;
-use crate::restorer::archives::{read_restore_checkpoint_info, RestoreCheckpointInfo};
-use crate::store::{indexer_store::IndexerStore, PgIndexerStore};
-use crate::types::{IndexedCheckpoint, IndexedObject};
+use crate::{
+    config::RestoreConfig,
+    errors::IndexerError,
+    handlers::TransactionObjectChangesToCommit,
+    restorer::archives::{RestoreCheckpointInfo, read_restore_checkpoint_info},
+    store::{PgIndexerStore, indexer_store::IndexerStore},
+    types::{IndexedCheckpoint, IndexedObject},
+};
 
 pub type DigestByBucketAndPartition = BTreeMap<u32, BTreeMap<u32, [u8; 32]>>;
 pub type SnapshotChecksums = (DigestByBucketAndPartition, Accumulator);

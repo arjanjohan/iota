@@ -16,19 +16,19 @@
 //! - its definition does not involve type parameters
 //! - its only instance in existence is passed as an argument to the module initializer
 //! - it is never instantiated anywhere in its defining module
+use iota_types::{
+    IOTA_FRAMEWORK_ADDRESS,
+    base_types::{TX_CONTEXT_MODULE_NAME, TX_CONTEXT_STRUCT_NAME},
+    error::ExecutionError,
+    move_package::{FnInfoMap, is_test_fun},
+};
 use move_binary_format::file_format::{
     Ability, AbilitySet, Bytecode, CompiledModule, DatatypeHandle, FunctionDefinition,
     FunctionHandle, SignatureToken, StructDefinition,
 };
 use move_core_types::{ident_str, language_storage::ModuleId};
-use iota_types::{
-    base_types::{TX_CONTEXT_MODULE_NAME, TX_CONTEXT_STRUCT_NAME},
-    error::ExecutionError,
-    move_package::{is_test_fun, FnInfoMap},
-    IOTA_FRAMEWORK_ADDRESS,
-};
 
-use crate::{verification_failure, INIT_FN_NAME};
+use crate::{INIT_FN_NAME, verification_failure};
 
 pub fn verify_module(
     module: &CompiledModule,

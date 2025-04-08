@@ -2,13 +2,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::manage_package::resolve_lock_file_path;
+use std::{fs, path::Path};
+
 use clap::Parser;
+use iota_move_build::{BuildConfig, check_invalid_dependencies, check_unpublished_dependencies};
 use move_cli::base;
 use move_package::BuildConfig as MoveBuildConfig;
 use serde_json::json;
-use std::{fs, path::Path};
-use iota_move_build::{check_invalid_dependencies, check_unpublished_dependencies, BuildConfig};
+
+use crate::manage_package::resolve_lock_file_path;
 
 const LAYOUTS_DIR: &str = "layouts";
 const STRUCT_LAYOUTS_FILENAME: &str = "struct_layouts.yaml";

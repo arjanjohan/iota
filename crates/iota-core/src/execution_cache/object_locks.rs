@@ -2,19 +2,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::authority_per_epoch_store::{AuthorityPerEpochStore, LockDetails};
-use dashmap::mapref::entry::Entry as DashMapEntry;
-use dashmap::DashMap;
+use dashmap::{DashMap, mapref::entry::Entry as DashMapEntry};
 use iota_common::*;
-use iota_types::base_types::{ObjectID, ObjectRef};
-use iota_types::digests::TransactionDigest;
-use iota_types::error::{IotaError, IotaResult, UserInputError};
-use iota_types::object::Object;
-use iota_types::storage::ObjectStore;
-use iota_types::transaction::VerifiedSignedTransaction;
+use iota_types::{
+    base_types::{ObjectID, ObjectRef},
+    digests::TransactionDigest,
+    error::{IotaError, IotaResult, UserInputError},
+    object::Object,
+    storage::ObjectStore,
+    transaction::VerifiedSignedTransaction,
+};
 use tracing::{debug, info, instrument, trace};
 
 use super::writeback_cache::WritebackCache;
+use crate::authority::authority_per_epoch_store::{AuthorityPerEpochStore, LockDetails};
 
 type RefCount = usize;
 
@@ -259,7 +260,7 @@ impl ObjectLocks {
 #[cfg(test)]
 mod tests {
     use crate::execution_cache::{
-        writeback_cache::writeback_cache_tests::Scenario, ExecutionCacheWrite,
+        ExecutionCacheWrite, writeback_cache::writeback_cache_tests::Scenario,
     };
 
     #[tokio::test]

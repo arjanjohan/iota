@@ -2,31 +2,30 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::net::SocketAddr;
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
 use anyhow::Context as _;
-use api::checkpoints::Checkpoints;
-use api::dynamic_fields::DynamicFields;
-use api::objects::{Objects, ObjectsConfig, QueryObjects};
-use api::rpc_module::RpcModule;
-use api::transactions::{QueryTransactions, Transactions, TransactionsConfig};
+use api::{
+    checkpoints::Checkpoints,
+    dynamic_fields::DynamicFields,
+    objects::{Objects, ObjectsConfig, QueryObjects},
+    rpc_module::RpcModule,
+    transactions::{QueryTransactions, Transactions, TransactionsConfig},
+};
 use config::RpcConfig;
 use data::system_package_task::{SystemPackageTask, SystemPackageTaskArgs};
-use jsonrpsee::server::{RpcServiceBuilder, ServerBuilder};
-use metrics::middleware::MetricsLayer;
-use metrics::RpcMetrics;
-use prometheus::Registry;
-use serde_json::json;
 use iota_open_rpc::Project;
 use iota_pg_db::DbArgs;
+use jsonrpsee::server::{RpcServiceBuilder, ServerBuilder};
+use metrics::{RpcMetrics, middleware::MetricsLayer};
+use prometheus::Registry;
+use serde_json::json;
 use tokio::{join, signal, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 use tower_layer::Identity;
 use tracing::info;
 
-use crate::api::governance::Governance;
-use crate::context::Context;
+use crate::{api::governance::Governance, context::Context};
 
 mod api;
 pub mod args;
@@ -252,12 +251,12 @@ mod tests {
         time::Duration,
     };
 
-    use jsonrpsee::{core::RpcResult, proc_macros::rpc, types::error::METHOD_NOT_FOUND_CODE};
-    use reqwest::Client;
-    use serde_json::{json, Value};
     use iota_open_rpc::Module;
     use iota_open_rpc_macros::open_rpc;
     use iota_pg_db::temp::get_available_port;
+    use jsonrpsee::{core::RpcResult, proc_macros::rpc, types::error::METHOD_NOT_FOUND_CODE};
+    use reqwest::Client;
+    use serde_json::{Value, json};
 
     use super::*;
 

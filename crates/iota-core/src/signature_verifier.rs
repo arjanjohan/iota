@@ -2,39 +2,36 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::Arc;
+
 use either::Either;
-use fastcrypto_zkp::bn254::zk_login::JwkId;
-use fastcrypto_zkp::bn254::zk_login::{OIDCProvider, JWK};
-use fastcrypto_zkp::bn254::zk_login_api::ZkLoginEnv;
+use fastcrypto_zkp::bn254::{
+    zk_login::{JWK, JwkId, OIDCProvider},
+    zk_login_api::ZkLoginEnv,
+};
 use futures::pin_mut;
 use im::hashmap::HashMap as ImHashMap;
-use itertools::{izip, Itertools as _};
 use iota_metrics::monitored_scope;
-use parking_lot::{Mutex, MutexGuard, RwLock};
-use prometheus::{register_int_counter_with_registry, IntCounter, Registry};
-use shared_crypto::intent::Intent;
-use std::sync::Arc;
-use iota_types::digests::SenderSignedDataDigest;
-use iota_types::digests::ZKLoginInputsDigest;
-use iota_types::signature_verification::{
-    verify_sender_signed_data_message_signatures, VerifiedDigestCache,
-};
-use iota_types::transaction::SenderSignedData;
 use iota_types::{
     committee::Committee,
     crypto::{AuthoritySignInfoTrait, VerificationObligation},
-    digests::CertificateDigest,
+    digests::{CertificateDigest, SenderSignedDataDigest, ZKLoginInputsDigest},
     error::{IotaError, IotaResult},
     message_envelope::Message,
     messages_checkpoint::SignedCheckpointSummary,
     signature::VerifyParams,
-    transaction::{CertifiedTransaction, VerifiedCertificate},
+    signature_verification::{VerifiedDigestCache, verify_sender_signed_data_message_signatures},
+    transaction::{CertifiedTransaction, SenderSignedData, VerifiedCertificate},
 };
+use itertools::{Itertools as _, izip};
+use parking_lot::{Mutex, MutexGuard, RwLock};
+use prometheus::{IntCounter, Registry, register_int_counter_with_registry};
+use shared_crypto::intent::Intent;
 use tap::TapFallible;
-use tokio::runtime::Handle;
 use tokio::{
+    runtime::Handle,
     sync::oneshot,
-    time::{timeout, Duration},
+    time::{Duration, timeout},
 };
 use tracing::debug;
 // Maximum amount of time we wait for a batch to fill up before verifying a partial batch.

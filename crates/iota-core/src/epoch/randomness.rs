@@ -2,42 +2,53 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::{Arc, Weak},
+    time::Instant,
+};
+
 use anemo::PeerId;
-use fastcrypto::encoding::{Encoding, Hex};
-use fastcrypto::error::{FastCryptoError, FastCryptoResult};
-use fastcrypto::groups::bls12381;
-use fastcrypto::serde_helpers::ToFromByteArray;
-use fastcrypto::traits::{KeyPair, ToFromBytes};
+use fastcrypto::{
+    encoding::{Encoding, Hex},
+    error::{FastCryptoError, FastCryptoResult},
+    groups::bls12381,
+    serde_helpers::ToFromByteArray,
+    traits::{KeyPair, ToFromBytes},
+};
 use fastcrypto_tbls::{dkg_v1, dkg_v1::Output, nodes, nodes::PartyId};
-use futures::stream::FuturesUnordered;
-use futures::StreamExt;
-use parking_lot::Mutex;
-use rand::rngs::{OsRng, StdRng};
-use rand::SeedableRng;
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap};
-use std::sync::{Arc, Weak};
-use std::time::Instant;
+use futures::{StreamExt, stream::FuturesUnordered};
 use iota_macros::fail_point_if;
 use iota_network::randomness;
-use iota_types::base_types::AuthorityName;
-use iota_types::committee::{Committee, EpochId, StakeUnit};
-use iota_types::crypto::{AuthorityKeyPair, RandomnessRound};
-use iota_types::error::{IotaError, IotaResult};
-use iota_types::messages_consensus::{
-    ConsensusTransaction, Round, TimestampMs, VersionedDkgConfirmation, VersionedDkgMessage,
+use iota_types::{
+    base_types::AuthorityName,
+    committee::{Committee, EpochId, StakeUnit},
+    crypto::{AuthorityKeyPair, RandomnessRound},
+    error::{IotaError, IotaResult},
+    iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
+    messages_consensus::{
+        ConsensusTransaction, Round, TimestampMs, VersionedDkgConfirmation, VersionedDkgMessage,
+    },
 };
-use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait;
-use tokio::sync::OnceCell;
-use tokio::task::JoinHandle;
+use parking_lot::Mutex;
+use rand::{
+    SeedableRng,
+    rngs::{OsRng, StdRng},
+};
+use serde::{Deserialize, Serialize};
+use tokio::{sync::OnceCell, task::JoinHandle};
 use tracing::{debug, error, info, warn};
 use typed_store::Map;
 
-use crate::authority::authority_per_epoch_store::{
-    consensus_quarantine::ConsensusCommitOutput, AuthorityPerEpochStore,
+use crate::{
+    authority::{
+        authority_per_epoch_store::{
+            AuthorityPerEpochStore, consensus_quarantine::ConsensusCommitOutput,
+        },
+        epoch_start_configuration::EpochStartConfigTrait,
+    },
+    consensus_adapter::SubmitToConsensus,
 };
-use crate::authority::epoch_start_configuration::EpochStartConfigTrait;
-use crate::consensus_adapter::SubmitToConsensus;
 
 type PkG = bls12381::G2Element;
 type EncG = bls12381::G2Element;
@@ -186,7 +197,9 @@ impl RandomnessManager {
         let tables = match epoch_store.tables() {
             Ok(tables) => tables,
             Err(_) => {
-                error!("could not construct RandomnessManager: AuthorityPerEpochStore tables already gone");
+                error!(
+                    "could not construct RandomnessManager: AuthorityPerEpochStore tables already gone"
+                );
                 return None;
             }
         };
@@ -199,7 +212,9 @@ impl RandomnessManager {
             // Log first few entries in DKG info for debugging.
             for (id, name, pk, stake) in info.iter().filter(|(id, _, _, _)| *id < 3) {
                 let pk_bytes = pk.as_element().to_byte_array();
-                debug!("random beacon: DKG info: id={id}, stake={stake}, name={name}, pk={pk_bytes:x?}");
+                debug!(
+                    "random beacon: DKG info: id={id}, stake={stake}, name={name}, pk={pk_bytes:x?}"
+                );
             }
         }
         let authority_ids: HashMap<_, _> =
@@ -523,7 +538,9 @@ impl RandomnessManager {
                     let num_shares = output.shares.as_ref().map_or(0, |shares| shares.len());
                     let epoch_elapsed = epoch_store.epoch_open_time.elapsed().as_millis();
                     let elapsed = self.dkg_start_time.get().map(|t| t.elapsed().as_millis());
-                    info!("random beacon: DKG complete in {epoch_elapsed}ms since epoch start, {elapsed:?}ms since DKG start, with {num_shares} shares for this node");
+                    info!(
+                        "random beacon: DKG complete in {epoch_elapsed}ms since epoch start, {elapsed:?}ms since DKG start, with {num_shares} shares for this node"
+                    );
                     epoch_store
                         .metrics
                         .epoch_random_beacon_dkg_num_shares
@@ -564,7 +581,9 @@ impl RandomnessManager {
                     .random_beacon_dkg_timeout_round()
                     .into()
         {
-            error!("random beacon: DKG timed out. Randomness disabled for this epoch. All randomness-using transactions will fail.");
+            error!(
+                "random beacon: DKG timed out. Randomness disabled for this epoch. All randomness-using transactions will fail."
+            );
             epoch_store.metrics.epoch_random_beacon_dkg_failed.set(1);
             self.dkg_output
                 .set(None)
@@ -597,7 +616,9 @@ impl RandomnessManager {
             return Ok(());
         };
         if *party_id != msg.sender() {
-            warn!("ignoring equivocating DKG Message from authority {authority:?} pretending to be PartyId {party_id:?}");
+            warn!(
+                "ignoring equivocating DKG Message from authority {authority:?} pretending to be PartyId {party_id:?}"
+            );
             return Ok(());
         }
         if self.enqueued_messages.contains_key(&msg.sender())
@@ -652,7 +673,9 @@ impl RandomnessManager {
             return Ok(());
         };
         if *party_id != conf.sender() {
-            warn!("ignoring equivocating DKG Confirmation from authority {authority:?} pretending to be PartyId {party_id:?}");
+            warn!(
+                "ignoring equivocating DKG Confirmation from authority {authority:?} pretending to be PartyId {party_id:?}"
+            );
             return Ok(());
         }
         self.confirmations.insert(conf.sender(), conf.clone());
@@ -804,6 +827,13 @@ pub enum DkgStatus {
 
 #[cfg(test)]
 mod tests {
+    use std::num::NonZeroUsize;
+
+    use consensus_core::{BlockRef, BlockStatus};
+    use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
+    use iota_types::messages_consensus::ConsensusTransactionKind;
+    use tokio::sync::mpsc;
+
     use crate::{
         authority::test_authority_builder::TestAuthorityBuilder,
         consensus_adapter::{
@@ -813,12 +843,6 @@ mod tests {
         epoch::randomness::*,
         mock_consensus::with_block_status,
     };
-    use consensus_core::{BlockRef, BlockStatus};
-    use std::num::NonZeroUsize;
-    use iota_protocol_config::ProtocolConfig;
-    use iota_protocol_config::{Chain, ProtocolVersion};
-    use iota_types::messages_consensus::ConsensusTransactionKind;
-    use tokio::sync::mpsc;
 
     #[tokio::test]
     async fn test_dkg_v1() {

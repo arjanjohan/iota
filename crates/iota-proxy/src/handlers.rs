@@ -1,20 +1,23 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::admin::{Labels, ReqwestClient};
-use crate::consumer::{convert_to_remote_write, populate_labels, NodeMetric};
-use crate::histogram_relay::HistogramRelay;
-use crate::middleware::LenDelimProtobuf;
-use crate::peers::AllowedPeer;
+use std::net::SocketAddr;
+
 use axum::{
     extract::{ConnectInfo, Extension},
     http::StatusCode,
 };
 use multiaddr::Multiaddr;
 use once_cell::sync::Lazy;
-use prometheus::{register_counter_vec, register_histogram_vec};
-use prometheus::{CounterVec, HistogramVec};
-use std::net::SocketAddr;
+use prometheus::{CounterVec, HistogramVec, register_counter_vec, register_histogram_vec};
+
+use crate::{
+    admin::{Labels, ReqwestClient},
+    consumer::{NodeMetric, convert_to_remote_write, populate_labels},
+    histogram_relay::HistogramRelay,
+    middleware::LenDelimProtobuf,
+    peers::AllowedPeer,
+};
 
 static HANDLER_HITS: Lazy<CounterVec> = Lazy::new(|| {
     register_counter_vec!(

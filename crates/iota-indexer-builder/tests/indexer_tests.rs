@@ -2,13 +2,16 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::indexer_test_utils::{InMemoryPersistent, NoopDataMapper, TestDatasource};
-use prometheus::{
-    register_int_counter_vec_with_registry, register_int_gauge_vec_with_registry, IntCounterVec,
-    IntGaugeVec, Registry,
+use iota_indexer_builder::{
+    LIVE_TASK_TARGET_CHECKPOINT, Task,
+    indexer_builder::{BackfillStrategy, IndexerBuilder},
 };
-use iota_indexer_builder::indexer_builder::{BackfillStrategy, IndexerBuilder};
-use iota_indexer_builder::{Task, LIVE_TASK_TARGET_CHECKPOINT};
+use prometheus::{
+    IntCounterVec, IntGaugeVec, Registry, register_int_counter_vec_with_registry,
+    register_int_gauge_vec_with_registry,
+};
+
+use crate::indexer_test_utils::{InMemoryPersistent, NoopDataMapper, TestDatasource};
 
 mod indexer_test_utils;
 

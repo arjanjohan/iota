@@ -2,26 +2,36 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::available_range::AvailableRange;
-use super::cursor::{self, Page, RawPaginated, ScanLimited, Target};
-use super::uint53::UInt53;
-use super::{big_int::BigInt, move_type::MoveType, iota_address::IotaAddress};
-use crate::consistency::Checkpointed;
-use crate::data::{Db, DbConnection, QueryExecutor};
-use crate::error::Error;
-use crate::raw_query::RawQuery;
-use crate::{filter, query};
-use async_graphql::connection::{Connection, CursorType, Edge};
-use async_graphql::*;
+use std::str::FromStr;
+
+use async_graphql::{
+    connection::{Connection, CursorType, Edge},
+    *,
+};
 use diesel::{
-    sql_types::{BigInt as SqlBigInt, Nullable, Text},
     OptionalExtension, QueryableByName,
+    sql_types::{BigInt as SqlBigInt, Nullable, Text},
 };
 use diesel_async::scoped_futures::ScopedFutureExt;
-use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 use iota_indexer::types::OwnerType;
 use iota_types::TypeTag;
+use serde::{Deserialize, Serialize};
+
+use super::{
+    available_range::AvailableRange,
+    big_int::BigInt,
+    cursor::{self, Page, RawPaginated, ScanLimited, Target},
+    iota_address::IotaAddress,
+    move_type::MoveType,
+    uint53::UInt53,
+};
+use crate::{
+    consistency::Checkpointed,
+    data::{Db, DbConnection, QueryExecutor},
+    error::Error,
+    filter, query,
+    raw_query::RawQuery,
+};
 
 /// The total balance for a particular coin type.
 #[derive(Clone, Debug, SimpleObject)]

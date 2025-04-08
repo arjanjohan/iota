@@ -3,63 +3,66 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority_client::{
-    make_authority_clients_with_timeout_config, make_network_authority_clients_with_network_config,
-    AuthorityAPI, NetworkAuthorityClient,
+use std::{
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+    convert::AsRef,
+    net::SocketAddr,
+    string::ToString,
+    sync::Arc,
+    time::Duration,
 };
-use crate::safe_client::{SafeClient, SafeClientMetrics, SafeClientMetricsBase};
-use futures::{future::BoxFuture, stream::FuturesUnordered, StreamExt};
-use iota_metrics::{monitored_future, spawn_monitored_task, GaugeGuard, MonitorCancellation};
-use iota_network_stack::config::Config;
-use std::convert::AsRef;
-use std::net::SocketAddr;
-use iota_authority_aggregation::ReduceOutput;
-use iota_authority_aggregation::{quorum_map_then_reduce_with_timeout, AsyncResult};
+
+use futures::{StreamExt, future::BoxFuture, stream::FuturesUnordered};
+use iota_authority_aggregation::{AsyncResult, ReduceOutput, quorum_map_then_reduce_with_timeout};
 use iota_config::genesis::Genesis;
+use iota_metrics::{GaugeGuard, MonitorCancellation, monitored_future, spawn_monitored_task};
 use iota_network::{
-    default_iota_network_config, DEFAULT_CONNECT_TIMEOUT_SEC, DEFAULT_REQUEST_TIMEOUT_SEC,
+    DEFAULT_CONNECT_TIMEOUT_SEC, DEFAULT_REQUEST_TIMEOUT_SEC, default_iota_network_config,
 };
+use iota_network_stack::config::Config;
 use iota_swarm_config::network_config::NetworkConfig;
-use iota_types::crypto::{AuthorityPublicKeyBytes, AuthoritySignInfo};
-use iota_types::error::UserInputError;
-use iota_types::fp_ensure;
-use iota_types::message_envelope::Message;
-use iota_types::object::Object;
-use iota_types::quorum_driver_types::{GroupedErrors, QuorumDriverResponse};
-use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait;
-use iota_types::iota_system_state::{IotaSystemState, IotaSystemStateTrait};
 use iota_types::{
     base_types::*,
-    committee::Committee,
-    error::{IotaError, IotaResult},
+    committee::{Committee, CommitteeTrait, CommitteeWithNetworkMetadata, StakeUnit},
+    crypto::{AuthorityPublicKeyBytes, AuthoritySignInfo},
+    effects::{
+        CertifiedTransactionEffects, SignedTransactionEffects, TransactionEffects,
+        TransactionEvents, VerifiedCertifiedTransactionEffects,
+    },
+    error::{IotaError, IotaResult, UserInputError},
+    fp_ensure,
+    iota_system_state::{
+        IotaSystemState, IotaSystemStateTrait,
+        epoch_start_iota_system_state::{EpochStartSystemState, EpochStartSystemStateTrait},
+    },
+    message_envelope::Message,
+    messages_grpc::{
+        HandleCertificateRequestV3, HandleCertificateResponseV3, LayoutGenerationOption,
+        ObjectInfoRequest, TransactionInfoRequest,
+    },
+    messages_safe_client::PlainTransactionInfoResponse,
+    object::Object,
+    quorum_driver_types::{GroupedErrors, QuorumDriverResponse},
     transaction::*,
 };
-use thiserror::Error;
-use tracing::{debug, error, info, instrument, trace, trace_span, warn, Instrument};
-
-use crate::epoch::committee_store::CommitteeStore;
-use crate::stake_aggregator::{InsertResult, MultiStakeAggregator, StakeAggregator};
 use prometheus::{
-    register_histogram_with_registry, register_int_counter_vec_with_registry,
-    register_int_counter_with_registry, register_int_gauge_with_registry, Histogram, IntCounter,
-    IntCounterVec, IntGauge, Registry,
+    Histogram, IntCounter, IntCounterVec, IntGauge, Registry, register_histogram_with_registry,
+    register_int_counter_vec_with_registry, register_int_counter_with_registry,
+    register_int_gauge_with_registry,
 };
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use std::string::ToString;
-use std::sync::Arc;
-use std::time::Duration;
-use iota_types::committee::{CommitteeTrait, CommitteeWithNetworkMetadata, StakeUnit};
-use iota_types::effects::{
-    CertifiedTransactionEffects, SignedTransactionEffects, TransactionEffects, TransactionEvents,
-    VerifiedCertifiedTransactionEffects,
-};
-use iota_types::messages_grpc::{
-    HandleCertificateRequestV3, HandleCertificateResponseV3, LayoutGenerationOption,
-    ObjectInfoRequest, TransactionInfoRequest,
-};
-use iota_types::messages_safe_client::PlainTransactionInfoResponse;
-use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemState;
+use thiserror::Error;
 use tokio::time::{sleep, timeout};
+use tracing::{Instrument, debug, error, info, instrument, trace, trace_span, warn};
+
+use crate::{
+    authority_client::{
+        AuthorityAPI, NetworkAuthorityClient, make_authority_clients_with_timeout_config,
+        make_network_authority_clients_with_network_config,
+    },
+    epoch::committee_store::CommitteeStore,
+    safe_client::{SafeClient, SafeClientMetrics, SafeClientMetricsBase},
+    stake_aggregator::{InsertResult, MultiStakeAggregator, StakeAggregator},
+};
 
 pub const DEFAULT_RETRIES: usize = 4;
 
@@ -210,7 +213,7 @@ impl AuthAggMetrics {
 pub enum AggregatorProcessTransactionError {
     #[error(
         "Failed to execute transaction on a quorum of validators due to non-retryable errors. Validator errors: {:?}",
-        errors,
+        errors
     )]
     FatalTransaction { errors: GroupedErrors },
 
@@ -223,7 +226,7 @@ pub enum AggregatorProcessTransactionError {
     #[error(
         "Failed to execute transaction on a quorum of validators due to conflicting transactions. Locked objects: {:?}. Validator errors: {:?}",
         conflicting_tx_digests,
-        errors,
+        errors
     )]
     FatalConflictingTransaction {
         errors: GroupedErrors,
@@ -1707,7 +1710,10 @@ where
                                 && state.output_objects.is_none())
                         {
                             metrics.quorum_reached_without_requested_objects.inc();
-                            debug!(?tx_digest, "Quorum Reached but requested input/output objects were not returned");
+                            debug!(
+                                ?tx_digest,
+                                "Quorum Reached but requested input/output objects were not returned"
+                            );
                         }
 
                         ct.verify(&committee).map(|ct| {

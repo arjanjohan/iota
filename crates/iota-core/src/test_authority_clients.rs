@@ -9,30 +9,29 @@ use std::{
     time::Duration,
 };
 
-use crate::authority::test_authority_builder::TestAuthorityBuilder;
-use crate::{authority::AuthorityState, authority_client::AuthorityAPI};
 use async_trait::async_trait;
-use iota_metrics::spawn_monitored_task;
 use iota_config::genesis::Genesis;
-use iota_types::messages_grpc::{
-    HandleCertificateResponseV2, HandleSoftBundleCertificatesRequestV3,
-    HandleSoftBundleCertificatesResponseV3, HandleTransactionResponse, ObjectInfoRequest,
-    ObjectInfoResponse, SystemStateRequest, TransactionInfoRequest, TransactionInfoResponse,
-};
-use iota_types::iota_system_state::IotaSystemState;
+use iota_metrics::spawn_monitored_task;
 use iota_types::{
     crypto::AuthorityKeyPair,
-    error::IotaError,
-    messages_checkpoint::{CheckpointRequest, CheckpointResponse},
+    effects::TransactionEffectsAPI,
+    error::{IotaError, IotaResult},
+    iota_system_state::IotaSystemState,
+    messages_checkpoint::{
+        CheckpointRequest, CheckpointRequestV2, CheckpointResponse, CheckpointResponseV2,
+    },
+    messages_grpc::{
+        HandleCertificateRequestV3, HandleCertificateResponseV2, HandleCertificateResponseV3,
+        HandleSoftBundleCertificatesRequestV3, HandleSoftBundleCertificatesResponseV3,
+        HandleTransactionResponse, ObjectInfoRequest, ObjectInfoResponse, SystemStateRequest,
+        TransactionInfoRequest, TransactionInfoResponse,
+    },
     transaction::{CertifiedTransaction, Transaction, VerifiedTransaction},
 };
-use iota_types::{
-    effects::TransactionEffectsAPI,
-    messages_checkpoint::{CheckpointRequestV2, CheckpointResponseV2},
-};
-use iota_types::{
-    error::IotaResult,
-    messages_grpc::{HandleCertificateRequestV3, HandleCertificateResponseV3},
+
+use crate::{
+    authority::{AuthorityState, test_authority_builder::TestAuthorityBuilder},
+    authority_client::AuthorityAPI,
 };
 
 #[derive(Clone, Copy, Default)]
@@ -218,7 +217,7 @@ impl LocalAuthorityClient {
                     .signature_verifier
                     .verify_cert(request.certificate)
                     .await?;
-                //let certificate = certificate.verify(epoch_store.committee())?;
+                // let certificate = certificate.verify(epoch_store.committee())?;
                 state.enqueue_certificates_for_execution(vec![certificate.clone()], &epoch_store);
                 let effects = state.notify_read_effects(*certificate.digest()).await?;
                 state.sign_effects(effects, &epoch_store)?

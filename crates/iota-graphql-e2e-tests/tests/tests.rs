@@ -4,11 +4,11 @@
 
 #![allow(unused_imports)]
 #![allow(unused_variables)]
+use std::{path::Path, sync::Arc, time::Duration};
+
 use anyhow::bail;
 use async_trait::async_trait;
-use serde_json::Value;
-use std::{path::Path, sync::Arc, time::Duration};
-use iota_graphql_rpc::test_infra::cluster::{serve_executor, ExecutorCluster};
+use iota_graphql_rpc::test_infra::cluster::{ExecutorCluster, serve_executor};
 use iota_transactional_test_runner::{
     args::IotaInitArgs,
     create_adapter,
@@ -16,6 +16,7 @@ use iota_transactional_test_runner::{
     run_tasks_with_adapter,
     test_adapter::{IotaTestAdapter, PRE_COMPILED},
 };
+use serde_json::Value;
 
 pub struct OffchainReaderForAdapter {
     cluster: Arc<ExecutorCluster>,

@@ -2,19 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::error::{AggregateError, Error};
+use std::collections::{HashMap, HashSet};
+
 use futures::future;
+use iota_move_build::CompiledPackage;
+use iota_sdk::{
+    apis::ReadApi,
+    error::Error as SdkError,
+    rpc_types::{IotaObjectDataOptions, IotaRawData, IotaRawMovePackage},
+};
+use iota_types::base_types::ObjectID;
 use move_binary_format::CompiledModule;
 use move_compiler::compiled_unit::NamedCompiledModule;
 use move_core_types::account_address::AccountAddress;
 use move_symbol_pool::Symbol;
-use std::collections::{HashMap, HashSet};
-use iota_move_build::CompiledPackage;
-use iota_sdk::apis::ReadApi;
-use iota_sdk::error::Error as SdkError;
-use iota_sdk::rpc_types::{IotaObjectDataOptions, IotaRawData, IotaRawMovePackage};
-use iota_types::base_types::ObjectID;
 use toolchain::units_for_toolchain;
+
+use crate::error::{AggregateError, Error};
 
 pub mod error;
 mod toolchain;

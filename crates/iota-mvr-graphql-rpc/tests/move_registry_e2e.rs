@@ -2,8 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::str::FromStr;
-use std::{path::PathBuf, time::Duration};
+use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use iota_graphql_rpc_client::simple_client::SimpleClient;
 use iota_json_rpc::name_service::{Domain, DomainFormat};
@@ -12,19 +11,19 @@ use iota_move_build::BuildConfig;
 use iota_mvr_graphql_rpc::{
     config::{ConnectionConfig, ServiceConfig},
     test_infra::cluster::{
-        start_graphql_server_with_fn_rpc, start_network_cluster,
-        wait_for_graphql_checkpoint_catchup, wait_for_graphql_server, NetworkCluster,
+        NetworkCluster, start_graphql_server_with_fn_rpc, start_network_cluster,
+        wait_for_graphql_checkpoint_catchup, wait_for_graphql_server,
     },
 };
 use iota_pg_db::temp::get_available_port;
 use iota_types::{
+    IOTA_FRAMEWORK_PACKAGE_ID, Identifier,
     base_types::{ObjectID, SequenceNumber},
     digests::ObjectDigest,
     move_package::UpgradePolicy,
     object::Owner,
     programmable_transaction_builder::ProgrammableTransactionBuilder,
     transaction::{CallArg, ObjectArg},
-    Identifier, IOTA_FRAMEWORK_PACKAGE_ID,
 };
 const DOT_MOVE_PKG: &str = "tests/move_registry/move_registry/";
 const DEMO_PKG: &str = "tests/move_registry/demo/";

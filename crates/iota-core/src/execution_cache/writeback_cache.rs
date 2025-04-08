@@ -38,60 +38,63 @@
 //!
 //! The above design is used for both objects and markers.
 
-use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::authority::authority_store::{
-    ExecutionLockWriteGuard, LockDetailsDeprecated, ObjectLockStatus, IotaLockResult,
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    hash::Hash,
+    sync::{Arc, atomic::AtomicU64},
 };
-use crate::authority::authority_store_tables::LiveObject;
-use crate::authority::backpressure::BackpressureManager;
-use crate::authority::epoch_start_configuration::{EpochFlag, EpochStartConfiguration};
-use crate::authority::AuthorityStore;
-use crate::state_accumulator::AccumulatorStore;
-use crate::transaction_outputs::TransactionOutputs;
 
-use dashmap::mapref::entry::Entry as DashMapEntry;
-use dashmap::DashMap;
-use futures::{future::BoxFuture, FutureExt};
-use moka::sync::Cache as MokaCache;
+use dashmap::{DashMap, mapref::entry::Entry as DashMapEntry};
+use futures::{FutureExt, future::BoxFuture};
 use iota_common::sync::notify_read::NotifyRead;
-use parking_lot::Mutex;
-use prometheus::Registry;
-use std::collections::{BTreeMap, BTreeSet};
-use std::hash::Hash;
-use std::sync::atomic::AtomicU64;
-use std::sync::Arc;
 use iota_config::ExecutionCacheConfig;
 use iota_macros::fail_point_async;
 use iota_protocol_config::ProtocolVersion;
-use iota_types::accumulator::Accumulator;
-use iota_types::base_types::{
-    EpochId, FullObjectID, ObjectID, ObjectRef, SequenceNumber, VerifiedExecutionData,
+use iota_types::{
+    accumulator::Accumulator,
+    base_types::{
+        EpochId, FullObjectID, ObjectID, ObjectRef, SequenceNumber, VerifiedExecutionData,
+    },
+    bridge::{Bridge, get_bridge},
+    digests::{ObjectDigest, TransactionDigest, TransactionEffectsDigest, TransactionEventsDigest},
+    effects::{TransactionEffects, TransactionEvents},
+    error::{IotaError, IotaResult, UserInputError},
+    iota_system_state::{IotaSystemState, get_iota_system_state},
+    message_envelope::Message,
+    messages_checkpoint::CheckpointSequenceNumber,
+    object::Object,
+    storage::{
+        FullObjectKey, MarkerValue, ObjectKey, ObjectOrTombstone, ObjectStore, PackageObject,
+    },
+    transaction::{VerifiedSignedTransaction, VerifiedTransaction},
 };
-use iota_types::bridge::{get_bridge, Bridge};
-use iota_types::digests::{
-    ObjectDigest, TransactionDigest, TransactionEffectsDigest, TransactionEventsDigest,
-};
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::error::{IotaError, IotaResult, UserInputError};
-use iota_types::message_envelope::Message;
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-use iota_types::object::Object;
-use iota_types::storage::{
-    FullObjectKey, MarkerValue, ObjectKey, ObjectOrTombstone, ObjectStore, PackageObject,
-};
-use iota_types::iota_system_state::{get_iota_system_state, IotaSystemState};
-use iota_types::transaction::{VerifiedSignedTransaction, VerifiedTransaction};
+use moka::sync::Cache as MokaCache;
+use parking_lot::Mutex;
+use prometheus::Registry;
 use tap::TapOptional;
 use tracing::{debug, info, instrument, trace, warn};
 
-use super::cache_types::Ticket;
-use super::ExecutionCacheAPI;
 use super::{
-    cache_types::{CachedVersionMap, IsNewer, MonotonicCache},
+    CheckpointCache, ExecutionCacheAPI, ExecutionCacheCommit, ExecutionCacheMetrics,
+    ExecutionCacheReconfigAPI, ExecutionCacheWrite, ObjectCacheRead, StateSyncAPI, TestingAPI,
+    TransactionCacheRead,
+    cache_types::{CachedVersionMap, IsNewer, MonotonicCache, Ticket},
     implement_passthrough_traits,
     object_locks::ObjectLocks,
-    CheckpointCache, ExecutionCacheCommit, ExecutionCacheMetrics, ExecutionCacheReconfigAPI,
-    ExecutionCacheWrite, ObjectCacheRead, StateSyncAPI, TestingAPI, TransactionCacheRead,
+};
+use crate::{
+    authority::{
+        AuthorityStore,
+        authority_per_epoch_store::AuthorityPerEpochStore,
+        authority_store::{
+            ExecutionLockWriteGuard, IotaLockResult, LockDetailsDeprecated, ObjectLockStatus,
+        },
+        authority_store_tables::LiveObject,
+        backpressure::BackpressureManager,
+        epoch_start_configuration::{EpochFlag, EpochStartConfiguration},
+    },
+    state_accumulator::AccumulatorStore,
+    transaction_outputs::TransactionOutputs,
 };
 
 #[cfg(test)]
@@ -955,11 +958,12 @@ impl WritebackCache {
 
         for outputs in all_outputs.iter() {
             let tx_digest = outputs.transaction.digest();
-            assert!(self
-                .dirty
-                .pending_transaction_writes
-                .remove(tx_digest)
-                .is_some());
+            assert!(
+                self.dirty
+                    .pending_transaction_writes
+                    .remove(tx_digest)
+                    .is_some()
+            );
             self.flush_transactions_from_dirty_to_cached(epoch, *tx_digest, outputs);
         }
 
@@ -1165,11 +1169,12 @@ impl WritebackCache {
                 .map(|o| o.transaction.clone())
             else {
                 // tx should exist in the db if it is not in dirty set.
-                debug_assert!(self
-                    .store
-                    .get_transaction_block(tx_digest)
-                    .unwrap()
-                    .is_some());
+                debug_assert!(
+                    self.store
+                        .get_transaction_block(tx_digest)
+                        .unwrap()
+                        .is_some()
+                );
                 // If the transaction is not in dirty, it does not need to be committed.
                 // This situation can happen if we build a checkpoint locally which was just executed
                 // via state sync.

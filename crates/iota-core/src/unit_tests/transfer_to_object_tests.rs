@@ -5,8 +5,8 @@
 use std::{collections::HashSet, sync::Arc};
 
 use iota_types::{
-    base_types::{ObjectID, ObjectRef, SequenceNumber, IotaAddress},
-    crypto::{get_key_pair, AccountKeyPair},
+    base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber},
+    crypto::{AccountKeyPair, get_key_pair},
     digests::ObjectDigest,
     effects::{TransactionEffects, TransactionEffectsAPI},
     error::{IotaError, UserInputError},
@@ -14,13 +14,15 @@ use iota_types::{
     object::{Object, Owner},
     programmable_transaction_builder::ProgrammableTransactionBuilder,
     transaction::{
-        CallArg, ObjectArg, ProgrammableTransaction, VerifiedCertificate,
-        TEST_ONLY_GAS_UNIT_FOR_PUBLISH,
+        CallArg, ObjectArg, ProgrammableTransaction, TEST_ONLY_GAS_UNIT_FOR_PUBLISH,
+        VerifiedCertificate,
     },
 };
+use move_core_types::ident_str;
 
 use crate::{
     authority::{
+        AuthorityState,
         authority_test_utils::{certify_transaction, send_consensus},
         authority_tests::{
             build_programmable_transaction, execute_programmable_transaction,
@@ -28,11 +30,9 @@ use crate::{
         },
         move_integration_tests::build_and_publish_test_package_with_upgrade_cap,
         test_authority_builder::TestAuthorityBuilder,
-        AuthorityState,
     },
     move_call,
 };
-use move_core_types::ident_str;
 
 // The primary use for these tests is to make sure the generated effect sets match what we expect
 // when receiving an object, and if we then perform different types of operations on the received
@@ -96,7 +96,8 @@ impl TestRunner {
             &sender_key,
             &gas_object_ids[0],
             base_package_name,
-            /* with_unpublished_deps */ false,
+            // with_unpublished_deps
+            false,
         )
         .await;
 
@@ -934,7 +935,7 @@ async fn verify_tto_not_locked(
     let fake_parent = effects
         .created()
         .iter()
-        .find(|(obj_ref, _)| obj_ref.0 != parent.0 .0 && obj_ref.0 != child.0 .0)
+        .find(|(obj_ref, _)| obj_ref.0 != parent.0.0 && obj_ref.0 != child.0.0)
         .cloned()
         .unwrap();
 

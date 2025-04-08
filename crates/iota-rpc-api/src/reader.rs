@@ -4,11 +4,14 @@
 
 use std::sync::Arc;
 
-use iota_sdk_types::{CheckpointSequenceNumber, EpochId, SignedTransaction, ValidatorCommittee};
-use iota_sdk_types::{Object, ObjectId, Version};
-use iota_types::storage::error::{Error as StorageError, Result};
-use iota_types::storage::ObjectStore;
-use iota_types::storage::RpcStateReader;
+use iota_sdk_types::{
+    CheckpointSequenceNumber, EpochId, Object, ObjectId, SignedTransaction, ValidatorCommittee,
+    Version,
+};
+use iota_types::storage::{
+    ObjectStore, RpcStateReader,
+    error::{Error as StorageError, Result},
+};
 use tap::Pipe;
 
 use crate::Direction;
@@ -55,7 +58,8 @@ impl StateReader {
 
     pub fn get_system_state_summary(
         &self,
-    ) -> Result<iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary> {
+    ) -> Result<iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary>
+    {
         use iota_types::iota_system_state::IotaSystemStateTrait;
 
         let system_state = iota_types::iota_system_state::get_iota_system_state(self.inner())

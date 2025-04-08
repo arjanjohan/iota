@@ -3,69 +3,65 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::Result;
-use async_trait::async_trait;
-use fastcrypto::traits::KeyPair;
-use iota_metrics::spawn_monitored_task;
-use iota_network_stack::server::IOTA_TLS_SERVER_NAME;
-use prometheus::{
-    register_histogram_with_registry, register_int_counter_vec_with_registry,
-    register_int_counter_with_registry, Histogram, IntCounter, IntCounterVec, Registry,
-};
 use std::{
     io,
     net::{IpAddr, SocketAddr},
     sync::Arc,
     time::SystemTime,
 };
+
+use anyhow::Result;
+use async_trait::async_trait;
+use fastcrypto::traits::KeyPair;
+use iota_config::local_ip_utils::new_local_tcp_address_for_testing;
+use iota_metrics::spawn_monitored_task;
 use iota_network::{
     api::{Validator, ValidatorServer},
     tonic,
 };
-use iota_types::messages_consensus::{ConsensusTransaction, ConsensusTransactionKind};
-use iota_types::messages_grpc::{
-    HandleCertificateRequestV3, HandleCertificateResponseV3, HandleTransactionResponseV2,
-};
-use iota_types::messages_grpc::{
-    HandleCertificateResponseV2, HandleTransactionResponse, ObjectInfoRequest, ObjectInfoResponse,
-    SubmitCertificateResponse, SystemStateRequest, TransactionInfoRequest, TransactionInfoResponse,
-};
-use iota_types::messages_grpc::{
-    HandleSoftBundleCertificatesRequestV3, HandleSoftBundleCertificatesResponseV3,
-};
-use iota_types::multiaddr::Multiaddr;
-use iota_types::iota_system_state::IotaSystemState;
-use iota_types::traffic_control::{ClientIdSource, PolicyConfig, RemoteFirewallConfig, Weight};
-use iota_types::{effects::TransactionEffectsAPI, messages_grpc::HandleTransactionRequestV2};
-use iota_types::{error::*, transaction::*};
+use iota_network_stack::server::IOTA_TLS_SERVER_NAME;
 use iota_types::{
+    effects::TransactionEffectsAPI,
+    error::*,
     fp_ensure,
+    iota_system_state::IotaSystemState,
     messages_checkpoint::{
         CheckpointRequest, CheckpointRequestV2, CheckpointResponse, CheckpointResponseV2,
     },
+    messages_consensus::{ConsensusTransaction, ConsensusTransactionKind},
+    messages_grpc::{
+        HandleCertificateRequestV3, HandleCertificateResponseV2, HandleCertificateResponseV3,
+        HandleSoftBundleCertificatesRequestV3, HandleSoftBundleCertificatesResponseV3,
+        HandleTransactionRequestV2, HandleTransactionResponse, HandleTransactionResponseV2,
+        ObjectInfoRequest, ObjectInfoResponse, SubmitCertificateResponse, SystemStateRequest,
+        TransactionInfoRequest, TransactionInfoResponse,
+    },
+    multiaddr::Multiaddr,
+    traffic_control::{ClientIdSource, PolicyConfig, RemoteFirewallConfig, Weight},
+    transaction::*,
+};
+use nonempty::{NonEmpty, nonempty};
+use prometheus::{
+    Histogram, IntCounter, IntCounterVec, Registry, register_histogram_with_registry,
+    register_int_counter_vec_with_registry, register_int_counter_with_registry,
 };
 use tap::TapFallible;
-use tonic::metadata::{Ascii, MetadataValue};
-use tracing::{error, error_span, info, Instrument};
+use tonic::{
+    metadata::{Ascii, MetadataValue},
+    transport::server::TcpConnectInfo,
+};
+use tracing::{Instrument, error, error_span, info};
 
 use crate::{
-    authority::authority_per_epoch_store::AuthorityPerEpochStore,
+    authority::{AuthorityState, authority_per_epoch_store::AuthorityPerEpochStore},
+    consensus_adapter::{
+        ConnectionMonitorStatusForTests, ConsensusAdapter, ConsensusAdapterMetrics,
+    },
     mysticeti_adapter::LazyMysticetiClient,
+    traffic_controller::{
+        TrafficController, metrics::TrafficControllerMetrics, parse_ip, policies::TrafficTally,
+    },
 };
-use crate::{
-    authority::AuthorityState,
-    consensus_adapter::{ConsensusAdapter, ConsensusAdapterMetrics},
-    traffic_controller::parse_ip,
-    traffic_controller::policies::TrafficTally,
-    traffic_controller::TrafficController,
-};
-use crate::{
-    consensus_adapter::ConnectionMonitorStatusForTests,
-    traffic_controller::metrics::TrafficControllerMetrics,
-};
-use nonempty::{nonempty, NonEmpty};
-use iota_config::local_ip_utils::new_local_tcp_address_for_testing;
-use tonic::transport::server::TcpConnectInfo;
 
 #[cfg(test)]
 #[path = "unit_tests/server_tests.rs"]
@@ -1254,10 +1250,7 @@ impl ValidatorService {
                                     "x-forwarded-for header value of {:?} contains {} values, but {} hops were specified. \
                                     Expected at least {} values. Please correctly set the `x-forwarded-for` value under \
                                     `client-id-source` in the node config.",
-                                    header_contents,
-                                    contents_len,
-                                    num_hops,
-                                    contents_len,
+                                    header_contents, contents_len, num_hops, contents_len,
                                 );
                                 self.metrics.client_id_source_config_mismatch.inc();
                                 return None;
@@ -1267,10 +1260,7 @@ impl ValidatorService {
                                 error!(
                                     "x-forwarded-for header value of {:?} contains {} values, but {} hops were specified. \
                                     Expected at least {} values. Skipping traffic controller request handling.",
-                                    header_contents,
-                                    contents_len,
-                                    num_hops,
-                                    contents_len,
+                                    header_contents, contents_len, num_hops, contents_len,
                                 );
                                 return None;
                             };
@@ -1295,7 +1285,9 @@ impl ValidatorService {
                     do_header_parse(op)
                 } else {
                     self.metrics.forwarded_header_not_included.inc();
-                    error!("x-forwarded-for header not present for request despite node configuring x-forwarded-for tracking type");
+                    error!(
+                        "x-forwarded-for header not present for request despite node configuring x-forwarded-for tracking type"
+                    );
                     None
                 }
             }

@@ -2,41 +2,40 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::BTreeMap;
-use std::convert::TryFrom;
-use std::fmt::{Debug, Display, Formatter};
-use std::sync::Arc;
+use std::{
+    collections::BTreeMap,
+    convert::TryFrom,
+    fmt::{Debug, Display, Formatter},
+    sync::Arc,
+};
 
+use iota_protocol_config::ProtocolConfig;
 use move_binary_format::CompiledModule;
-use move_bytecode_utils::layout::TypeLayoutBuilder;
-use move_bytecode_utils::module_cache::GetModule;
-use move_core_types::annotated_value::{MoveStruct, MoveStructLayout, MoveTypeLayout, MoveValue};
-use move_core_types::language_storage::StructTag;
-use move_core_types::language_storage::TypeTag;
+use move_bytecode_utils::{layout::TypeLayoutBuilder, module_cache::GetModule};
+use move_core_types::{
+    annotated_value::{MoveStruct, MoveStructLayout, MoveTypeLayout, MoveValue},
+    language_storage::{StructTag, TypeTag},
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
-use serde_with::Bytes;
+use serde_with::{Bytes, serde_as};
 
-use crate::base_types::{FullObjectID, FullObjectRef, MoveObjectType, ObjectIDParseError};
-use crate::coin::{Coin, CoinMetadata, TreasuryCap};
-use crate::crypto::{default_hash, deterministic_random_account_key};
-use crate::error::{ExecutionError, ExecutionErrorKind, UserInputError, UserInputResult};
-use crate::error::{IotaError, IotaResult};
-use crate::gas_coin::GAS;
-use crate::is_system_package;
-use crate::layout_resolver::LayoutResolver;
-use crate::move_package::MovePackage;
+use self::{balance_traversal::BalanceTraversal, bounded_visitor::BoundedVisitor};
 use crate::{
     base_types::{
-        ObjectDigest, ObjectID, ObjectRef, SequenceNumber, IotaAddress, TransactionDigest,
+        FullObjectID, FullObjectRef, IotaAddress, MoveObjectType, ObjectDigest, ObjectID,
+        ObjectIDParseError, ObjectRef, SequenceNumber, TransactionDigest,
     },
-    gas_coin::GasCoin,
+    coin::{Coin, CoinMetadata, TreasuryCap},
+    crypto::{default_hash, deterministic_random_account_key},
+    error::{
+        ExecutionError, ExecutionErrorKind, IotaError, IotaResult, UserInputError, UserInputResult,
+    },
+    gas_coin::{GAS, GasCoin},
+    is_system_package,
+    layout_resolver::LayoutResolver,
+    move_package::MovePackage,
 };
-use iota_protocol_config::ProtocolConfig;
-
-use self::balance_traversal::BalanceTraversal;
-use self::bounded_visitor::BoundedVisitor;
 
 mod balance_traversal;
 pub mod bounded_visitor;
@@ -355,7 +354,10 @@ impl MoveObject {
     }
 
     /// Get the total amount of IOTA embedded in `self`. Intended for testing purposes
-    pub fn get_total_iota(&self, layout_resolver: &mut dyn LayoutResolver) -> Result<u64, IotaError> {
+    pub fn get_total_iota(
+        &self,
+        layout_resolver: &mut dyn LayoutResolver,
+    ) -> Result<u64, IotaError> {
         let balances = self.get_coin_balances(layout_resolver)?;
         Ok(balances.get(&GAS::type_tag()).copied().unwrap_or(0))
     }
@@ -942,7 +944,7 @@ impl ObjectInner {
             Owner::ConsensusV2 { authenticator, .. } => {
                 DEFAULT_OWNER_SIZE
                     + match authenticator.as_ref() {
-                        Authenticator::SingleOwner(_) => 8, // marginal cost to store both IotaAddress and SequenceNumber
+                        Authenticator::SingleOwner(_) => 8, /* marginal cost to store both IotaAddress and SequenceNumber */
                     }
             }
         };
@@ -998,7 +1000,10 @@ impl ObjectInner {
 // Testing-related APIs.
 impl Object {
     /// Get the total amount of IOTA embedded in `self`, including both Move objects and the storage rebate
-    pub fn get_total_iota(&self, layout_resolver: &mut dyn LayoutResolver) -> Result<u64, IotaError> {
+    pub fn get_total_iota(
+        &self,
+        layout_resolver: &mut dyn LayoutResolver,
+    ) -> Result<u64, IotaError> {
         Ok(self.storage_rebate
             + match &self.data {
                 Data::Move(m) => m.get_total_iota(layout_resolver)?,
@@ -1297,7 +1302,11 @@ impl Display for PastObjectRead {
                 asked_version,
                 latest_version,
             } => {
-                write!(f, "PastObjectRead::VersionTooHigh ({:?}, asked sequence number {:?}, latest sequence number {:?})", object_id, asked_version, latest_version)
+                write!(
+                    f,
+                    "PastObjectRead::VersionTooHigh ({:?}, asked sequence number {:?}, latest sequence number {:?})",
+                    object_id, asked_version, latest_version
+                )
             }
         }
     }
@@ -1305,10 +1314,10 @@ impl Display for PastObjectRead {
 
 #[cfg(test)]
 mod tests {
-    use crate::object::{Object, Owner, OBJECT_START_VERSION};
     use crate::{
-        base_types::{ObjectID, IotaAddress, TransactionDigest},
+        base_types::{IotaAddress, ObjectID, TransactionDigest},
         gas_coin::GasCoin,
+        object::{OBJECT_START_VERSION, Object, Owner},
     };
 
     // Ensure that object digest computation and bcs serialized format are not inadvertently changed.
@@ -1335,7 +1344,10 @@ mod tests {
         );
 
         let objref = format!("{:?}", o.compute_object_reference());
-        assert_eq!(objref, "(0x0000000000000000000000000000000000000000000000000000000000000000, SequenceNumber(1), o#59tZq65HVqZjUyNtD7BCGLTD87N5cpayYwEFrtwR4aMz)");
+        assert_eq!(
+            objref,
+            "(0x0000000000000000000000000000000000000000000000000000000000000000, SequenceNumber(1), o#59tZq65HVqZjUyNtD7BCGLTD87N5cpayYwEFrtwR4aMz)"
+        );
     }
 
     #[test]

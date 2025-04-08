@@ -4,12 +4,13 @@
 
 use std::num::NonZeroUsize;
 
+use iota_archival::reader::{ArchiveReader, ArchiveReaderMetrics};
+use iota_config::{
+    node::ArchiveReaderConfig,
+    object_storage_config::{ObjectStoreConfig, ObjectStoreType},
+};
 use prometheus::Registry;
 use tracing::info;
-
-use iota_archival::reader::{ArchiveReader, ArchiveReaderMetrics};
-use iota_config::node::ArchiveReaderConfig;
-use iota_config::object_storage_config::{ObjectStoreConfig, ObjectStoreType};
 
 use crate::Args;
 

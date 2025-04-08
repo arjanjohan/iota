@@ -13,22 +13,22 @@ mod pay_iota;
 mod query_transactions;
 mod rpc_command_processor;
 mod validation;
-use strum_macros::EnumString;
+use core::default::Default;
+use std::time::Duration;
 
 use anyhow::Result;
 use async_trait::async_trait;
-use core::default::Default;
-use std::time::Duration;
 use iota_types::{
-    base_types::IotaAddress, digests::TransactionDigest,
+    base_types::{IotaAddress, ObjectID},
+    digests::TransactionDigest,
     messages_checkpoint::CheckpointSequenceNumber,
 };
+pub use rpc_command_processor::{
+    RpcCommandProcessor, load_addresses_from_file, load_digests_from_file, load_objects_from_file,
+};
+use strum_macros::EnumString;
 
 use crate::load_test::LoadTestConfig;
-pub use rpc_command_processor::{
-    load_addresses_from_file, load_digests_from_file, load_objects_from_file, RpcCommandProcessor,
-};
-use iota_types::base_types::ObjectID;
 
 #[derive(Default, Clone)]
 pub struct SignerInfo {

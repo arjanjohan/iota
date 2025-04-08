@@ -2,23 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{fmt::Formatter, sync::LazyLock};
+
+use iota_types::{
+    BRIDGE_PACKAGE_ID, DEEPBOOK_PACKAGE_ID, IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_PACKAGE_ID,
+    MOVE_STDLIB_PACKAGE_ID,
+    base_types::{ObjectID, ObjectRef},
+    digests::TransactionDigest,
+    move_package::MovePackage,
+    object::{OBJECT_START_VERSION, Object},
+    storage::ObjectStore,
+};
 use move_binary_format::{
-    binary_config::BinaryConfig, compatibility::Compatibility, CompiledModule,
+    CompiledModule, binary_config::BinaryConfig, compatibility::Compatibility,
 };
 use move_core_types::gas_algebra::InternalGas;
 use serde::{Deserialize, Serialize};
-use std::fmt::Formatter;
-use std::sync::LazyLock;
-use iota_types::base_types::ObjectRef;
-use iota_types::storage::ObjectStore;
-use iota_types::{
-    base_types::ObjectID,
-    digests::TransactionDigest,
-    move_package::MovePackage,
-    object::{Object, OBJECT_START_VERSION},
-    MOVE_STDLIB_PACKAGE_ID, IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_PACKAGE_ID,
-};
-use iota_types::{BRIDGE_PACKAGE_ID, DEEPBOOK_PACKAGE_ID};
 use tracing::error;
 
 /// Encapsulates a system package in the framework

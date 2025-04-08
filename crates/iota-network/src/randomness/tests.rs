@@ -2,10 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{randomness::*, utils};
+use std::collections::BTreeSet;
+
 use fastcrypto::{groups::bls12381, serde_helpers::ToFromByteArray};
 use fastcrypto_tbls::{mocked_dkg, nodes};
-use std::collections::BTreeSet;
 use iota_swarm_config::test_utils::CommitteeFixture;
 use iota_types::{
     base_types::ConciseableName,
@@ -13,6 +13,8 @@ use iota_types::{
     crypto::{AuthorityPublicKeyBytes, ToFromBytes},
 };
 use tracing::Instrument;
+
+use crate::{randomness::*, utils};
 
 type PkG = bls12381::G2Element;
 type EncG = bls12381::G2Element;

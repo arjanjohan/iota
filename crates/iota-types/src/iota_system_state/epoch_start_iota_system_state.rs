@@ -2,19 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use enum_dispatch::enum_dispatch;
 use std::collections::HashMap;
 
-use crate::base_types::{AuthorityName, EpochId, IotaAddress};
-use crate::committee::{Committee, CommitteeWithNetworkMetadata, NetworkMetadata, StakeUnit};
-use crate::crypto::{AuthorityPublicKey, NetworkPublicKey};
-use crate::multiaddr::Multiaddr;
-use anemo::types::{PeerAffinity, PeerInfo};
-use anemo::PeerId;
+use anemo::{
+    PeerId,
+    types::{PeerAffinity, PeerInfo},
+};
 use consensus_config::{Authority, Committee as ConsensusCommittee};
-use serde::{Deserialize, Serialize};
+use enum_dispatch::enum_dispatch;
 use iota_protocol_config::ProtocolVersion;
+use serde::{Deserialize, Serialize};
 use tracing::{error, warn};
+
+use crate::{
+    base_types::{AuthorityName, EpochId, IotaAddress},
+    committee::{Committee, CommitteeWithNetworkMetadata, NetworkMetadata, StakeUnit},
+    crypto::{AuthorityPublicKey, NetworkPublicKey},
+    multiaddr::Multiaddr,
+};
 
 #[enum_dispatch]
 pub trait EpochStartSystemStateTrait {
@@ -292,16 +297,19 @@ impl EpochStartValidatorInfoV1 {
 
 #[cfg(test)]
 mod test {
-    use crate::base_types::IotaAddress;
-    use crate::committee::CommitteeTrait;
-    use crate::crypto::{get_key_pair, AuthorityKeyPair, NetworkKeyPair};
-    use crate::iota_system_state::epoch_start_iota_system_state::{
-        EpochStartSystemStateTrait, EpochStartSystemStateV1, EpochStartValidatorInfoV1,
-    };
     use fastcrypto::traits::KeyPair;
     use iota_network_stack::Multiaddr;
-    use rand::thread_rng;
     use iota_protocol_config::ProtocolVersion;
+    use rand::thread_rng;
+
+    use crate::{
+        base_types::IotaAddress,
+        committee::CommitteeTrait,
+        crypto::{AuthorityKeyPair, NetworkKeyPair, get_key_pair},
+        iota_system_state::epoch_start_iota_system_state::{
+            EpochStartSystemStateTrait, EpochStartSystemStateV1, EpochStartValidatorInfoV1,
+        },
+    };
 
     #[test]
     fn test_iota_and_mysticeti_committee_are_same() {

@@ -2,28 +2,29 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use axum::{extract::Extension, http::StatusCode, routing::get, Router};
-use dashmap::DashMap;
-use parking_lot::Mutex;
-use prometheus::core::{AtomicI64, GenericGauge};
-use simple_server_timing_header::Timer;
-use std::future::Future;
-use std::net::SocketAddr;
-use std::pin::Pin;
-use std::sync::Arc;
-use std::task::{Context, Poll};
-use std::time::Instant;
-
-use once_cell::sync::OnceCell;
-use prometheus::{
-    register_histogram_with_registry, register_int_counter_vec_with_registry,
-    register_int_gauge_vec_with_registry, Histogram, IntCounterVec, IntGaugeVec, Registry,
-    TextEncoder,
+use std::{
+    future::Future,
+    net::SocketAddr,
+    pin::Pin,
+    sync::Arc,
+    task::{Context, Poll},
+    time::Instant,
 };
-use tap::TapFallible;
-use tracing::{warn, Span};
 
+use axum::{Router, extract::Extension, http::StatusCode, routing::get};
+use dashmap::DashMap;
+use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
+use prometheus::{
+    Histogram, IntCounterVec, IntGaugeVec, Registry, TextEncoder,
+    core::{AtomicI64, GenericGauge},
+    register_histogram_with_registry, register_int_counter_vec_with_registry,
+    register_int_gauge_vec_with_registry,
+};
 pub use scopeguard;
+use simple_server_timing_header::Timer;
+use tap::TapFallible;
+use tracing::{Span, warn};
 use uuid::Uuid;
 
 mod guards;
@@ -225,9 +226,7 @@ pub fn add_server_timing(name: &str) {
 
 #[macro_export]
 macro_rules! monitored_future {
-    ($fut: expr) => {{
-        monitored_future!(futures, $fut, "", INFO, false)
-    }};
+    ($fut: expr) => {{ monitored_future!(futures, $fut, "", INFO, false) }};
 
     ($metric: ident, $fut: expr, $name: expr, $logging_level: ident, $logging_enabled: expr) => {{
         let location: &str = if $name.is_empty() {
@@ -641,9 +640,9 @@ pub async fn metrics(
 
 #[cfg(test)]
 mod tests {
+    use prometheus::{IntCounter, Registry};
+
     use crate::RegistryService;
-    use prometheus::IntCounter;
-    use prometheus::Registry;
 
     #[test]
     fn registry_service() {

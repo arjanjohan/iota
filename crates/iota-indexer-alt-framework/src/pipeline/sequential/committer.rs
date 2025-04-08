@@ -4,23 +4,22 @@
 
 use std::{cmp::Ordering, collections::BTreeMap, sync::Arc};
 
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection};
+use diesel_async::{AsyncConnection, scoped_futures::ScopedFutureExt};
 use iota_pg_db::Db;
 use tokio::{
     sync::mpsc,
     task::JoinHandle,
-    time::{interval, MissedTickBehavior},
+    time::{MissedTickBehavior, interval},
 };
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, info, warn};
 
+use super::{Handler, SequentialConfig};
 use crate::{
     metrics::IndexerMetrics,
     models::watermarks::CommitterWatermark,
-    pipeline::{logging::WatermarkLogger, IndexedCheckpoint, WARN_PENDING_WATERMARKS},
+    pipeline::{IndexedCheckpoint, WARN_PENDING_WATERMARKS, logging::WatermarkLogger},
 };
-
-use super::{Handler, SequentialConfig};
 
 /// The committer task gathers rows into batches and writes them to the database.
 ///

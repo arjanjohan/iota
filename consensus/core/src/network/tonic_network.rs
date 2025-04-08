@@ -13,29 +13,30 @@ use std::{
 use async_trait::async_trait;
 use bytes::Bytes;
 use consensus_config::{AuthorityIndex, NetworkKeyPair, NetworkPublicKey};
-use futures::{stream, Stream, StreamExt as _};
+use futures::{Stream, StreamExt as _, stream};
+use iota_http::ServerHandle;
 use iota_network_stack::{
+    Multiaddr,
     callback::{CallbackLayer, MakeCallbackHandler, ResponseHandler},
     multiaddr::Protocol,
-    Multiaddr,
 };
-use parking_lot::RwLock;
-use iota_http::ServerHandle;
 use iota_tls::AllowPublicKeys;
-use tokio_stream::{iter, Iter};
-use tonic::{codec::CompressionEncoding, Request, Response, Streaming};
+use parking_lot::RwLock;
+use tokio_stream::{Iter, iter};
+use tonic::{Request, Response, Streaming, codec::CompressionEncoding};
 use tower_http::trace::{DefaultMakeSpan, DefaultOnFailure, TraceLayer};
 use tracing::{debug, error, info, trace, warn};
 
 use super::{
+    BlockStream, ExtendedSerializedBlock, NetworkClient, NetworkManager, NetworkService,
     metrics_layer::{MetricsCallbackMaker, MetricsResponseCallback, SizedRequest, SizedResponse},
     tonic_gen::{
         consensus_service_client::ConsensusServiceClient,
         consensus_service_server::ConsensusService,
     },
-    BlockStream, ExtendedSerializedBlock, NetworkClient, NetworkManager, NetworkService,
 };
 use crate::{
+    CommitIndex, Round,
     block::{BlockRef, VerifiedBlock},
     commit::CommitRange,
     context::Context,
@@ -44,7 +45,6 @@ use crate::{
         tonic_gen::consensus_service_server::ConsensusServiceServer,
         tonic_tls::certificate_server_name,
     },
-    CommitIndex, Round,
 };
 
 // Maximum bytes size in a single fetch_blocks()response.

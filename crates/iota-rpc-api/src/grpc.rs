@@ -2,17 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::proto::types::Bcs;
-use http::{Request, Response};
 use std::{convert::Infallible, pin::Pin};
+
+use http::{Request, Response};
 use tap::Pipe;
 use tonic::{
-    body::{boxed, BoxBody},
+    body::{BoxBody, boxed},
     server::NamedService,
 };
 use tower::{Service, ServiceExt};
 
-use crate::subscription::SubscriptionServiceHandle;
+use crate::{proto::types::Bcs, subscription::SubscriptionServiceHandle};
 
 pub type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 
@@ -152,7 +152,7 @@ impl crate::proto::node::v2::node_service_server::NodeService for crate::RpcServ
                 return Err(tonic::Status::new(
                     tonic::Code::InvalidArgument,
                     "only one of `sequence_number` or `digest` can be provided",
-                ))
+                ));
             }
             (Some(sequence_number), None) => Some(
                 crate::service::checkpoints::CheckpointId::SequenceNumber(sequence_number),
@@ -192,7 +192,7 @@ impl crate::proto::node::v2::node_service_server::NodeService for crate::RpcServ
                 return Err(tonic::Status::new(
                     tonic::Code::InvalidArgument,
                     "only one of `sequence_number` or `digest` can be provided",
-                ))
+                ));
             }
             (Some(sequence_number), None) => {
                 crate::service::checkpoints::CheckpointId::SequenceNumber(sequence_number)
@@ -207,7 +207,7 @@ impl crate::proto::node::v2::node_service_server::NodeService for crate::RpcServ
                 return Err(tonic::Status::new(
                     tonic::Code::InvalidArgument,
                     "must provided one of `sequence_number` or `digest`",
-                ))
+                ));
             }
         };
 
@@ -238,7 +238,7 @@ impl crate::proto::node::v2::node_service_server::NodeService for crate::RpcServ
                 return Err(tonic::Status::new(
                     tonic::Code::InvalidArgument,
                     "only one of `transaction` or `transaction_bcs` can be provided",
-                ))
+                ));
             }
             (Some(transaction), None) => (&transaction).try_into().map_err(|e| {
                 tonic::Status::new(
@@ -255,7 +255,7 @@ impl crate::proto::node::v2::node_service_server::NodeService for crate::RpcServ
                 return Err(tonic::Status::new(
                     tonic::Code::InvalidArgument,
                     "one of `transaction` or `transaction_bcs` must be provided",
-                ))
+                ));
             }
         };
         let mut signatures: Vec<iota_sdk_types::UserSignature> = Vec::new();
@@ -523,7 +523,7 @@ impl crate::proto::node::v2alpha::node_service_server::NodeService for crate::Rp
         tonic::Status,
     > {
         let request = request.into_inner();
-        //TODO use provided read_mask
+        // TODO use provided read_mask
         let parameters = crate::types::SimulateTransactionQueryParameters {
             balance_changes: false,
             input_objects: false,
@@ -567,7 +567,7 @@ impl crate::proto::node::v2alpha::node_service_server::NodeService for crate::Rp
     > {
         let request = request.into_inner();
         let read_mask = request.read_mask.unwrap_or_default();
-        //TODO use provided read_mask
+        // TODO use provided read_mask
         let simulate_parameters = crate::types::SimulateTransactionQueryParameters {
             balance_changes: false,
             input_objects: false,

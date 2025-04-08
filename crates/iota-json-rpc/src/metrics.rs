@@ -2,17 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashSet;
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 use futures::FutureExt;
+use iota_json_rpc_api::{
+    CLIENT_SDK_TYPE_HEADER, CLIENT_TARGET_API_VERSION_HEADER, TRANSIENT_ERROR_CODE,
+};
 use jsonrpsee::server::middleware::rpc::RpcServiceT;
 use prometheus::{
-    register_histogram_vec_with_registry, register_int_counter_vec_with_registry,
-    register_int_gauge_vec_with_registry, HistogramVec, IntCounterVec, IntGaugeVec,
+    HistogramVec, IntCounterVec, IntGaugeVec, register_histogram_vec_with_registry,
+    register_int_counter_vec_with_registry, register_int_gauge_vec_with_registry,
 };
-use iota_json_rpc_api::TRANSIENT_ERROR_CODE;
-use iota_json_rpc_api::{CLIENT_SDK_TYPE_HEADER, CLIENT_TARGET_API_VERSION_HEADER};
 use tokio::time::Instant;
 
 const SPAM_LABEL: &str = "SPAM";

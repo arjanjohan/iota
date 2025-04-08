@@ -2,35 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{anyhow, Context as _};
+use anyhow::{Context as _, anyhow};
 use diesel::{
+    AppearsOnTable, Column, Expression, ExpressionMethods, QueryDsl, QuerySource,
     dsl::sql,
     expression::{
-        is_aggregate::{Never, No},
         MixedAggregates, ValidGrouping,
+        is_aggregate::{Never, No},
     },
     pg::Pg,
     query_builder::{BoxedSelectStatement, FromClause, QueryFragment},
     sql_types::BigInt,
-    AppearsOnTable, Column, Expression, ExpressionMethods, QueryDsl, QuerySource,
 };
 use iota_indexer_alt_schema::schema::{
     tx_affected_addresses, tx_affected_objects, tx_calls, tx_digests,
 };
 use iota_json_rpc_types::{Page as PageResponse, TransactionFilter};
 use iota_types::{
-    base_types::{ObjectID, IotaAddress},
+    base_types::{IotaAddress, ObjectID},
     digests::TransactionDigest,
     messages_checkpoint::{CheckpointContents, CheckpointSummary},
 };
 
+use super::{Context, TransactionsConfig, error::Error};
 use crate::{
     data::{checkpoints::CheckpointKey, tx_digests::TxDigestKey},
-    error::{invalid_params, RpcError},
+    error::{RpcError, invalid_params},
     paginate::{Cursor as _, JsonCursor, Page},
 };
-
-use super::{error::Error, Context, TransactionsConfig};
 
 type Cursor = JsonCursor<u64>;
 type Digests = PageResponse<TransactionDigest, String>;

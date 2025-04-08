@@ -5,8 +5,8 @@
 use std::sync::Arc;
 
 use async_graphql::{
-    extensions::{Extension, ExtensionContext, ExtensionFactory, NextResolve, ResolveInfo},
     ServerError, ServerResult, Value,
+    extensions::{Extension, ExtensionContext, ExtensionFactory, NextResolve, ResolveInfo},
 };
 use async_trait::async_trait;
 
@@ -84,9 +84,8 @@ mod tests {
     use async_graphql::{EmptySubscription, Schema};
     use expect_test::expect;
 
-    use crate::{functional_group::FunctionalGroup, mutation::Mutation, types::query::Query};
-
     use super::*;
+    use crate::{functional_group::FunctionalGroup, mutation::Mutation, types::query::Query};
 
     #[tokio::test]
     #[should_panic] // because it tries to access the data provider, which isn't there

@@ -2,34 +2,36 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{Context, Result};
-use fastcrypto::encoding::{Base64, Encoding};
-use fastcrypto::hash::HashFunction;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{fs, path::Path};
-use iota_types::authenticator_state::{get_authenticator_state, AuthenticatorStateInner};
-use iota_types::base_types::{ObjectID, IotaAddress};
-use iota_types::clock::Clock;
-use iota_types::committee::CommitteeWithNetworkMetadata;
-use iota_types::crypto::DefaultHash;
-use iota_types::deny_list_v1::{get_coin_deny_list, PerTypeDenyList};
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::gas_coin::TOTAL_SUPPLY_NANOS;
-use iota_types::messages_checkpoint::{
-    CertifiedCheckpointSummary, CheckpointContents, CheckpointSummary, VerifiedCheckpoint,
+
+use anyhow::{Context, Result};
+use fastcrypto::{
+    encoding::{Base64, Encoding},
+    hash::HashFunction,
 };
-use iota_types::storage::ObjectStore;
-use iota_types::iota_system_state::{
-    get_iota_system_state, get_iota_system_state_wrapper, IotaSystemState, IotaSystemStateTrait,
-    IotaSystemStateWrapper, IotaValidatorGenesis,
-};
-use iota_types::transaction::Transaction;
 use iota_types::{
-    committee::{Committee, EpochId, ProtocolVersion},
+    IOTA_BRIDGE_OBJECT_ID, IOTA_RANDOMNESS_STATE_OBJECT_ID,
+    authenticator_state::{AuthenticatorStateInner, get_authenticator_state},
+    base_types::{IotaAddress, ObjectID},
+    clock::Clock,
+    committee::{Committee, CommitteeWithNetworkMetadata, EpochId, ProtocolVersion},
+    crypto::DefaultHash,
+    deny_list_v1::{PerTypeDenyList, get_coin_deny_list},
+    effects::{TransactionEffects, TransactionEvents},
     error::IotaResult,
+    gas_coin::TOTAL_SUPPLY_NANOS,
+    iota_system_state::{
+        IotaSystemState, IotaSystemStateTrait, IotaSystemStateWrapper, IotaValidatorGenesis,
+        get_iota_system_state, get_iota_system_state_wrapper,
+    },
+    messages_checkpoint::{
+        CertifiedCheckpointSummary, CheckpointContents, CheckpointSummary, VerifiedCheckpoint,
+    },
     object::Object,
+    storage::ObjectStore,
+    transaction::Transaction,
 };
-use iota_types::{IOTA_BRIDGE_OBJECT_ID, IOTA_RANDOMNESS_STATE_OBJECT_ID};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use tracing::trace;
 
 #[derive(Clone, Debug)]
@@ -492,7 +494,9 @@ impl TokenDistributionSchedule {
         }
 
         if total_nanos != TOTAL_SUPPLY_NANOS {
-            panic!("TokenDistributionSchedule adds up to {total_nanos} and not expected {TOTAL_SUPPLY_NANOS}");
+            panic!(
+                "TokenDistributionSchedule adds up to {total_nanos} and not expected {TOTAL_SUPPLY_NANOS}"
+            );
         }
     }
 
@@ -523,7 +527,9 @@ impl TokenDistributionSchedule {
         let minimum_required_stake = iota_types::governance::VALIDATOR_LOW_STAKE_THRESHOLD_NANOS;
         for (validator, stake) in validators {
             if stake < minimum_required_stake {
-                panic!("validator {validator} has '{stake}' stake and does not meet the minimum required stake threshold of '{minimum_required_stake}'");
+                panic!(
+                    "validator {validator} has '{stake}' stake and does not meet the minimum required stake threshold of '{minimum_required_stake}'"
+                );
             }
         }
     }

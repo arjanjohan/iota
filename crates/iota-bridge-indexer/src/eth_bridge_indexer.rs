@@ -2,42 +2,43 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::Duration;
+use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use anyhow::Error;
 use async_trait::async_trait;
-use ethers::prelude::Transaction;
-use ethers::providers::{Http, Middleware, Provider, StreamExt, Ws};
-use ethers::types::{Address as EthAddress, Block, Filter, Log, H256};
+use ethers::{
+    prelude::Transaction,
+    providers::{Http, Middleware, Provider, StreamExt, Ws},
+    types::{Address as EthAddress, Block, Filter, H256, Log},
+};
+use iota_bridge::{
+    abi::{
+        EthBridgeCommitteeEvents, EthBridgeConfigEvents, EthBridgeEvent, EthBridgeLimiterEvents,
+        EthIotaBridgeEvents,
+    },
+    error::BridgeError,
+    eth_client::EthClient,
+    eth_syncer::EthSyncer,
+    metered_eth_provider::MeteredEthHttpProvider,
+    metrics::BridgeMetrics,
+    retry_with_max_elapsed_time,
+    types::{EthEvent, RawEthLog},
+};
+use iota_indexer_builder::{
+    Task,
+    indexer_builder::{DataMapper, DataSender, Datasource},
+    metrics::IndexerMetricProvider,
+};
+use iota_metrics::spawn_monitored_task;
 use prometheus::IntGauge;
-use iota_bridge::error::BridgeError;
-use iota_bridge::eth_client::EthClient;
-use iota_bridge::eth_syncer::EthSyncer;
-use iota_bridge::metered_eth_provider::MeteredEthHttpProvider;
-use iota_bridge::retry_with_max_elapsed_time;
-use iota_indexer_builder::Task;
 use tap::tap::TapFallible;
-use tokio::select;
-use tokio::task::JoinHandle;
+use tokio::{select, task::JoinHandle};
 use tracing::{info, warn};
 
-use iota_metrics::spawn_monitored_task;
-use iota_bridge::abi::{
-    EthBridgeCommitteeEvents, EthBridgeConfigEvents, EthBridgeEvent, EthBridgeLimiterEvents,
-    EthIotaBridgeEvents,
-};
-
-use crate::metrics::BridgeIndexerMetrics;
 use crate::{
     BridgeDataSource, GovernanceAction, GovernanceActionType, ProcessedTxnData, TokenTransfer,
-    TokenTransferData, TokenTransferStatus,
+    TokenTransferData, TokenTransferStatus, metrics::BridgeIndexerMetrics,
 };
-use iota_bridge::metrics::BridgeMetrics;
-use iota_bridge::types::{EthEvent, RawEthLog};
-use iota_indexer_builder::indexer_builder::{DataMapper, DataSender, Datasource};
-use iota_indexer_builder::metrics::IndexerMetricProvider;
 
 #[derive(Debug)]
 pub struct RawEthData {

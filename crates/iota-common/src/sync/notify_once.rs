@@ -2,10 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use parking_lot::Mutex;
 use std::sync::Arc;
-use tokio::sync::futures::Notified;
-use tokio::sync::Notify;
+
+use parking_lot::Mutex;
+use tokio::sync::{Notify, futures::Notified};
 
 /// Notify once allows waiter to register for certain conditions and unblocks waiter
 /// when condition is signalled with `notify` method.
@@ -84,9 +84,11 @@ impl Default for NotifyOnce {
 async fn notify_once_test() {
     let notify_once = NotifyOnce::new();
     // Before notify() is called .wait() is not ready
-    assert!(futures::future::poll_immediate(notify_once.wait())
-        .await
-        .is_none());
+    assert!(
+        futures::future::poll_immediate(notify_once.wait())
+            .await
+            .is_none()
+    );
     let wait = notify_once.wait();
     notify_once.notify().unwrap();
     // Pending wait() call is ready now
@@ -95,7 +97,9 @@ async fn notify_once_test() {
     // This makes sure lock is dropped properly and wait futures resolve independently of each other
     let _dangle_wait = notify_once.wait();
     // Any new wait() is immediately ready
-    assert!(futures::future::poll_immediate(notify_once.wait())
-        .await
-        .is_some());
+    assert!(
+        futures::future::poll_immediate(notify_once.wait())
+            .await
+            .is_some()
+    );
 }

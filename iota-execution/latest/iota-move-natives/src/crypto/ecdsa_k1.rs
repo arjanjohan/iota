@@ -1,18 +1,18 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::NativesCostTable;
-use fastcrypto::secp256k1::Secp256k1KeyPair;
-use fastcrypto::secp256k1::Secp256k1PrivateKey;
-use fastcrypto::traits::RecoverableSigner;
+use std::collections::VecDeque;
+
 use fastcrypto::{
     error::FastCryptoError,
     hash::{Keccak256, Sha256},
     secp256k1::{
-        recoverable::Secp256k1RecoverableSignature, Secp256k1PublicKey, Secp256k1Signature,
+        Secp256k1KeyPair, Secp256k1PrivateKey, Secp256k1PublicKey, Secp256k1Signature,
+        recoverable::Secp256k1RecoverableSignature,
     },
-    traits::{RecoverableSignature, ToFromBytes},
+    traits::{RecoverableSignature, RecoverableSigner, ToFromBytes},
 };
+use iota_types::crypto::KeypairTraits;
 use move_binary_format::errors::PartialVMResult;
 use move_core_types::gas_algebra::InternalGas;
 use move_vm_runtime::{native_charge_gas_early_exit, native_functions::NativeContext};
@@ -22,11 +22,10 @@ use move_vm_types::{
     pop_arg,
     values::{self, Value, VectorRef},
 };
-use rand::rngs::StdRng;
-use rand::SeedableRng;
+use rand::{SeedableRng, rngs::StdRng};
 use smallvec::smallvec;
-use std::collections::VecDeque;
-use iota_types::crypto::KeypairTraits;
+
+use crate::NativesCostTable;
 
 pub const FAIL_TO_RECOVER_PUBKEY: u64 = 0;
 pub const INVALID_SIGNATURE: u64 = 1;
@@ -58,17 +57,17 @@ pub struct EcdsaK1EcrecoverCostParams {
     ///  Cost per block of `msg` with `hash=1`implying SHA256, with block size = 64
     pub ecdsa_k1_ecrecover_sha256_msg_cost_per_block: InternalGas,
 }
-/***************************************************************************************************
- * native fun secp256k1_ecrecover
- * Implementation of the Move native function `secp256k1_ecrecover(signature: &vector<u8>, msg: &vector<u8>, hash: u8): vector<u8>`
- * This function has two cost modes depending on the hash being set to `KECCAK256` or `SHA256`. The core formula is same but constants differ.
- * If hash = 0, we use the `keccak256` cost constants, otherwise we use the `sha256` cost constants.
- *   gas cost: ecdsa_k1_ecrecover_cost_base                    | covers various fixed costs in the oper
- *              + ecdsa_k1_ecrecover_msg_cost_per_byte    * size_of(msg)        | covers cost of operating on each byte of `msg`
- *              + ecdsa_k1_ecrecover_msg_cost_per_block   * num_blocks(msg)     | covers cost of operating on each block in `msg`
- * Note: each block is of size `KECCAK256_BLOCK_SIZE` bytes for `keccak256` and `SHA256_BLOCK_SIZE` for `sha256`, and we round up.
- *       `signature` is fixed size, so the cost is included in the base cost.
- **************************************************************************************************/
+/// *************************************************************************************************
+/// native fun secp256k1_ecrecover
+/// Implementation of the Move native function `secp256k1_ecrecover(signature: &vector<u8>, msg: &vector<u8>, hash: u8): vector<u8>`
+/// This function has two cost modes depending on the hash being set to `KECCAK256` or `SHA256`. The core formula is same but constants differ.
+/// If hash = 0, we use the `keccak256` cost constants, otherwise we use the `sha256` cost constants.
+///   gas cost: ecdsa_k1_ecrecover_cost_base                    | covers various fixed costs in the oper
+///              + ecdsa_k1_ecrecover_msg_cost_per_byte    * size_of(msg)        | covers cost of operating on each byte of `msg`
+///              + ecdsa_k1_ecrecover_msg_cost_per_block   * num_blocks(msg)     | covers cost of operating on each block in `msg`
+/// Note: each block is of size `KECCAK256_BLOCK_SIZE` bytes for `keccak256` and `SHA256_BLOCK_SIZE` for `sha256`, and we round up.
+///       `signature` is fixed size, so the cost is included in the base cost.
+/// ***********************************************************************************************
 pub fn ecrecover(
     context: &mut NativeContext,
     ty_args: Vec<Type>,
@@ -204,17 +203,17 @@ pub struct EcdsaK1Secp256k1VerifyCostParams {
     ///  Cost per block of `msg` with `hash=1`implying SHA256, with block size = 64
     pub ecdsa_k1_secp256k1_verify_sha256_msg_cost_per_block: InternalGas,
 }
-/***************************************************************************************************
- * native fun secp256k1_verify
- * Implementation of the Move native function `secp256k1_verify(signature: &vector<u8>, public_key: &vector<u8>, msg: &vector<u8>, hash: u8): bool`
- * This function has two cost modes depending on the hash being set to`KECCAK256` or `SHA256`. The core formula is same but constants differ.
- * If hash = 0, we use the `keccak256` cost constants, otherwise we use the `sha256` cost constants.
- *   gas cost: ecdsa_k1_secp256k1_verify_cost_base                    | covers various fixed costs in the oper
- *              + ecdsa_k1_secp256k1_verify_msg_cost_per_byte    * size_of(msg)        | covers cost of operating on each byte of `msg`
- *              + ecdsa_k1_secp256k1_verify_msg_cost_per_block   * num_blocks(msg)     | covers cost of operating on each block in `msg`
- * Note: each block is of size `KECCAK256_BLOCK_SIZE` bytes for `keccak256` and `SHA256_BLOCK_SIZE` for `sha256`, and we round up.
- *       `signature` and `public_key` are fixed size, so their costs are included in the base cost.
- **************************************************************************************************/
+/// *************************************************************************************************
+/// native fun secp256k1_verify
+/// Implementation of the Move native function `secp256k1_verify(signature: &vector<u8>, public_key: &vector<u8>, msg: &vector<u8>, hash: u8): bool`
+/// This function has two cost modes depending on the hash being set to`KECCAK256` or `SHA256`. The core formula is same but constants differ.
+/// If hash = 0, we use the `keccak256` cost constants, otherwise we use the `sha256` cost constants.
+///   gas cost: ecdsa_k1_secp256k1_verify_cost_base                    | covers various fixed costs in the oper
+///              + ecdsa_k1_secp256k1_verify_msg_cost_per_byte    * size_of(msg)        | covers cost of operating on each byte of `msg`
+///              + ecdsa_k1_secp256k1_verify_msg_cost_per_block   * num_blocks(msg)     | covers cost of operating on each block in `msg`
+/// Note: each block is of size `KECCAK256_BLOCK_SIZE` bytes for `keccak256` and `SHA256_BLOCK_SIZE` for `sha256`, and we round up.
+///       `signature` and `public_key` are fixed size, so their costs are included in the base cost.
+/// ***********************************************************************************************
 pub fn secp256k1_verify(
     context: &mut NativeContext,
     ty_args: Vec<Type>,
@@ -298,13 +297,13 @@ pub fn secp256k1_verify(
     Ok(NativeResult::ok(cost, smallvec![Value::bool(result)]))
 }
 
-/***************************************************************************************************
- * native fun secp256k1_sign (TEST ONLY)
- * Implementation of the Move native function `secp256k1_sign(private_key: &vector<u8>, msg: &vector<u8>, hash: u8): vector<u8>`
- * This function has two cost modes depending on the hash being set to`KECCAK256` or `SHA256`. The core formula is same but constants differ.
- * If hash = 0, we use the `keccak256` cost constants, otherwise we use the `sha256` cost constants.
- *   gas cost: 0 (because it is only for test purposes)
- **************************************************************************************************/
+/// *************************************************************************************************
+/// native fun secp256k1_sign (TEST ONLY)
+/// Implementation of the Move native function `secp256k1_sign(private_key: &vector<u8>, msg: &vector<u8>, hash: u8): vector<u8>`
+/// This function has two cost modes depending on the hash being set to`KECCAK256` or `SHA256`. The core formula is same but constants differ.
+/// If hash = 0, we use the `keccak256` cost constants, otherwise we use the `sha256` cost constants.
+///   gas cost: 0 (because it is only for test purposes)
+/// ***********************************************************************************************
 pub fn secp256k1_sign(
     _context: &mut NativeContext,
     ty_args: Vec<Type>,
@@ -352,12 +351,12 @@ pub fn secp256k1_sign(
     ))
 }
 
-/***************************************************************************************************
- * native fun secp256k1_keypair_from_seed (TEST ONLY)
- * Implementation of the Move native function `secp256k1_sign(seed: &vector<u8>): KeyPair`
- * Seed must be exactly 32 bytes long.
- *   gas cost: 0 (because it is only for test purposes)
- **************************************************************************************************/
+/// *************************************************************************************************
+/// native fun secp256k1_keypair_from_seed (TEST ONLY)
+/// Implementation of the Move native function `secp256k1_sign(seed: &vector<u8>): KeyPair`
+/// Seed must be exactly 32 bytes long.
+///   gas cost: 0 (because it is only for test purposes)
+/// ***********************************************************************************************
 pub fn secp256k1_keypair_from_seed(
     _context: &mut NativeContext,
     ty_args: Vec<Type>,

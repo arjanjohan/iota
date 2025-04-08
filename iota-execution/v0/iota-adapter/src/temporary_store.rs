@@ -2,39 +2,41 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::gas_charger::GasCharger;
-use move_core_types::account_address::AccountAddress;
-use move_core_types::language_storage::StructTag;
-use move_core_types::resolver::ResourceResolver;
-use parking_lot::RwLock;
 use std::collections::{BTreeMap, HashSet};
+
 use iota_protocol_config::ProtocolConfig;
-use iota_types::committee::EpochId;
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::execution::{DynamicallyLoadedObjectMetadata, ExecutionResults, SharedInput};
-use iota_types::execution_config_utils::to_binary_config;
-use iota_types::execution_status::ExecutionStatus;
-use iota_types::inner_temporary_store::InnerTemporaryStore;
-use iota_types::layout_resolver::LayoutResolver;
-use iota_types::storage::{BackingStore, DeleteKindWithOldVersion, DenyListResult, PackageObject};
-use iota_types::iota_system_state::{get_iota_system_state_wrapper, AdvanceEpochParams};
 use iota_types::{
+    IOTA_SYSTEM_STATE_OBJECT_ID,
     base_types::{
-        ObjectDigest, ObjectID, ObjectRef, SequenceNumber, IotaAddress, TransactionDigest,
+        IotaAddress, ObjectDigest, ObjectID, ObjectRef, SequenceNumber, TransactionDigest,
         VersionDigest,
     },
+    committee::EpochId,
+    effects::{TransactionEffects, TransactionEvents},
     error::{ExecutionError, IotaError, IotaResult},
     event::Event,
+    execution::{DynamicallyLoadedObjectMetadata, ExecutionResults, SharedInput},
+    execution_config_utils::to_binary_config,
+    execution_status::ExecutionStatus,
     fp_bail,
     gas::GasCostSummary,
-    object::Owner,
-    object::{Data, Object},
+    inner_temporary_store::InnerTemporaryStore,
+    iota_system_state::{AdvanceEpochParams, get_iota_system_state_wrapper},
+    is_system_package,
+    layout_resolver::LayoutResolver,
+    object::{Data, Object, Owner},
     storage::{
-        BackingPackageStore, ChildObjectResolver, ObjectChange, ParentSync, Storage, WriteKind,
+        BackingPackageStore, BackingStore, ChildObjectResolver, DeleteKindWithOldVersion,
+        DenyListResult, ObjectChange, PackageObject, ParentSync, Storage, WriteKind,
     },
     transaction::InputObjects,
 };
-use iota_types::{is_system_package, IOTA_SYSTEM_STATE_OBJECT_ID};
+use move_core_types::{
+    account_address::AccountAddress, language_storage::StructTag, resolver::ResourceResolver,
+};
+use parking_lot::RwLock;
+
+use crate::gas_charger::GasCharger;
 
 pub struct TemporaryStore<'backing> {
     // The backing store for retrieving Move packages onchain.
@@ -343,10 +345,11 @@ impl<'backing> TemporaryStore<'backing> {
                 )
             }));
         } else {
-            debug_assert!(self
-                .deleted
-                .iter()
-                .all(|(_, kind)| { !matches!(kind, DeleteKindWithOldVersion::UnwrapThenDelete) }));
+            debug_assert!(
+                self.deleted.iter().all(|(_, kind)| {
+                    !matches!(kind, DeleteKindWithOldVersion::UnwrapThenDelete)
+                })
+            );
         }
     }
 
@@ -398,7 +401,9 @@ impl<'backing> TemporaryStore<'backing> {
                 // In addition, gas objects should never be immutable, so gas smashing
                 // should not allow us to delete immutable objects
                 let digest = self.tx_digest;
-                panic!("Internal invariant violation in tx {digest}: Deleting immutable object {id}, delete kind {kind:?}")
+                panic!(
+                    "Internal invariant violation in tx {digest}: Deleting immutable object {id}, delete kind {kind:?}"
+                )
             }
         }
 
@@ -470,7 +475,7 @@ impl<'backing> TemporaryStore<'backing> {
     pub fn written_objects_size(&self) -> usize {
         self.written
             .iter()
-            .fold(0, |sum, obj| sum + obj.1 .0.object_size_for_gas_metering())
+            .fold(0, |sum, obj| sum + obj.1.0.object_size_for_gas_metering())
     }
 
     /// If there are unmetered storage rebate (due to system transaction), we put them into
@@ -565,7 +570,10 @@ impl<'backing> TemporaryStore<'backing> {
                             unreachable!("Should already be in authenticated_objs")
                         }
                         Owner::Immutable => {
-                            assert!(is_epoch_change, "Immutable objects cannot be written, except for IOTA Framework/Move stdlib upgrades at epoch change boundaries");
+                            assert!(
+                                is_epoch_change,
+                                "Immutable objects cannot be written, except for IOTA Framework/Move stdlib upgrades at epoch change boundaries"
+                            );
                             // Note: this assumes that the only immutable objects an epoch change tx can update are system packages,
                             // but in principle we could allow others.
                             assert!(
@@ -913,11 +921,10 @@ impl<'backing> TemporaryStore<'backing> {
                 total_output_iota += epoch_rebates;
             }
             if total_input_iota != total_output_iota {
-                return Err(ExecutionError::invariant_violation(
-                format!("IOTA conservation failed: input={}, output={}, this transaction either mints or burns IOTA",
-                total_input_iota,
-                total_output_iota))
-            );
+                return Err(ExecutionError::invariant_violation(format!(
+                    "IOTA conservation failed: input={}, output={}, this transaction either mints or burns IOTA",
+                    total_input_iota, total_output_iota
+                )));
             }
         }
 
@@ -926,21 +933,21 @@ impl<'backing> TemporaryStore<'backing> {
         if total_input_rebate != gas_summary.storage_rebate + gas_summary.non_refundable_storage_fee
         {
             // TODO: re-enable once we fix the edge case with OOG, gas smashing, and storage rebate
-            /*return Err(ExecutionError::invariant_violation(
-                format!("IOTA conservation failed--{} IOTA in storage rebate field of input objects, {} IOTA in tx storage rebate or tx non-refundable storage rebate",
-                total_input_rebate,
-                gas_summary.non_refundable_storage_fee))
-            );*/
+            // return Err(ExecutionError::invariant_violation(
+            // format!("IOTA conservation failed--{} IOTA in storage rebate field of input objects, {} IOTA in tx storage rebate or tx non-refundable storage rebate",
+            // total_input_rebate,
+            // gas_summary.non_refundable_storage_fee))
+            // );
         }
 
         // all IOTA charged for storage should flow into the storage rebate field of some output object
         if gas_summary.storage_cost != total_output_rebate {
             // TODO: re-enable once we fix the edge case with OOG, gas smashing, and storage rebate
-            /*return Err(ExecutionError::invariant_violation(
-                format!("IOTA conservation failed--{} IOTA charged for storage, {} IOTA in storage rebate field of output objects",
-                gas_summary.storage_cost,
-                total_output_rebate))
-            );*/
+            // return Err(ExecutionError::invariant_violation(
+            // format!("IOTA conservation failed--{} IOTA charged for storage, {} IOTA in storage rebate field of output objects",
+            // gas_summary.storage_cost,
+            // total_output_rebate))
+            // );
         }
         Ok(())
     }

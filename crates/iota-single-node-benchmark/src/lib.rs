@@ -2,9 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::benchmark_context::BenchmarkContext;
-use crate::command::Component;
-use crate::workload::Workload;
+use crate::{benchmark_context::BenchmarkContext, command::Component, workload::Workload};
 
 pub(crate) mod benchmark_context;
 pub mod command;

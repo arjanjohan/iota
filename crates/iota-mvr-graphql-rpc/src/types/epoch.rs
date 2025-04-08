@@ -4,33 +4,34 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use crate::connection::ScanConnection;
-use crate::consistency::Checkpointed;
-use crate::context_data::db_data_provider::{convert_to_validators, PgManager};
-use crate::data::{self, DataLoader, Db, DbConnection, QueryExecutor};
-use crate::error::Error;
-use crate::server::watermark_task::Watermark;
-
-use super::big_int::BigInt;
-use super::checkpoint::{self, Checkpoint};
-use super::cursor::{self, Page, Paginated, ScanLimited, Target};
-use super::date_time::DateTime;
-use super::protocol_config::ProtocolConfigs;
-use super::system_state_summary::SystemStateSummary;
-use super::transaction_block::{self, TransactionBlock, TransactionBlockFilter};
-use super::uint53::UInt53;
-use super::validator_set::ValidatorSet;
-use async_graphql::connection::Connection;
-use async_graphql::dataloader::Loader;
-use async_graphql::*;
+use async_graphql::{connection::Connection, dataloader::Loader, *};
 use connection::{CursorType, Edge};
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::scoped_futures::ScopedFutureExt;
 use fastcrypto::encoding::{Base58, Encoding};
-use serde::{Deserialize, Serialize};
-use iota_indexer::models::epoch::QueryableEpochInfo;
-use iota_indexer::schema::epochs;
+use iota_indexer::{models::epoch::QueryableEpochInfo, schema::epochs};
 use iota_types::messages_checkpoint::CheckpointCommitment as EpochCommitment;
+use serde::{Deserialize, Serialize};
+
+use super::{
+    big_int::BigInt,
+    checkpoint::{self, Checkpoint},
+    cursor::{self, Page, Paginated, ScanLimited, Target},
+    date_time::DateTime,
+    protocol_config::ProtocolConfigs,
+    system_state_summary::SystemStateSummary,
+    transaction_block::{self, TransactionBlock, TransactionBlockFilter},
+    uint53::UInt53,
+    validator_set::ValidatorSet,
+};
+use crate::{
+    connection::ScanConnection,
+    consistency::Checkpointed,
+    context_data::db_data_provider::{PgManager, convert_to_validators},
+    data::{self, DataLoader, Db, DbConnection, QueryExecutor},
+    error::Error,
+    server::watermark_task::Watermark,
+};
 
 #[derive(Clone)]
 pub(crate) struct Epoch {

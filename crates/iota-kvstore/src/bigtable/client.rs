@@ -2,35 +2,42 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::bigtable::proto::bigtable::v2::bigtable_client::BigtableClient as BigtableInternalClient;
-use crate::bigtable::proto::bigtable::v2::mutate_rows_request::Entry;
-use crate::bigtable::proto::bigtable::v2::mutation::SetCell;
-use crate::bigtable::proto::bigtable::v2::read_rows_response::cell_chunk::RowStatus;
-use crate::bigtable::proto::bigtable::v2::row_range::EndKey;
-use crate::bigtable::proto::bigtable::v2::{
-    mutation, MutateRowsRequest, MutateRowsResponse, Mutation, ReadRowsRequest, RowRange, RowSet,
+use std::{
+    future::Future,
+    pin::Pin,
+    sync::{Arc, RwLock},
+    task::{Context, Poll},
+    time::Duration,
 };
-use crate::{Checkpoint, KeyValueStoreReader, KeyValueStoreWriter, TransactionData};
-use anyhow::{anyhow, Result};
+
+use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use gcp_auth::{Token, TokenProvider};
 use http::{HeaderValue, Request, Response};
-use std::future::Future;
-use std::pin::Pin;
-use std::sync::{Arc, RwLock};
-use std::task::{Context, Poll};
-use std::time::Duration;
-use iota_types::base_types::{ObjectID, TransactionDigest};
-use iota_types::digests::CheckpointDigest;
-use iota_types::full_checkpoint_content::CheckpointData;
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-use iota_types::object::Object;
-use iota_types::storage::ObjectKey;
-use tonic::body::BoxBody;
-use tonic::codegen::Service;
-use tonic::transport::{Certificate, Channel, ClientTlsConfig};
-use tonic::Streaming;
+use iota_types::{
+    base_types::{ObjectID, TransactionDigest},
+    digests::CheckpointDigest,
+    full_checkpoint_content::CheckpointData,
+    messages_checkpoint::CheckpointSequenceNumber,
+    object::Object,
+    storage::ObjectKey,
+};
+use tonic::{
+    Streaming,
+    body::BoxBody,
+    codegen::Service,
+    transport::{Certificate, Channel, ClientTlsConfig},
+};
 use tracing::error;
+
+use crate::{
+    Checkpoint, KeyValueStoreReader, KeyValueStoreWriter, TransactionData,
+    bigtable::proto::bigtable::v2::{
+        MutateRowsRequest, MutateRowsResponse, Mutation, ReadRowsRequest, RowRange, RowSet,
+        bigtable_client::BigtableClient as BigtableInternalClient, mutate_rows_request::Entry,
+        mutation, mutation::SetCell, read_rows_response::cell_chunk::RowStatus, row_range::EndKey,
+    },
+};
 
 const OBJECTS_TABLE: &str = "objects";
 const TRANSACTIONS_TABLE: &str = "transactions";

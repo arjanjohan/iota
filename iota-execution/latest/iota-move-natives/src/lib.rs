@@ -2,23 +2,57 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::Arc;
+
+use better_any::{Tid, TidAble};
+use crypto::{
+    nitro_attestation::{self, NitroAttestationCostParams},
+    vdf::{self, VDFCostParams},
+};
+use iota_protocol_config::ProtocolConfig;
+use iota_types::{IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS, MOVE_STDLIB_ADDRESS};
+use move_binary_format::errors::{PartialVMError, PartialVMResult};
+use move_core_types::{
+    annotated_value as A,
+    gas_algebra::InternalGas,
+    identifier::Identifier,
+    language_storage::{StructTag, TypeTag},
+    runtime_value as R,
+    vm_status::StatusCode,
+};
+use move_stdlib_natives::{self as MSN, GasParameters};
+use move_vm_runtime::native_functions::{NativeContext, NativeFunction, NativeFunctionTable};
+use move_vm_types::{
+    loaded_data::runtime_types::Type,
+    natives::function::NativeResult,
+    values::{Struct, Value},
+};
+use transfer::TransferReceiveObjectInternalCostParams;
+
 use self::{
     address::{AddressFromBytesCostParams, AddressFromU256CostParams, AddressToU256CostParams},
     config::ConfigReadSettingImplCostParams,
-    crypto::{bls12381, ecdsa_k1, ecdsa_r1, ecvrf, ed25519, groth16, hash, hmac},
     crypto::{
+        bls12381,
         bls12381::{Bls12381Bls12381MinPkVerifyCostParams, Bls12381Bls12381MinSigVerifyCostParams},
+        ecdsa_k1,
         ecdsa_k1::{
             EcdsaK1DecompressPubkeyCostParams, EcdsaK1EcrecoverCostParams,
             EcdsaK1Secp256k1VerifyCostParams,
         },
+        ecdsa_r1,
         ecdsa_r1::{EcdsaR1EcrecoverCostParams, EcdsaR1Secp256R1VerifyCostParams},
+        ecvrf,
         ecvrf::EcvrfEcvrfVerifyCostParams,
+        ed25519,
         ed25519::Ed25519VerifyCostParams,
+        groth16,
         groth16::{
             Groth16PrepareVerifyingKeyCostParams, Groth16VerifyGroth16ProofInternalCostParams,
         },
+        hash,
         hash::{HashBlake2b256CostParams, HashKeccak256CostParams},
+        hmac,
         hmac::HmacHmacSha3256CostParams,
         poseidon,
     },
@@ -36,34 +70,13 @@ use self::{
     types::TypesIsOneTimeWitnessCostParams,
     validator::ValidatorValidateMetadataBcsCostParams,
 };
-use crate::crypto::group_ops;
-use crate::crypto::group_ops::GroupOpsCostParams;
-use crate::crypto::poseidon::PoseidonBN254CostParams;
-use crate::crypto::zklogin;
-use crate::crypto::zklogin::{CheckZkloginIdCostParams, CheckZkloginIssuerCostParams};
-use better_any::{Tid, TidAble};
-use crypto::nitro_attestation::{self, NitroAttestationCostParams};
-use crypto::vdf::{self, VDFCostParams};
-use move_binary_format::errors::{PartialVMError, PartialVMResult};
-use move_core_types::{
-    annotated_value as A,
-    gas_algebra::InternalGas,
-    identifier::Identifier,
-    language_storage::{StructTag, TypeTag},
-    runtime_value as R,
-    vm_status::StatusCode,
+use crate::crypto::{
+    group_ops,
+    group_ops::GroupOpsCostParams,
+    poseidon::PoseidonBN254CostParams,
+    zklogin,
+    zklogin::{CheckZkloginIdCostParams, CheckZkloginIssuerCostParams},
 };
-use move_stdlib_natives::{self as MSN, GasParameters};
-use move_vm_runtime::native_functions::{NativeContext, NativeFunction, NativeFunctionTable};
-use move_vm_types::{
-    loaded_data::runtime_types::Type,
-    natives::function::NativeResult,
-    values::{Struct, Value},
-};
-use std::sync::Arc;
-use iota_protocol_config::ProtocolConfig;
-use iota_types::{MOVE_STDLIB_ADDRESS, IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS};
-use transfer::TransferReceiveObjectInternalCostParams;
 
 mod address;
 mod config;
@@ -1162,7 +1175,7 @@ pub(crate) fn get_tag_and_layouts(
             return Err(
                 PartialVMError::new(StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR)
                     .with_message("IOTA verifier guarantees this is a struct".to_string()),
-            )
+            );
         }
     };
     let Some(layout) = context.type_to_type_layout(ty)? else {

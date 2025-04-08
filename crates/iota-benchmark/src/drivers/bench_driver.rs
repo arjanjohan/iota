@@ -2,51 +2,57 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::Context;
-use anyhow::{anyhow, Result};
-use async_trait::async_trait;
-use futures::future::try_join_all;
-use futures::future::BoxFuture;
-use futures::FutureExt;
-use futures::{stream::FuturesUnordered, StreamExt};
-use indicatif::ProgressBar;
-use indicatif::ProgressStyle;
-use prometheus::register_histogram_vec_with_registry;
-use prometheus::IntCounterVec;
-use prometheus::Registry;
-use prometheus::{register_counter_vec_with_registry, register_gauge_vec_with_registry};
-use prometheus::{register_int_counter_vec_with_registry, CounterVec};
-use prometheus::{register_int_gauge_with_registry, GaugeVec};
-use prometheus::{HistogramVec, IntGauge};
-use rand::seq::SliceRandom;
-use tokio::sync::mpsc::{channel, Sender};
-use tokio::sync::OnceCell;
-use tokio_util::sync::CancellationToken;
+use std::{
+    collections::{BTreeMap, VecDeque},
+    fmt::{Debug, Formatter},
+    future::Future,
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering},
+    },
+    time::Duration,
+};
 
-use crate::drivers::driver::Driver;
-use crate::drivers::HistogramWrapper;
-use crate::system_state_observer::SystemStateObserver;
-use crate::workloads::payload::Payload;
-use crate::workloads::workload::ExpectedFailureType;
-use crate::workloads::{GroupID, WorkloadInfo};
-use crate::{ExecutionEffects, ValidatorProxy};
-use std::collections::{BTreeMap, VecDeque};
-use std::fmt::{Debug, Formatter};
-use std::future::Future;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
-use std::time::Duration;
-use iota_types::committee::Committee;
-use iota_types::quorum_driver_types::QuorumDriverError;
-use iota_types::transaction::{Transaction, TransactionDataAPI};
+use anyhow::{Context, Result, anyhow};
+use async_trait::async_trait;
+use futures::{
+    FutureExt, StreamExt,
+    future::{BoxFuture, try_join_all},
+    stream::FuturesUnordered,
+};
+use indicatif::{ProgressBar, ProgressStyle};
+use iota_types::{
+    committee::Committee,
+    quorum_driver_types::QuorumDriverError,
+    transaction::{Transaction, TransactionDataAPI},
+};
+use prometheus::{
+    CounterVec, GaugeVec, HistogramVec, IntCounterVec, IntGauge, Registry,
+    register_counter_vec_with_registry, register_gauge_vec_with_registry,
+    register_histogram_vec_with_registry, register_int_counter_vec_with_registry,
+    register_int_gauge_with_registry,
+};
+use rand::seq::SliceRandom;
 use sysinfo::{CpuExt, System, SystemExt};
-use tokio::sync::Barrier;
-use tokio::task::{JoinHandle, JoinSet};
-use tokio::{time, time::Instant};
+use tokio::{
+    sync::{
+        Barrier, OnceCell,
+        mpsc::{Sender, channel},
+    },
+    task::{JoinHandle, JoinSet},
+    time,
+    time::Instant,
+};
+use tokio_util::sync::CancellationToken;
 use tracing::{debug, error, info, warn};
 
-use super::Interval;
-use super::{BenchmarkStats, StressStats};
+use super::{BenchmarkStats, Interval, StressStats};
+use crate::{
+    ExecutionEffects, ValidatorProxy,
+    drivers::{HistogramWrapper, driver::Driver},
+    system_state_observer::SystemStateObserver,
+    workloads::{GroupID, WorkloadInfo, payload::Payload, workload::ExpectedFailureType},
+};
 pub struct BenchMetrics {
     pub benchmark_duration: IntGauge,
     pub num_success: IntCounterVec,

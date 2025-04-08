@@ -2,12 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{collections::BTreeMap, sync::Arc};
+
 use futures::stream::FuturesUnordered;
-use std::collections::BTreeMap;
-use std::sync::Arc;
-use iota_types::base_types::{ObjectRef, IotaAddress};
-use iota_types::crypto::{get_account_key_pair, AccountKeyPair};
-use iota_types::object::Object;
+use iota_types::{
+    base_types::{IotaAddress, ObjectRef},
+    crypto::{AccountKeyPair, get_account_key_pair},
+    object::Object,
+};
 
 #[derive(Clone)]
 pub struct Account {

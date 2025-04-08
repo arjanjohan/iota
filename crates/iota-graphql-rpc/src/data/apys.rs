@@ -2,8 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use itertools::Itertools;
 use iota_types::iota_system_state::PoolTokenExchangeRate;
+use itertools::Itertools;
 
 /// Calculate an APY for a validator based on the exchange rates of the staking pool.
 ///
@@ -61,7 +61,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     use iota_json_rpc::governance_api::ValidatorExchangeRates;
-    use iota_types::base_types::{ObjectID, IotaAddress};
+    use iota_types::base_types::{IotaAddress, ObjectID};
 
     use super::*;
 

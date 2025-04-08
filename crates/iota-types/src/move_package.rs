@@ -2,34 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::execution_status::PackageUpgradeError;
-use crate::{
-    base_types::{ObjectID, SequenceNumber},
-    crypto::DefaultHash,
-    error::{ExecutionError, ExecutionErrorKind, IotaError, IotaResult},
-    id::{ID, UID},
-    object::OBJECT_START_VERSION,
-    IOTA_FRAMEWORK_ADDRESS,
-};
+use std::collections::{BTreeMap, BTreeSet};
+
 use fastcrypto::hash::HashFunction;
-use move_binary_format::binary_config::BinaryConfig;
-use move_binary_format::file_format::CompiledModule;
-use move_binary_format::file_format_common::VERSION_6;
-use move_binary_format::normalized;
-use move_core_types::language_storage::ModuleId;
+use iota_protocol_config::ProtocolConfig;
+use move_binary_format::{
+    binary_config::BinaryConfig, file_format::CompiledModule, file_format_common::VERSION_6,
+    normalized,
+};
 use move_core_types::{
     account_address::AccountAddress,
     ident_str,
     identifier::{IdentStr, Identifier},
-    language_storage::StructTag,
+    language_storage::{ModuleId, StructTag},
 };
 use once_cell::sync::Lazy;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
-use serde_with::Bytes;
-use std::collections::{BTreeMap, BTreeSet};
-use iota_protocol_config::ProtocolConfig;
+use serde_with::{Bytes, serde_as};
+
+use crate::{
+    IOTA_FRAMEWORK_ADDRESS,
+    base_types::{ObjectID, SequenceNumber},
+    crypto::DefaultHash,
+    error::{ExecutionError, ExecutionErrorKind, IotaError, IotaResult},
+    execution_status::PackageUpgradeError,
+    id::{ID, UID},
+    object::OBJECT_START_VERSION,
+};
 
 // TODO: robust MovePackage tests
 // #[cfg(test)]
@@ -442,7 +442,11 @@ impl MovePackage {
             .sum::<usize>();
 
         let linkage_table_size = self.linkage_table.len()
-            * (ObjectID::LENGTH + (ObjectID::LENGTH + 8/* SequenceNumber */));
+            * (ObjectID::LENGTH
+                + (
+                    ObjectID::LENGTH + 8
+                    // SequenceNumber
+                ));
 
         8 /* SequenceNumber */ + module_map_size + type_origin_table_size + linkage_table_size
     }

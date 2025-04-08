@@ -2,17 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::proto::node::v2alpha::AccountObject;
-use crate::proto::node::v2alpha::ListAccountObjectsRequest;
-use crate::proto::node::v2alpha::ListAccountObjectsResponse;
-use crate::Result;
-use crate::RpcError;
-use crate::RpcService;
-use iota_sdk_types::Address;
-use iota_sdk_types::Version;
-use iota_sdk_types::{ObjectId, StructTag};
+use iota_sdk_types::{Address, ObjectId, StructTag, Version};
 use iota_types::iota_sdk_types_conversions::struct_tag_core_to_sdk;
 use tap::Pipe;
+
+use crate::{
+    Result, RpcError, RpcService,
+    proto::node::v2alpha::{AccountObject, ListAccountObjectsRequest, ListAccountObjectsResponse},
+};
 
 impl RpcService {
     pub fn list_account_objects(
@@ -81,16 +78,14 @@ impl RpcService {
 }
 
 fn decode_page_token(page_token: &str) -> Result<ObjectId> {
-    use base64::prelude::BASE64_STANDARD;
-    use base64::Engine;
+    use base64::{Engine, prelude::BASE64_STANDARD};
 
     let bytes = BASE64_STANDARD.decode(page_token).unwrap();
     Ok(ObjectId::new(bytes.try_into().unwrap()))
 }
 
 fn encode_page_token(page_token: ObjectId) -> String {
-    use base64::prelude::BASE64_STANDARD;
-    use base64::Engine;
+    use base64::{Engine, prelude::BASE64_STANDARD};
 
     BASE64_STANDARD.encode(page_token.as_bytes())
 }

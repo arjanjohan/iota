@@ -89,9 +89,8 @@ impl From<bcs::Error> for RpcError {
 
 impl From<iota_types::quorum_driver_types::QuorumDriverError> for RpcError {
     fn from(error: iota_types::quorum_driver_types::QuorumDriverError) -> Self {
+        use iota_types::{error::IotaError, quorum_driver_types::QuorumDriverError::*};
         use itertools::Itertools;
-        use iota_types::error::IotaError;
-        use iota_types::quorum_driver_types::QuorumDriverError::*;
 
         match error {
             InvalidUserSignature(err) => {
@@ -118,8 +117,8 @@ impl From<iota_types::quorum_driver_types::QuorumDriverError> for RpcError {
                     .collect::<std::collections::BTreeMap<_, Vec<_>>>();
 
                 let message = format!(
-                        "Failed to sign transaction by a quorum of validators because of locked objects. Conflicting Transactions:\n{new_map:#?}",  
-                    );
+                    "Failed to sign transaction by a quorum of validators because of locked objects. Conflicting Transactions:\n{new_map:#?}",
+                );
 
                 RpcError::new(Code::FailedPrecondition, message)
             }
@@ -165,7 +164,10 @@ impl From<iota_types::quorum_driver_types::QuorumDriverError> for RpcError {
                 );
 
                 let error_list = new_errors.join(", ");
-                let error_msg = format!("Transaction execution failed due to issues with transaction inputs, please review the errors and try again: {}.", error_list);
+                let error_msg = format!(
+                    "Transaction execution failed due to issues with transaction inputs, please review the errors and try again: {}.",
+                    error_list
+                );
 
                 RpcError::new(Code::InvalidArgument, error_msg)
             }

@@ -2,12 +2,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::TransactionBlockKindInput;
-use crate::types::{digest::Digest, iota_address::IotaAddress, type_filter::FqNameFilter};
-use crate::types::{intersect, uint53::UInt53};
-use async_graphql::InputObject;
 use std::collections::BTreeSet;
+
+use async_graphql::InputObject;
 use iota_types::base_types::IotaAddress as NativeIotaAddress;
+
+use super::TransactionBlockKindInput;
+use crate::types::{
+    digest::Digest, intersect, iota_address::IotaAddress, type_filter::FqNameFilter, uint53::UInt53,
+};
 
 #[derive(InputObject, Debug, Default, Clone)]
 pub(crate) struct TransactionBlockFilter {

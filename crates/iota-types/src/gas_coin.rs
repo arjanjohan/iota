@@ -2,6 +2,11 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    convert::{TryFrom, TryInto},
+    fmt::{Display, Formatter},
+};
+
 use move_core_types::{
     annotated_value::MoveStructLayout,
     ident_str,
@@ -9,17 +14,15 @@ use move_core_types::{
     language_storage::{StructTag, TypeTag},
 };
 use serde::{Deserialize, Serialize};
-use std::convert::{TryFrom, TryInto};
-use std::fmt::{Display, Formatter};
 
 use crate::{
+    IOTA_FRAMEWORK_ADDRESS,
     balance::Balance,
     base_types::{ObjectID, SequenceNumber},
     coin::Coin,
     error::{ExecutionError, ExecutionErrorKind},
     id::UID,
     object::{Data, MoveObject, Object},
-    IOTA_FRAMEWORK_ADDRESS,
 };
 
 /// The number of Nanos per IOTA token

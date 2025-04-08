@@ -2,21 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::data::{Db, DbConnection, QueryExecutor};
-use crate::error::Error;
-use crate::metrics::Metrics;
-use crate::types::chain_identifier::ChainIdentifier;
+use std::{mem, sync::Arc, time::Duration};
+
 use async_graphql::ServerError;
 use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
 use diesel_async::scoped_futures::ScopedFutureExt;
-use std::mem;
-use std::sync::Arc;
-use std::time::Duration;
 use iota_indexer::schema::checkpoints;
-use tokio::sync::{watch, RwLock};
-use tokio::time::Interval;
+use tokio::{
+    sync::{RwLock, watch},
+    time::Interval,
+};
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
+
+use crate::{
+    data::{Db, DbConnection, QueryExecutor},
+    error::Error,
+    metrics::Metrics,
+    types::chain_identifier::ChainIdentifier,
+};
 
 /// Watermark task that periodically updates the current checkpoint, checkpoint timestamp, and
 /// epoch values.

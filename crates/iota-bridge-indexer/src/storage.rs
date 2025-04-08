@@ -2,24 +2,29 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{anyhow, Error};
+use anyhow::{Error, anyhow};
 use async_trait::async_trait;
-use diesel::dsl::now;
-use diesel::upsert::excluded;
-use diesel::{ExpressionMethods, QueryDsl, TextExpressionMethods};
-use diesel::{OptionalExtension, SelectableHelper};
-use diesel_async::scoped_futures::ScopedFutureExt;
-use diesel_async::AsyncConnection;
-use diesel_async::RunQueryDsl;
-
-use crate::models::ProgressStore;
-use crate::postgres_manager::PgPool;
-use crate::schema::progress_store::{columns, dsl};
-use crate::schema::{iota_error_transactions, token_transfer, token_transfer_data};
-use crate::{schema, ProcessedTxnData};
-use iota_indexer_builder::indexer_builder::{IndexerProgressStore, Persistent};
+use diesel::{
+    ExpressionMethods, OptionalExtension, QueryDsl, SelectableHelper, TextExpressionMethods,
+    dsl::now, upsert::excluded,
+};
+use diesel_async::{AsyncConnection, RunQueryDsl, scoped_futures::ScopedFutureExt};
 use iota_indexer_builder::{
-    progress::ProgressSavingPolicy, Task, Tasks, LIVE_TASK_TARGET_CHECKPOINT,
+    LIVE_TASK_TARGET_CHECKPOINT, Task, Tasks,
+    indexer_builder::{IndexerProgressStore, Persistent},
+    progress::ProgressSavingPolicy,
+};
+
+use crate::{
+    ProcessedTxnData,
+    models::ProgressStore,
+    postgres_manager::PgPool,
+    schema,
+    schema::{
+        iota_error_transactions,
+        progress_store::{columns, dsl},
+        token_transfer, token_transfer_data,
+    },
 };
 
 /// Persistent layer impl

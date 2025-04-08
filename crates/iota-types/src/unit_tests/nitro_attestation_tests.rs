@@ -2,11 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::error::IotaError;
+use fastcrypto::encoding::{Encoding, Hex};
 
 use super::{parse_nitro_attestation, verify_nitro_attestation};
-use fastcrypto::encoding::Encoding;
-use fastcrypto::encoding::Hex;
+use crate::error::IotaError;
 
 #[test]
 fn attestation_parse() {

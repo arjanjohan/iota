@@ -4,26 +4,25 @@
 
 use std::iter::Peekable;
 
+use iota_types::{Identifier, base_types::ObjectID};
 use move_core_types::parsing::{
     address::{NumericalAddress, ParsedAddress},
-    parser::{parse_u128, parse_u16, parse_u256, parse_u32, parse_u64, parse_u8},
+    parser::{parse_u8, parse_u16, parse_u32, parse_u64, parse_u128, parse_u256},
     types::{ParsedFqName, ParsedModuleId, ParsedStructType, ParsedType},
-};
-use iota_types::{base_types::ObjectID, Identifier};
-
-use crate::{
-    client_ptb::{
-        ast::{all_keywords, COMMANDS},
-        builder::{display_did_you_mean, find_did_you_means},
-    },
-    err, error, sp,
 };
 
 use super::{
-    ast::{self as A, is_keyword, Argument, ModuleAccess, ParsedPTBCommand, ParsedProgram},
+    ast::{self as A, Argument, ModuleAccess, ParsedPTBCommand, ParsedProgram, is_keyword},
     error::{PTBError, PTBResult, Span, Spanned},
     lexer::Lexer,
     token::{Lexeme, Token},
+};
+use crate::{
+    client_ptb::{
+        ast::{COMMANDS, all_keywords},
+        builder::{display_did_you_mean, find_did_you_means},
+    },
+    err, error, sp,
 };
 
 /// Parse a program

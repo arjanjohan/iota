@@ -2,9 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use std::path::PathBuf;
 
 // These values set to loosely attempt to limit
 // memory usage for a single sketch to ~20MB
@@ -216,8 +217,7 @@ pub enum PolicyType {
     /// with granularity of `update_interval_secs`
     FreqThreshold(FreqThresholdConfig),
 
-    /* Below this point are test policies, and thus should not be used in production */
-    ///
+    // Below this point are test policies, and thus should not be used in production
     /// Simple policy that adds connection_ip to blocklist when the same connection_ip
     /// is encountered in tally N times. If used in an error policy, this would trigger
     /// after N errors

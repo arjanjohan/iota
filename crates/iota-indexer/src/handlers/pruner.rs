@@ -2,19 +2,21 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{collections::HashMap, time::Duration};
+
 use iota_metrics::spawn_monitored_task;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::time::Duration;
 use strum_macros;
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
 
-use crate::config::RetentionConfig;
-use crate::errors::IndexerError;
-use crate::store::pg_partition_manager::PgPartitionManager;
-use crate::store::PgIndexerStore;
-use crate::{metrics::IndexerMetrics, store::IndexerStore, types::IndexerResult};
+use crate::{
+    config::RetentionConfig,
+    errors::IndexerError,
+    metrics::IndexerMetrics,
+    store::{IndexerStore, PgIndexerStore, pg_partition_manager::PgPartitionManager},
+    types::IndexerResult,
+};
 
 pub struct Pruner {
     pub store: PgIndexerStore,

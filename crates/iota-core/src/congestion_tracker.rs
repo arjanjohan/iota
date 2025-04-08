@@ -2,15 +2,16 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use moka::ops::compute::Op;
-use moka::sync::Cache;
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
-use iota_types::base_types::ObjectID;
-use iota_types::effects::{InputSharedObject, TransactionEffects, TransactionEffectsAPI};
-use iota_types::execution_status::CongestedObjects;
-use iota_types::messages_checkpoint::{CheckpointTimestamp, VerifiedCheckpoint};
-use iota_types::transaction::{TransactionData, TransactionDataAPI};
+use std::collections::{HashMap, hash_map::Entry};
+
+use iota_types::{
+    base_types::ObjectID,
+    effects::{InputSharedObject, TransactionEffects, TransactionEffectsAPI},
+    execution_status::CongestedObjects,
+    messages_checkpoint::{CheckpointTimestamp, VerifiedCheckpoint},
+    transaction::{TransactionData, TransactionDataAPI},
+};
+use moka::{ops::compute::Op, sync::Cache};
 
 use crate::execution_cache::TransactionCacheRead;
 

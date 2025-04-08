@@ -3,57 +3,57 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{base_types::*, error::*, IOTA_BRIDGE_OBJECT_ID};
-use crate::authenticator_state::ActiveJwk;
-use crate::committee::{Committee, EpochId, ProtocolVersion};
-use crate::crypto::{
-    default_hash, AuthoritySignInfo, AuthoritySignInfoTrait, AuthoritySignature,
-    AuthorityStrongQuorumSignInfo, DefaultHash, Ed25519IotaSignature, EmptySignInfo,
-    RandomnessRound, Signature, Signer, IotaSignatureInner, ToFromBytes,
+use std::{
+    collections::{BTreeMap, BTreeSet, HashSet},
+    fmt::{Debug, Display, Formatter, Write},
+    hash::Hash,
+    iter,
+    iter::once,
+    sync::Arc,
 };
-use crate::digests::{CertificateDigest, SenderSignedDataDigest};
-use crate::digests::{ChainIdentifier, ConsensusCommitDigest, ZKLoginInputsDigest};
-use crate::execution::SharedInput;
-use crate::message_envelope::{Envelope, Message, TrustedEnvelope, VerifiedEnvelope};
-use crate::messages_checkpoint::CheckpointTimestamp;
-use crate::messages_consensus::{
-    ConsensusCommitPrologue, ConsensusCommitPrologueV2, ConsensusCommitPrologueV3,
-    ConsensusDeterminedVersionAssignments,
-};
-use crate::object::{MoveObject, Object, Owner};
-use crate::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use crate::signature::{GenericSignature, VerifyParams};
-use crate::signature_verification::{
-    verify_sender_signed_data_message_signatures, VerifiedDigestCache,
-};
-use crate::type_input::TypeInput;
+
+use enum_dispatch::enum_dispatch;
+use fastcrypto::{encoding::Base64, hash::HashFunction};
+use iota_protocol_config::ProtocolConfig;
+use itertools::Either;
+use move_core_types::{ident_str, identifier, identifier::Identifier, language_storage::TypeTag};
+use nonempty::{NonEmpty, nonempty};
+use serde::{Deserialize, Serialize};
+use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
+use strum::IntoStaticStr;
+use tap::Pipe;
+use tracing::trace;
+
+use super::{IOTA_BRIDGE_OBJECT_ID, base_types::*, error::*};
 use crate::{
     IOTA_AUTHENTICATOR_STATE_OBJECT_ID, IOTA_AUTHENTICATOR_STATE_OBJECT_SHARED_VERSION,
     IOTA_CLOCK_OBJECT_ID, IOTA_CLOCK_OBJECT_SHARED_VERSION, IOTA_FRAMEWORK_PACKAGE_ID,
     IOTA_RANDOMNESS_STATE_OBJECT_ID, IOTA_SYSTEM_STATE_OBJECT_ID,
     IOTA_SYSTEM_STATE_OBJECT_SHARED_VERSION,
+    authenticator_state::ActiveJwk,
+    committee::{Committee, EpochId, ProtocolVersion},
+    crypto::{
+        AuthoritySignInfo, AuthoritySignInfoTrait, AuthoritySignature,
+        AuthorityStrongQuorumSignInfo, DefaultHash, Ed25519IotaSignature, EmptySignInfo,
+        IotaSignatureInner, RandomnessRound, Signature, Signer, ToFromBytes, default_hash,
+    },
+    digests::{
+        CertificateDigest, ChainIdentifier, ConsensusCommitDigest, SenderSignedDataDigest,
+        ZKLoginInputsDigest,
+    },
+    execution::SharedInput,
+    message_envelope::{Envelope, Message, TrustedEnvelope, VerifiedEnvelope},
+    messages_checkpoint::CheckpointTimestamp,
+    messages_consensus::{
+        ConsensusCommitPrologue, ConsensusCommitPrologueV2, ConsensusCommitPrologueV3,
+        ConsensusDeterminedVersionAssignments,
+    },
+    object::{MoveObject, Object, Owner},
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    signature::{GenericSignature, VerifyParams},
+    signature_verification::{VerifiedDigestCache, verify_sender_signed_data_message_signatures},
+    type_input::TypeInput,
 };
-use enum_dispatch::enum_dispatch;
-use fastcrypto::{encoding::Base64, hash::HashFunction};
-use itertools::Either;
-use move_core_types::{ident_str, identifier};
-use move_core_types::{identifier::Identifier, language_storage::TypeTag};
-use nonempty::{nonempty, NonEmpty};
-use serde::{Deserialize, Serialize};
-use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
-use std::fmt::Write;
-use std::fmt::{Debug, Display, Formatter};
-use std::iter::once;
-use std::sync::Arc;
-use std::{
-    collections::{BTreeMap, BTreeSet, HashSet},
-    hash::Hash,
-    iter,
-};
-use strum::IntoStaticStr;
-use iota_protocol_config::ProtocolConfig;
-use tap::Pipe;
-use tracing::trace;
 
 pub const TEST_ONLY_GAS_UNIT_FOR_TRANSFER: u64 = 10_000;
 pub const TEST_ONLY_GAS_UNIT_FOR_OBJECT_BASICS: u64 = 50_000;
@@ -1630,7 +1630,11 @@ impl TransactionData {
         })
     }
 
-    pub fn new_with_gas_data(kind: TransactionKind, sender: IotaAddress, gas_data: GasData) -> Self {
+    pub fn new_with_gas_data(
+        kind: TransactionKind,
+        sender: IotaAddress,
+        gas_data: GasData,
+    ) -> Self {
         TransactionData::V1(TransactionDataV1 {
             kind,
             sender,
@@ -1854,12 +1858,12 @@ impl TransactionData {
                 Owner::Immutable => {
                     return Err(anyhow::anyhow!(
                         "Upgrade capability is stored immutably and cannot be used for upgrades"
-                    ))
+                    ));
                 }
                 // If the capability is owned by an object, then the module defining the owning
                 // object gets to decide how the upgrade capability should be used.
                 Owner::ObjectOwner(_) => {
-                    return Err(anyhow::anyhow!("Upgrade capability controlled by object"))
+                    return Err(anyhow::anyhow!("Upgrade capability controlled by object"));
                 }
             };
             builder.obj(capability_arg).unwrap();

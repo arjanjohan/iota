@@ -2,13 +2,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::Arc;
+
 use iota_network_stack::callback::CallbackLayer;
+use iota_types::{storage::RpcStateReader, transaction_executor::TransactionExecutor};
 use proto::node::v2alpha::subscription_service_server::SubscriptionServiceServer;
 use reader::StateReader;
-use std::sync::Arc;
 use subscription::SubscriptionServiceHandle;
-use iota_types::storage::RpcStateReader;
-use iota_types::transaction_executor::TransactionExecutor;
 use tap::Pipe;
 
 pub mod client;
@@ -26,10 +26,9 @@ pub mod types;
 pub use client::Client;
 pub use config::Config;
 pub use error::{Result, RpcError};
-pub use metrics::RpcMetrics;
 pub use iota_types::full_checkpoint_content::{CheckpointData, CheckpointTransaction};
-pub use types::CheckpointResponse;
-pub use types::ObjectResponse;
+pub use metrics::RpcMetrics;
+pub use types::{CheckpointResponse, ObjectResponse};
 
 #[derive(Clone)]
 pub struct RpcService {

@@ -2,47 +2,45 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::test_utils::make_transfer_object_transaction;
-use crate::test_utils::make_transfer_iota_transaction;
-use move_core_types::{account_address::AccountAddress, ident_str};
-use rand::rngs::StdRng;
-use rand::SeedableRng;
-use shared_crypto::intent::{Intent, IntentScope};
-use std::collections::BTreeMap;
-use std::collections::HashSet;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::{BTreeMap, HashSet},
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
+
 use iota_authority_aggregation::quorum_map_then_reduce_with_timeout;
+use iota_framework::BuiltInFramework;
 use iota_macros::sim_test;
 use iota_move_build::BuildConfig;
-use iota_types::crypto::get_key_pair_from_rng;
-use iota_types::crypto::{get_key_pair, AccountKeyPair, AuthorityKeyPair};
-use iota_types::crypto::{AuthoritySignature, Signer};
-use iota_types::crypto::{KeypairTraits, Signature};
-use iota_types::object::Object;
-use iota_types::transaction::*;
-use iota_types::utils::create_fake_transaction;
-
-use super::*;
-use crate::authority_client::AuthorityAPI;
-use crate::test_authority_clients::{
-    HandleTransactionTestAuthorityClient, LocalAuthorityClient, LocalAuthorityClientFaultConfig,
-    MockAuthorityApi,
-};
-use crate::unit_test_utils::init_local_authorities;
-use iota_framework::BuiltInFramework;
-use iota_types::utils::to_sender_signed_transaction;
-use tokio::time::Instant;
-
 #[cfg(msim)]
 use iota_simulator::configs::constant_latency_ms;
-use iota_types::effects::{
-    TestEffectsBuilder, TransactionEffects, TransactionEffectsAPI, TransactionEvents,
+use iota_types::{
+    crypto::{
+        AccountKeyPair, AuthorityKeyPair, AuthoritySignature, KeypairTraits, Signature, Signer,
+        get_key_pair, get_key_pair_from_rng,
+    },
+    effects::{TestEffectsBuilder, TransactionEffects, TransactionEffectsAPI, TransactionEvents},
+    execution_status::{ExecutionFailureStatus, ExecutionStatus},
+    messages_grpc::{HandleTransactionResponse, TransactionStatus, VerifiedObjectInfoResponse},
+    object::Object,
+    transaction::*,
+    utils::{create_fake_transaction, to_sender_signed_transaction},
 };
-use iota_types::execution_status::{ExecutionFailureStatus, ExecutionStatus};
-use iota_types::messages_grpc::{
-    HandleTransactionResponse, TransactionStatus, VerifiedObjectInfoResponse,
+use move_core_types::{account_address::AccountAddress, ident_str};
+use rand::{SeedableRng, rngs::StdRng};
+use shared_crypto::intent::{Intent, IntentScope};
+use tokio::time::Instant;
+
+use super::*;
+use crate::{
+    authority_client::AuthorityAPI,
+    test_authority_clients::{
+        HandleTransactionTestAuthorityClient, LocalAuthorityClient,
+        LocalAuthorityClientFaultConfig, MockAuthorityApi,
+    },
+    test_utils::{make_transfer_iota_transaction, make_transfer_object_transaction},
+    unit_test_utils::init_local_authorities,
 };
 
 macro_rules! assert_matches {
@@ -641,10 +639,12 @@ async fn test_quorum_once_with_timeout() {
     // the parallelism every 50ms
     assert_eq!(
         case(agg.clone(), 100).await,
-        [0, 50, 100, 100, 150, 150, 200, 200, 200, 250, 250, 250, 300, 300, 300]
-            .iter()
-            .map(|d| Duration::from_millis(*d))
-            .collect::<Vec<Duration>>()
+        [
+            0, 50, 100, 100, 150, 150, 200, 200, 200, 250, 250, 250, 300, 300, 300
+        ]
+        .iter()
+        .map(|d| Duration::from_millis(*d))
+        .collect::<Vec<Duration>>()
     );
 }
 
@@ -1035,7 +1035,9 @@ async fn test_handle_transaction_response() {
         .await
         .unwrap();
 
-    println!("Case 6 - Retryable Transaction (most staked effects stake + retryable stake >= 2f+1 with QuorumFailedToGetEffectsQuorumWhenProcessingTransaction Error)");
+    println!(
+        "Case 6 - Retryable Transaction (most staked effects stake + retryable stake >= 2f+1 with QuorumFailedToGetEffectsQuorumWhenProcessingTransaction Error)"
+    );
     // Val 0, 1 & 2 returns retryable error
     set_retryable_tx_info_response_error(&mut clients, &authority_keys);
     // Validators 3 returns tx-cert with epoch 1
@@ -1301,7 +1303,12 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::RetryableTransaction { .. }
             )
         },
-        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
+        |e| {
+            matches!(
+                e,
+                IotaError::UserInputError { .. } | IotaError::RpcError(..)
+            )
+        },
     )
     .await;
 
@@ -1324,7 +1331,12 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::RetryableTransaction { .. }
             )
         },
-        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
+        |e| {
+            matches!(
+                e,
+                IotaError::UserInputError { .. } | IotaError::RpcError(..)
+            )
+        },
     )
     .await;
 
@@ -1348,7 +1360,12 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::RetryableTransaction { .. }
             )
         },
-        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
+        |e| {
+            matches!(
+                e,
+                IotaError::UserInputError { .. } | IotaError::RpcError(..)
+            )
+        },
     )
     .await;
 
@@ -1415,7 +1432,12 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::FatalTransaction { .. }
             )
         },
-        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
+        |e| {
+            matches!(
+                e,
+                IotaError::UserInputError { .. } | IotaError::RpcError(..)
+            )
+        },
     )
     .await;
 
@@ -1438,7 +1460,12 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::FatalTransaction { .. }
             )
         },
-        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
+        |e| {
+            matches!(
+                e,
+                IotaError::UserInputError { .. } | IotaError::RpcError(..)
+            )
+        },
     )
     .await;
 
@@ -1466,7 +1493,12 @@ async fn test_handle_transaction_response() {
                 AggregatorProcessTransactionError::FatalTransaction { .. }
             )
         },
-        |e| matches!(e, IotaError::UserInputError { .. } | IotaError::RpcError(..)),
+        |e| {
+            matches!(
+                e,
+                IotaError::UserInputError { .. } | IotaError::RpcError(..)
+            )
+        },
     )
     .await;
 }
@@ -1677,13 +1709,16 @@ async fn test_handle_conflicting_transaction_response() {
         |e| {
             matches!(
                 e,
-                IotaError::ObjectLockConflict { .. } | IotaError::ByzantineAuthoritySuspicion { .. }
+                IotaError::ObjectLockConflict { .. }
+                    | IotaError::ByzantineAuthoritySuspicion { .. }
             )
         },
     )
     .await;
 
-    println!("Case 4.1 - Non-retryable Tx (Mixed Response - 1 conflict, 1 signed, 1 non-retryable, 1 retryable)");
+    println!(
+        "Case 4.1 - Non-retryable Tx (Mixed Response - 1 conflict, 1 signed, 1 non-retryable, 1 retryable)"
+    );
     // Validator 1 returns a signed tx1
     set_tx_info_response_with_signed_tx(&mut clients, &authority_keys, &tx1, 0);
     // Validator 2 returns a conflicting tx2

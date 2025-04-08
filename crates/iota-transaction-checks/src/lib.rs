@@ -8,32 +8,30 @@ pub use checked::*;
 
 #[iota_macros::with_checked_arithmetic]
 mod checked {
-    use std::collections::{BTreeMap, HashSet};
-    use std::sync::Arc;
+    use std::{
+        collections::{BTreeMap, HashSet},
+        sync::Arc,
+    };
+
     use iota_config::verifier_signing_config::VerifierSigningConfig;
     use iota_protocol_config::ProtocolConfig;
-    use iota_types::base_types::{ObjectID, ObjectRef};
-    use iota_types::error::{IotaResult, UserInputError, UserInputResult};
-    use iota_types::executable_transaction::VerifiedExecutableTransaction;
-    use iota_types::metrics::BytecodeVerifierMetrics;
-    use iota_types::transaction::{
-        CheckedInputObjects, InputObjectKind, InputObjects, ObjectReadResult, ObjectReadResultKind,
-        ReceivingObjectReadResult, ReceivingObjects, TransactionData, TransactionDataAPI,
-        TransactionKind,
-    };
-    use iota_types::{
-        base_types::{SequenceNumber, IotaAddress},
-        error::IotaError,
-        fp_bail, fp_ensure,
-        gas::IotaGasStatus,
-        object::{Object, Owner},
-    };
     use iota_types::{
         IOTA_AUTHENTICATOR_STATE_OBJECT_ID, IOTA_CLOCK_OBJECT_ID, IOTA_CLOCK_OBJECT_SHARED_VERSION,
         IOTA_RANDOMNESS_STATE_OBJECT_ID,
+        base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber},
+        error::{IotaError, IotaResult, UserInputError, UserInputResult},
+        executable_transaction::VerifiedExecutableTransaction,
+        fp_bail, fp_ensure,
+        gas::IotaGasStatus,
+        metrics::BytecodeVerifierMetrics,
+        object::{Object, Owner},
+        transaction::{
+            CheckedInputObjects, InputObjectKind, InputObjects, ObjectReadResult,
+            ObjectReadResultKind, ReceivingObjectReadResult, ReceivingObjects, TransactionData,
+            TransactionDataAPI, TransactionKind,
+        },
     };
-    use tracing::error;
-    use tracing::instrument;
+    use tracing::{error, instrument};
 
     trait IntoChecked {
         fn into_checked(self) -> CheckedInputObjects;
@@ -285,36 +283,45 @@ mod checked {
 
                 match object.owner {
                     Owner::AddressOwner(_) => {
-                        debug_assert!(false,
+                        debug_assert!(
+                            false,
                             "Receiving object {:?} is invalid but we expect it should be valid. {:?}",
-                            (*object_id, *version, *object_id), object
+                            (*object_id, *version, *object_id),
+                            object
                         );
                         error!(
                             "Receiving object {:?} is invalid but we expect it should be valid. {:?}",
-                            (*object_id, *version, *object_id), object
+                            (*object_id, *version, *object_id),
+                            object
                         );
                         // We should never get here, but if for some reason we do just default to
                         // object not found and reject signing the transaction.
-                        fp_bail!(UserInputError::ObjectNotFound {
-                            object_id: *object_id,
-                            version: Some(*version),
-                        }
-                        .into())
+                        fp_bail!(
+                            UserInputError::ObjectNotFound {
+                                object_id: *object_id,
+                                version: Some(*version),
+                            }
+                            .into()
+                        )
                     }
                     Owner::ObjectOwner(owner) => {
-                        fp_bail!(UserInputError::InvalidChildObjectArgument {
-                            child_id: object.id(),
-                            parent_id: owner.into(),
-                        }
-                        .into())
+                        fp_bail!(
+                            UserInputError::InvalidChildObjectArgument {
+                                child_id: object.id(),
+                                parent_id: owner.into(),
+                            }
+                            .into()
+                        )
                     }
                     Owner::Shared { .. } | Owner::ConsensusV2 { .. } => {
                         fp_bail!(UserInputError::NotSharedObjectError.into())
                     }
-                    Owner::Immutable => fp_bail!(UserInputError::MutableParameterExpected {
-                        object_id: *object_id
-                    }
-                    .into()),
+                    Owner::Immutable => fp_bail!(
+                        UserInputError::MutableParameterExpected {
+                            object_id: *object_id
+                        }
+                        .into()
+                    ),
                 };
             }
 
@@ -470,11 +477,14 @@ mod checked {
                     Owner::AddressOwner(actual_owner) => {
                         // Check the owner is correct.
                         fp_ensure!(
-                        owner == &actual_owner,
-                        UserInputError::IncorrectUserSignature {
-                            error: format!("Object {:?} is owned by account address {:?}, but given owner/signer address is {:?}", object_id, actual_owner, owner),
-                        }
-                    );
+                            owner == &actual_owner,
+                            UserInputError::IncorrectUserSignature {
+                                error: format!(
+                                    "Object {:?} is owned by account address {:?}, but given owner/signer address is {:?}",
+                                    object_id, actual_owner, owner
+                                ),
+                            }
+                        );
                     }
                     Owner::ObjectOwner(owner) => {
                         return Err(UserInputError::InvalidChildObjectArgument {

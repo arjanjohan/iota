@@ -8,15 +8,14 @@ use consensus_config::AuthorityIndex;
 use futures::stream;
 use parking_lot::Mutex;
 
+use super::ExtendedSerializedBlock;
 use crate::{
+    Round,
     block::{BlockRef, VerifiedBlock},
     commit::{CommitRange, TrustedCommit},
     error::ConsensusResult,
     network::{BlockStream, NetworkService},
-    Round,
 };
-
-use super::ExtendedSerializedBlock;
 
 pub(crate) struct TestService {
     pub(crate) handle_send_block: Vec<(AuthorityIndex, ExtendedSerializedBlock)>,

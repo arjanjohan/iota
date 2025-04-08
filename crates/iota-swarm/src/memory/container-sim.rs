@@ -2,12 +2,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use prometheus::Registry;
-use std::net::{IpAddr, SocketAddr};
-use std::sync::{Arc, Weak};
+use std::{
+    net::{IpAddr, SocketAddr},
+    sync::{Arc, Weak},
+};
+
 use iota_config::NodeConfig;
 use iota_node::{IotaNode, IotaNodeHandle};
 use iota_types::base_types::ConciseableName;
+use prometheus::Registry;
 use tokio::sync::watch;
 use tracing::{info, trace};
 
@@ -94,7 +97,6 @@ impl Container {
 
     /// Check to see that the Node is still alive by checking if the receiving side of the
     /// `cancel_sender` has been dropped.
-    ///
     pub fn is_alive(&self) -> bool {
         if let Some(cancel_sender) = &self.cancel_sender {
             // unless the node is deleted, it keeps a reference to its start up function, which

@@ -4,40 +4,47 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use super::balance::{self, Balance};
-use super::base64::Base64;
-use super::big_int::BigInt;
-use super::coin::Coin;
-use super::cursor::{BcsCursor, JsonCursor, Page, RawPaginated, ScanLimited, Target};
-use super::move_module::MoveModule;
-use super::move_object::MoveObject;
-use super::object::{self, Object, ObjectFilter, ObjectImpl, ObjectOwner, ObjectStatus};
-use super::owner::OwnerImpl;
-use super::stake::StakedIota;
-use super::iota_address::IotaAddress;
-use super::iotans_registration::{DomainFormat, IotaNSRegistration};
-use super::transaction_block::{self, TransactionBlock, TransactionBlockFilter};
-use super::type_filter::ExactTypeFilter;
-use super::uint53::UInt53;
-use crate::connection::ScanConnection;
-use crate::consistency::{Checkpointed, ConsistentNamedCursor};
-use crate::data::{DataLoader, Db, DbConnection, QueryExecutor};
-use crate::error::Error;
-use crate::raw_query::RawQuery;
-use crate::types::iota_address::addr;
-use crate::{filter, query};
-use async_graphql::connection::{Connection, CursorType, Edge};
-use async_graphql::dataloader::Loader;
-use async_graphql::*;
-use diesel::prelude::QueryableByName;
-use diesel::{BoolExpressionMethods, ExpressionMethods, JoinOnDsl, QueryDsl, Selectable};
+use async_graphql::{
+    connection::{Connection, CursorType, Edge},
+    dataloader::Loader,
+    *,
+};
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, JoinOnDsl, QueryDsl, Selectable,
+    prelude::QueryableByName,
+};
 use diesel_async::scoped_futures::ScopedFutureExt;
+use iota_indexer::{models::objects::StoredFullHistoryObject, schema::packages};
+use iota_package_resolver::{Package as ParsedMovePackage, error::Error as PackageCacheError};
+use iota_types::{is_system_package, move_package::MovePackage as NativeMovePackage, object::Data};
 use serde::{Deserialize, Serialize};
-use iota_indexer::models::objects::StoredFullHistoryObject;
-use iota_indexer::schema::packages;
-use iota_package_resolver::{error::Error as PackageCacheError, Package as ParsedMovePackage};
-use iota_types::is_system_package;
-use iota_types::{move_package::MovePackage as NativeMovePackage, object::Data};
+
+use super::{
+    balance::{self, Balance},
+    base64::Base64,
+    big_int::BigInt,
+    coin::Coin,
+    cursor::{BcsCursor, JsonCursor, Page, RawPaginated, ScanLimited, Target},
+    iota_address::IotaAddress,
+    iotans_registration::{DomainFormat, IotaNSRegistration},
+    move_module::MoveModule,
+    move_object::MoveObject,
+    object::{self, Object, ObjectFilter, ObjectImpl, ObjectOwner, ObjectStatus},
+    owner::OwnerImpl,
+    stake::StakedIota,
+    transaction_block::{self, TransactionBlock, TransactionBlockFilter},
+    type_filter::ExactTypeFilter,
+    uint53::UInt53,
+};
+use crate::{
+    connection::ScanConnection,
+    consistency::{Checkpointed, ConsistentNamedCursor},
+    data::{DataLoader, Db, DbConnection, QueryExecutor},
+    error::Error,
+    filter, query,
+    raw_query::RawQuery,
+    types::iota_address::addr,
+};
 
 #[derive(Clone)]
 pub(crate) struct MovePackage {
@@ -228,7 +235,7 @@ impl MovePackage {
 
     /// The coin objects owned by this package.
     ///
-    ///`type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
+    /// `type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
     ///
     /// Note that coins owned by a package are inaccessible, because packages are immutable and
     /// cannot be owned by an address.

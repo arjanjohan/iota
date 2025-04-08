@@ -2,27 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::base_types::{AuthorityName, ConsensusObjectSequenceKey, ObjectRef, TransactionDigest};
-use crate::base_types::{ConciseableName, ObjectID, SequenceNumber};
-use crate::digests::ConsensusCommitDigest;
-use crate::execution::ExecutionTimeObservationKey;
-use crate::messages_checkpoint::{CheckpointSequenceNumber, CheckpointSignatureMessage};
-use crate::supported_protocol_versions::{
-    Chain, SupportedProtocolVersions, SupportedProtocolVersionsWithHashes,
+use std::{
+    collections::hash_map::DefaultHasher,
+    fmt::{Debug, Formatter},
+    hash::{Hash, Hasher},
+    sync::Arc,
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
-use crate::transaction::{CertifiedTransaction, Transaction};
+
 use byteorder::{BigEndian, ReadBytesExt};
-use fastcrypto::error::FastCryptoResult;
-use fastcrypto::groups::bls12381;
+use fastcrypto::{error::FastCryptoResult, groups::bls12381};
 use fastcrypto_tbls::dkg_v1;
-use fastcrypto_zkp::bn254::zk_login::{JwkId, JWK};
+use fastcrypto_zkp::bn254::zk_login::{JWK, JwkId};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::hash_map::DefaultHasher;
-use std::fmt::{Debug, Formatter};
-use std::hash::{Hash, Hasher};
-use std::sync::Arc;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+use crate::{
+    base_types::{
+        AuthorityName, ConciseableName, ConsensusObjectSequenceKey, ObjectID, ObjectRef,
+        SequenceNumber, TransactionDigest,
+    },
+    digests::ConsensusCommitDigest,
+    execution::ExecutionTimeObservationKey,
+    messages_checkpoint::{CheckpointSequenceNumber, CheckpointSignatureMessage},
+    supported_protocol_versions::{
+        Chain, SupportedProtocolVersions, SupportedProtocolVersionsWithHashes,
+    },
+    transaction::{CertifiedTransaction, Transaction},
+};
 
 /// The index of an authority in the consensus committee.
 /// The value should be the same in IOTA committee.
@@ -611,7 +618,9 @@ impl ConsensusTransaction {
                 )))
             }
             ConsensusTransactionKind::RandomnessStateUpdate(_, _) => {
-                unreachable!("there should never be a RandomnessStateUpdate with SequencedConsensusTransactionKind::External")
+                unreachable!(
+                    "there should never be a RandomnessStateUpdate with SequencedConsensusTransactionKind::External"
+                )
             }
             ConsensusTransactionKind::RandomnessDkgMessage(authority, _) => {
                 ConsensusTransactionKey::RandomnessDkgMessage(*authority)

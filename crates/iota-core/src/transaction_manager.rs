@@ -3,38 +3,36 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
-    cmp::{max, Reverse},
-    collections::{hash_map, BTreeSet, BinaryHeap, HashMap, HashSet},
+    cmp::{Reverse, max},
+    collections::{BTreeSet, BinaryHeap, HashMap, HashSet, hash_map},
     sync::Arc,
     time::Duration,
 };
 
-use lru::LruCache;
 use iota_common::fatal;
+use iota_config::node::AuthorityOverloadConfig;
 use iota_metrics::monitored_scope;
-use parking_lot::RwLock;
 use iota_types::{
     base_types::{FullObjectID, SequenceNumber, TransactionDigest},
     committee::EpochId,
     digests::TransactionEffectsDigest,
     error::{IotaError, IotaResult},
-    fp_ensure,
+    executable_transaction::VerifiedExecutableTransaction,
+    fp_bail, fp_ensure,
     message_envelope::Message,
     storage::InputKey,
-    transaction::{TransactionDataAPI, VerifiedCertificate},
+    transaction::{SenderSignedData, TransactionDataAPI, VerifiedCertificate},
 };
-use iota_types::{executable_transaction::VerifiedExecutableTransaction, fp_bail};
-use tokio::sync::mpsc::UnboundedSender;
-use tokio::time::Instant;
+use lru::LruCache;
+use parking_lot::RwLock;
+use tap::TapOptional;
+use tokio::{sync::mpsc::UnboundedSender, time::Instant};
 use tracing::{error, info, instrument, trace, warn};
 
 use crate::{
-    authority::authority_per_epoch_store::AuthorityPerEpochStore, execution_cache::ObjectCacheRead,
+    authority::{AuthorityMetrics, authority_per_epoch_store::AuthorityPerEpochStore},
+    execution_cache::{ObjectCacheRead, TransactionCacheRead},
 };
-use crate::{authority::AuthorityMetrics, execution_cache::TransactionCacheRead};
-use iota_config::node::AuthorityOverloadConfig;
-use iota_types::transaction::SenderSignedData;
-use tap::TapOptional;
 
 #[cfg(test)]
 #[path = "unit_tests/transaction_manager_tests.rs"]
@@ -740,7 +738,12 @@ impl TransactionManager {
             let _scope = monitored_scope("TransactionManager::notify_commit::wlock");
 
             if inner.epoch != epoch_store.epoch() {
-                warn!("Ignoring committed certificate from wrong epoch. Expected={} Actual={} CertificateDigest={:?}", inner.epoch, epoch_store.epoch(), digest);
+                warn!(
+                    "Ignoring committed certificate from wrong epoch. Expected={} Actual={} CertificateDigest={:?}",
+                    inner.epoch,
+                    epoch_store.epoch(),
+                    digest
+                );
                 return;
             }
 
@@ -753,7 +756,10 @@ impl TransactionManager {
             );
 
             if !inner.executing_certificates.remove(digest) {
-                trace!("{:?} not found in executing certificates, likely because it is a system transaction", digest);
+                trace!(
+                    "{:?} not found in executing certificates, likely because it is a system transaction",
+                    digest
+                );
                 return;
             }
 
@@ -770,9 +776,11 @@ impl TransactionManager {
         trace!(tx_digest = ?pending_certificate.certificate.digest(), "certificate ready");
         assert_eq!(pending_certificate.waiting_input_objects.len(), 0);
         // Record as an executing certificate.
-        assert!(inner
-            .executing_certificates
-            .insert(*pending_certificate.certificate.digest()));
+        assert!(
+            inner
+                .executing_certificates
+                .insert(*pending_certificate.certificate.digest())
+        );
         self.metrics.txn_ready_rate_tracker.lock().record();
         let _ = self.tx_ready_certificates.send(pending_certificate);
         self.metrics.transaction_manager_num_ready.inc();
@@ -1000,7 +1008,7 @@ impl TransactionQueue {
             // We compare the exact time of the entry, because there may be an
             // entry in the heap that was previously inserted and removed from
             // digests, and we want to ignore it. (see test_transaction_queue_remove_in_order)
-            if self.digests.get(&first.1) == Some(&first.0 .0) {
+            if self.digests.get(&first.1) == Some(&first.0.0) {
                 break;
             }
 
@@ -1018,10 +1026,11 @@ impl TransactionQueue {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use iota_types::base_types::ObjectID;
     use prometheus::Registry;
     use rand::{Rng, RngCore};
-    use iota_types::base_types::ObjectID;
+
+    use super::*;
 
     #[test]
     #[cfg_attr(msim, ignore)]

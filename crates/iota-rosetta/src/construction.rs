@@ -4,39 +4,41 @@
 
 use std::sync::Arc;
 
-use axum::extract::State;
-use axum::{Extension, Json};
+use axum::{Extension, Json, extract::State};
 use axum_extra::extract::WithRejection;
-use fastcrypto::encoding::{Encoding, Hex};
-use fastcrypto::hash::HashFunction;
+use fastcrypto::{
+    encoding::{Encoding, Hex},
+    hash::HashFunction,
+};
 use futures::StreamExt;
-
-use shared_crypto::intent::{Intent, IntentMessage};
 use iota_json_rpc_types::{
-    StakeStatus, IotaObjectDataOptions, IotaTransactionBlockEffectsAPI,
-    IotaTransactionBlockResponseOptions,
+    IotaObjectDataOptions, IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponseOptions,
+    StakeStatus,
 };
 use iota_sdk::rpc_types::IotaExecutionStatus;
-use iota_types::base_types::{ObjectRef, IotaAddress};
-use iota_types::crypto::{DefaultHash, SignatureScheme, ToFromBytes};
-use iota_types::error::IotaError;
-use iota_types::signature::{GenericSignature, VerifyParams};
-use iota_types::signature_verification::{
-    verify_sender_signed_data_message_signatures, VerifiedDigestCache,
+use iota_types::{
+    base_types::{IotaAddress, ObjectRef},
+    crypto::{DefaultHash, SignatureScheme, ToFromBytes},
+    error::IotaError,
+    signature::{GenericSignature, VerifyParams},
+    signature_verification::{VerifiedDigestCache, verify_sender_signed_data_message_signatures},
+    transaction::{Transaction, TransactionData, TransactionDataAPI},
 };
-use iota_types::transaction::{Transaction, TransactionData, TransactionDataAPI};
+use shared_crypto::intent::{Intent, IntentMessage};
 
-use crate::errors::Error;
-use crate::types::{
-    Amount, ConstructionCombineRequest, ConstructionCombineResponse, ConstructionDeriveRequest,
-    ConstructionDeriveResponse, ConstructionHashRequest, ConstructionMetadata,
-    ConstructionMetadataRequest, ConstructionMetadataResponse, ConstructionParseRequest,
-    ConstructionParseResponse, ConstructionPayloadsRequest, ConstructionPayloadsResponse,
-    ConstructionPreprocessRequest, ConstructionPreprocessResponse, ConstructionSubmitRequest,
-    InternalOperation, MetadataOptions, SignatureType, SigningPayload, TransactionIdentifier,
-    TransactionIdentifierResponse,
+use crate::{
+    IotaEnv, OnlineServerContext,
+    errors::Error,
+    types::{
+        Amount, ConstructionCombineRequest, ConstructionCombineResponse, ConstructionDeriveRequest,
+        ConstructionDeriveResponse, ConstructionHashRequest, ConstructionMetadata,
+        ConstructionMetadataRequest, ConstructionMetadataResponse, ConstructionParseRequest,
+        ConstructionParseResponse, ConstructionPayloadsRequest, ConstructionPayloadsResponse,
+        ConstructionPreprocessRequest, ConstructionPreprocessResponse, ConstructionSubmitRequest,
+        InternalOperation, MetadataOptions, SignatureType, SigningPayload, TransactionIdentifier,
+        TransactionIdentifierResponse,
+    },
 };
-use crate::{OnlineServerContext, IotaEnv};
 
 /// This module implements the [Rosetta Construction API](https://www.rosetta-api.org/docs/ConstructionApi.html)
 
@@ -105,11 +107,13 @@ pub async fn combine(
         .ok_or_else(|| Error::MissingInput("Signature".to_string()))?;
     let sig_bytes = sig.hex_bytes.to_vec()?;
     let pub_key = sig.public_key.hex_bytes.to_vec()?;
-    let flag = vec![match sig.signature_type {
-        SignatureType::Ed25519 => SignatureScheme::ED25519,
-        SignatureType::Ecdsa => SignatureScheme::Secp256k1,
-    }
-    .flag()];
+    let flag = vec![
+        match sig.signature_type {
+            SignatureType::Ed25519 => SignatureScheme::ED25519,
+            SignatureType::Ecdsa => SignatureScheme::Secp256k1,
+        }
+        .flag(),
+    ];
 
     let signed_tx = Transaction::from_generic_sig_data(
         intent_msg.value,

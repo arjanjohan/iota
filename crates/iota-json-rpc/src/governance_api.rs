@@ -2,40 +2,41 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::cmp::max;
-use std::collections::BTreeMap;
-use std::sync::Arc;
+use std::{cmp::max, collections::BTreeMap, sync::Arc};
 
 use async_trait::async_trait;
-use cached::proc_macro::cached;
-use cached::SizedCache;
-use itertools::Itertools;
-use jsonrpsee::core::RpcResult;
-use jsonrpsee::RpcModule;
-use tracing::{info, instrument};
-
-use iota_metrics::spawn_monitored_task;
+use cached::{SizedCache, proc_macro::cached};
 use iota_core::authority::AuthorityState;
 use iota_json_rpc_api::{GovernanceReadApiOpenRpc, GovernanceReadApiServer, JsonRpcMetrics};
-use iota_json_rpc_types::{DelegatedStake, Stake, StakeStatus};
-use iota_json_rpc_types::{IotaCommittee, ValidatorApy, ValidatorApys};
+use iota_json_rpc_types::{
+    DelegatedStake, IotaCommittee, Stake, StakeStatus, ValidatorApy, ValidatorApys,
+};
+use iota_metrics::spawn_monitored_task;
 use iota_open_rpc::Module;
-use iota_types::base_types::{ObjectID, IotaAddress};
-use iota_types::committee::EpochId;
-use iota_types::dynamic_field::get_dynamic_field_from_store;
-use iota_types::error::{IotaError, UserInputError};
-use iota_types::governance::StakedIota;
-use iota_types::id::ID;
-use iota_types::object::ObjectRead;
-use iota_types::iota_serde::BigInt;
-use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary;
-use iota_types::iota_system_state::PoolTokenExchangeRate;
-use iota_types::iota_system_state::IotaSystemStateTrait;
-use iota_types::iota_system_state::{get_validator_from_table, IotaSystemState};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID},
+    committee::EpochId,
+    dynamic_field::get_dynamic_field_from_store,
+    error::{IotaError, UserInputError},
+    governance::StakedIota,
+    id::ID,
+    iota_serde::BigInt,
+    iota_system_state::{
+        IotaSystemState, IotaSystemStateTrait, PoolTokenExchangeRate, get_validator_from_table,
+        iota_system_state_summary::IotaSystemStateSummary,
+    },
+    object::ObjectRead,
+};
+use itertools::Itertools;
+use jsonrpsee::{RpcModule, core::RpcResult};
+use tracing::{info, instrument};
 
-use crate::authority_state::StateRead;
-use crate::error::{Error, RpcInterimResult, IotaRpcInputError};
-use crate::{with_tracing, ObjectProvider, IotaRpcModule};
+use crate::{
+    IotaRpcModule, ObjectProvider,
+    authority_state::StateRead,
+    error::{Error, IotaRpcInputError, RpcInterimResult},
+    with_tracing,
+};
 
 #[derive(Clone)]
 pub struct GovernanceReadApi {
@@ -371,7 +372,8 @@ async fn exchange_rates(
     _current_epoch: EpochId,
 ) -> RpcInterimResult<Vec<ValidatorExchangeRates>> {
     let system_state = state.get_system_state()?;
-    let system_state_summary: IotaSystemStateSummary = system_state.into_iota_system_state_summary();
+    let system_state_summary: IotaSystemStateSummary =
+        system_state.into_iota_system_state_summary();
 
     // Get validator rate tables
     let mut tables = vec![];
@@ -498,8 +500,9 @@ impl IotaRpcModule for GovernanceReadApi {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use iota_types::iota_system_state::PoolTokenExchangeRate;
+
+    use super::*;
 
     #[test]
     fn test_backfill_rates_empty() {

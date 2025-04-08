@@ -11,10 +11,10 @@ use move_core_types::{ident_str, identifier::Identifier, language_storage::TypeT
 use serde::Serialize;
 
 use crate::{
-    base_types::{ObjectID, ObjectRef, IotaAddress},
+    IOTA_FRAMEWORK_PACKAGE_ID,
+    base_types::{IotaAddress, ObjectID, ObjectRef},
     move_package::PACKAGE_MODULE_NAME,
     transaction::{Argument, CallArg, Command, ObjectArg, ProgrammableTransaction},
-    IOTA_FRAMEWORK_PACKAGE_ID,
 };
 
 #[derive(PartialEq, Eq, Hash)]
@@ -54,7 +54,8 @@ impl ProgrammableTransactionBuilder {
     pub fn pure<T: Serialize>(&mut self, value: T) -> anyhow::Result<Argument> {
         Ok(self.pure_bytes(
             bcs::to_bytes(&value).context("Serializing pure argument.")?,
-            /* force separate */ false,
+            // force separate
+            false,
         ))
     }
 
@@ -62,7 +63,8 @@ impl ProgrammableTransactionBuilder {
     pub fn force_separate_pure<T: Serialize>(&mut self, value: T) -> anyhow::Result<Argument> {
         Ok(self.pure_bytes(
             bcs::to_bytes(&value).context("Serializing pure argument.")?,
-            /* force separate */ true,
+            // force separate
+            true,
         ))
     }
 

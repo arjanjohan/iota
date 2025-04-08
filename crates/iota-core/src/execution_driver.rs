@@ -7,21 +7,20 @@ use std::{
     time::Duration,
 };
 
-use iota_metrics::{monitored_scope, spawn_monitored_task};
-use rand::{
-    rngs::{OsRng, StdRng},
-    Rng, SeedableRng,
-};
 use iota_macros::fail_point_async;
+use iota_metrics::{monitored_scope, spawn_monitored_task};
 use iota_protocol_config::Chain;
+use rand::{
+    Rng, SeedableRng,
+    rngs::{OsRng, StdRng},
+};
 use tokio::{
-    sync::{mpsc::UnboundedReceiver, oneshot, Semaphore},
+    sync::{Semaphore, mpsc::UnboundedReceiver, oneshot},
     time::sleep,
 };
-use tracing::{error, error_span, info, trace, Instrument};
+use tracing::{Instrument, error, error_span, info, trace};
 
-use crate::authority::AuthorityState;
-use crate::transaction_manager::PendingCertificate;
+use crate::{authority::AuthorityState, transaction_manager::PendingCertificate};
 
 #[cfg(test)]
 #[path = "unit_tests/execution_driver_tests.rs"]

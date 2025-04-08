@@ -2,24 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::iota_client_config::IotaClientConfig;
-use crate::IotaClient;
+use std::{collections::BTreeSet, path::Path, sync::Arc};
+
 use anyhow::anyhow;
-use shared_crypto::intent::Intent;
-use std::collections::BTreeSet;
-use std::path::Path;
-use std::sync::Arc;
 use iota_config::{Config, PersistedConfig};
 use iota_json_rpc_types::{
     IotaObjectData, IotaObjectDataFilter, IotaObjectDataOptions, IotaObjectResponse,
     IotaObjectResponseQuery, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
 };
 use iota_keys::keystore::AccountKeystore;
-use iota_types::base_types::{ObjectID, ObjectRef, IotaAddress};
-use iota_types::crypto::IotaKeyPair;
-use iota_types::gas_coin::GasCoin;
-use iota_types::transaction::{Transaction, TransactionData, TransactionDataAPI};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef},
+    crypto::IotaKeyPair,
+    gas_coin::GasCoin,
+    transaction::{Transaction, TransactionData, TransactionDataAPI},
+};
+use shared_crypto::intent::Intent;
 use tokio::sync::RwLock;
+
+use crate::{IotaClient, iota_client_config::IotaClientConfig};
 
 pub struct WalletContext {
     pub config: PersistedConfig<IotaClientConfig>,

@@ -5,58 +5,56 @@
 use std::fmt::{self, Display, Formatter, Write};
 
 use enum_dispatch::enum_dispatch;
+use fastcrypto::encoding::Base64;
+use iota_json::{IotaJsonValue, primitive_type};
+use iota_metrics::monitored_scope;
+use iota_package_resolver::{PackageStore, Resolver};
+use iota_types::{
+    IOTA_FRAMEWORK_ADDRESS,
+    authenticator_state::ActiveJwk,
+    base_types::{EpochId, IotaAddress, ObjectID, ObjectRef, SequenceNumber, TransactionDigest},
+    crypto::IotaSignature,
+    digests::{CheckpointDigest, ConsensusCommitDigest, ObjectDigest, TransactionEventsDigest},
+    effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents},
+    error::{ExecutionError, IotaError, IotaResult},
+    execution_status::ExecutionStatus,
+    gas::GasCostSummary,
+    iota_serde::{
+        BigInt, IotaTypeTag as AsIotaTypeTag, Readable, SequenceNumber as AsSequenceNumber,
+    },
+    layout_resolver::{LayoutResolver, get_layout_from_struct_tag},
+    messages_checkpoint::CheckpointSequenceNumber,
+    messages_consensus::ConsensusDeterminedVersionAssignments,
+    object::Owner,
+    parse_iota_type_tag,
+    quorum_driver_types::ExecuteTransactionRequestType,
+    signature::GenericSignature,
+    storage::{DeleteKind, WriteKind},
+    transaction::{
+        Argument, CallArg, ChangeEpoch, Command, EndOfEpochTransactionKind, GenesisObject,
+        InputObjectKind, ObjectArg, ProgrammableMoveCall, ProgrammableTransaction,
+        SenderSignedData, TransactionData, TransactionDataAPI, TransactionKind,
+    },
+};
+use move_binary_format::CompiledModule;
+use move_bytecode_utils::module_cache::GetModule;
+use move_core_types::{
+    annotated_value::MoveTypeLayout,
+    identifier::{IdentStr, Identifier},
+    language_storage::{ModuleId, StructTag, TypeTag},
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use iota_package_resolver::{PackageStore, Resolver};
 use tabled::{
     builder::Builder as TableBuilder,
-    settings::{style::HorizontalLine, Panel as TablePanel, Style as TableStyle},
+    settings::{Panel as TablePanel, Style as TableStyle, style::HorizontalLine},
 };
 
-use fastcrypto::encoding::Base64;
-use move_binary_format::CompiledModule;
-use move_bytecode_utils::module_cache::GetModule;
-use move_core_types::annotated_value::MoveTypeLayout;
-use move_core_types::identifier::{IdentStr, Identifier};
-use move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
-use iota_metrics::monitored_scope;
-use iota_json::{primitive_type, IotaJsonValue};
-use iota_types::authenticator_state::ActiveJwk;
-use iota_types::base_types::{
-    EpochId, ObjectID, ObjectRef, SequenceNumber, IotaAddress, TransactionDigest,
+use crate::{
+    Filter, IotaEvent, IotaObjectRef, Page, balance_changes::BalanceChange,
+    iota_transaction::GenericSignature::Signature, object_changes::ObjectChange,
 };
-use iota_types::crypto::IotaSignature;
-use iota_types::digests::{
-    CheckpointDigest, ConsensusCommitDigest, ObjectDigest, TransactionEventsDigest,
-};
-use iota_types::effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents};
-use iota_types::error::{ExecutionError, IotaError, IotaResult};
-use iota_types::execution_status::ExecutionStatus;
-use iota_types::gas::GasCostSummary;
-use iota_types::layout_resolver::{get_layout_from_struct_tag, LayoutResolver};
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-use iota_types::messages_consensus::ConsensusDeterminedVersionAssignments;
-use iota_types::object::Owner;
-use iota_types::parse_iota_type_tag;
-use iota_types::quorum_driver_types::ExecuteTransactionRequestType;
-use iota_types::signature::GenericSignature;
-use iota_types::storage::{DeleteKind, WriteKind};
-use iota_types::iota_serde::Readable;
-use iota_types::iota_serde::{
-    BigInt, SequenceNumber as AsSequenceNumber, IotaTypeTag as AsIotaTypeTag,
-};
-use iota_types::transaction::{
-    Argument, CallArg, ChangeEpoch, Command, EndOfEpochTransactionKind, GenesisObject,
-    InputObjectKind, ObjectArg, ProgrammableMoveCall, ProgrammableTransaction, SenderSignedData,
-    TransactionData, TransactionDataAPI, TransactionKind,
-};
-use iota_types::IOTA_FRAMEWORK_ADDRESS;
-
-use crate::balance_changes::BalanceChange;
-use crate::object_changes::ObjectChange;
-use crate::iota_transaction::GenericSignature::Signature;
-use crate::{Filter, Page, IotaEvent, IotaObjectRef};
 
 // similar to EpochId of iota-types but BigInt
 pub type IotaEpochId = BigInt<u64>;
@@ -447,7 +445,11 @@ impl Display for IotaTransactionBlockKind {
                 writeln!(
                     writer,
                     "Epoch: {}, Round: {}, SubDagIndex: {:?}, Timestamp: {}, ConsensusCommitDigest: {}",
-                    p.epoch, p.round, p.sub_dag_index, p.commit_timestamp_ms, p.consensus_commit_digest
+                    p.epoch,
+                    p.round,
+                    p.sub_dag_index,
+                    p.commit_timestamp_ms,
+                    p.consensus_commit_digest
                 )?;
             }
             Self::ProgrammableTransaction(p) => {
@@ -973,7 +975,9 @@ impl TryFrom<TransactionEffects> for IotaTransactionBlockEffects {
                 mutated: to_owned_ref(effect.mutated().to_vec()),
                 unwrapped: to_owned_ref(effect.unwrapped().to_vec()),
                 deleted: to_iota_object_ref(effect.deleted().to_vec()),
-                unwrapped_then_deleted: to_iota_object_ref(effect.unwrapped_then_deleted().to_vec()),
+                unwrapped_then_deleted: to_iota_object_ref(
+                    effect.unwrapped_then_deleted().to_vec(),
+                ),
                 wrapped: to_iota_object_ref(effect.wrapped().to_vec()),
                 gas_object: OwnedObjectRef {
                     owner: effect.gas_object().1,
@@ -1229,8 +1233,10 @@ pub struct IotaExecutionResult {
 }
 
 type ExecutionResult = (
-    /*  mutable_reference_outputs */ Vec<(Argument, Vec<u8>, TypeTag)>,
-    /*  return_values */ Vec<(Vec<u8>, TypeTag)>,
+    // mutable_reference_outputs
+    Vec<(Argument, Vec<u8>, TypeTag)>,
+    // return_values
+    Vec<(Vec<u8>, TypeTag)>,
 );
 
 impl DevInspectResults {

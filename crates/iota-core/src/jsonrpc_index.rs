@@ -5,44 +5,48 @@
 //! IndexStore supports creation of various ancillary indexes of state in IotaDataStore.
 //! The main user of this data is the explorer.
 
-use std::cmp::{max, min};
-use std::collections::{BTreeMap, HashMap, HashSet};
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
+use std::{
+    cmp::{max, min},
+    collections::{BTreeMap, HashMap, HashSet},
+    path::{Path, PathBuf},
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering},
+    },
+};
 
+use iota_json_rpc_types::{IotaObjectDataFilter, TransactionFilter};
+use iota_storage::{mutex_table::MutexTable, sharded_lru::ShardedLruCache};
+use iota_types::{
+    base_types::{
+        IotaAddress, ObjectDigest, ObjectID, ObjectInfo, ObjectRef, SequenceNumber,
+        TransactionDigest, TxSequenceNumber,
+    },
+    digests::TransactionEventsDigest,
+    dynamic_field::{self, DynamicFieldInfo},
+    effects::TransactionEvents,
+    error::{IotaError, IotaResult, UserInputError},
+    inner_temporary_store::TxCoins,
+    object::{Object, Owner},
+    parse_iota_struct_tag,
+    storage::error::Error as StorageError,
+};
 use itertools::Itertools;
 use move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
 use parking_lot::ArcMutexGuard;
-use prometheus::{register_int_counter_with_registry, IntCounter, Registry};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use typed_store::TypedStoreError;
-
-use iota_json_rpc_types::{IotaObjectDataFilter, TransactionFilter};
-use iota_storage::mutex_table::MutexTable;
-use iota_storage::sharded_lru::ShardedLruCache;
-use iota_types::base_types::{
-    ObjectDigest, ObjectID, SequenceNumber, IotaAddress, TransactionDigest, TxSequenceNumber,
-};
-use iota_types::base_types::{ObjectInfo, ObjectRef};
-use iota_types::digests::TransactionEventsDigest;
-use iota_types::dynamic_field::{self, DynamicFieldInfo};
-use iota_types::effects::TransactionEvents;
-use iota_types::error::{IotaError, IotaResult, UserInputError};
-use iota_types::inner_temporary_store::TxCoins;
-use iota_types::object::{Object, Owner};
-use iota_types::parse_iota_struct_tag;
-use iota_types::storage::error::Error as StorageError;
+use prometheus::{IntCounter, Registry, register_int_counter_with_registry};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use tracing::{debug, info, instrument, trace};
-use typed_store::rocks::{
-    default_db_options, read_size_from_env, DBBatch, DBMap, DBOptions, MetricConf,
+use typed_store::{
+    DBMapUtils, TypedStoreError,
+    rocks::{DBBatch, DBMap, DBOptions, MetricConf, default_db_options, read_size_from_env},
+    traits::{Map, TableSummary, TypedStoreDebug},
 };
-use typed_store::traits::Map;
-use typed_store::traits::{TableSummary, TypedStoreDebug};
-use typed_store::DBMapUtils;
 
-use crate::authority::AuthorityStore;
-use crate::par_index_live_object_set::{LiveObjectIndexer, ParMakeLiveObjectIndexer};
+use crate::{
+    authority::AuthorityStore,
+    par_index_live_object_set::{LiveObjectIndexer, ParMakeLiveObjectIndexer},
+};
 
 type OwnedMutexGuard<T> = ArcMutexGuard<parking_lot::RawMutex, T>;
 
@@ -1290,7 +1294,7 @@ impl IndexStore {
             .skip_to(&(object, cursor.unwrap_or(ObjectID::ZERO)))?
             // skip an extra b/c the cursor is exclusive
             .skip(usize::from(cursor.is_some()))
-            .take_while(move |result| result.is_err() || (result.as_ref().unwrap().0 .0 == object))
+            .take_while(move |result| result.is_err() || (result.as_ref().unwrap().0.0 == object))
             .map_ok(|((_, c), object_info)| (c, object_info)))
     }
 
@@ -1544,7 +1548,10 @@ impl IndexStore {
         if force_disable_cache {
             Self::get_all_balances_from_db(metrics_cloned, coin_index_cloned, owner).map_err(
                 |e| {
-                    IotaError::ExecutionError(format!("Failed to read all balance from DB: {:?}", e))
+                    IotaError::ExecutionError(format!(
+                        "Failed to read all balance from DB: {:?}",
+                        e
+                    ))
                 },
             )?;
         }
@@ -1599,13 +1606,14 @@ impl IndexStore {
                 total_balance += coin_info.balance as i128;
                 coin_object_count += 1;
             }
-            let coin_type =
-                TypeTag::Struct(Box::new(parse_iota_struct_tag(&coin_type).map_err(|e| {
+            let coin_type = TypeTag::Struct(Box::new(parse_iota_struct_tag(&coin_type).map_err(
+                |e| {
                     IotaError::ExecutionError(format!(
                         "Failed to parse event sender address: {:?}",
                         e
                     ))
-                })?));
+                },
+            )?));
             balances.insert(
                 coin_type,
                 TotalBalance {
@@ -1769,18 +1777,20 @@ impl<'a> LiveObjectIndexer for CoinLiveObjectIndexer<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::IndexStore;
-    use super::ObjectIndexChanges;
+    use std::{collections::BTreeMap, env::temp_dir};
+
+    use iota_types::{
+        base_types::{IotaAddress, ObjectInfo, ObjectType},
+        digests::TransactionDigest,
+        effects::TransactionEvents,
+        gas_coin::GAS,
+        object,
+        object::Owner,
+    };
     use move_core_types::account_address::AccountAddress;
     use prometheus::Registry;
-    use std::collections::BTreeMap;
-    use std::env::temp_dir;
-    use iota_types::base_types::{ObjectInfo, ObjectType, IotaAddress};
-    use iota_types::digests::TransactionDigest;
-    use iota_types::effects::TransactionEvents;
-    use iota_types::gas_coin::GAS;
-    use iota_types::object;
-    use iota_types::object::Owner;
+
+    use super::{IndexStore, ObjectIndexChanges};
 
     #[tokio::test]
     async fn test_index_cache() -> anyhow::Result<()> {

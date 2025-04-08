@@ -3,70 +3,77 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::Result;
-use fastcrypto::traits::ToFromBytes;
-use futures::future::join_all;
-use futures::future::AbortHandle;
-use itertools::Itertools;
-use std::collections::BTreeMap;
-use std::fmt::Write;
-use std::num::NonZeroUsize;
-use std::ops::Range;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
-use std::sync::Arc;
-use std::time::Duration;
-use std::{fs, io};
-use iota_config::{genesis::Genesis, NodeConfig};
-use iota_core::authority_client::{AuthorityAPI, NetworkAuthorityClient};
-use iota_core::execution_cache::build_execution_cache_from_env;
-use iota_network::default_iota_network_config;
-use iota_protocol_config::Chain;
-use iota_sdk::IotaClient;
-use iota_sdk::IotaClientBuilder;
-use iota_storage::object_store::http::HttpDownloaderBuilder;
-use iota_storage::object_store::util::Manifest;
-use iota_storage::object_store::util::PerEpochManifest;
-use iota_storage::object_store::util::MANIFEST_FILENAME;
-use iota_types::accumulator::Accumulator;
-use iota_types::committee::QUORUM_THRESHOLD;
-use iota_types::crypto::AuthorityPublicKeyBytes;
-use iota_types::messages_grpc::LayoutGenerationOption;
-use iota_types::multiaddr::Multiaddr;
-use iota_types::{base_types::*, object::Owner};
-use tokio::sync::mpsc;
-use tokio::task::JoinHandle;
-use tokio::time::Instant;
-
-use anyhow::anyhow;
-use clap::ValueEnum;
-use eyre::ContextCompat;
-use fastcrypto::hash::MultisetHash;
-use futures::{StreamExt, TryStreamExt};
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use prometheus::Registry;
-use serde::{Deserialize, Serialize};
-use iota_archival::reader::{ArchiveReader, ArchiveReaderMetrics};
-use iota_archival::{verify_archive_with_checksums, verify_archive_with_genesis_config};
-use iota_config::node::ArchiveReaderConfig;
-use iota_config::object_storage_config::{ObjectStoreConfig, ObjectStoreType};
-use iota_core::authority::authority_store_tables::AuthorityPerpetualTables;
-use iota_core::authority::AuthorityStore;
-use iota_core::checkpoints::CheckpointStore;
-use iota_core::epoch::committee_store::CommitteeStore;
-use iota_core::storage::RocksDbStore;
-use iota_snapshot::reader::StateSnapshotReaderV1;
-use iota_snapshot::setup_db_state;
-use iota_storage::object_store::util::{copy_file, exists, get_path};
-use iota_storage::object_store::ObjectStoreGetExt;
-use iota_storage::verify_checkpoint_range;
-use iota_types::messages_checkpoint::{CheckpointCommitment, ECMHLiveObjectSetDigest};
-use iota_types::messages_grpc::{
-    ObjectInfoRequest, ObjectInfoRequestKind, ObjectInfoResponse, TransactionInfoRequest,
-    TransactionStatus,
+use std::{
+    collections::BTreeMap,
+    fmt::Write,
+    fs, io,
+    num::NonZeroUsize,
+    ops::Range,
+    path::{Path, PathBuf},
+    sync::{
+        Arc,
+        atomic::{AtomicU64, AtomicUsize, Ordering},
+    },
+    time::Duration,
 };
 
-use iota_types::storage::{ReadStore, SharedInMemoryStore};
+use anyhow::{Result, anyhow};
+use clap::ValueEnum;
+use eyre::ContextCompat;
+use fastcrypto::{hash::MultisetHash, traits::ToFromBytes};
+use futures::{
+    StreamExt, TryStreamExt,
+    future::{AbortHandle, join_all},
+};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use iota_archival::{
+    reader::{ArchiveReader, ArchiveReaderMetrics},
+    verify_archive_with_checksums, verify_archive_with_genesis_config,
+};
+use iota_config::{
+    NodeConfig,
+    genesis::Genesis,
+    node::ArchiveReaderConfig,
+    object_storage_config::{ObjectStoreConfig, ObjectStoreType},
+};
+use iota_core::{
+    authority::{AuthorityStore, authority_store_tables::AuthorityPerpetualTables},
+    authority_client::{AuthorityAPI, NetworkAuthorityClient},
+    checkpoints::CheckpointStore,
+    epoch::committee_store::CommitteeStore,
+    execution_cache::build_execution_cache_from_env,
+    storage::RocksDbStore,
+};
+use iota_network::default_iota_network_config;
+use iota_protocol_config::Chain;
+use iota_sdk::{IotaClient, IotaClientBuilder};
+use iota_snapshot::{reader::StateSnapshotReaderV1, setup_db_state};
+use iota_storage::{
+    object_store::{
+        ObjectStoreGetExt,
+        http::HttpDownloaderBuilder,
+        util::{MANIFEST_FILENAME, Manifest, PerEpochManifest, copy_file, exists, get_path},
+    },
+    verify_checkpoint_range,
+};
+use iota_types::{
+    accumulator::Accumulator,
+    base_types::*,
+    committee::QUORUM_THRESHOLD,
+    crypto::AuthorityPublicKeyBytes,
+    messages_checkpoint::{CheckpointCommitment, ECMHLiveObjectSetDigest},
+    messages_grpc::{
+        LayoutGenerationOption, ObjectInfoRequest, ObjectInfoRequestKind, ObjectInfoResponse,
+        TransactionInfoRequest, TransactionStatus,
+    },
+    multiaddr::Multiaddr,
+    object::Owner,
+    storage::{ReadStore, SharedInMemoryStore},
+};
+use itertools::Itertools;
+use prometheus::Registry;
+use serde::{Deserialize, Serialize};
+use tokio::{sync::mpsc, task::JoinHandle, time::Instant};
 use tracing::info;
 use typed_store::rocks::MetricConf;
 
@@ -496,8 +503,7 @@ async fn get_object_impl(
 }
 
 pub(crate) fn make_anemo_config() -> anemo_cli::Config {
-    use iota_network::discovery::*;
-    use iota_network::state_sync::*;
+    use iota_network::{discovery::*, state_sync::*};
 
     // TODO: implement `ServiceInfo` generation in anemo-build and use here.
     anemo_cli::Config::new()

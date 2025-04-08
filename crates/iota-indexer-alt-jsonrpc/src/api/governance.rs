@@ -4,35 +4,33 @@
 
 use anyhow::Context as _;
 use diesel::{ExpressionMethods, QueryDsl};
-
-use jsonrpsee::{
-    core::{DeserializeOwned, RpcResult},
-    proc_macros::rpc,
-};
 use iota_indexer_alt_schema::schema::kv_epoch_starts;
 use iota_open_rpc::Module;
 use iota_open_rpc_macros::open_rpc;
 use iota_types::{
+    IOTA_SYSTEM_STATE_OBJECT_ID, TypeTag,
     base_types::ObjectID,
-    dynamic_field::{derive_dynamic_field_id, Field},
-    object::Object,
+    dynamic_field::{Field, derive_dynamic_field_id},
     iota_serde::BigInt,
     iota_system_state::{
+        IotaSystemStateTrait, IotaSystemStateWrapper,
         iota_system_state_inner_v1::IotaSystemStateInnerV1,
         iota_system_state_inner_v2::IotaSystemStateInnerV2,
-        iota_system_state_summary::IotaSystemStateSummary, IotaSystemStateTrait,
-        IotaSystemStateWrapper,
+        iota_system_state_summary::IotaSystemStateSummary,
     },
-    TypeTag, IOTA_SYSTEM_STATE_OBJECT_ID,
+    object::Object,
 };
-
-use crate::{
-    context::Context,
-    data::objects::load_latest,
-    error::{internal_error, rpc_bail, InternalContext, RpcError},
+use jsonrpsee::{
+    core::{DeserializeOwned, RpcResult},
+    proc_macros::rpc,
 };
 
 use super::rpc_module::RpcModule;
+use crate::{
+    context::Context,
+    data::objects::load_latest,
+    error::{InternalContext, RpcError, internal_error, rpc_bail},
+};
 
 #[open_rpc(namespace = "iotax", tag = "Governance API")]
 #[rpc(server, namespace = "iotax")]

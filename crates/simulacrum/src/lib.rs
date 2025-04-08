@@ -11,51 +11,48 @@
 //!
 //! [`Simulacrum`]: crate::Simulacrum
 
-use std::num::NonZeroUsize;
-use std::path::PathBuf;
-use std::sync::Arc;
+use std::{num::NonZeroUsize, path::PathBuf, sync::Arc};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use fastcrypto::traits::Signer;
-use rand::rngs::OsRng;
-use iota_config::verifier_signing_config::VerifierSigningConfig;
-use iota_config::{genesis, transaction_deny_config::TransactionDenyConfig};
+use iota_config::{
+    genesis, transaction_deny_config::TransactionDenyConfig,
+    verifier_signing_config::VerifierSigningConfig,
+};
 use iota_protocol_config::ProtocolVersion;
 use iota_storage::blob::{Blob, BlobEncoding};
-use iota_swarm_config::genesis_config::AccountConfig;
-use iota_swarm_config::network_config::NetworkConfig;
-use iota_swarm_config::network_config_builder::ConfigBuilder;
-use iota_types::base_types::{AuthorityName, ObjectID, VersionNumber};
-use iota_types::crypto::AuthoritySignature;
-use iota_types::digests::ConsensusCommitDigest;
-use iota_types::messages_consensus::ConsensusDeterminedVersionAssignments;
-use iota_types::object::Object;
-use iota_types::storage::{ObjectStore, ReadStore, RpcStateReader};
-use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemState;
-use iota_types::transaction::EndOfEpochTransactionKind;
+use iota_swarm_config::{
+    genesis_config::AccountConfig, network_config::NetworkConfig,
+    network_config_builder::ConfigBuilder,
+};
 use iota_types::{
-    base_types::IotaAddress,
+    base_types::{AuthorityName, IotaAddress, ObjectID, VersionNumber},
     committee::Committee,
+    crypto::AuthoritySignature,
+    digests::ConsensusCommitDigest,
     effects::TransactionEffects,
     error::ExecutionError,
-    gas_coin::NANOS_PER_IOTA,
+    gas_coin::{GasCoin, NANOS_PER_IOTA},
     inner_temporary_store::InnerTemporaryStore,
-    messages_checkpoint::{EndOfEpochData, VerifiedCheckpoint},
-    signature::VerifyParams,
-    transaction::{Transaction, VerifiedTransaction},
-};
-
-use self::epoch_state::EpochState;
-pub use self::store::in_mem_store::InMemoryStore;
-use self::store::in_mem_store::KeyStore;
-pub use self::store::SimulatorStore;
-use iota_types::messages_checkpoint::{CheckpointContents, CheckpointSequenceNumber};
-use iota_types::mock_checkpoint_builder::{MockCheckpointBuilder, ValidatorKeypairProvider};
-use iota_types::{
-    gas_coin::GasCoin,
+    iota_system_state::epoch_start_iota_system_state::EpochStartSystemState,
+    messages_checkpoint::{
+        CheckpointContents, CheckpointSequenceNumber, EndOfEpochData, VerifiedCheckpoint,
+    },
+    messages_consensus::ConsensusDeterminedVersionAssignments,
+    mock_checkpoint_builder::{MockCheckpointBuilder, ValidatorKeypairProvider},
+    object::Object,
     programmable_transaction_builder::ProgrammableTransactionBuilder,
-    transaction::{GasData, TransactionData, TransactionKind},
+    signature::VerifyParams,
+    storage::{ObjectStore, ReadStore, RpcStateReader},
+    transaction::{
+        EndOfEpochTransactionKind, GasData, Transaction, TransactionData, TransactionKind,
+        VerifiedTransaction,
+    },
 };
+use rand::rngs::OsRng;
+
+pub use self::store::{SimulatorStore, in_mem_store::InMemoryStore};
+use self::{epoch_state::EpochState, store::in_mem_store::KeyStore};
 
 mod epoch_state;
 pub mod store;
@@ -104,8 +101,8 @@ where
     /// used.
     ///
     /// ```
-    /// use simulacrum::Simulacrum;
     /// use rand::{SeedableRng, rngs::StdRng};
+    /// use simulacrum::Simulacrum;
     ///
     /// # fn main() {
     /// let mut rng = StdRng::seed_from_u64(1);
@@ -333,9 +330,8 @@ impl<R, S: store::SimulatorStore> Simulacrum<R, S> {
     /// Request that `amount` Nanos be sent to `address` from a faucet account.
     ///
     /// ```
+    /// use iota_types::{base_types::IotaAddress, gas_coin::NANOS_PER_IOTA};
     /// use simulacrum::Simulacrum;
-    /// use iota_types::base_types::IotaAddress;
-    /// use iota_types::gas_coin::NANOS_PER_IOTA;
     ///
     /// # fn main() {
     /// let mut simulacrum = Simulacrum::new();
@@ -614,11 +610,11 @@ impl Simulacrum {
 mod tests {
     use std::time::Duration;
 
-    use rand::{rngs::StdRng, SeedableRng};
     use iota_types::{
         base_types::IotaAddress, effects::TransactionEffectsAPI, gas_coin::GasCoin,
         transaction::TransactionDataAPI,
     };
+    use rand::{SeedableRng, rngs::StdRng};
 
     use super::*;
 

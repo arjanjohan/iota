@@ -8,13 +8,14 @@ use async_trait::async_trait;
 use consensus_config::{Committee, NetworkKeyPair, Parameters, ProtocolKeyPair};
 use consensus_core::{CommitConsumer, CommitConsumerMonitor, CommitIndex, ConsensusAuthority};
 use fastcrypto::ed25519;
-use iota_metrics::{RegistryID, RegistryService};
-use prometheus::Registry;
 use iota_config::NodeConfig;
+use iota_metrics::{RegistryID, RegistryService};
 use iota_protocol_config::ConsensusNetwork;
 use iota_types::{
-    committee::EpochId, iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
+    committee::EpochId,
+    iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait,
 };
+use prometheus::Registry;
 use tokio::sync::Mutex;
 use tracing::info;
 

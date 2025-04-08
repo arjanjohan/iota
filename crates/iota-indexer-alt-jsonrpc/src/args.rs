@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use iota_indexer_alt_metrics::MetricsArgs;
 use iota_pg_db::DbArgs;
 
-use crate::{data::system_package_task::SystemPackageTaskArgs, RpcArgs};
+use crate::{RpcArgs, data::system_package_task::SystemPackageTaskArgs};
 
 #[derive(clap::Parser, Debug, Clone)]
 pub struct Args {

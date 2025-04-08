@@ -2,29 +2,28 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{anyhow, Context as _};
-use jsonrpsee::{core::RpcResult, proc_macros::rpc};
+use anyhow::{Context as _, anyhow};
 use iota_indexer_alt_schema::objects::StoredObject;
 use iota_json::IotaJsonValue;
 use iota_json_rpc_types::{IotaObjectDataOptions, IotaObjectResponse};
 use iota_open_rpc::Module;
 use iota_open_rpc_macros::open_rpc;
 use iota_types::{
+    TypeTag,
     base_types::{ObjectID, SequenceNumber},
-    dynamic_field::{derive_dynamic_field_id, DynamicFieldInfo, DynamicFieldName},
+    dynamic_field::{DynamicFieldInfo, DynamicFieldName, derive_dynamic_field_id},
     error::IotaObjectResponseError,
     object::Object,
-    TypeTag,
 };
+use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use tokio::try_join;
 
+use super::{objects, rpc_module::RpcModule};
 use crate::{
     context::Context,
     data::objects::load_latest,
-    error::{invalid_params, rpc_bail, RpcError},
+    error::{RpcError, invalid_params, rpc_bail},
 };
-
-use super::{objects, rpc_module::RpcModule};
 
 #[open_rpc(namespace = "iotax", tag = "Dynamic Fields API")]
 #[rpc(server, namespace = "iotax")]

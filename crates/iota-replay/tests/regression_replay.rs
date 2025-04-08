@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::path::PathBuf;
-use iota_replay::execute_replay_command;
-use iota_replay::ReplayToolCommand;
+
+use iota_replay::{ReplayToolCommand, execute_replay_command};
 
 #[tokio::test]
 async fn replay_sandboxes() {

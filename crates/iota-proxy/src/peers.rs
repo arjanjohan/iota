@@ -1,26 +1,27 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use anyhow::{bail, Context, Result};
-use fastcrypto::ed25519::Ed25519PublicKey;
-use fastcrypto::encoding::Base64;
-use fastcrypto::encoding::Encoding;
-use fastcrypto::traits::ToFromBytes;
-use futures::stream::{self, StreamExt};
-use once_cell::sync::Lazy;
-use prometheus::{register_counter_vec, register_histogram_vec};
-use prometheus::{CounterVec, HistogramVec};
-use serde::Deserialize;
-use std::collections::BTreeMap;
 use std::{
-    collections::HashMap,
+    collections::{BTreeMap, HashMap},
     sync::{Arc, RwLock},
     time::Duration,
 };
+
+use anyhow::{Context, Result, bail};
+use fastcrypto::{
+    ed25519::Ed25519PublicKey,
+    encoding::{Base64, Encoding},
+    traits::ToFromBytes,
+};
+use futures::stream::{self, StreamExt};
 use iota_tls::Allower;
-use iota_types::base_types::IotaAddress;
-use iota_types::bridge::BridgeSummary;
-use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary;
+use iota_types::{
+    base_types::IotaAddress, bridge::BridgeSummary,
+    iota_system_state::iota_system_state_summary::IotaSystemStateSummary,
+};
+use once_cell::sync::Lazy;
+use prometheus::{CounterVec, HistogramVec, register_counter_vec, register_histogram_vec};
+use serde::Deserialize;
 use tracing::{debug, error, info, warn};
 use url::Url;
 
@@ -540,14 +541,17 @@ fn append_path_segment(mut url: Url, segment: &str) -> Option<Url> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::admin::{generate_self_cert, CertKeyPair};
-    use serde::Serialize;
-    use iota_types::base_types::IotaAddress;
-    use iota_types::bridge::{BridgeCommitteeSummary, BridgeSummary, MoveTypeCommitteeMember};
-    use iota_types::iota_system_state::iota_system_state_summary::{
-        IotaSystemStateSummary, IotaValidatorSummary,
+    use iota_types::{
+        base_types::IotaAddress,
+        bridge::{BridgeCommitteeSummary, BridgeSummary, MoveTypeCommitteeMember},
+        iota_system_state::iota_system_state_summary::{
+            IotaSystemStateSummary, IotaValidatorSummary,
+        },
     };
+    use serde::Serialize;
+
+    use super::*;
+    use crate::admin::{CertKeyPair, generate_self_cert};
 
     /// creates a test that binds our proxy use case to the structure in iota_getLatestIotaSystemState
     /// most of the fields are garbage, but we will send the results of the serde process to a private decode

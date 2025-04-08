@@ -9,7 +9,7 @@ use std::{
     time::Duration,
 };
 
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 use crate::{faults::FaultsType, measurement::MeasurementsCollection};
 
@@ -275,12 +275,11 @@ pub mod test {
 
     use serde::{Deserialize, Serialize};
 
+    use super::{BenchmarkParametersGenerator, BenchmarkType, LoadType};
     use crate::{
         measurement::{Measurement, MeasurementsCollection},
         settings::Settings,
     };
-
-    use super::{BenchmarkParametersGenerator, BenchmarkType, LoadType};
 
     /// Mock benchmark type for unit tests.
     #[derive(

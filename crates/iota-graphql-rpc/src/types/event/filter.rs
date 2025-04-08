@@ -2,12 +2,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use async_graphql::*;
+
 use crate::types::{
     digest::Digest,
     iota_address::IotaAddress,
     type_filter::{ModuleFilter, TypeFilter},
 };
-use async_graphql::*;
 
 #[derive(InputObject, Clone, Default)]
 pub(crate) struct EventFilter {

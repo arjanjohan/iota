@@ -4,9 +4,11 @@
 
 use std::collections::HashMap;
 
-use crate::error::{BridgeError, BridgeResult};
-use crate::server::handler::ActionVerifier;
-use crate::types::{BridgeAction, BridgeActionDigest};
+use crate::{
+    error::{BridgeError, BridgeResult},
+    server::handler::ActionVerifier,
+    types::{BridgeAction, BridgeActionDigest},
+};
 
 #[derive(Debug)]
 pub struct GovernanceVerifier {
@@ -53,12 +55,13 @@ impl ActionVerifier<BridgeAction> for GovernanceVerifier {
 
 #[cfg(test)]
 mod tests {
+    use iota_types::bridge::BridgeChainId;
+
     use super::*;
     use crate::{
         test_utils::get_test_iota_to_eth_bridge_action,
         types::{BridgeAction, EmergencyAction, EmergencyActionType, LimitUpdateAction},
     };
-    use iota_types::bridge::BridgeChainId;
 
     #[tokio::test]
     async fn test_governance_verifier() {

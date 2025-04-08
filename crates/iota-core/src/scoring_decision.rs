@@ -27,7 +27,11 @@ pub(crate) fn update_low_scoring_authorities(
     metrics: &Arc<AuthorityMetrics>,
     consensus_bad_nodes_stake_threshold: u64,
 ) {
-    assert!((0..=33).contains(&consensus_bad_nodes_stake_threshold), "The bad_nodes_stake_threshold should be in range [0 - 33], out of bounds parameter detected {}", consensus_bad_nodes_stake_threshold);
+    assert!(
+        (0..=33).contains(&consensus_bad_nodes_stake_threshold),
+        "The bad_nodes_stake_threshold should be in range [0 - 33], out of bounds parameter detected {}",
+        consensus_bad_nodes_stake_threshold
+    );
 
     let Some(reputation_scores) = reputation_score_sorted_desc else {
         return;
@@ -86,9 +90,9 @@ mod tests {
     use std::{collections::HashMap, sync::Arc};
 
     use arc_swap::ArcSwap;
-    use consensus_config::{local_committee_and_keys, Committee as ConsensusCommittee};
-    use prometheus::Registry;
+    use consensus_config::{Committee as ConsensusCommittee, local_committee_and_keys};
     use iota_types::{committee::Committee, crypto::AuthorityPublicKeyBytes};
+    use prometheus::Registry;
 
     use crate::{authority::AuthorityMetrics, scoring_decision::update_low_scoring_authorities};
 

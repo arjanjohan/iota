@@ -2,18 +2,21 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{bail, Context, Result};
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use std::env;
-use std::fmt;
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::{
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+    env, fmt, fs,
+    path::{Path, PathBuf},
+};
+
+use anyhow::{Context, Result, bail};
 use thiserror::Error;
 use toml::value::Value;
 use toml_edit::{self, Document, Item};
 
-use crate::args::Args;
-use crate::path::{deep_copy, normalize_path, path_relative_to, shortest_new_prefix};
+use crate::{
+    args::Args,
+    path::{deep_copy, normalize_path, path_relative_to, shortest_new_prefix},
+};
 
 /// Description of where packages should be copied to, what their new names should be, and whether
 /// they should be added to the `workspace` `members` or `exclude` fields.
@@ -672,15 +675,13 @@ fn package_name<P: AsRef<Path>>(path: P) -> Result<Option<String>> {
 
 #[cfg(test)]
 mod tests {
-    use crate::args::Directory;
-
-    use super::*;
+    use std::{fmt, fs, path::PathBuf};
 
     use expect_test::expect;
-    use std::fmt;
-    use std::fs;
-    use std::path::PathBuf;
     use tempfile::tempdir;
+
+    use super::*;
+    use crate::args::Directory;
 
     #[test]
     fn test_discover_root() {

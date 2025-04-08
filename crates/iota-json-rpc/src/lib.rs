@@ -2,39 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::env;
-use std::net::SocketAddr;
-use std::sync::Arc;
+use std::{env, net::SocketAddr, sync::Arc};
 
-use axum::body::Body;
-use axum::http;
-use hyper::header::HeaderName;
-use hyper::header::HeaderValue;
-use hyper::Method;
-use hyper::Request;
-use jsonrpsee::RpcModule;
-use metrics::Metrics;
-use metrics::MetricsLayer;
-use prometheus::Registry;
-use iota_core::traffic_controller::metrics::TrafficControllerMetrics;
-use iota_core::traffic_controller::TrafficController;
-use iota_types::traffic_control::PolicyConfig;
-use iota_types::traffic_control::RemoteFirewallConfig;
-use tokio::runtime::Handle;
-use tokio_util::sync::CancellationToken;
-use tower::ServiceBuilder;
-use tower_http::cors::{AllowOrigin, CorsLayer};
-use tower_http::trace::TraceLayer;
-use tracing::info;
-
+use axum::{body::Body, http};
 pub use balance_changes::*;
-pub use object_changes::*;
+use hyper::{
+    Method, Request,
+    header::{HeaderName, HeaderValue},
+};
 pub use iota_config::node::ServerType;
+use iota_core::traffic_controller::{TrafficController, metrics::TrafficControllerMetrics};
 use iota_json_rpc_api::{
     CLIENT_REQUEST_METHOD_HEADER, CLIENT_SDK_TYPE_HEADER, CLIENT_SDK_VERSION_HEADER,
     CLIENT_TARGET_API_VERSION_HEADER,
 };
 use iota_open_rpc::{Module, Project};
+use iota_types::traffic_control::{PolicyConfig, RemoteFirewallConfig};
+use jsonrpsee::RpcModule;
+use metrics::{Metrics, MetricsLayer};
+pub use object_changes::*;
+use prometheus::Registry;
+use tokio::runtime::Handle;
+use tokio_util::sync::CancellationToken;
+use tower::ServiceBuilder;
+use tower_http::{
+    cors::{AllowOrigin, CorsLayer},
+    trace::TraceLayer,
+};
+use tracing::info;
 use traffic_control::TrafficControllerService;
 
 use crate::error::Error;
@@ -333,11 +328,11 @@ struct JsonRpcService<S>(S);
 impl<S, RequestBody> tower::Service<http::Request<RequestBody>> for JsonRpcService<S>
 where
     S: tower::Service<
-        http::Request<RequestBody>,
-        Error = BoxError,
-        Response = http::Response<jsonrpsee::server::HttpBody>,
-        Future: Send + 'static,
-    >,
+            http::Request<RequestBody>,
+            Error = BoxError,
+            Response = http::Response<jsonrpsee::server::HttpBody>,
+            Future: Send + 'static,
+        >,
 {
     type Response = http::Response<jsonrpsee::server::HttpBody>;
     type Error = std::convert::Infallible;

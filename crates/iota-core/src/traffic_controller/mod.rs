@@ -7,27 +7,29 @@ pub mod nodefw_client;
 pub mod nodefw_test_server;
 pub mod policies;
 
+use std::{
+    fmt::Debug,
+    fs,
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    ops::Add,
+    sync::Arc,
+    time::{Duration, Instant, SystemTime},
+};
+
 use dashmap::DashMap;
 use fs::File;
+use iota_metrics::spawn_monitored_task;
+use iota_types::traffic_control::{PolicyConfig, PolicyType, RemoteFirewallConfig, Weight};
 use prometheus::IntGauge;
-use std::fs;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
-use std::ops::Add;
-use std::sync::Arc;
+use rand::Rng;
+use tokio::sync::{mpsc, mpsc::error::TrySendError};
+use tracing::{debug, error, info, trace, warn};
 
 use self::metrics::TrafficControllerMetrics;
-use crate::traffic_controller::nodefw_client::{BlockAddress, BlockAddresses, NodeFWClient};
-use crate::traffic_controller::policies::{
-    Policy, PolicyResponse, TrafficControlPolicy, TrafficTally,
+use crate::traffic_controller::{
+    nodefw_client::{BlockAddress, BlockAddresses, NodeFWClient},
+    policies::{Policy, PolicyResponse, TrafficControlPolicy, TrafficTally},
 };
-use iota_metrics::spawn_monitored_task;
-use rand::Rng;
-use std::fmt::Debug;
-use std::time::{Duration, Instant, SystemTime};
-use iota_types::traffic_control::{PolicyConfig, PolicyType, RemoteFirewallConfig, Weight};
-use tokio::sync::mpsc;
-use tokio::sync::mpsc::error::TrySendError;
-use tracing::{debug, error, info, trace, warn};
 
 pub const METRICS_INTERVAL_SECS: u64 = 2;
 pub const DEFAULT_DRAIN_TIMEOUT_SECS: u64 = 300;
@@ -457,8 +459,7 @@ async fn handle_error_tally(
     }
     trace!(
         "Handling error_type {:?} from client {:?}",
-        error_type,
-        tally.direct,
+        error_type, tally.direct,
     );
     metrics
         .tally_error_types

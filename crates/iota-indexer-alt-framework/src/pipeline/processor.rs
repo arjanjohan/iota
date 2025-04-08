@@ -10,13 +10,12 @@ use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, error, info};
 
+use super::IndexedCheckpoint;
 use crate::{
     metrics::{CheckpointLagMetricReporter, IndexerMetrics},
     pipeline::Break,
     task::TrySpawnStreamExt,
 };
-
-use super::IndexedCheckpoint;
 
 /// Implementors of this trait are responsible for transforming checkpoint into rows for their
 /// table. The `FANOUT` associated value controls how many concurrent workers will be used to

@@ -4,23 +4,23 @@
 
 use std::{collections::BTreeSet, sync::Arc};
 
-use anyhow::{ensure, Context, Result};
+use anyhow::{Context, Result, ensure};
 use diesel::{
     migration::{self, Migration, MigrationSource},
     pg::Pg,
 };
-use diesel_migrations::{embed_migrations, EmbeddedMigrations};
-use ingestion::{client::IngestionClient, ClientArgs, IngestionConfig, IngestionService};
+use diesel_migrations::{EmbeddedMigrations, embed_migrations};
+use ingestion::{ClientArgs, IngestionConfig, IngestionService, client::IngestionClient};
+use iota_indexer_alt_metrics::db::DbConnectionStatsCollector;
+use iota_pg_db::{Db, DbArgs, temp::TempDb};
 use metrics::IndexerMetrics;
 use models::watermarks::{CommitterWatermark, PrunerWatermark};
 use pipeline::{
+    Processor,
     concurrent::{self, ConcurrentConfig},
     sequential::{self, SequentialConfig},
-    Processor,
 };
 use prometheus::Registry;
-use iota_indexer_alt_metrics::db::DbConnectionStatsCollector;
-use iota_pg_db::{temp::TempDb, Db, DbArgs};
 use task::graceful_shutdown;
 use tempfile::tempdir;
 use tokio::task::JoinHandle;
@@ -545,10 +545,12 @@ mod tests {
             .await
             .unwrap();
         let pruner_watermark = PrunerWatermark::new_for_testing(ConcurrentPipeline3::NAME, 5);
-        assert!(pruner_watermark
-            .update(&mut indexer.db().connect().await.unwrap())
-            .await
-            .unwrap());
+        assert!(
+            pruner_watermark
+                .update(&mut indexer.db().connect().await.unwrap())
+                .await
+                .unwrap()
+        );
         indexer
             .concurrent_pipeline(ConcurrentPipeline3, ConcurrentConfig::default())
             .await

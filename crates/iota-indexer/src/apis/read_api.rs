@@ -3,29 +3,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use async_trait::async_trait;
-use jsonrpsee::core::RpcResult;
-use jsonrpsee::RpcModule;
-use iota_json_rpc::error::IotaRpcInputError;
-use iota_types::error::IotaObjectResponseError;
-use iota_types::object::ObjectRead;
-
-use crate::errors::IndexerError;
-use crate::indexer_reader::IndexerReader;
-use iota_json_rpc::IotaRpcModule;
-use iota_json_rpc_api::{ReadApiServer, QUERY_MAX_RESULT_LIMIT};
-use iota_json_rpc_types::ZkLoginIntentScope;
-use iota_json_rpc_types::ZkLoginVerifyResult;
+use iota_json_rpc::{IotaRpcModule, error::IotaRpcInputError};
+use iota_json_rpc_api::{QUERY_MAX_RESULT_LIMIT, ReadApiServer};
 use iota_json_rpc_types::{
-    Checkpoint, CheckpointId, CheckpointPage, ProtocolConfigResponse, IotaEvent,
-    IotaGetPastObjectRequest, IotaObjectDataOptions, IotaObjectResponse, IotaPastObjectResponse,
-    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+    Checkpoint, CheckpointId, CheckpointPage, IotaEvent, IotaGetPastObjectRequest,
+    IotaObjectDataOptions, IotaObjectResponse, IotaPastObjectResponse,
+    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions, ProtocolConfigResponse,
+    ZkLoginIntentScope, ZkLoginVerifyResult,
 };
 use iota_open_rpc::Module;
 use iota_protocol_config::{ProtocolConfig, ProtocolVersion};
-use iota_types::base_types::IotaAddress;
-use iota_types::base_types::{ObjectID, SequenceNumber};
-use iota_types::digests::{ChainIdentifier, TransactionDigest};
-use iota_types::iota_serde::BigInt;
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, SequenceNumber},
+    digests::{ChainIdentifier, TransactionDigest},
+    error::IotaObjectResponseError,
+    iota_serde::BigInt,
+    object::ObjectRead,
+};
+use jsonrpsee::{RpcModule, core::RpcResult};
+
+use crate::{errors::IndexerError, indexer_reader::IndexerReader};
 
 #[derive(Clone)]
 pub struct ReadApi {
@@ -291,12 +288,12 @@ async fn object_read_to_object_response(
                     .map_err(IndexerError::from)?,
             ))
         }
-        ObjectRead::Deleted((object_id, version, digest)) => Ok(IotaObjectResponse::new_with_error(
-            IotaObjectResponseError::Deleted {
+        ObjectRead::Deleted((object_id, version, digest)) => Ok(
+            IotaObjectResponse::new_with_error(IotaObjectResponseError::Deleted {
                 object_id,
                 version,
                 digest,
-            },
-        )),
+            }),
+        ),
     }
 }

@@ -2,28 +2,29 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::{test_authority_builder::TestAuthorityBuilder, AuthorityState};
-use crate::authority_aggregator::{AuthorityAggregator, AuthorityAggregatorBuilder, TimeoutConfig};
-use crate::test_authority_clients::LocalAuthorityClient;
+use std::{collections::BTreeMap, sync::Arc, time::Duration};
+
 use fastcrypto::traits::KeyPair;
 use futures::future::join_all;
-use std::collections::BTreeMap;
-use std::sync::Arc;
-use std::time::Duration;
-use iota_config::genesis::Genesis;
-use iota_config::local_ip_utils;
-use iota_config::node::AuthorityOverloadConfig;
+use iota_config::{genesis::Genesis, local_ip_utils, node::AuthorityOverloadConfig};
 use iota_framework::BuiltInFramework;
 use iota_genesis_builder::validator_info::ValidatorInfo;
 use iota_move_build::test_utils::compile_basics_package;
 use iota_protocol_config::ProtocolConfig;
-use iota_types::base_types::{ObjectID, IotaAddress, TransactionDigest};
-use iota_types::crypto::AuthorityKeyPair;
-use iota_types::crypto::{
-    generate_proof_of_possession, get_key_pair, AccountKeyPair, AuthorityPublicKeyBytes,
-    NetworkKeyPair, IotaKeyPair,
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, TransactionDigest},
+    crypto::{
+        AccountKeyPair, AuthorityKeyPair, AuthorityPublicKeyBytes, IotaKeyPair, NetworkKeyPair,
+        generate_proof_of_possession, get_key_pair,
+    },
+    object::Object,
 };
-use iota_types::object::Object;
+
+use crate::{
+    authority::{AuthorityState, test_authority_builder::TestAuthorityBuilder},
+    authority_aggregator::{AuthorityAggregator, AuthorityAggregatorBuilder, TimeoutConfig},
+    test_authority_clients::LocalAuthorityClient,
+};
 
 async fn init_genesis(
     committee_size: usize,

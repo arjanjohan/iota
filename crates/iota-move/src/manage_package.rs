@@ -2,17 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::bail;
-use clap::Parser;
 use std::path::{Path, PathBuf};
 
+use anyhow::bail;
+use clap::Parser;
+use iota_types::base_types::ObjectID;
 use move_cli::base;
 use move_package::{
+    BuildConfig,
     lock_file::{self, LockFile},
     source_package::layout::SourcePackageLayout,
-    BuildConfig,
 };
-use iota_types::base_types::ObjectID;
 
 const NO_LOCK_FILE: &str = "Expected a `Move.lock` file to exist in the package path, \
                             but none found. Consider running `iota move build` to \

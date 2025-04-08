@@ -5,23 +5,23 @@
 
 use std::{
     borrow::Borrow,
-    collections::{btree_map::Iter, BTreeMap, HashMap, VecDeque},
+    collections::{BTreeMap, HashMap, VecDeque, btree_map::Iter},
     marker::PhantomData,
     ops::RangeBounds,
-    sync::{Arc, RwLock},
+    sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
-use crate::{
-    rocks::{be_fix_int_ser, errors::typed_store_err_from_bcs_err},
-    Map, TypedStoreError,
-};
 use bincode::Options;
 use collectable::TryExtend;
 use ouroboros::self_referencing;
 use rand::distributions::{Alphanumeric, DistString};
 use rocksdb::Direction;
-use serde::{de::DeserializeOwned, Serialize};
-use std::sync::{RwLockReadGuard, RwLockWriteGuard};
+use serde::{Serialize, de::DeserializeOwned};
+
+use crate::{
+    Map, TypedStoreError,
+    rocks::{be_fix_int_ser, errors::typed_store_err_from_bcs_err},
+};
 
 /// An interface to a btree map backed sally database. This is mainly intended
 /// for tests and performing benchmark comparisons
@@ -525,19 +525,21 @@ impl TestDBWriteBatch {
 
 #[cfg(test)]
 mod test {
-    use crate::{test_db::TestDB, Map};
+    use crate::{Map, test_db::TestDB};
 
     #[test]
     fn test_contains_key() {
         let db = TestDB::open();
         db.insert(&123456789, &"123456789".to_string())
             .expect("Failed to insert");
-        assert!(db
-            .contains_key(&123456789)
-            .expect("Failed to call contains key"));
-        assert!(!db
-            .contains_key(&000000000)
-            .expect("Failed to call contains key"));
+        assert!(
+            db.contains_key(&123456789)
+                .expect("Failed to call contains key")
+        );
+        assert!(
+            !db.contains_key(&000000000)
+                .expect("Failed to call contains key")
+        );
     }
 
     #[test]

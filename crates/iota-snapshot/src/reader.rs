@@ -2,43 +2,59 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    FileMetadata, FileType, Manifest, MAGIC_BYTES, MANIFEST_FILE_MAGIC, OBJECT_FILE_MAGIC,
-    OBJECT_ID_BYTES, OBJECT_REF_BYTES, REFERENCE_FILE_MAGIC, SEQUENCE_NUM_BYTES, SHA3_BYTES,
+use std::{
+    collections::BTreeMap,
+    fs,
+    fs::File,
+    io::{BufReader, Read, Seek, SeekFrom},
+    num::NonZeroUsize,
+    path::PathBuf,
+    sync::{
+        Arc,
+        atomic::{AtomicU64, AtomicUsize, Ordering},
+    },
 };
-use anyhow::{anyhow, Context, Result};
+
+use anyhow::{Context, Result, anyhow};
 use byteorder::{BigEndian, ReadBytesExt};
 use bytes::{Buf, Bytes};
-use fastcrypto::hash::MultisetHash;
-use fastcrypto::hash::{HashFunction, Sha3_256};
-use futures::future::{AbortRegistration, Abortable};
-use futures::{StreamExt, TryStreamExt};
+use fastcrypto::hash::{HashFunction, MultisetHash, Sha3_256};
+use futures::{
+    StreamExt, TryStreamExt,
+    future::{AbortRegistration, Abortable},
+};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use integer_encoding::VarIntReader;
-use object_store::path::Path;
-use std::collections::BTreeMap;
-use std::fs;
-use std::fs::File;
-use std::io::{BufReader, Read, Seek, SeekFrom};
-use std::num::NonZeroUsize;
-use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
-use std::sync::Arc;
 use iota_config::object_storage_config::ObjectStoreConfig;
-use iota_core::authority::authority_store_tables::{AuthorityPerpetualTables, LiveObject};
-use iota_core::authority::AuthorityStore;
+use iota_core::authority::{
+    AuthorityStore,
+    authority_store_tables::{AuthorityPerpetualTables, LiveObject},
+};
 use iota_indexer_alt_framework::task::TrySpawnStreamExt;
-use iota_storage::blob::{Blob, BlobEncoding};
-use iota_storage::object_store::http::HttpDownloaderBuilder;
-use iota_storage::object_store::util::{copy_file, copy_files, path_to_filesystem};
-use iota_storage::object_store::{ObjectStoreGetExt, ObjectStoreListExt, ObjectStorePutExt};
-use iota_types::accumulator::Accumulator;
-use iota_types::base_types::{ObjectDigest, ObjectID, ObjectRef, SequenceNumber};
-use tokio::sync::Mutex;
-use tokio::task::JoinHandle;
-use tokio::time::Duration;
-use tokio::time::Instant;
+use iota_storage::{
+    blob::{Blob, BlobEncoding},
+    object_store::{
+        ObjectStoreGetExt, ObjectStoreListExt, ObjectStorePutExt,
+        http::HttpDownloaderBuilder,
+        util::{copy_file, copy_files, path_to_filesystem},
+    },
+};
+use iota_types::{
+    accumulator::Accumulator,
+    base_types::{ObjectDigest, ObjectID, ObjectRef, SequenceNumber},
+};
+use object_store::path::Path;
+use tokio::{
+    sync::Mutex,
+    task::JoinHandle,
+    time::{Duration, Instant},
+};
 use tracing::{error, info};
+
+use crate::{
+    FileMetadata, FileType, MAGIC_BYTES, MANIFEST_FILE_MAGIC, Manifest, OBJECT_FILE_MAGIC,
+    OBJECT_ID_BYTES, OBJECT_REF_BYTES, REFERENCE_FILE_MAGIC, SEQUENCE_NUM_BYTES, SHA3_BYTES,
+};
 
 pub type SnapshotChecksums = (DigestByBucketAndPartition, Accumulator);
 pub type DigestByBucketAndPartition = BTreeMap<u32, BTreeMap<u32, [u8; 32]>>;

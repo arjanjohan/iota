@@ -2,72 +2,79 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::exchange_rates_task::TriggerExchangeRatesTask;
-use super::system_package_task::SystemPackageTask;
-use super::watermark_task::{ChainIdentifierLock, Watermark, WatermarkLock, WatermarkTask};
-use crate::config::{
-    ConnectionConfig, ServiceConfig, Version, MAX_CONCURRENT_REQUESTS,
-    RPC_TIMEOUT_ERR_SLEEP_RETRY_PERIOD,
+use std::{
+    any::Any,
+    convert::Infallible,
+    net::{SocketAddr, TcpStream},
+    sync::Arc,
+    time::{Duration, Instant},
 };
-use crate::data::move_registry_data_loader::MoveRegistryDataLoader;
-use crate::data::package_resolver::{DbPackageStore, PackageResolver};
-use crate::data::{DataLoader, Db};
-use crate::extensions::directive_checker::DirectiveChecker;
-use crate::metrics::Metrics;
-use crate::mutation::Mutation;
-use crate::types::datatype::IMoveDatatype;
-use crate::types::move_object::IMoveObject;
-use crate::types::object::IObject;
-use crate::types::owner::IOwner;
-use crate::{
-    config::ServerConfig,
-    context_data::db_data_provider::PgManager,
-    error::Error,
-    extensions::{
-        feature_gate::FeatureGate,
-        logger::Logger,
-        query_limits_checker::{PayloadSize, QueryLimitsChecker, ShowUsage},
-        timeout::Timeout,
-    },
-    server::version::set_version_middleware,
-    types::query::{Query, IotaGraphQLSchema},
+
+use async_graphql::{
+    EmptySubscription, Schema, SchemaBuilder,
+    extensions::{ApolloTracing, ExtensionFactory, Tracing},
 };
-use async_graphql::extensions::ApolloTracing;
-use async_graphql::extensions::Tracing;
-use async_graphql::EmptySubscription;
-use async_graphql::{extensions::ExtensionFactory, Schema, SchemaBuilder};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
-use axum::body::Body;
-use axum::extract::FromRef;
-use axum::extract::{ConnectInfo, Query as AxumQuery, State};
-use axum::http::{HeaderMap, StatusCode};
-use axum::middleware::{self};
-use axum::response::IntoResponse;
-use axum::routing::{get, post, MethodRouter, Route};
-use axum::Extension;
-use axum::Router;
-use axum_extra::headers::ContentLength;
-use axum_extra::TypedHeader;
+use axum::{
+    Extension, Router,
+    body::Body,
+    extract::{ConnectInfo, FromRef, Query as AxumQuery, State},
+    http::{HeaderMap, StatusCode},
+    middleware::{self},
+    response::IntoResponse,
+    routing::{MethodRouter, Route, get, post},
+};
+use axum_extra::{TypedHeader, headers::ContentLength};
 use chrono::Utc;
 use http::{HeaderValue, Method, Request};
-use iota_metrics::spawn_monitored_task;
-use iota_network_stack::callback::{CallbackLayer, MakeCallbackHandler, ResponseHandler};
-use std::convert::Infallible;
-use std::net::TcpStream;
-use std::sync::Arc;
-use std::time::Duration;
-use std::{any::Any, net::SocketAddr, time::Instant};
 use iota_graphql_rpc_headers::LIMITS_HEADER;
 use iota_indexer::db::check_db_migration_consistency;
+use iota_metrics::spawn_monitored_task;
+use iota_network_stack::callback::{CallbackLayer, MakeCallbackHandler, ResponseHandler};
 use iota_package_resolver::{PackageStoreWithLruCache, Resolver};
 use iota_sdk::IotaClientBuilder;
-use tokio::join;
-use tokio::sync::OnceCell;
+use tokio::{join, sync::OnceCell};
 use tokio_util::sync::CancellationToken;
 use tower::{Layer, Service};
 use tower_http::cors::{AllowOrigin, CorsLayer};
 use tracing::{info, warn};
 use uuid::Uuid;
+
+use super::{
+    exchange_rates_task::TriggerExchangeRatesTask,
+    system_package_task::SystemPackageTask,
+    watermark_task::{ChainIdentifierLock, Watermark, WatermarkLock, WatermarkTask},
+};
+use crate::{
+    config::{
+        ConnectionConfig, MAX_CONCURRENT_REQUESTS, RPC_TIMEOUT_ERR_SLEEP_RETRY_PERIOD,
+        ServerConfig, ServiceConfig, Version,
+    },
+    context_data::db_data_provider::PgManager,
+    data::{
+        DataLoader, Db,
+        move_registry_data_loader::MoveRegistryDataLoader,
+        package_resolver::{DbPackageStore, PackageResolver},
+    },
+    error::Error,
+    extensions::{
+        directive_checker::DirectiveChecker,
+        feature_gate::FeatureGate,
+        logger::Logger,
+        query_limits_checker::{PayloadSize, QueryLimitsChecker, ShowUsage},
+        timeout::Timeout,
+    },
+    metrics::Metrics,
+    mutation::Mutation,
+    server::version::set_version_middleware,
+    types::{
+        datatype::IMoveDatatype,
+        move_object::IMoveObject,
+        object::IObject,
+        owner::IOwner,
+        query::{IotaGraphQLSchema, Query},
+    },
+};
 
 /// The default allowed maximum lag between the current timestamp and the checkpoint timestamp.
 const DEFAULT_MAX_CHECKPOINT_LAG: Duration = Duration::from_secs(300);
@@ -454,7 +461,9 @@ impl ServerBuilder {
                     .map_err(|e| Error::Internal(format!("Failed to create IotaClient: {}", e)))?,
             )
         } else {
-            warn!("No fullnode url found in config. `dryRunTransactionBlock` and `executeTransactionBlock` will not work");
+            warn!(
+                "No fullnode url found in config. `dryRunTransactionBlock` and `executeTransactionBlock` will not work"
+            );
             None
         };
 
@@ -681,26 +690,26 @@ async fn get_or_init_server_start_time() -> &'static Instant {
 
 #[cfg(test)]
 pub mod tests {
+    use std::{sync::Arc, time::Duration};
+
+    use async_graphql::{
+        Request, Response, Variables,
+        extensions::{Extension, ExtensionContext, NextExecute},
+    };
+    use iota_pg_db::temp::get_available_port;
+    use iota_sdk::IotaClient;
+    use iota_types::{digests::get_mainnet_chain_identifier, transaction::TransactionData};
+    use serde_json::json;
+    use uuid::Uuid;
+
     use super::*;
-    use crate::test_infra::cluster::{prep_executor_cluster, start_cluster};
-    use crate::types::chain_identifier::ChainIdentifier;
     use crate::{
         config::{ConnectionConfig, Limits, ServiceConfig, Version},
         context_data::db_data_provider::PgManager,
         extensions::{query_limits_checker::QueryLimitsChecker, timeout::Timeout},
+        test_infra::cluster::{prep_executor_cluster, start_cluster},
+        types::chain_identifier::ChainIdentifier,
     };
-    use async_graphql::{
-        extensions::{Extension, ExtensionContext, NextExecute},
-        Request, Response, Variables,
-    };
-    use serde_json::json;
-    use std::sync::Arc;
-    use std::time::Duration;
-    use iota_pg_db::temp::get_available_port;
-    use iota_sdk::IotaClient;
-    use iota_types::digests::get_mainnet_chain_identifier;
-    use iota_types::transaction::TransactionData;
-    use uuid::Uuid;
 
     /// Prepares a schema for tests dealing with extensions. Returns a `ServerBuilder` that can be
     /// further extended with `context_data` and `extension` for testing.

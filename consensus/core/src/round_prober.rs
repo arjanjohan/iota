@@ -27,8 +27,8 @@ use parking_lot::RwLock;
 use tokio::{task::JoinHandle, time::MissedTickBehavior};
 
 use crate::{
-    context::Context, core_thread::CoreThreadDispatcher, dag_state::DagState,
-    network::NetworkClient, BlockAPI as _, Round,
+    BlockAPI as _, Round, context::Context, core_thread::CoreThreadDispatcher, dag_state::DagState,
+    network::NetworkClient,
 };
 
 /// A [`QuorumRound`] is a round range [low, high]. It is computed from
@@ -361,6 +361,7 @@ mod test {
 
     use super::QuorumRound;
     use crate::{
+        Round, TestBlock, VerifiedBlock,
         block::BlockRef,
         commit::CommitRange,
         context::Context,
@@ -368,9 +369,8 @@ mod test {
         dag_state::DagState,
         error::{ConsensusError, ConsensusResult},
         network::{BlockStream, NetworkClient},
-        round_prober::{compute_quorum_round, RoundProber},
+        round_prober::{RoundProber, compute_quorum_round},
         storage::mem_store::MemStore,
-        Round, TestBlock, VerifiedBlock,
     };
 
     struct FakeThreadDispatcher {

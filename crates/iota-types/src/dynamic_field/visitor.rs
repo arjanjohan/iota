@@ -10,9 +10,8 @@ use move_core_types::{
     u256::U256,
 };
 
-use crate::{base_types::ObjectID, id::UID};
-
 use super::{DynamicFieldInfo, DynamicFieldType};
+use crate::{base_types::ObjectID, id::UID};
 
 /// Visitor to deserialize the outer structure of a `0x2::dynamic_field::Field` while leaving its
 /// name and value untouched.
@@ -238,14 +237,13 @@ mod tests {
         account_address::AccountAddress, annotated_value as A, language_storage::TypeTag,
     };
 
+    use super::*;
     use crate::{
         base_types::ObjectID,
         dynamic_field,
         id::UID,
         object::bounded_visitor::tests::{enum_, layout_, value_, variant_},
     };
-
-    use super::*;
 
     #[test]
     fn test_dynamic_field_name() {
@@ -442,8 +440,7 @@ mod tests {
 
     /// Various Move values to use as dynamic field names and values.
     fn fixtures() -> Vec<(A::MoveValue, A::MoveTypeLayout, Vec<u8>)> {
-        use A::MoveTypeLayout as T;
-        use A::MoveValue as V;
+        use A::{MoveTypeLayout as T, MoveValue as V};
 
         vec![
             fixture(V::U8(42), T::U8),

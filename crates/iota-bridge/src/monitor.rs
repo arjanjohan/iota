@@ -5,24 +5,28 @@
 //! `BridgeMonitor` receives all `IotaBridgeEvent` and `EthBridgeEvent`
 //! and handles them accordingly.
 
-use crate::abi::{
-    EthBridgeCommitteeEvents, EthBridgeConfigEvents, EthBridgeEvent, EthBridgeLimiterEvents,
-    EthCommitteeUpgradeableContractEvents, EthIotaBridgeEvents,
-};
-use crate::client::bridge_authority_aggregator::BridgeAuthorityAggregator;
-use crate::crypto::BridgeAuthorityPublicKeyBytes;
-use crate::events::{BlocklistValidatorEvent, CommitteeMemberUrlUpdateEvent};
-use crate::events::{EmergencyOpEvent, IotaBridgeEvent};
-use crate::metrics::BridgeMetrics;
-use crate::retry_with_max_elapsed_time;
-use crate::iota_client::{IotaClient, IotaClientInner};
-use crate::types::{BridgeCommittee, IsBridgePaused};
+use std::{collections::HashMap, sync::Arc};
+
 use arc_swap::ArcSwap;
-use std::collections::HashMap;
-use std::sync::Arc;
 use iota_types::TypeTag;
 use tokio::time::Duration;
 use tracing::{error, info, warn};
+
+use crate::{
+    abi::{
+        EthBridgeCommitteeEvents, EthBridgeConfigEvents, EthBridgeEvent, EthBridgeLimiterEvents,
+        EthCommitteeUpgradeableContractEvents, EthIotaBridgeEvents,
+    },
+    client::bridge_authority_aggregator::BridgeAuthorityAggregator,
+    crypto::BridgeAuthorityPublicKeyBytes,
+    events::{
+        BlocklistValidatorEvent, CommitteeMemberUrlUpdateEvent, EmergencyOpEvent, IotaBridgeEvent,
+    },
+    iota_client::{IotaClient, IotaClientInner},
+    metrics::BridgeMetrics,
+    retry_with_max_elapsed_time,
+    types::{BridgeCommittee, IsBridgePaused},
+};
 
 const REFRESH_BRIDGE_RETRY_TIMES: u64 = 3;
 
@@ -442,9 +446,10 @@ async fn get_latest_bridge_pause_status_with_emergency_event<C: IotaClientInner>
 ) -> IsBridgePaused {
     let mut remaining_retry_times = REFRESH_BRIDGE_RETRY_TIMES;
     loop {
-        let Ok(Ok(summary)) =
-            retry_with_max_elapsed_time!(iota_client.get_bridge_summary(), Duration::from_secs(600))
-        else {
+        let Ok(Ok(summary)) = retry_with_max_elapsed_time!(
+            iota_client.get_bridge_summary(),
+            Duration::from_secs(600)
+        ) else {
             error!("Failed to get bridge summary after retry");
             continue;
         };
@@ -471,21 +476,21 @@ async fn get_latest_bridge_pause_status_with_emergency_event<C: IotaClientInner>
 mod tests {
     use std::str::FromStr;
 
-    use super::*;
-    use crate::events::{init_all_struct_tags, NewTokenEvent};
-    use crate::test_utils::{
-        bridge_committee_to_bridge_committee_summary, get_test_authority_and_key,
-    };
-    use crate::types::{BridgeAuthority, BRIDGE_PAUSED, BRIDGE_UNPAUSED};
     use fastcrypto::traits::KeyPair;
+    use iota_types::{
+        base_types::IotaAddress,
+        bridge::{BridgeCommitteeSummary, MoveTypeCommitteeMember},
+        crypto::{ToFromBytes, get_key_pair},
+    };
     use prometheus::Registry;
-    use iota_types::base_types::IotaAddress;
-    use iota_types::bridge::BridgeCommitteeSummary;
-    use iota_types::bridge::MoveTypeCommitteeMember;
-    use iota_types::crypto::get_key_pair;
 
-    use crate::{iota_mock_client::IotaMockClient, types::BridgeCommittee};
-    use iota_types::crypto::ToFromBytes;
+    use super::*;
+    use crate::{
+        events::{NewTokenEvent, init_all_struct_tags},
+        iota_mock_client::IotaMockClient,
+        test_utils::{bridge_committee_to_bridge_committee_summary, get_test_authority_and_key},
+        types::{BRIDGE_PAUSED, BRIDGE_UNPAUSED, BridgeAuthority, BridgeCommittee},
+    };
 
     #[tokio::test]
     async fn test_get_latest_bridge_committee_with_url_update_event() {

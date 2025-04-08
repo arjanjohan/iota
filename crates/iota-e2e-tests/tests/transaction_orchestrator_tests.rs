@@ -2,22 +2,26 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::sync::Arc;
-use std::time::Duration;
-use iota_core::authority_client::NetworkAuthorityClient;
-use iota_core::transaction_orchestrator::TransactiondOrchestrator;
+use std::{sync::Arc, time::Duration};
+
+use iota_core::{
+    authority_client::NetworkAuthorityClient, transaction_orchestrator::TransactiondOrchestrator,
+};
 use iota_macros::sim_test;
-use iota_storage::key_value_store::TransactionKeyValueStore;
-use iota_storage::key_value_store_metrics::KeyValueStoreMetrics;
+use iota_storage::{
+    key_value_store::TransactionKeyValueStore, key_value_store_metrics::KeyValueStoreMetrics,
+};
 use iota_test_transaction_builder::{
     batch_make_transfer_transactions, make_staking_transaction, make_transfer_iota_transaction,
 };
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::quorum_driver_types::{
-    ExecuteTransactionRequestType, ExecuteTransactionRequestV3, ExecuteTransactionResponseV3,
-    FinalizedEffects, IsTransactionExecutedLocally, QuorumDriverError,
+use iota_types::{
+    effects::TransactionEffectsAPI,
+    quorum_driver_types::{
+        ExecuteTransactionRequestType, ExecuteTransactionRequestV3, ExecuteTransactionResponseV3,
+        FinalizedEffects, IsTransactionExecutedLocally, QuorumDriverError,
+    },
+    transaction::Transaction,
 };
-use iota_types::transaction::Transaction;
 use test_cluster::TestClusterBuilder;
 use tokio::time::timeout;
 use tracing::info;
@@ -80,11 +84,13 @@ async fn test_blocking_execution() -> Result<(), anyhow::Error> {
         handle.state(),
     ));
 
-    assert!(handle
-        .state()
-        .get_executed_transaction_and_effects(digest, kv_store)
-        .await
-        .is_ok());
+    assert!(
+        handle
+            .state()
+            .get_executed_transaction_and_effects(digest, kv_store)
+            .await
+            .is_ok()
+    );
 
     Ok(())
 }
@@ -93,7 +99,7 @@ async fn test_blocking_execution() -> Result<(), anyhow::Error> {
 async fn test_fullnode_wal_log() -> Result<(), anyhow::Error> {
     #[cfg(msim)]
     {
-        use iota_core::authority::{init_checkpoint_timeout_config, CheckpointTimeoutConfig};
+        use iota_core::authority::{CheckpointTimeoutConfig, init_checkpoint_timeout_config};
         init_checkpoint_timeout_config(CheckpointTimeoutConfig {
             warning_timeout: Duration::from_secs(2),
             panic_timeout: None,

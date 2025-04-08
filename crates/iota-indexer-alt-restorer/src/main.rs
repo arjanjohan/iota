@@ -4,10 +4,8 @@
 
 use anyhow::Result;
 use clap::Parser;
+use iota_indexer_alt_restorer::{Args, restore};
 use tracing::info;
-
-use iota_indexer_alt_restorer::restore;
-use iota_indexer_alt_restorer::Args;
 
 #[tokio::main]
 async fn main() -> Result<()> {

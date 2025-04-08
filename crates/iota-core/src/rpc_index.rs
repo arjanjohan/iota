@@ -2,44 +2,40 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::authority::AuthorityStore;
-use crate::checkpoints::CheckpointStore;
-use crate::par_index_live_object_set::LiveObjectIndexer;
-use crate::par_index_live_object_set::ParMakeLiveObjectIndexer;
+use std::{
+    collections::{BTreeMap, HashMap},
+    path::{Path, PathBuf},
+    sync::{Arc, Mutex},
+    time::Instant,
+};
+
+use iota_types::{
+    base_types::{IotaAddress, MoveObjectType, ObjectID, SequenceNumber},
+    digests::TransactionDigest,
+    dynamic_field::visitor as DFV,
+    full_checkpoint_content::CheckpointData,
+    layout_resolver::LayoutResolver,
+    messages_checkpoint::CheckpointContents,
+    object::{Object, Owner},
+    storage::{
+        BackingPackageStore, DynamicFieldIndexInfo, DynamicFieldKey, error::Error as StorageError,
+    },
+};
 use move_core_types::language_storage::StructTag;
-use rayon::iter::IntoParallelIterator;
-use rayon::iter::ParallelIterator;
-use serde::Deserialize;
-use serde::Serialize;
-use std::collections::BTreeMap;
-use std::collections::HashMap;
-use std::path::Path;
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::sync::Mutex;
-use std::time::Instant;
-use iota_types::base_types::MoveObjectType;
-use iota_types::base_types::ObjectID;
-use iota_types::base_types::SequenceNumber;
-use iota_types::base_types::IotaAddress;
-use iota_types::digests::TransactionDigest;
-use iota_types::dynamic_field::visitor as DFV;
-use iota_types::full_checkpoint_content::CheckpointData;
-use iota_types::layout_resolver::LayoutResolver;
-use iota_types::messages_checkpoint::CheckpointContents;
-use iota_types::object::Object;
-use iota_types::object::Owner;
-use iota_types::storage::error::Error as StorageError;
-use iota_types::storage::BackingPackageStore;
-use iota_types::storage::DynamicFieldIndexInfo;
-use iota_types::storage::DynamicFieldKey;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
-use typed_store::rocks::{DBMap, MetricConf};
-use typed_store::traits::Map;
-use typed_store::traits::{TableSummary, TypedStoreDebug};
-use typed_store::DBMapUtils;
-use typed_store::TypedStoreError;
+use typed_store::{
+    DBMapUtils, TypedStoreError,
+    rocks::{DBMap, MetricConf},
+    traits::{Map, TableSummary, TypedStoreDebug},
+};
+
+use crate::{
+    authority::{AuthorityStore, authority_per_epoch_store::AuthorityPerEpochStore},
+    checkpoints::CheckpointStore,
+    par_index_live_object_set::{LiveObjectIndexer, ParMakeLiveObjectIndexer},
+};
 
 const CURRENT_DB_VERSION: u64 = 0;
 
@@ -643,8 +639,7 @@ fn try_create_dynamic_field_info(
 }
 
 fn try_create_coin_index_info(object: &Object) -> Option<(CoinIndexKey, CoinIndexInfo)> {
-    use iota_types::coin::CoinMetadata;
-    use iota_types::coin::TreasuryCap;
+    use iota_types::coin::{CoinMetadata, TreasuryCap};
 
     object
         .type_()

@@ -2,16 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::VecDeque;
-use std::hash::{Hash, Hasher};
-use std::sync::atomic::AtomicU64;
-use std::sync::Arc;
-use std::{cmp::Ordering, hash::DefaultHasher};
+use std::{
+    cmp::Ordering,
+    collections::VecDeque,
+    hash::{DefaultHasher, Hash, Hasher},
+    sync::{Arc, atomic::AtomicU64},
+};
 
-use moka::sync::Cache as MokaCache;
 use iota_common::debug_fatal;
-use parking_lot::Mutex;
 use iota_types::base_types::SequenceNumber;
+use moka::sync::Cache as MokaCache;
+use parking_lot::Mutex;
 
 /// CachedVersionMap is a map from version to value, with the additional constraints:
 /// - The key (SequenceNumber) must be monotonically increasing for each insert. If
@@ -325,8 +326,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use iota_types::base_types::SequenceNumber;
+
+    use super::*;
 
     // Helper function to create a SequenceNumber for simplicity
     fn seq(num: u64) -> SequenceNumber {

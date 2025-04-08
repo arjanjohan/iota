@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 pub mod indexer_builder;
+pub mod iota_datasource;
 pub mod metrics;
 pub mod progress;
-pub mod iota_datasource;
 pub const LIVE_TASK_TARGET_CHECKPOINT: i64 = i64::MAX;
 
 #[derive(Clone, Debug)]

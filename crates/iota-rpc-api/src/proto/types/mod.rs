@@ -12,8 +12,9 @@ pub const FILE_DESCRIPTOR_SET: &[u8] = include_bytes!("../generated/iota.types.f
 
 #[cfg(test)]
 mod tests {
-    use super::FILE_DESCRIPTOR_SET;
     use prost::Message as _;
+
+    use super::FILE_DESCRIPTOR_SET;
 
     #[test]
     fn file_descriptor_set_is_valid() {
@@ -30,7 +31,6 @@ mod object;
 mod signatures;
 mod transaction_convert;
 
-//
 // Address
 //
 
@@ -56,7 +56,6 @@ impl TryFrom<&Address> for iota_sdk_types::Address {
     }
 }
 
-//
 // ObjectId
 //
 
@@ -82,7 +81,6 @@ impl TryFrom<&ObjectId> for iota_sdk_types::ObjectId {
     }
 }
 
-//
 // Digest
 //
 
@@ -135,7 +133,6 @@ impl_digest_proto!(ObjectDigest);
 impl_digest_proto!(ConsensusCommitDigest);
 impl_digest_proto!(EffectsAuxiliaryDataDigest);
 
-//
 // TimeStamp
 //
 
@@ -154,7 +151,6 @@ pub fn proto_to_timestamp_ms(timestamp: prost_types::Timestamp) -> Result<u64, T
     Ok((seconds + nanos).as_millis().try_into()?)
 }
 
-//
 // Bcs
 //
 
@@ -216,7 +212,6 @@ impl From<Bcs> for prost::bytes::Bytes {
     }
 }
 
-//
 // U128
 //
 
@@ -236,7 +231,6 @@ impl TryFrom<&U128> for u128 {
     }
 }
 
-//
 // I128
 //
 

@@ -2,43 +2,42 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use move_core_types::{ident_str, language_storage::StructTag};
-use iota_move_build::BuildConfig;
-use iota_protocol_config::ProtocolConfig;
-use iota_types::{
-    base_types::{ObjectID, ObjectRef, IotaAddress},
-    crypto::{get_key_pair, AccountKeyPair},
-    move_package::UpgradePolicy,
-    object::{Object, Owner},
-    programmable_transaction_builder::ProgrammableTransactionBuilder,
-    storage::ObjectStore,
-    transaction::{Argument, ObjectArg, ProgrammableTransaction, TEST_ONLY_GAS_UNIT_FOR_PUBLISH},
-    MOVE_STDLIB_PACKAGE_ID, IOTA_FRAMEWORK_PACKAGE_ID,
-};
-
 use std::{
     collections::BTreeSet,
     path::{Path, PathBuf},
     str::FromStr,
     sync::Arc,
 };
-use iota_types::effects::{TransactionEffects, TransactionEffectsAPI};
-use iota_types::error::{IotaError, UserInputError};
-use iota_types::execution_config_utils::to_binary_config;
-use iota_types::execution_status::{
-    CommandArgumentError, ExecutionFailureStatus, ExecutionStatus, PackageUpgradeError,
-};
 
-use crate::authority::authority_tests::init_state_with_ids;
-use crate::authority::move_integration_tests::{
-    build_multi_publish_txns, build_multi_upgrade_txns, build_package,
-    collect_packages_and_upgrade_caps, run_multi_txns, UpgradeData,
+use iota_move_build::BuildConfig;
+use iota_protocol_config::ProtocolConfig;
+use iota_types::{
+    IOTA_FRAMEWORK_PACKAGE_ID, MOVE_STDLIB_PACKAGE_ID,
+    base_types::{IotaAddress, ObjectID, ObjectRef},
+    crypto::{AccountKeyPair, get_key_pair},
+    effects::{TransactionEffects, TransactionEffectsAPI},
+    error::{IotaError, UserInputError},
+    execution_config_utils::to_binary_config,
+    execution_status::{
+        CommandArgumentError, ExecutionFailureStatus, ExecutionStatus, PackageUpgradeError,
+    },
+    move_package::UpgradePolicy,
+    object::{Object, Owner},
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    storage::ObjectStore,
+    transaction::{Argument, ObjectArg, ProgrammableTransaction, TEST_ONLY_GAS_UNIT_FOR_PUBLISH},
 };
-use crate::authority::test_authority_builder::TestAuthorityBuilder;
+use move_core_types::{ident_str, language_storage::StructTag};
+
 use crate::authority::{
+    AuthorityState,
     auth_unit_test_utils::build_test_modules_with_dep_addr,
-    authority_tests::execute_programmable_transaction,
-    move_integration_tests::build_and_publish_test_package_with_upgrade_cap, AuthorityState,
+    authority_tests::{execute_programmable_transaction, init_state_with_ids},
+    move_integration_tests::{
+        UpgradeData, build_and_publish_test_package_with_upgrade_cap, build_multi_publish_txns,
+        build_multi_upgrade_txns, build_package, collect_packages_and_upgrade_caps, run_multi_txns,
+    },
+    test_authority_builder::TestAuthorityBuilder,
 };
 
 #[macro_export]
@@ -187,7 +186,8 @@ impl UpgradeStateRunner {
             &sender_key,
             &gas_object_id,
             base_package_name,
-            /* with_unpublished_deps */ false,
+            // with_unpublished_deps
+            false,
         )
         .await;
 
@@ -330,14 +330,18 @@ async fn test_upgrade_package_happy_path() {
     let binary_config = to_binary_config(&config);
     let normalized_modules = package.move_package().normalize(&binary_config).unwrap();
     assert!(normalized_modules.contains_key("new_module"));
-    assert!(normalized_modules["new_module"]
-        .functions
-        .contains_key(ident_str!("this_is_a_new_module")));
-    assert!(normalized_modules["new_module"]
-        .functions
-        .contains_key(ident_str!(
-            "i_can_call_funs_in_other_modules_that_already_existed"
-        )));
+    assert!(
+        normalized_modules["new_module"]
+            .functions
+            .contains_key(ident_str!("this_is_a_new_module"))
+    );
+    assert!(
+        normalized_modules["new_module"]
+            .functions
+            .contains_key(ident_str!(
+                "i_can_call_funs_in_other_modules_that_already_existed"
+            ))
+    );
 
     // Call into the upgraded module
     let effects = runner
@@ -836,7 +840,7 @@ async fn test_multiple_upgrades(
         .find(|(_, owner)| matches!(owner, Owner::Immutable))
         .unwrap()
         .0
-         .0;
+        .0;
 
     // Second upgrade: May also adds a dep on the iota framework and stdlib.
     let (digest, modules) = build_upgrade_test_modules("stage2_basic_compatibility_valid");
@@ -1277,7 +1281,7 @@ async fn test_different_versions_across_calls() {
         .find(|(_, owner)| matches!(owner, Owner::Immutable))
         .unwrap()
         .0
-         .0;
+        .0;
 
     // call the same function twice within the same block but from two different module versions
     let effects = runner
@@ -1475,7 +1479,6 @@ async fn test_upgrade_max_packages() {
     let gas_object_id = ObjectID::random();
     let authority = init_state_with_ids(vec![(sender, gas_object_id)]).await;
 
-    //
     // Build and publish max number of packages allowed
     let (_, modules, dependencies) = build_package("move_upgrade/base", false);
 
@@ -1530,7 +1533,6 @@ async fn test_upgrade_more_than_max_packages_error() {
     let gas_object_id = ObjectID::random();
     let authority = init_state_with_ids(vec![(sender, gas_object_id)]).await;
 
-    //
     // Build and publish max number of packages allowed
     let (_, modules, dependencies) = build_package("move_upgrade/base", false);
 

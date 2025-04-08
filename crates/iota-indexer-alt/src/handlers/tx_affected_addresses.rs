@@ -2,22 +2,21 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::ops::Range;
-use std::sync::Arc;
+use std::{ops::Range, sync::Arc};
 
 use anyhow::Result;
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use itertools::Itertools;
 use iota_indexer_alt_framework::{
     models::cp_sequence_numbers::tx_interval,
-    pipeline::{concurrent::Handler, Processor},
+    pipeline::{Processor, concurrent::Handler},
 };
 use iota_indexer_alt_schema::{
     schema::tx_affected_addresses, transactions::StoredTxAffectedAddress,
 };
 use iota_pg_db as db;
 use iota_types::{full_checkpoint_content::CheckpointData, object::Owner};
+use itertools::Itertools;
 
 pub(crate) struct TxAffectedAddresses;
 
@@ -96,11 +95,12 @@ impl Handler for TxAffectedAddresses {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use diesel_async::RunQueryDsl;
-    use iota_indexer_alt_framework::{handlers::cp_sequence_numbers::CpSequenceNumbers, Indexer};
+    use iota_indexer_alt_framework::{Indexer, handlers::cp_sequence_numbers::CpSequenceNumbers};
     use iota_indexer_alt_schema::MIGRATIONS;
     use iota_types::test_checkpoint_data_builder::TestCheckpointDataBuilder;
+
+    use super::*;
 
     async fn get_all_tx_affected_addresses(conn: &mut db::Connection<'_>) -> Result<Vec<i64>> {
         Ok(tx_affected_addresses::table

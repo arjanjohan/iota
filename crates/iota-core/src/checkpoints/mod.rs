@@ -7,71 +7,80 @@ pub mod checkpoint_executor;
 mod checkpoint_output;
 mod metrics;
 
-use crate::authority::AuthorityState;
-use crate::authority_client::{make_network_authority_clients_with_network_config, AuthorityAPI};
-use crate::checkpoints::causal_order::CausalOrder;
-use crate::checkpoints::checkpoint_output::{CertifiedCheckpointOutput, CheckpointOutput};
-pub use crate::checkpoints::checkpoint_output::{
-    LogCheckpointOutput, SendCheckpointToStateSync, SubmitCheckpointToConsensus,
+use std::{
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+    fs::File,
+    io::Write,
+    path::Path,
+    sync::{Arc, Weak},
+    time::{Duration, SystemTime},
 };
-pub use crate::checkpoints::metrics::CheckpointMetrics;
-use crate::execution_cache::TransactionCacheRead;
-use crate::stake_aggregator::{InsertResult, MultiStakeAggregator};
-use crate::state_accumulator::StateAccumulator;
+
 use diffy::create_patch;
-use itertools::Itertools;
 use iota_common::{debug_fatal, fatal};
-use iota_metrics::{monitored_future, monitored_scope, MonitoredFutureExt};
+use iota_macros::fail_point;
+use iota_metrics::{MonitoredFutureExt, monitored_future, monitored_scope};
+use iota_network::default_iota_network_config;
+use iota_protocol_config::ProtocolVersion;
+use iota_types::{
+    base_types::{AuthorityName, ConciseableName, EpochId, TransactionDigest},
+    committee::StakeUnit,
+    crypto::AuthorityStrongQuorumSignInfo,
+    digests::{CheckpointContentsDigest, CheckpointDigest},
+    effects::{TransactionEffects, TransactionEffectsAPI},
+    error::{IotaError, IotaResult},
+    executable_transaction::VerifiedExecutableTransaction,
+    gas::GasCostSummary,
+    iota_system_state::{
+        IotaSystemState, IotaSystemStateTrait,
+        epoch_start_iota_system_state::EpochStartSystemStateTrait,
+    },
+    message_envelope::Message,
+    messages_checkpoint::{
+        CertifiedCheckpointSummary, CheckpointCommitment, CheckpointContents, CheckpointRequestV2,
+        CheckpointResponseV2, CheckpointSequenceNumber, CheckpointSignatureMessage,
+        CheckpointSummary, CheckpointSummaryResponse, CheckpointTimestamp, EndOfEpochData,
+        FullCheckpointContents, SignedCheckpointSummary, TrustedCheckpoint, VerifiedCheckpoint,
+        VerifiedCheckpointContents,
+    },
+    messages_consensus::ConsensusTransactionKey,
+    signature::GenericSignature,
+    transaction::{TransactionDataAPI, TransactionKey, TransactionKind},
+};
+use itertools::Itertools;
 use nonempty::NonEmpty;
 use parking_lot::Mutex;
+use rand::{rngs::OsRng, seq::SliceRandom};
 use serde::{Deserialize, Serialize};
-use iota_macros::fail_point;
-use iota_network::default_iota_network_config;
-use iota_types::base_types::ConciseableName;
-use iota_types::executable_transaction::VerifiedExecutableTransaction;
-use iota_types::messages_checkpoint::CheckpointCommitment;
-use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait;
-use tokio::sync::watch;
-
-use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::consensus_handler::SequencedConsensusTransactionKey;
-use rand::rngs::OsRng;
-use rand::seq::SliceRandom;
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
-use std::sync::Arc;
-use std::sync::Weak;
-use std::time::{Duration, SystemTime};
-use iota_protocol_config::ProtocolVersion;
-use iota_types::base_types::{AuthorityName, EpochId, TransactionDigest};
-use iota_types::committee::StakeUnit;
-use iota_types::crypto::AuthorityStrongQuorumSignInfo;
-use iota_types::digests::{CheckpointContentsDigest, CheckpointDigest};
-use iota_types::effects::{TransactionEffects, TransactionEffectsAPI};
-use iota_types::error::{IotaError, IotaResult};
-use iota_types::gas::GasCostSummary;
-use iota_types::message_envelope::Message;
-use iota_types::messages_checkpoint::{
-    CertifiedCheckpointSummary, CheckpointContents, CheckpointResponseV2, CheckpointSequenceNumber,
-    CheckpointSignatureMessage, CheckpointSummary, CheckpointSummaryResponse, CheckpointTimestamp,
-    EndOfEpochData, FullCheckpointContents, TrustedCheckpoint, VerifiedCheckpoint,
-    VerifiedCheckpointContents,
+use tokio::{
+    sync::{Notify, watch},
+    task::JoinSet,
+    time::timeout,
 };
-use iota_types::messages_checkpoint::{CheckpointRequestV2, SignedCheckpointSummary};
-use iota_types::messages_consensus::ConsensusTransactionKey;
-use iota_types::signature::GenericSignature;
-use iota_types::iota_system_state::{IotaSystemState, IotaSystemStateTrait};
-use iota_types::transaction::{TransactionDataAPI, TransactionKey, TransactionKind};
-use tokio::{sync::Notify, task::JoinSet, time::timeout};
 use tracing::{debug, error, info, instrument, trace, warn};
-use typed_store::traits::{TableSummary, TypedStoreDebug};
-use typed_store::DBMapUtils;
-use typed_store::Map;
 use typed_store::{
+    DBMapUtils, Map, TypedStoreError,
     rocks::{DBMap, MetricConf},
-    TypedStoreError,
+    traits::{TableSummary, TypedStoreDebug},
+};
+
+pub use crate::checkpoints::{
+    checkpoint_output::{
+        LogCheckpointOutput, SendCheckpointToStateSync, SubmitCheckpointToConsensus,
+    },
+    metrics::CheckpointMetrics,
+};
+use crate::{
+    authority::{AuthorityState, authority_per_epoch_store::AuthorityPerEpochStore},
+    authority_client::{AuthorityAPI, make_network_authority_clients_with_network_config},
+    checkpoints::{
+        causal_order::CausalOrder,
+        checkpoint_output::{CertifiedCheckpointOutput, CheckpointOutput},
+    },
+    consensus_handler::SequencedConsensusTransactionKey,
+    execution_cache::TransactionCacheRead,
+    stake_aggregator::{InsertResult, MultiStakeAggregator},
+    state_accumulator::StateAccumulator,
 };
 
 pub type CheckpointHeight = u64;
@@ -582,10 +591,13 @@ impl CheckpointStore {
             if seq_number >= *checkpoint.sequence_number() {
                 return Ok(());
             }
-            assert_eq!(seq_number + 1, *checkpoint.sequence_number(),
-            "Cannot update highest executed checkpoint to {} when current highest executed checkpoint is {}",
-            checkpoint.sequence_number(),
-            seq_number);
+            assert_eq!(
+                seq_number + 1,
+                *checkpoint.sequence_number(),
+                "Cannot update highest executed checkpoint to {} when current highest executed checkpoint is {}",
+                checkpoint.sequence_number(),
+                seq_number
+            );
         }
         debug!(
             checkpoint_seq = checkpoint.sequence_number(),
@@ -784,7 +796,10 @@ impl CheckpointStore {
                 .get_checkpoint_contents(&checkpoint.content_digest)
                 .expect("get_checkpoint_contents should not fail")
             else {
-                panic!("checkpoint contents not found for locally computed checkpoint {:?} (digest: {:?})", seq, checkpoint.content_digest);
+                panic!(
+                    "checkpoint contents not found for locally computed checkpoint {:?} (digest: {:?})",
+                    seq, checkpoint.content_digest
+                );
             };
 
             let cache = state.get_transaction_cache_reader();
@@ -1293,7 +1308,10 @@ impl CheckpointBuilder {
             {
                 if chunk.is_empty() {
                     // Always allow at least one tx in a checkpoint.
-                    warn!("Size of single transaction ({size}) exceeds max checkpoint size ({}); allowing excessively large checkpoint to go through.", self.max_checkpoint_size_bytes);
+                    warn!(
+                        "Size of single transaction ({size}) exceeds max checkpoint size ({}); allowing excessively large checkpoint to go through.",
+                        self.max_checkpoint_size_bytes
+                    );
                 } else {
                     chunks.push(chunk);
                     chunk = Vec::new();
@@ -1335,7 +1353,9 @@ impl CheckpointBuilder {
                 let last_verified = self.tables.get_epoch_last_checkpoint(previous_epoch)?;
                 last_checkpoint = last_verified.map(VerifiedCheckpoint::into_summary_and_sequence);
                 if let Some((ref seq, _)) = last_checkpoint {
-                    debug!("No checkpoints in builder DB, taking checkpoint from previous epoch with sequence {seq}");
+                    debug!(
+                        "No checkpoints in builder DB, taking checkpoint from previous epoch with sequence {seq}"
+                    );
                 } else {
                     // This is some serious bug with when CheckpointBuilder started so surfacing it via panic
                     panic!("Can not find last checkpoint for previous epoch {previous_epoch}");
@@ -1443,8 +1463,10 @@ impl CheckpointBuilder {
             let timestamp_ms = details.timestamp_ms;
             if let Some((_, last_checkpoint)) = &last_checkpoint {
                 if last_checkpoint.timestamp_ms > timestamp_ms {
-                    error!("Unexpected decrease of checkpoint timestamp, sequence: {}, previous: {}, current: {}",
-                    sequence_number,  last_checkpoint.timestamp_ms, timestamp_ms);
+                    error!(
+                        "Unexpected decrease of checkpoint timestamp, sequence: {}, previous: {}, current: {}",
+                        sequence_number, last_checkpoint.timestamp_ms, timestamp_ms
+                    );
                 }
             }
 
@@ -2410,8 +2432,7 @@ impl CheckpointServiceNotify for CheckpointService {
             if sequence <= highest_verified_checkpoint {
                 trace!(
                     checkpoint_seq = sequence,
-                    "Ignore checkpoint signature from {} - already certified",
-                    signer,
+                    "Ignore checkpoint signature from {} - already certified", signer,
                 );
                 self.metrics
                     .last_ignored_checkpoint_signature_received
@@ -2483,23 +2504,28 @@ impl From<PendingCheckpoint> for PendingCheckpointV2 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::authority::test_authority_builder::TestAuthorityBuilder;
-    use futures::future::BoxFuture;
-    use futures::FutureExt as _;
-    use std::collections::{BTreeMap, HashMap};
-    use std::ops::Deref;
+    use std::{
+        collections::{BTreeMap, HashMap},
+        ops::Deref,
+    };
+
+    use futures::{FutureExt as _, future::BoxFuture};
     use iota_macros::sim_test;
     use iota_protocol_config::{Chain, ProtocolConfig};
-    use iota_types::base_types::{ObjectID, SequenceNumber, TransactionEffectsDigest};
-    use iota_types::crypto::Signature;
-    use iota_types::digests::TransactionEventsDigest;
-    use iota_types::effects::{TransactionEffects, TransactionEvents};
-    use iota_types::messages_checkpoint::SignedCheckpointSummary;
-    use iota_types::move_package::MovePackage;
-    use iota_types::object;
-    use iota_types::transaction::{GenesisObject, VerifiedTransaction};
+    use iota_types::{
+        base_types::{ObjectID, SequenceNumber, TransactionEffectsDigest},
+        crypto::Signature,
+        digests::TransactionEventsDigest,
+        effects::{TransactionEffects, TransactionEvents},
+        messages_checkpoint::SignedCheckpointSummary,
+        move_package::MovePackage,
+        object,
+        transaction::{GenesisObject, VerifiedTransaction},
+    };
     use tokio::sync::mpsc;
+
+    use super::*;
+    use crate::authority::test_authority_builder::TestAuthorityBuilder;
 
     #[sim_test]
     pub async fn checkpoint_builder_test() {

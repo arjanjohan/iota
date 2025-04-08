@@ -2,16 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::Result;
-use move_binary_format::{file_format::Visibility, CompiledModule};
-use move_compiler::editions::Edition;
-use move_package::{BuildConfig as MoveBuildConfig, LintFlag};
 use std::{
     collections::BTreeMap,
     env, fs,
     path::{Path, PathBuf},
 };
+
+use anyhow::Result;
 use iota_move_build::{BuildConfig, IotaPackageHooks};
+use move_binary_format::{CompiledModule, file_format::Visibility};
+use move_compiler::editions::Edition;
+use move_package::{BuildConfig as MoveBuildConfig, LintFlag};
 
 const CRATE_ROOT: &str = env!("CARGO_MANIFEST_DIR");
 const COMPILED_PACKAGES_DIR: &str = "packages_compiled";
@@ -64,8 +65,7 @@ fn check_diff(checked_in: &Path, built: &Path) {
             .output()
             .unwrap();
         if !output.status.success() {
-            let header =
-                "Generated and checked-in iota-framework packages and/or docs do not match.\n\
+            let header = "Generated and checked-in iota-framework packages and/or docs do not match.\n\
                  Re-run with `UPDATE=1` to update checked-in packages and docs. e.g.\n\n\
                  UPDATE=1 cargo test -p iota-framework --test build-system-packages";
 

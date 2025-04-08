@@ -2,51 +2,58 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::backpressure::BackpressureManager;
-use super::epoch_start_configuration::EpochFlag;
-use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::authority::authority_store_pruner::ObjectsCompactionFilter;
-use crate::authority::authority_store_tables::{
-    AuthorityPerpetualTables, AuthorityPerpetualTablesOptions, AuthorityPrunerTables,
-};
-use crate::authority::epoch_start_configuration::EpochStartConfiguration;
-use crate::authority::{AuthorityState, AuthorityStore};
-use crate::checkpoints::CheckpointStore;
-use crate::epoch::committee_store::CommitteeStore;
-use crate::epoch::epoch_metrics::EpochMetrics;
-use crate::epoch::randomness::RandomnessManager;
-use crate::execution_cache::build_execution_cache;
-use crate::jsonrpc_index::IndexStore;
-use crate::mock_consensus::{ConsensusMode, MockConsensusClient};
-use crate::module_cache_metrics::ResolverMetrics;
-use crate::rpc_index::RpcIndexStore;
-use crate::signature_verifier::SignatureVerifierMetrics;
+use std::{path::PathBuf, sync::Arc};
+
 use fastcrypto::traits::KeyPair;
-use prometheus::Registry;
-use std::path::PathBuf;
-use std::sync::Arc;
 use iota_archival::reader::ArchiveReaderBalancer;
-use iota_config::certificate_deny_config::CertificateDenyConfig;
-use iota_config::genesis::Genesis;
-use iota_config::node::AuthorityOverloadConfig;
-use iota_config::node::{
-    AuthorityStorePruningConfig, DBCheckpointConfig, ExpensiveSafetyCheckConfig,
+use iota_config::{
+    ExecutionCacheConfig,
+    certificate_deny_config::CertificateDenyConfig,
+    genesis::Genesis,
+    node::{
+        AuthorityOverloadConfig, AuthorityStorePruningConfig, DBCheckpointConfig,
+        ExpensiveSafetyCheckConfig,
+    },
+    transaction_deny_config::TransactionDenyConfig,
 };
-use iota_config::transaction_deny_config::TransactionDenyConfig;
-use iota_config::ExecutionCacheConfig;
 use iota_macros::nondeterministic;
 use iota_network::randomness;
 use iota_protocol_config::ProtocolConfig;
-use iota_swarm_config::genesis_config::AccountConfig;
-use iota_swarm_config::network_config::NetworkConfig;
-use iota_types::base_types::{AuthorityName, ObjectID};
-use iota_types::crypto::AuthorityKeyPair;
-use iota_types::digests::ChainIdentifier;
-use iota_types::executable_transaction::VerifiedExecutableTransaction;
-use iota_types::object::Object;
-use iota_types::iota_system_state::IotaSystemStateTrait;
-use iota_types::supported_protocol_versions::SupportedProtocolVersions;
-use iota_types::transaction::VerifiedTransaction;
+use iota_swarm_config::{genesis_config::AccountConfig, network_config::NetworkConfig};
+use iota_types::{
+    base_types::{AuthorityName, ObjectID},
+    crypto::AuthorityKeyPair,
+    digests::ChainIdentifier,
+    executable_transaction::VerifiedExecutableTransaction,
+    iota_system_state::IotaSystemStateTrait,
+    object::Object,
+    supported_protocol_versions::SupportedProtocolVersions,
+    transaction::VerifiedTransaction,
+};
+use prometheus::Registry;
+
+use super::{backpressure::BackpressureManager, epoch_start_configuration::EpochFlag};
+use crate::{
+    authority::{
+        AuthorityState, AuthorityStore,
+        authority_per_epoch_store::AuthorityPerEpochStore,
+        authority_store_pruner::ObjectsCompactionFilter,
+        authority_store_tables::{
+            AuthorityPerpetualTables, AuthorityPerpetualTablesOptions, AuthorityPrunerTables,
+        },
+        epoch_start_configuration::EpochStartConfiguration,
+    },
+    checkpoints::CheckpointStore,
+    epoch::{
+        committee_store::CommitteeStore, epoch_metrics::EpochMetrics, randomness::RandomnessManager,
+    },
+    execution_cache::build_execution_cache,
+    jsonrpc_index::IndexStore,
+    mock_consensus::{ConsensusMode, MockConsensusClient},
+    module_cache_metrics::ResolverMetrics,
+    rpc_index::RpcIndexStore,
+    signature_verifier::SignatureVerifierMetrics,
+};
 
 #[derive(Default, Clone)]
 pub struct TestAuthorityBuilder<'a> {
@@ -106,10 +113,11 @@ impl<'a> TestAuthorityBuilder<'a> {
     pub fn with_reference_gas_price(mut self, reference_gas_price: u64) -> Self {
         // If genesis is already set then setting rgp is meaningless since it will be overwritten.
         assert!(self.genesis.is_none());
-        assert!(self
-            .reference_gas_price
-            .replace(reference_gas_price)
-            .is_none());
+        assert!(
+            self.reference_gas_price
+                .replace(reference_gas_price)
+                .is_none()
+        );
         self
     }
 

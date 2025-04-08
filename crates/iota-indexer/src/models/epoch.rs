@@ -2,14 +2,21 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::schema::epochs;
-use crate::{errors::IndexerError, schema::feature_flags, schema::protocol_configs};
-use diesel::prelude::{AsChangeset, Identifiable};
-use diesel::{Insertable, Queryable, Selectable};
+use diesel::{
+    Insertable, Queryable, Selectable,
+    prelude::{AsChangeset, Identifiable},
+};
 use iota_json_rpc_types::{EndOfEpochInfo, EpochInfo};
-use iota_types::event::SystemEpochInfoEvent;
-use iota_types::messages_checkpoint::CertifiedCheckpointSummary;
-use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary;
+use iota_types::{
+    event::SystemEpochInfoEvent,
+    iota_system_state::iota_system_state_summary::IotaSystemStateSummary,
+    messages_checkpoint::CertifiedCheckpointSummary,
+};
+
+use crate::{
+    errors::IndexerError,
+    schema::{epochs, feature_flags, protocol_configs},
+};
 
 #[derive(Queryable, Insertable, Debug, Clone, Default)]
 #[diesel(table_name = epochs)]

@@ -7,7 +7,7 @@ use std::sync::Arc;
 use anyhow::{Context, Result};
 use diesel::{ExpressionMethods, QueryDsl};
 use diesel_async::RunQueryDsl;
-use iota_indexer_alt_framework::pipeline::{concurrent::Handler, Processor};
+use iota_indexer_alt_framework::pipeline::{Processor, concurrent::Handler};
 use iota_indexer_alt_schema::{checkpoints::StoredCheckpoint, schema::kv_checkpoints};
 use iota_pg_db as db;
 use iota_types::full_checkpoint_content::CheckpointData;
@@ -60,11 +60,12 @@ impl Handler for KvCheckpoints {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use diesel_async::RunQueryDsl;
     use iota_indexer_alt_framework::Indexer;
     use iota_indexer_alt_schema::MIGRATIONS;
     use iota_types::test_checkpoint_data_builder::TestCheckpointDataBuilder;
+
+    use super::*;
 
     async fn get_all_kv_checkpoints(
         conn: &mut db::Connection<'_>,

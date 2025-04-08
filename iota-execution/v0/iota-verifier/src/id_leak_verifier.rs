@@ -13,6 +13,20 @@
 //! 2. Written into a mutable reference
 //! 3. Added to a vector
 //! 4. Passed to a function cal::;
+use std::{collections::BTreeMap, error::Error, num::NonZeroU64};
+
+use iota_types::{
+    IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS,
+    clock::CLOCK_MODULE_NAME,
+    error::{ExecutionError, VMMVerifierErrorSubStatusCode},
+    id::OBJECT_MODULE_NAME,
+    iota_system_state::IOTA_SYSTEM_MODULE_NAME,
+};
+#[cfg(msim)]
+use iota_types::{
+    authenticator_state::AUTHENTICATOR_STATE_MODULE_NAME, coin::COIN_MODULE_NAME,
+    randomness_state::RANDOMNESS_MODULE_NAME,
+};
 use move_abstract_stack::AbstractStack;
 use move_binary_format::{
     errors::PartialVMError,
@@ -28,24 +42,10 @@ use move_bytecode_verifier_meter::{Meter, Scope};
 use move_core_types::{
     account_address::AccountAddress, ident_str, identifier::IdentStr, vm_status::StatusCode,
 };
-use std::{collections::BTreeMap, error::Error, num::NonZeroU64};
-use iota_types::{
-    clock::CLOCK_MODULE_NAME,
-    error::{ExecutionError, VMMVerifierErrorSubStatusCode},
-    id::OBJECT_MODULE_NAME,
-    iota_system_state::IOTA_SYSTEM_MODULE_NAME,
-    IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS,
-};
-
-#[cfg(msim)]
-use iota_types::{
-    authenticator_state::AUTHENTICATOR_STATE_MODULE_NAME, coin::COIN_MODULE_NAME,
-    randomness_state::RANDOMNESS_MODULE_NAME,
-};
 
 use crate::{
-    check_for_verifier_timeout, to_verification_timeout_error, verification_failure,
-    TEST_SCENARIO_MODULE_NAME,
+    TEST_SCENARIO_MODULE_NAME, check_for_verifier_timeout, to_verification_timeout_error,
+    verification_failure,
 };
 pub(crate) const JOIN_BASE_COST: u128 = 10;
 pub(crate) const JOIN_PER_LOCAL_COST: u128 = 5;

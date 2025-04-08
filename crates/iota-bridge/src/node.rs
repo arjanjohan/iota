@@ -2,54 +2,56 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::WatchdogConfig;
-use crate::crypto::BridgeAuthorityPublicKeyBytes;
-use crate::metered_eth_provider::MeteredEthHttpProvider;
-use crate::iota_bridge_watchdog::eth_bridge_status::EthBridgeStatus;
-use crate::iota_bridge_watchdog::eth_vault_balance::{EthereumVaultBalance, VaultAsset};
-use crate::iota_bridge_watchdog::metrics::WatchdogMetrics;
-use crate::iota_bridge_watchdog::iota_bridge_status::IotaBridgeStatus;
-use crate::iota_bridge_watchdog::total_supplies::TotalSupplies;
-use crate::iota_bridge_watchdog::{BridgeWatchDog, Observable};
-use crate::iota_client::IotaBridgeClient;
-use crate::types::BridgeCommittee;
-use crate::utils::{
-    get_committee_voting_power_by_name, get_eth_contract_addresses, get_validator_names_by_pub_keys,
-};
-use crate::{
-    action_executor::BridgeActionExecutor,
-    client::bridge_authority_aggregator::BridgeAuthorityAggregator,
-    config::{BridgeClientConfig, BridgeNodeConfig},
-    eth_syncer::EthSyncer,
-    events::init_all_struct_tags,
-    metrics::BridgeMetrics,
-    monitor::BridgeMonitor,
-    orchestrator::BridgeOrchestrator,
-    server::{handler::BridgeRequestHandler, run_server, BridgeNodePublicMetadata},
-    storage::BridgeOrchestratorTables,
-    iota_syncer::IotaSyncer,
-};
-use arc_swap::ArcSwap;
-use ethers::providers::Provider;
-use ethers::types::Address as EthAddress;
-use iota_metrics::spawn_logged_monitored_task;
-use std::collections::BTreeMap;
 use std::{
-    collections::HashMap,
+    collections::{BTreeMap, HashMap},
     net::{IpAddr, Ipv4Addr, SocketAddr},
     sync::Arc,
     time::Duration,
 };
+
+use arc_swap::ArcSwap;
+use ethers::{providers::Provider, types::Address as EthAddress};
+use iota_metrics::spawn_logged_monitored_task;
 use iota_types::{
+    Identifier,
     bridge::{
         BRIDGE_COMMITTEE_MODULE_NAME, BRIDGE_LIMITER_MODULE_NAME, BRIDGE_MODULE_NAME,
         BRIDGE_TREASURY_MODULE_NAME,
     },
     event::EventID,
-    Identifier,
 };
 use tokio::task::JoinHandle;
 use tracing::info;
+
+use crate::{
+    action_executor::BridgeActionExecutor,
+    client::bridge_authority_aggregator::BridgeAuthorityAggregator,
+    config::{BridgeClientConfig, BridgeNodeConfig, WatchdogConfig},
+    crypto::BridgeAuthorityPublicKeyBytes,
+    eth_syncer::EthSyncer,
+    events::init_all_struct_tags,
+    iota_bridge_watchdog::{
+        BridgeWatchDog, Observable,
+        eth_bridge_status::EthBridgeStatus,
+        eth_vault_balance::{EthereumVaultBalance, VaultAsset},
+        iota_bridge_status::IotaBridgeStatus,
+        metrics::WatchdogMetrics,
+        total_supplies::TotalSupplies,
+    },
+    iota_client::IotaBridgeClient,
+    iota_syncer::IotaSyncer,
+    metered_eth_provider::MeteredEthHttpProvider,
+    metrics::BridgeMetrics,
+    monitor::BridgeMonitor,
+    orchestrator::BridgeOrchestrator,
+    server::{BridgeNodePublicMetadata, handler::BridgeRequestHandler, run_server},
+    storage::BridgeOrchestratorTables,
+    types::BridgeCommittee,
+    utils::{
+        get_committee_voting_power_by_name, get_eth_contract_addresses,
+        get_validator_names_by_pub_keys,
+    },
+};
 
 pub async fn run_bridge_node(
     config: BridgeNodeConfig,
@@ -413,27 +415,24 @@ fn get_eth_contracts_to_watch(
 #[cfg(test)]
 mod tests {
     use ethers::types::Address as EthAddress;
-    use prometheus::Registry;
-
-    use super::*;
-    use crate::config::default_ed25519_key_pair;
-    use crate::config::BridgeNodeConfig;
-    use crate::config::EthConfig;
-    use crate::config::IotaConfig;
-    use crate::e2e_tests::test_utils::BridgeTestCluster;
-    use crate::e2e_tests::test_utils::BridgeTestClusterBuilder;
-    use crate::utils::wait_for_server_to_be_up;
     use fastcrypto::secp256k1::Secp256k1KeyPair;
     use iota_config::local_ip_utils::get_available_port;
-    use iota_types::base_types::IotaAddress;
-    use iota_types::bridge::BridgeChainId;
-    use iota_types::crypto::get_key_pair;
-    use iota_types::crypto::EncodeDecodeBase64;
-    use iota_types::crypto::KeypairTraits;
-    use iota_types::crypto::IotaKeyPair;
-    use iota_types::digests::TransactionDigest;
-    use iota_types::event::EventID;
+    use iota_types::{
+        base_types::IotaAddress,
+        bridge::BridgeChainId,
+        crypto::{EncodeDecodeBase64, IotaKeyPair, KeypairTraits, get_key_pair},
+        digests::TransactionDigest,
+        event::EventID,
+    };
+    use prometheus::Registry;
     use tempfile::tempdir;
+
+    use super::*;
+    use crate::{
+        config::{BridgeNodeConfig, EthConfig, IotaConfig, default_ed25519_key_pair},
+        e2e_tests::test_utils::{BridgeTestCluster, BridgeTestClusterBuilder},
+        utils::wait_for_server_to_be_up,
+    };
 
     #[tokio::test]
     async fn test_get_eth_contracts_to_watch() {

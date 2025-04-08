@@ -2,16 +2,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::proto::node::v2alpha::CoinMetadata;
-use crate::proto::node::v2alpha::CoinTreasury;
-use crate::proto::node::v2alpha::GetCoinInfoRequest;
-use crate::proto::node::v2alpha::GetCoinInfoResponse;
-use crate::Result;
-use crate::RpcError;
-use crate::RpcService;
-use iota_sdk_types::TypeTag;
-use iota_sdk_types::{ObjectId, StructTag};
+use iota_sdk_types::{ObjectId, StructTag, TypeTag};
 use iota_types::iota_sdk_types_conversions::struct_tag_sdk_to_core;
+
+use crate::{
+    Result, RpcError, RpcService,
+    proto::node::v2alpha::{CoinMetadata, CoinTreasury, GetCoinInfoRequest, GetCoinInfoResponse},
+};
 
 const IOTA_COIN_TREASURY: CoinTreasury = CoinTreasury {
     id: None,

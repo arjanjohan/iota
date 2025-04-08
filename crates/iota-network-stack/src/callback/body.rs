@@ -2,14 +2,16 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::ResponseHandler;
-use http_body::{Body, Frame};
-use pin_project_lite::pin_project;
 use std::{
     fmt,
     pin::Pin,
-    task::{ready, Context, Poll},
+    task::{Context, Poll, ready},
 };
+
+use http_body::{Body, Frame};
+use pin_project_lite::pin_project;
+
+use super::ResponseHandler;
 
 pin_project! {
     /// Response body for [`Callback`].

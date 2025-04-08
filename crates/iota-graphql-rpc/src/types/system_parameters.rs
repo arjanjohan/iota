@@ -1,8 +1,9 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use super::{big_int::BigInt, uint53::UInt53};
 use async_graphql::*;
+
+use super::{big_int::BigInt, uint53::UInt53};
 
 /// Details of the system that are decided during genesis.
 #[derive(Clone, Debug, PartialEq, Eq, SimpleObject)]

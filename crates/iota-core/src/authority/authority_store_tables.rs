@@ -2,32 +2,39 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::*;
-use crate::authority::authority_store::LockDetailsWrapperDeprecated;
-use serde::{Deserialize, Serialize};
 use std::path::Path;
-use iota_types::accumulator::Accumulator;
-use iota_types::base_types::SequenceNumber;
-use iota_types::digests::TransactionEventsDigest;
-use iota_types::effects::TransactionEffects;
-use iota_types::storage::{FullObjectKey, MarkerValue};
-use tracing::error;
-use typed_store::metrics::SamplingInterval;
-use typed_store::rocks::util::{empty_compaction_filter, reference_count_merge_operator};
-use typed_store::rocks::{
-    default_db_options, read_size_from_env, DBBatch, DBMap, DBMapTableConfigMap, DBOptions,
-    MetricConf,
-};
-use typed_store::traits::{Map, TableSummary, TypedStoreDebug};
 
-use crate::authority::authority_store_pruner::ObjectsCompactionFilter;
-use crate::authority::authority_store_types::{
-    get_store_object_pair, try_construct_object, ObjectContentDigest, StoreData,
-    StoreMoveObjectWrapper, StoreObject, StoreObjectPair, StoreObjectValue, StoreObjectWrapper,
+use iota_types::{
+    accumulator::Accumulator,
+    base_types::SequenceNumber,
+    digests::TransactionEventsDigest,
+    effects::TransactionEffects,
+    storage::{FullObjectKey, MarkerValue},
 };
-use crate::authority::epoch_start_configuration::EpochStartConfiguration;
-use typed_store::rocksdb::compaction_filter::Decision;
-use typed_store::DBMapUtils;
+use serde::{Deserialize, Serialize};
+use tracing::error;
+use typed_store::{
+    DBMapUtils,
+    metrics::SamplingInterval,
+    rocks::{
+        DBBatch, DBMap, DBMapTableConfigMap, DBOptions, MetricConf, default_db_options,
+        read_size_from_env,
+        util::{empty_compaction_filter, reference_count_merge_operator},
+    },
+    rocksdb::compaction_filter::Decision,
+    traits::{Map, TableSummary, TypedStoreDebug},
+};
+
+use super::*;
+use crate::authority::{
+    authority_store::LockDetailsWrapperDeprecated,
+    authority_store_pruner::ObjectsCompactionFilter,
+    authority_store_types::{
+        ObjectContentDigest, StoreData, StoreMoveObjectWrapper, StoreObject, StoreObjectPair,
+        StoreObjectValue, StoreObjectWrapper, get_store_object_pair, try_construct_object,
+    },
+    epoch_start_configuration::EpochStartConfiguration,
+};
 
 const ENV_VAR_OBJECTS_BLOCK_CACHE_SIZE: &str = "OBJECTS_BLOCK_CACHE_MB";
 pub(crate) const ENV_VAR_LOCKS_BLOCK_CACHE_SIZE: &str = "LOCKS_BLOCK_CACHE_MB";
@@ -391,7 +398,10 @@ impl AuthorityPerpetualTables {
         Ok(Some(transaction))
     }
 
-    pub fn get_effects(&self, digest: &TransactionDigest) -> IotaResult<Option<TransactionEffects>> {
+    pub fn get_effects(
+        &self,
+        digest: &TransactionDigest,
+    ) -> IotaResult<Option<TransactionEffects>> {
         let Some(effect_digest) = self.executed_effects.get(digest)? else {
             return Ok(None);
         };

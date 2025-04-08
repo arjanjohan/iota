@@ -2,17 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::*;
-use crate::{
-    authority::authority_tests::init_state_with_object_id,
-    authority_client::{AuthorityAPI, NetworkAuthorityClient},
-};
 use iota_types::{
     base_types::{dbg_addr, dbg_object_id},
     messages_grpc::LayoutGenerationOption,
 };
 
-//This is the most basic example of how to test the server logic
+use super::*;
+use crate::{
+    authority::authority_tests::init_state_with_object_id,
+    authority_client::{AuthorityAPI, NetworkAuthorityClient},
+};
+
+// This is the most basic example of how to test the server logic
 #[tokio::test]
 async fn test_simple_request() {
     let sender = dbg_addr(1);

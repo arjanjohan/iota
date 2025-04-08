@@ -2,57 +2,61 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::future::Future;
-use std::ops::Deref;
-use std::sync::atomic::AtomicU64;
-use std::sync::atomic::Ordering;
-use std::sync::Arc;
-use std::time::Instant;
+use std::{
+    collections::HashMap,
+    future::Future,
+    ops::Deref,
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering},
+    },
+    time::Instant,
+};
 
 use arc_swap::{ArcSwap, ArcSwapOption};
 use consensus_core::{BlockStatus, ConnectionStatus};
-use dashmap::try_result::TryResult;
-use dashmap::DashMap;
-use futures::future::{self, select, Either};
-use futures::stream::FuturesUnordered;
-use futures::FutureExt;
-use futures::{pin_mut, StreamExt};
+use dashmap::{DashMap, try_result::TryResult};
+use futures::{
+    FutureExt, StreamExt,
+    future::{self, Either, select},
+    pin_mut,
+    stream::FuturesUnordered,
+};
+use iota_metrics::{GaugeGuard, GaugeGuardFutureExt, LATENCY_SEC_BUCKETS, spawn_monitored_task};
+use iota_protocol_config::ProtocolConfig;
+use iota_simulator::anemo::PeerId;
+use iota_types::{
+    base_types::{AuthorityName, TransactionDigest},
+    committee::Committee,
+    error::{IotaError, IotaResult},
+    fp_ensure,
+    messages_consensus::{ConsensusTransaction, ConsensusTransactionKey, ConsensusTransactionKind},
+    transaction::TransactionDataAPI,
+};
 use itertools::Itertools;
-use iota_metrics::{spawn_monitored_task, GaugeGuard, GaugeGuardFutureExt, LATENCY_SEC_BUCKETS};
 use parking_lot::RwLockReadGuard;
-use prometheus::Histogram;
-use prometheus::HistogramVec;
-use prometheus::IntCounterVec;
-use prometheus::IntGauge;
-use prometheus::IntGaugeVec;
-use prometheus::Registry;
 use prometheus::{
+    Histogram, HistogramVec, IntCounterVec, IntGauge, IntGaugeVec, Registry,
     register_histogram_vec_with_registry, register_histogram_with_registry,
     register_int_counter_vec_with_registry, register_int_gauge_vec_with_registry,
     register_int_gauge_with_registry,
 };
-use iota_protocol_config::ProtocolConfig;
-use iota_simulator::anemo::PeerId;
-use iota_types::base_types::AuthorityName;
-use iota_types::base_types::TransactionDigest;
-use iota_types::committee::Committee;
-use iota_types::error::{IotaError, IotaResult};
-use iota_types::fp_ensure;
-use iota_types::messages_consensus::ConsensusTransactionKind;
-use iota_types::messages_consensus::{ConsensusTransaction, ConsensusTransactionKey};
-use iota_types::transaction::TransactionDataAPI;
-use tokio::sync::{oneshot, Semaphore, SemaphorePermit};
-use tokio::task::JoinHandle;
-use tokio::time::Duration;
-use tokio::time::{self};
+use tokio::{
+    sync::{Semaphore, SemaphorePermit, oneshot},
+    task::JoinHandle,
+    time::{
+        Duration, {self},
+    },
+};
 use tracing::{debug, info, trace, warn};
 
-use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::consensus_handler::{classify, SequencedConsensusTransactionKey};
-use crate::consensus_throughput_calculator::{ConsensusThroughputProfiler, Level};
-use crate::epoch::reconfiguration::{ReconfigState, ReconfigurationInitiator};
-use crate::metrics::LatencyObserver;
+use crate::{
+    authority::authority_per_epoch_store::AuthorityPerEpochStore,
+    consensus_handler::{SequencedConsensusTransactionKey, classify},
+    consensus_throughput_calculator::{ConsensusThroughputProfiler, Level},
+    epoch::reconfiguration::{ReconfigState, ReconfigurationInitiator},
+    metrics::LatencyObserver,
+};
 
 #[cfg(test)]
 #[path = "unit_tests/consensus_tests.rs"]
@@ -471,11 +475,7 @@ impl ConsensusAdapter {
                         let l = Duration::from_millis(HIGH_THROUGHPUT_DELAY_BEFORE_SUBMIT_MS);
 
                         // back off according to recorded latency if it's significantly higher
-                        if latency >= 2 * l {
-                            latency
-                        } else {
-                            l
-                        }
+                        if latency >= 2 * l { latency } else { l }
                     }
                 };
             }
@@ -826,7 +826,8 @@ impl ConsensusAdapter {
                         }
                         Err(err) => {
                             warn!(
-                                "Error while waiting for status from consensus for transactions {transaction_keys:?}, with error {:?}. Will be retried.", err
+                                "Error while waiting for status from consensus for transactions {transaction_keys:?}, with error {:?}. Will be retried.",
+                                err
                             );
                             time::sleep(RETRY_DELAY_STEP).await;
                             continue;
@@ -1295,20 +1296,22 @@ pub fn position_submit_certificate(
 
 #[cfg(test)]
 mod adapter_tests {
-    use super::position_submit_certificate;
-    use crate::consensus_adapter::{
-        ConnectionMonitorStatusForTests, ConsensusAdapter, ConsensusAdapterMetrics,
-    };
-    use crate::mysticeti_adapter::LazyMysticetiClient;
+    use std::{sync::Arc, time::Duration};
+
     use fastcrypto::traits::KeyPair;
-    use rand::Rng;
-    use rand::{rngs::StdRng, SeedableRng};
-    use std::sync::Arc;
-    use std::time::Duration;
     use iota_types::{
         base_types::TransactionDigest,
         committee::Committee,
-        crypto::{get_key_pair_from_rng, AuthorityKeyPair, AuthorityPublicKeyBytes},
+        crypto::{AuthorityKeyPair, AuthorityPublicKeyBytes, get_key_pair_from_rng},
+    };
+    use rand::{Rng, SeedableRng, rngs::StdRng};
+
+    use super::position_submit_certificate;
+    use crate::{
+        consensus_adapter::{
+            ConnectionMonitorStatusForTests, ConsensusAdapter, ConsensusAdapterMetrics,
+        },
+        mysticeti_adapter::LazyMysticetiClient,
     };
 
     fn test_committee(rng: &mut StdRng, size: usize) -> Committee {

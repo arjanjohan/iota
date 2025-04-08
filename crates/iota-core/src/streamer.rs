@@ -2,21 +2,19 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::subscription_handler::{SubscriptionMetrics, EVENT_DISPATCH_BUFFER_SIZE};
+use std::{collections::BTreeMap, fmt::Debug, sync::Arc};
+
 use futures::Stream;
-use iota_metrics::metered_channel::Sender;
-use iota_metrics::spawn_monitored_task;
+use iota_json_rpc_types::Filter;
+use iota_metrics::{metered_channel::Sender, spawn_monitored_task};
+use iota_types::{base_types::ObjectID, error::IotaError};
 use parking_lot::RwLock;
 use prometheus::Registry;
-use std::collections::BTreeMap;
-use std::fmt::Debug;
-use std::sync::Arc;
-use iota_json_rpc_types::Filter;
-use iota_types::base_types::ObjectID;
-use iota_types::error::IotaError;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 use tracing::{debug, warn};
+
+use crate::subscription_handler::{EVENT_DISPATCH_BUFFER_SIZE, SubscriptionMetrics};
 
 type Subscribers<T, F> = Arc<RwLock<BTreeMap<String, (tokio::sync::mpsc::Sender<T>, F)>>>;
 

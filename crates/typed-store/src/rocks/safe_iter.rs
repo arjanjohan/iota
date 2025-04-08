@@ -6,11 +6,10 @@ use std::{marker::PhantomData, sync::Arc};
 use bincode::Options;
 use prometheus::{Histogram, HistogramTimer};
 use rocksdb::Direction;
+use serde::{Serialize, de::DeserializeOwned};
 
+use super::{RocksDBRawIter, TypedStoreError, be_fix_int_ser};
 use crate::metrics::{DBMetrics, RocksDBPerfContext};
-
-use super::{be_fix_int_ser, RocksDBRawIter, TypedStoreError};
-use serde::{de::DeserializeOwned, Serialize};
 
 /// An iterator over all key-value pairs in a data map.
 pub struct SafeIter<'a, K, V> {

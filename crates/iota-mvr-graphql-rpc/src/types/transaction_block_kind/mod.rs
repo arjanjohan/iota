@@ -2,6 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use async_graphql::*;
+use iota_types::transaction::TransactionKind as NativeTransactionKind;
+
 use self::{
     consensus_commit_prologue::ConsensusCommitPrologueTransaction,
     end_of_epoch::ChangeEpochTransaction, genesis::GenesisTransaction,
@@ -11,8 +14,6 @@ use crate::types::transaction_block_kind::{
     authenticator_state_update::AuthenticatorStateUpdateTransaction,
     end_of_epoch::EndOfEpochTransaction, programmable::ProgrammableTransactionBlock,
 };
-use async_graphql::*;
-use iota_types::transaction::TransactionKind as NativeTransactionKind;
 
 pub(crate) mod authenticator_state_update;
 pub(crate) mod consensus_commit_prologue;

@@ -2,15 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::anyhow;
-use anyhow::Context;
-use anyhow::Result;
-use std::fs::OpenOptions;
 use std::{
+    fs::OpenOptions,
     path::{Path, PathBuf},
     process::{Child, Command},
     time::{Duration, Instant},
 };
+
+use anyhow::{Context, Result, anyhow};
 use tracing::{event_enabled, info, trace};
 use url::Url;
 

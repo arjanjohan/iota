@@ -2,14 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{fmt, sync::LazyLock};
+
 use anyhow::{Context, Error};
 use move_binary_format::normalized::{Field, Type};
 use move_bytecode_source_map::source_map::SourceName;
 use move_core_types::identifier::Identifier;
 use move_ir_types::location::Loc;
 use regex::Regex;
-use std::fmt;
-use std::sync::LazyLock;
 
 pub(super) struct FormattedType<'f> {
     type_: &'f Type,

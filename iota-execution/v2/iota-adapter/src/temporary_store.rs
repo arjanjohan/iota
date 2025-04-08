@@ -2,38 +2,42 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::gas_charger::GasCharger;
-use move_core_types::account_address::AccountAddress;
-use move_core_types::language_storage::StructTag;
-use move_core_types::resolver::ResourceResolver;
-use parking_lot::RwLock;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
+
 use iota_protocol_config::ProtocolConfig;
-use iota_types::base_types::VersionDigest;
-use iota_types::committee::EpochId;
-use iota_types::digests::ObjectDigest;
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::execution::{
-    DynamicallyLoadedObjectMetadata, ExecutionResults, ExecutionResultsV2, SharedInput,
-};
-use iota_types::execution_config_utils::to_binary_config;
-use iota_types::execution_status::ExecutionStatus;
-use iota_types::inner_temporary_store::InnerTemporaryStore;
-use iota_types::layout_resolver::LayoutResolver;
-use iota_types::storage::{BackingStore, DenyListResult, PackageObject};
-use iota_types::iota_system_state::{get_iota_system_state_wrapper, AdvanceEpochParams};
 use iota_types::{
-    base_types::{ObjectID, ObjectRef, SequenceNumber, IotaAddress, TransactionDigest},
-    effects::EffectsObjectChange,
+    IOTA_SYSTEM_STATE_OBJECT_ID,
+    base_types::{
+        IotaAddress, ObjectID, ObjectRef, SequenceNumber, TransactionDigest, VersionDigest,
+    },
+    committee::EpochId,
+    digests::ObjectDigest,
+    effects::{EffectsObjectChange, TransactionEffects, TransactionEvents},
     error::{ExecutionError, IotaError, IotaResult},
+    execution::{
+        DynamicallyLoadedObjectMetadata, ExecutionResults, ExecutionResultsV2, SharedInput,
+    },
+    execution_config_utils::to_binary_config,
+    execution_status::ExecutionStatus,
     fp_bail,
     gas::GasCostSummary,
-    object::Owner,
-    object::{Data, Object},
-    storage::{BackingPackageStore, ChildObjectResolver, ParentSync, Storage},
+    inner_temporary_store::InnerTemporaryStore,
+    iota_system_state::{AdvanceEpochParams, get_iota_system_state_wrapper},
+    is_system_package,
+    layout_resolver::LayoutResolver,
+    object::{Data, Object, Owner},
+    storage::{
+        BackingPackageStore, BackingStore, ChildObjectResolver, DenyListResult, PackageObject,
+        ParentSync, Storage,
+    },
     transaction::InputObjects,
 };
-use iota_types::{is_system_package, IOTA_SYSTEM_STATE_OBJECT_ID};
+use move_core_types::{
+    account_address::AccountAddress, language_storage::StructTag, resolver::ResourceResolver,
+};
+use parking_lot::RwLock;
+
+use crate::gas_charger::GasCharger;
 
 pub struct TemporaryStore<'backing> {
     // The backing store for retrieving Move packages onchain.
@@ -81,17 +85,19 @@ impl<'backing> TemporaryStore<'backing> {
         #[cfg(debug_assertions)]
         {
             // Ensure that input objects and receiving objects must not overlap.
-            assert!(objects
-                .keys()
-                .collect::<HashSet<_>>()
-                .intersection(
-                    &receiving_objects
-                        .iter()
-                        .map(|oref| &oref.0)
-                        .collect::<HashSet<_>>()
-                )
-                .next()
-                .is_none());
+            assert!(
+                objects
+                    .keys()
+                    .collect::<HashSet<_>>()
+                    .intersection(
+                        &receiving_objects
+                            .iter()
+                            .map(|oref| &oref.0)
+                            .collect::<HashSet<_>>()
+                    )
+                    .next()
+                    .is_none()
+            );
         }
         Self {
             store,
@@ -1129,14 +1135,18 @@ impl<'backing> ChildObjectResolver for TemporaryStore<'backing> {
     ) -> IotaResult<Option<Object>> {
         // You should never be able to try and receive an object after deleting it or writing it in the same
         // transaction since `Receiving` doesn't have copy.
-        debug_assert!(!self
-            .execution_results
-            .written_objects
-            .contains_key(receiving_object_id));
-        debug_assert!(!self
-            .execution_results
-            .deleted_object_ids
-            .contains(receiving_object_id));
+        debug_assert!(
+            !self
+                .execution_results
+                .written_objects
+                .contains_key(receiving_object_id)
+        );
+        debug_assert!(
+            !self
+                .execution_results
+                .deleted_object_ids
+                .contains(receiving_object_id)
+        );
         self.store.get_object_received_at_version(
             owner,
             receiving_object_id,

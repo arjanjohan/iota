@@ -3,10 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
-use iota_types::base_types::TransactionDigest;
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::effects::{InputSharedObject, TransactionEffects};
-use iota_types::storage::ObjectKey;
+
+use iota_types::{
+    base_types::TransactionDigest,
+    effects::{InputSharedObject, TransactionEffects, TransactionEffectsAPI},
+    storage::ObjectKey,
+};
 use tracing::trace;
 
 pub struct CausalOrder {
@@ -147,7 +149,7 @@ impl RWLockDependencyBuilder {
                         .entry(*effect.transaction_digest())
                         .or_default()
                         .push(ObjectKey(oid, version)),
-                    InputSharedObject::Cancelled(..) => (), // TODO: confirm that consensus_commit_prologue is always at the beginning of the checkpoint, so that cancelled txn don't need to worry about dependency.
+                    InputSharedObject::Cancelled(..) => (), /* TODO: confirm that consensus_commit_prologue is always at the beginning of the checkpoint, so that cancelled txn don't need to worry about dependency. */
                 }
             }
         }
@@ -172,8 +174,7 @@ impl RWLockDependencyBuilder {
             for dep in reads {
                 trace!(
                     "Assuming additional dependency when constructing checkpoint {:?} -> {:?}",
-                    digest,
-                    *dep
+                    digest, *dep
                 );
                 v.insert(*dep);
             }
@@ -211,10 +212,12 @@ impl InsertState {
 
 #[cfg(test)]
 mod tests {
+    use iota_types::{
+        base_types::{ObjectDigest, ObjectID, SequenceNumber},
+        effects::TransactionEffects,
+    };
+
     use super::*;
-    use iota_types::base_types::ObjectDigest;
-    use iota_types::base_types::{ObjectID, SequenceNumber};
-    use iota_types::effects::TransactionEffects;
 
     #[test]
     pub fn test_causal_order() {
@@ -263,7 +266,7 @@ mod tests {
         let r = extract(CausalOrder::causal_sort(vec![e5, e2, e3]));
         assert_eq!(r.len(), 3);
         assert_eq!(*r.get(2).unwrap(), 3); // [3] is the last
-                                           // both [5] and [2] are present (but order is not fixed)
+        // both [5] and [2] are present (but order is not fixed)
         assert!(r.contains(&5));
         assert!(r.contains(&2));
     }

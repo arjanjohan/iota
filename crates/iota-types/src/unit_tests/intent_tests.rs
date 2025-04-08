@@ -3,22 +3,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use fastcrypto::traits::KeyPair;
-
-use crate::{
-    base_types::{dbg_addr, ObjectID},
-    committee::EpochId,
-    crypto::{
-        AccountKeyPair, AuthorityKeyPair, AuthoritySignature, Signature, SignatureScheme,
-        IotaAuthoritySignature, IotaSignature,
-    },
-    object::Object,
-    transaction::{Transaction, TransactionData, TEST_ONLY_GAS_UNIT_FOR_TRANSFER},
-};
-
-use crate::crypto::get_key_pair;
-
 use shared_crypto::intent::{
     AppId, Intent, IntentMessage, IntentScope, IntentVersion, PersonalMessage,
+};
+
+use crate::{
+    base_types::{ObjectID, dbg_addr},
+    committee::EpochId,
+    crypto::{
+        AccountKeyPair, AuthorityKeyPair, AuthoritySignature, IotaAuthoritySignature,
+        IotaSignature, Signature, SignatureScheme, get_key_pair,
+    },
+    object::Object,
+    transaction::{TEST_ONLY_GAS_UNIT_FOR_TRANSFER, Transaction, TransactionData},
 };
 
 #[test]
@@ -83,9 +80,10 @@ fn test_authority_signature_intent() {
     );
     let tx = Transaction::from_data(data, vec![signature]);
     let tx1 = tx.clone();
-    assert!(tx
-        .try_into_verified_for_testing(epoch, &Default::default())
-        .is_ok());
+    assert!(
+        tx.try_into_verified_for_testing(epoch, &Default::default())
+            .is_ok()
+    );
 
     // Create an intent with signed data.
     let intent_bcs = bcs::to_bytes(tx1.intent_message()).unwrap();

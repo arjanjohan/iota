@@ -1,58 +1,62 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::base_types::{AuthorityName, ConciseableName, IotaAddress};
-use crate::committee::CommitteeTrait;
-use crate::committee::{Committee, EpochId, StakeUnit};
-use crate::error::{IotaError, IotaResult};
-use crate::signature::GenericSignature;
-use crate::iota_serde::{Readable, IotaBitmap};
-use anyhow::{anyhow, Error};
+use std::{
+    collections::BTreeMap,
+    fmt::{self, Debug, Display, Formatter},
+    hash::{Hash, Hasher},
+    str::FromStr,
+};
+
+use anyhow::{Error, anyhow};
 use derive_more::{AsMut, AsRef, From};
 pub use enum_dispatch::enum_dispatch;
 use eyre::eyre;
-use fastcrypto::bls12381::min_sig::{
-    BLS12381AggregateSignature, BLS12381AggregateSignatureAsBytes, BLS12381KeyPair,
-    BLS12381PrivateKey, BLS12381PublicKey, BLS12381Signature,
-};
-use fastcrypto::ed25519::{
-    Ed25519KeyPair, Ed25519PrivateKey, Ed25519PublicKey, Ed25519PublicKeyAsBytes, Ed25519Signature,
-    Ed25519SignatureAsBytes,
-};
-use fastcrypto::encoding::{Base64, Bech32, Encoding, Hex};
-use fastcrypto::error::{FastCryptoError, FastCryptoResult};
-use fastcrypto::hash::{Blake2b256, HashFunction};
-use fastcrypto::secp256k1::{
-    Secp256k1KeyPair, Secp256k1PublicKey, Secp256k1PublicKeyAsBytes, Secp256k1Signature,
-    Secp256k1SignatureAsBytes,
-};
-use fastcrypto::secp256r1::{
-    Secp256r1KeyPair, Secp256r1PublicKey, Secp256r1PublicKeyAsBytes, Secp256r1Signature,
-    Secp256r1SignatureAsBytes,
-};
-pub use fastcrypto::traits::KeyPair as KeypairTraits;
-pub use fastcrypto::traits::Signer;
 pub use fastcrypto::traits::{
-    AggregateAuthenticator, Authenticator, EncodeDecodeBase64, SigningKey, ToFromBytes,
-    VerifyingKey,
+    AggregateAuthenticator, Authenticator, EncodeDecodeBase64, KeyPair as KeypairTraits, Signer,
+    SigningKey, ToFromBytes, VerifyingKey,
 };
-use fastcrypto_zkp::bn254::zk_login::ZkLoginInputs;
-use fastcrypto_zkp::zk_login_utils::Bn254FrElement;
-use rand::rngs::{OsRng, StdRng};
-use rand::SeedableRng;
+use fastcrypto::{
+    bls12381::min_sig::{
+        BLS12381AggregateSignature, BLS12381AggregateSignatureAsBytes, BLS12381KeyPair,
+        BLS12381PrivateKey, BLS12381PublicKey, BLS12381Signature,
+    },
+    ed25519::{
+        Ed25519KeyPair, Ed25519PrivateKey, Ed25519PublicKey, Ed25519PublicKeyAsBytes,
+        Ed25519Signature, Ed25519SignatureAsBytes,
+    },
+    encoding::{Base64, Bech32, Encoding, Hex},
+    error::{FastCryptoError, FastCryptoResult},
+    hash::{Blake2b256, HashFunction},
+    secp256k1::{
+        Secp256k1KeyPair, Secp256k1PublicKey, Secp256k1PublicKeyAsBytes, Secp256k1Signature,
+        Secp256k1SignatureAsBytes,
+    },
+    secp256r1::{
+        Secp256r1KeyPair, Secp256r1PublicKey, Secp256r1PublicKeyAsBytes, Secp256r1Signature,
+        Secp256r1SignatureAsBytes,
+    },
+};
+use fastcrypto_zkp::{bn254::zk_login::ZkLoginInputs, zk_login_utils::Bn254FrElement};
+use rand::{
+    SeedableRng,
+    rngs::{OsRng, StdRng},
+};
 use roaring::RoaringBitmap;
 use schemars::JsonSchema;
-use serde::ser::Serializer;
-use serde::{Deserialize, Deserializer, Serialize};
-use serde_with::{serde_as, Bytes};
+use serde::{Deserialize, Deserializer, Serialize, ser::Serializer};
+use serde_with::{Bytes, serde_as};
 use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
-use std::collections::BTreeMap;
-use std::fmt::Debug;
-use std::fmt::{self, Display, Formatter};
-use std::hash::{Hash, Hasher};
-use std::str::FromStr;
 use strum::EnumString;
 use tracing::{instrument, warn};
+
+use crate::{
+    base_types::{AuthorityName, ConciseableName, IotaAddress},
+    committee::{Committee, CommitteeTrait, EpochId, StakeUnit},
+    error::{IotaError, IotaResult},
+    iota_serde::{IotaBitmap, Readable},
+    signature::GenericSignature,
+};
 
 #[cfg(test)]
 #[path = "unit_tests/crypto_tests.rs"]
@@ -130,7 +134,6 @@ pub fn verify_proof_of_possession(
 /// * The following section defines the keypairs that are used by
 /// * accounts to interact with IOTA.
 /// * Currently we support eddsa and ecdsa on IOTA.
-///
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, From, PartialEq, Eq)]
@@ -438,7 +441,7 @@ pub struct ConciseAuthorityPublicKeyBytesRef<'a>(&'a AuthorityPublicKeyBytes);
 
 impl Debug for ConciseAuthorityPublicKeyBytesRef<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        let s = Hex::encode(self.0 .0.get(0..4).ok_or(std::fmt::Error)?);
+        let s = Hex::encode(self.0.0.get(0..4).ok_or(std::fmt::Error)?);
         write!(f, "k#{}..", s)
     }
 }
@@ -455,7 +458,7 @@ pub struct ConciseAuthorityPublicKeyBytes(AuthorityPublicKeyBytes);
 
 impl Debug for ConciseAuthorityPublicKeyBytes {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        let s = Hex::encode(self.0 .0.get(0..4).ok_or(std::fmt::Error)?);
+        let s = Hex::encode(self.0.0.get(0..4).ok_or(std::fmt::Error)?);
         write!(f, "k#{}..", s)
     }
 }
@@ -526,7 +529,6 @@ impl Default for AuthorityPublicKeyBytes {
     }
 }
 
-//
 // Add helper calls for Authority Signature
 //
 
@@ -667,7 +669,6 @@ where
     Ok((kp.public().into(), kp))
 }
 
-//
 // Account Signatures
 //
 
@@ -774,7 +775,6 @@ impl ToFromBytes for Signature {
     }
 }
 
-//
 // BLS Port
 //
 
@@ -782,7 +782,6 @@ impl IotaPublicKey for BLS12381PublicKey {
     const SIGNATURE_SCHEME: SignatureScheme = SignatureScheme::BLS12381;
 }
 
-//
 // Ed25519 IOTA Signature port
 //
 
@@ -831,7 +830,6 @@ impl Signer<Signature> for Ed25519KeyPair {
     }
 }
 
-//
 // Secp256k1 IOTA Signature port
 //
 #[serde_as]
@@ -872,7 +870,6 @@ impl Signer<Signature> for Secp256k1KeyPair {
     }
 }
 
-//
 // Secp256r1 IOTA Signature port
 //
 #[serde_as]
@@ -913,7 +910,6 @@ impl Signer<Signature> for Secp256r1KeyPair {
     }
 }
 
-//
 // This struct exists due to the limitations of the `enum_dispatch` library.
 //
 pub trait IotaSignatureInner: Sized + ToFromBytes + PartialEq + Eq + Hash {
@@ -1004,7 +1000,7 @@ impl<S: IotaSignatureInner + Sized> IotaSignature for S {
 
         let (sig, pk) = &self.get_verification_inputs()?;
         match scheme {
-            SignatureScheme::ZkLoginAuthenticator => {} // Pass this check because zk login does not derive address from pubkey.
+            SignatureScheme::ZkLoginAuthenticator => {} /* Pass this check because zk login does not derive address from pubkey. */
             _ => {
                 let address = IotaAddress::from(pk);
                 if author != address {
@@ -1674,7 +1670,7 @@ impl SignatureScheme {
             SignatureScheme::Secp256k1 => 0x01,
             SignatureScheme::Secp256r1 => 0x02,
             SignatureScheme::MultiSig => 0x03,
-            SignatureScheme::BLS12381 => 0x04, // This is currently not supported for user IOTA Address.
+            SignatureScheme::BLS12381 => 0x04, /* This is currently not supported for user IOTA Address. */
             SignatureScheme::ZkLoginAuthenticator => 0x05,
             SignatureScheme::PasskeyAuthenticator => 0x06,
         }
@@ -1745,7 +1741,6 @@ impl FromStr for GenericSignature {
     }
 }
 
-//
 // Types for randomness generation
 //
 pub type RandomnessSignature = fastcrypto_tbls::types::Signature;

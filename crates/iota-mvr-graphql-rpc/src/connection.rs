@@ -2,14 +2,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::borrow::Cow;
-use std::marker::PhantomData;
+use std::{borrow::Cow, marker::PhantomData};
 
-use async_graphql::connection::{
-    ConnectionNameType, CursorType, DefaultConnectionName, DefaultEdgeName, Edge, EdgeNameType,
-    EmptyFields, EnableNodesField, NodesFieldSwitcherSealed, PageInfo,
+use async_graphql::{
+    Object, ObjectType, OutputType, TypeName,
+    connection::{
+        ConnectionNameType, CursorType, DefaultConnectionName, DefaultEdgeName, Edge, EdgeNameType,
+        EmptyFields, EnableNodesField, NodesFieldSwitcherSealed, PageInfo,
+    },
 };
-use async_graphql::{Object, ObjectType, OutputType, TypeName};
 
 /// Mirrors the `Connection` type from async-graphql, with the exception that if `start_cursor` and/
 /// or `end_cursor` is set on the struct, then when `page_info` is called, it will use those values

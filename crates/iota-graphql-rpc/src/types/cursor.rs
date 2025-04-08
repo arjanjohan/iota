@@ -9,12 +9,12 @@ use async_graphql::{
     *,
 };
 use diesel::{
-    deserialize::FromSqlRow, query_builder::QueryFragment, sql_types::Untyped, QueryDsl,
-    QueryResult, QuerySource,
+    QueryDsl, QueryResult, QuerySource, deserialize::FromSqlRow, query_builder::QueryFragment,
+    sql_types::Untyped,
 };
 use diesel_async::methods::LoadQuery;
 use fastcrypto::encoding::{Base64, Encoding};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 
 use crate::{
     config::ServiceConfig,
@@ -606,7 +606,7 @@ impl<C: fmt::Debug> fmt::Debug for BcsCursor<C> {
 
 impl<C: Clone> Clone for JsonCursor<C> {
     fn clone(&self) -> Self {
-        JsonCursor::new(self.0 .0.clone())
+        JsonCursor::new(self.0.0.clone())
     }
 }
 
@@ -633,8 +633,9 @@ impl<C: Eq> Eq for BcsCursor<C> {}
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use expect_test::expect;
+
+    use super::*;
 
     #[test]
     fn test_default_page() {

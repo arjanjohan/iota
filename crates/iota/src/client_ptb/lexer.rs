@@ -2,12 +2,11 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::sp;
-
 use super::{
     error::{Span, Spanned},
     token::{Lexeme, Token as T},
 };
+use crate::sp;
 
 pub struct Lexer<'l, I: Iterator<Item = &'l str>> {
     pub buf: &'l str,

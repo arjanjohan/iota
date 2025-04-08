@@ -2,18 +2,6 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    consistency::ConsistentIndexCursor,
-    types::{
-        base64::Base64,
-        cursor::{JsonCursor, Page},
-        move_function::MoveFunction,
-        move_type::MoveType,
-        object_read::ObjectRead,
-        iota_address::IotaAddress,
-        uint53::UInt53,
-    },
-};
 use async_graphql::{
     connection::{Connection, CursorType, Edge},
     *,
@@ -23,6 +11,19 @@ use iota_types::transaction::{
     Argument as NativeArgument, CallArg as NativeCallArg, Command as NativeProgrammableTransaction,
     ObjectArg as NativeObjectArg, ProgrammableMoveCall as NativeMoveCallTransaction,
     ProgrammableTransaction as NativeProgrammableTransactionBlock,
+};
+
+use crate::{
+    consistency::ConsistentIndexCursor,
+    types::{
+        base64::Base64,
+        cursor::{JsonCursor, Page},
+        iota_address::IotaAddress,
+        move_function::MoveFunction,
+        move_type::MoveType,
+        object_read::ObjectRead,
+        uint53::UInt53,
+    },
 };
 
 #[derive(Clone, Eq, PartialEq)]

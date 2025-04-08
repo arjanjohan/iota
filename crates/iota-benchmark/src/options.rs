@@ -2,12 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use clap::*;
+use std::str::FromStr;
 
+use clap::*;
 use strum_macros::EnumString;
 
 use crate::drivers::Interval;
-use std::str::FromStr;
 
 #[derive(Parser)]
 #[clap(name = "Stress Testing Framework")]

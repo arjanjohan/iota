@@ -2,11 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{fs, path::Path, process::Command};
+
 use fs_extra::dir::CopyOptions;
 use insta_cmd::get_cargo_bin;
-use std::fs;
-use std::path::Path;
-use std::process::Command;
 use iota_config::IOTA_CLIENT_CONFIG;
 use test_cluster::TestClusterBuilder;
 

@@ -7,33 +7,40 @@ mod formatting;
 #[cfg(test)]
 mod upgrade_compatibility_tests;
 
-use formatting::{format_list, format_param, singular_or_plural, FormattedField};
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    fs,
+    path::PathBuf,
+    sync::Arc,
+};
 
-use anyhow::{anyhow, Context, Error};
-use std::collections::{BTreeMap, HashMap, HashSet};
-use std::fs;
-use std::path::PathBuf;
-use std::sync::Arc;
-
-use move_binary_format::file_format::{
-    AbilitySet, DatatypeTyParameter, EnumDefinitionIndex, FunctionDefinitionIndex,
-    StructDefinitionIndex, TableIndex,
+use anyhow::{Context, Error, anyhow};
+use formatting::{FormattedField, format_list, format_param, singular_or_plural};
+use iota_json_rpc_types::{IotaObjectDataOptions, IotaRawData};
+use iota_move_build::CompiledPackage;
+use iota_protocol_config::ProtocolConfig;
+use iota_sdk::IotaClient;
+use iota_types::{
+    base_types::ObjectID, execution_config_utils::to_binary_config, move_package::UpgradePolicy,
 };
 use move_binary_format::{
+    CompiledModule,
     compatibility::{Compatibility, InclusionCheck},
     compatibility_mode::CompatibilityMode,
-    file_format::Visibility,
+    file_format::{
+        AbilitySet, DatatypeTyParameter, EnumDefinitionIndex, FunctionDefinitionIndex,
+        StructDefinitionIndex, TableIndex, Visibility,
+    },
     inclusion_mode::InclusionCheckMode,
     normalized::{Enum, Field, Function, Module, Struct, Type, Variant},
-    CompiledModule,
 };
 use move_bytecode_source_map::source_map::SourceName;
 use move_command_line_common::files::FileHash;
-use move_compiler::diagnostics::codes::DiagnosticInfo;
 use move_compiler::{
     diagnostics::{
-        codes::{custom, Severity},
-        report_diagnostics_to_buffer, Diagnostic, Diagnostics,
+        Diagnostic, Diagnostics,
+        codes::{DiagnosticInfo, Severity, custom},
+        report_diagnostics_to_buffer,
     },
     shared::files::FileName,
 };
@@ -43,12 +50,6 @@ use move_core_types::{
 };
 use move_ir_types::location::{ByteIndex, Loc};
 use move_package::compilation::compiled_package::CompiledUnitWithSource;
-use iota_json_rpc_types::{IotaObjectDataOptions, IotaRawData};
-use iota_move_build::CompiledPackage;
-use iota_protocol_config::ProtocolConfig;
-use iota_sdk::IotaClient;
-use iota_types::move_package::UpgradePolicy;
-use iota_types::{base_types::ObjectID, execution_config_utils::to_binary_config};
 
 /// Errors that can occur during upgrade compatibility checks,
 /// one-to-one related to the underlying trait functions see: [`CompatibilityMode`].
@@ -766,7 +767,8 @@ fn compare_packages(
                 &new_package.package.file_map,
                 diags,
                 use_colors()
-            )).context("Unable to convert buffer to string")?,
+            ))
+            .context("Unable to convert buffer to string")?,
             match policy {
                 UpgradePolicy::Compatible => "compatible",
                 UpgradePolicy::Additive => "additive",
@@ -1047,7 +1049,7 @@ fn missing_module_diag(
 fn missing_definition_diag(
     declaration_kind: &str,
     identifier_name: &Identifier,
-    public_visibility_related_error: bool, // give a different code for errors which are public visibility related
+    public_visibility_related_error: bool, /* give a different code for errors which are public visibility related */
     compiled_unit_with_source: &CompiledUnitWithSource,
 ) -> Result<Diagnostics, Error> {
     let mut diags = Diagnostics::new();
@@ -1731,7 +1733,7 @@ fn struct_type_param_mismatch_diag(
     name: &Identifier,
     old_struct: &Struct,
     new_struct: &Struct,
-    public_visibility_related_error: bool, // give a different code for errors which are public visibility related
+    public_visibility_related_error: bool, /* give a different code for errors which are public visibility related */
     compiled_unit_with_source: &CompiledUnitWithSource,
     lookup: &IdentifierTableLookup,
 ) -> Result<Diagnostics, Error> {
@@ -1764,7 +1766,7 @@ fn enum_ability_mismatch_diag(
     enum_name: &Identifier,
     old_enum: &Enum,
     new_enum: &Enum,
-    public_visibility_related_error: bool, // give a different code for errors which are public visibility related
+    public_visibility_related_error: bool, /* give a different code for errors which are public visibility related */
     compiled_unit_with_source: &CompiledUnitWithSource,
     lookup: &IdentifierTableLookup,
 ) -> Result<Diagnostics, Error> {
@@ -1893,7 +1895,7 @@ fn enum_variant_mismatch_diag(
     enum_name: &Identifier,
     old_enum: &Enum,
     new_enum: &Enum,
-    public_visibility_related_error: bool, // give a different code for errors which are public visibility related
+    public_visibility_related_error: bool, /* give a different code for errors which are public visibility related */
     compiled_unit_with_source: &CompiledUnitWithSource,
     lookup: &IdentifierTableLookup,
 ) -> Result<Diagnostics, Error> {
@@ -1924,7 +1926,7 @@ fn enum_variant_mismatch_diag(
                 .get(i)
                 .context("Unable to get variant location")?
                 .0
-                 .1;
+                .1;
 
             let messages = enum_variant_field_message(old_variant, new_variant)?;
 
@@ -1993,7 +1995,7 @@ fn enum_new_variant_diag(
                 .get(i)
                 .context("Unable to get variant location")?
                 .0
-                 .1;
+                .1;
 
             diags.add(Diagnostic::new(
                 Enums::VariantMismatch,
@@ -2276,7 +2278,7 @@ fn enum_type_param_mismatch(
     enum_name: &Identifier,
     old_enum: &Enum,
     new_enum: &Enum,
-    public_visibility_related_error: bool, // give a different code for errors which are public visibility related
+    public_visibility_related_error: bool, /* give a different code for errors which are public visibility related */
     compiled_unit_with_source: &CompiledUnitWithSource,
     lookup: &IdentifierTableLookup,
 ) -> Result<Diagnostics, Error> {
@@ -2310,7 +2312,7 @@ fn type_parameter_diag(
     name: &Identifier,
     old_type_parameters: &[DatatypeTyParameter],
     new_type_parameters: &[DatatypeTyParameter],
-    public_visibility_related_error: bool, // give a different code for errors which are public visibility related
+    public_visibility_related_error: bool, /* give a different code for errors which are public visibility related */
     def_loc: Loc,
     type_parameter_locs: &[SourceName],
 ) -> Result<Diagnostics, Error> {
@@ -2518,7 +2520,7 @@ fn use_colors() -> bool {
 
     #[cfg(not(test))]
     {
-        use std::io::{stdout, IsTerminal};
+        use std::io::{IsTerminal, stdout};
         stdout().is_terminal()
     }
 }

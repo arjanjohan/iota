@@ -2,15 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use eyre::{eyre, Result};
 use std::{
     borrow::Cow,
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
 };
-use tracing::error;
 
-pub use ::multiaddr::Error;
-pub use ::multiaddr::Protocol;
+pub use ::multiaddr::{Error, Protocol};
+use eyre::{Result, eyre};
+use tracing::error;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Multiaddr(::multiaddr::Multiaddr);
@@ -385,8 +384,9 @@ pub(crate) fn parse_ip6(address: &Multiaddr) -> Result<(SocketAddr, &'static str
 
 #[cfg(test)]
 mod test {
-    use super::Multiaddr;
     use multiaddr::multiaddr;
+
+    use super::Multiaddr;
 
     #[test]
     fn test_to_socket_addr_basic() {

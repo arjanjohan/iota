@@ -2,45 +2,48 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    client_commands::{compile_package, upgrade_package},
-    client_ptb::{
-        ast::{Argument as PTBArg, ASSIGN, GAS_BUDGET},
-        error::{PTBError, PTBResult, Span, Spanned},
-    },
-    err, error, sp,
-};
+use std::{collections::BTreeMap, path::Path};
+
 use anyhow::Result;
 use async_recursion::async_recursion;
 use async_trait::async_trait;
-use miette::Severity;
-use move_binary_format::{
-    binary_config::BinaryConfig, file_format::SignatureToken, CompiledModule,
-};
-use move_core_types::parsing::{
-    address::{NumericalAddress, ParsedAddress},
-    parser::NumberFormat,
-};
-use move_core_types::{
-    account_address::AccountAddress, annotated_value::MoveTypeLayout, ident_str,
-};
-use move_package::BuildConfig;
-use std::{collections::BTreeMap, path::Path};
 use iota_json::{is_receiving_argument, primitive_type};
 use iota_json_rpc_types::{IotaObjectData, IotaObjectDataOptions, IotaRawData};
 use iota_move::manage_package::resolve_lock_file_path;
 use iota_sdk::apis::ReadApi;
 use iota_types::{
-    base_types::{is_primitive_type_tag, ObjectID, TxContext, TxContextKind},
+    IOTA_FRAMEWORK_PACKAGE_ID, Identifier, TypeTag,
+    base_types::{ObjectID, TxContext, TxContextKind, is_primitive_type_tag},
     move_package::MovePackage,
     object::Owner,
     programmable_transaction_builder::ProgrammableTransactionBuilder,
     resolve_address,
     transaction::{self as Tx, ObjectArg},
-    Identifier, TypeTag, IOTA_FRAMEWORK_PACKAGE_ID,
 };
+use miette::Severity;
+use move_binary_format::{
+    CompiledModule, binary_config::BinaryConfig, file_format::SignatureToken,
+};
+use move_core_types::{
+    account_address::AccountAddress,
+    annotated_value::MoveTypeLayout,
+    ident_str,
+    parsing::{
+        address::{NumericalAddress, ParsedAddress},
+        parser::NumberFormat,
+    },
+};
+use move_package::BuildConfig;
 
 use super::ast::{ModuleAccess as PTBModuleAccess, ParsedPTBCommand, Program};
+use crate::{
+    client_commands::{compile_package, upgrade_package},
+    client_ptb::{
+        ast::{ASSIGN, Argument as PTBArg, GAS_BUDGET},
+        error::{PTBError, PTBResult, Span, Spanned},
+    },
+    err, error, sp,
+};
 
 // ===========================================================================
 // Object Resolution
@@ -952,8 +955,8 @@ impl<'a> PTBBuilder<'a> {
                     self.reader,
                     build_config.clone(),
                     package_path,
-                    false, /* with_unpublished_dependencies */
-                    false, /* skip_dependency_verification */
+                    false, // with_unpublished_dependencies
+                    false, // skip_dependency_verification
                 )
                 .await;
                 // Restore original ID, then check result.
@@ -1020,8 +1023,8 @@ impl<'a> PTBBuilder<'a> {
                     build_config.clone(),
                     package_path,
                     ObjectID::from_address(upgrade_cap_id.into_inner()),
-                    false, /* with_unpublished_dependencies */
-                    false, /* skip_dependency_verification */
+                    false, // with_unpublished_dependencies
+                    false, // skip_dependency_verification
                     None,
                 )
                 .await;

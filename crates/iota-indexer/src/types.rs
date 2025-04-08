@@ -2,27 +2,28 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_json_rpc_types::{
+    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions, ObjectChange,
+};
+use iota_types::{
+    base_types::{IotaAddress, ObjectDigest, ObjectID, SequenceNumber},
+    crypto::AggregateAuthoritySignature,
+    digests::TransactionDigest,
+    dynamic_field::DynamicFieldType,
+    effects::TransactionEffects,
+    iota_serde::IotaStructTag,
+    messages_checkpoint::{
+        CertifiedCheckpointSummary, CheckpointCommitment, CheckpointContents, CheckpointDigest,
+        CheckpointSequenceNumber, EndOfEpochData,
+    },
+    move_package::MovePackage,
+    object::{Object, Owner},
+    transaction::SenderSignedData,
+};
 use move_core_types::language_storage::StructTag;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use iota_json_rpc_types::{
-    ObjectChange, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
-};
-use iota_types::base_types::{ObjectDigest, SequenceNumber};
-use iota_types::base_types::{ObjectID, IotaAddress};
-use iota_types::crypto::AggregateAuthoritySignature;
-use iota_types::digests::TransactionDigest;
-use iota_types::dynamic_field::DynamicFieldType;
-use iota_types::effects::TransactionEffects;
-use iota_types::messages_checkpoint::{
-    CertifiedCheckpointSummary, CheckpointCommitment, CheckpointContents, CheckpointDigest,
-    CheckpointSequenceNumber, EndOfEpochData,
-};
-use iota_types::move_package::MovePackage;
-use iota_types::object::{Object, Owner};
-use iota_types::iota_serde::IotaStructTag;
-use iota_types::transaction::SenderSignedData;
 
 use crate::errors::IndexerError;
 
@@ -224,7 +225,7 @@ impl TryFrom<i16> for ObjectStatus {
             value => {
                 return Err(IndexerError::PersistentStorageDataCorruptionError(format!(
                     "{value} as ObjectStatus"
-                )))
+                )));
             }
         })
     }
@@ -242,7 +243,7 @@ impl TryFrom<i16> for OwnerType {
             value => {
                 return Err(IndexerError::PersistentStorageDataCorruptionError(format!(
                     "{value} as OwnerType"
-                )))
+                )));
             }
         })
     }

@@ -4,7 +4,7 @@
 
 use std::time::Duration;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use diesel::{OptionalExtension, QueryDsl, SelectableHelper};
 use diesel_async::RunQueryDsl;
 use iota_indexer_alt_framework::task::graceful_shutdown;
@@ -15,7 +15,7 @@ use iota_indexer_alt_schema::{
 };
 use iota_types::{
     full_checkpoint_content::CheckpointData,
-    iota_system_state::{get_iota_system_state, IotaSystemStateTrait},
+    iota_system_state::{IotaSystemStateTrait, get_iota_system_state},
     transaction::{TransactionDataAPI, TransactionKind},
 };
 use tokio_util::sync::CancellationToken;

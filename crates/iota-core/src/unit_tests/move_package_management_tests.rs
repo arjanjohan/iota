@@ -2,9 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use expect_test::expect;
 use std::{fs::File, io::Read, path::PathBuf};
 
+use expect_test::expect;
 use iota_move::manage_package::ManagePackage;
 use iota_move_build::BuildConfig;
 use iota_types::base_types::ObjectID;

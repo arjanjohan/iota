@@ -3,16 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use async_graphql::*;
+use iota_types::{base_types::MoveObjectType, type_input::TypeInput};
 use move_binary_format::file_format::AbilitySet;
 use move_core_types::{annotated_value as A, language_storage::TypeTag};
 use serde::{Deserialize, Serialize};
-use iota_types::base_types::MoveObjectType;
-use iota_types::type_input::TypeInput;
-
-use crate::data::package_resolver::PackageResolver;
-use crate::error::Error;
 
 use super::open_move_type::MoveAbility;
+use crate::{data::package_resolver::PackageResolver, error::Error};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct MoveType {
@@ -349,9 +346,9 @@ pub(crate) fn unexpected_signer_error() -> Error {
 mod tests {
     use std::str::FromStr;
 
-    use super::*;
-
     use expect_test::expect;
+
+    use super::*;
 
     fn signature(repr: impl Into<String>) -> Result<MoveTypeSignature, Error> {
         let tag = TypeTag::from_str(repr.into().as_str()).unwrap();

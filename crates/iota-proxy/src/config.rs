@@ -1,11 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use anyhow::{Context, Result};
 use core::time::Duration;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use serde_with::{serde_as, DurationSeconds};
 use std::net::SocketAddr;
+
+use anyhow::{Context, Result};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use serde_with::{DurationSeconds, serde_as};
 use tracing::debug;
 
 #[serde_as]

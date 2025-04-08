@@ -43,10 +43,11 @@
 //!
 //! We can't prevent this completely, but we can at least make the right way the easy way.
 
-use super::IotaNode;
-use std::future::Future;
-use std::sync::Arc;
+use std::{future::Future, sync::Arc};
+
 use iota_core::authority::AuthorityState;
+
+use super::IotaNode;
 
 /// Wrap IotaNode to allow correct access to IotaNode in simulator tests.
 pub struct IotaNodeHandle {

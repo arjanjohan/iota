@@ -1,7 +1,7 @@
-use super::TryFromProtoError;
 use tap::Pipe;
 
-//
+use super::TryFromProtoError;
+
 // ObjectReference
 //
 
@@ -40,7 +40,6 @@ impl TryFrom<&super::ObjectReference> for iota_sdk_types::ObjectReference {
     }
 }
 
-//
 // Object
 //
 
@@ -90,14 +89,14 @@ impl TryFrom<&super::Object> for iota_sdk_types::Object {
     }
 }
 
-//
 // Owner
 //
 
 impl From<iota_sdk_types::Owner> for super::Owner {
     fn from(value: iota_sdk_types::Owner) -> Self {
-        use super::owner::Kind;
         use iota_sdk_types::Owner::*;
+
+        use super::owner::Kind;
 
         let kind = match value {
             Address(address) => Kind::Address(address.into()),
@@ -130,14 +129,14 @@ impl TryFrom<&super::Owner> for iota_sdk_types::Owner {
     }
 }
 
-//
 // ObjectData
 //
 
 impl From<iota_sdk_types::ObjectData> for super::ObjectData {
     fn from(value: iota_sdk_types::ObjectData) -> Self {
-        use super::object_data::Kind;
         use iota_sdk_types::ObjectData::*;
+
+        use super::object_data::Kind;
 
         let kind = match value {
             Struct(s) => Kind::Struct(s.into()),
@@ -166,7 +165,6 @@ impl TryFrom<&super::ObjectData> for iota_sdk_types::ObjectData {
     }
 }
 
-//
 // MoveStruct
 //
 
@@ -212,7 +210,6 @@ impl TryFrom<&super::MoveStruct> for iota_sdk_types::MoveStruct {
     }
 }
 
-//
 // MovePackage
 //
 
@@ -342,7 +339,6 @@ impl TryFrom<&super::MovePackage> for iota_sdk_types::MovePackage {
     }
 }
 
-//
 // TypeOrigin
 //
 
@@ -386,7 +382,6 @@ impl TryFrom<&super::TypeOrigin> for iota_sdk_types::TypeOrigin {
     }
 }
 
-//
 // GenesisObject
 //
 

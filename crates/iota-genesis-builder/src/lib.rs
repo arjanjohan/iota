@@ -2,17 +2,16 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{bail, Context};
+use std::{
+    collections::{BTreeMap, HashSet},
+    fs,
+    path::Path,
+    sync::Arc,
+};
+
+use anyhow::{Context, bail};
 use camino::Utf8Path;
-use fastcrypto::hash::HashFunction;
-use fastcrypto::traits::KeyPair;
-use move_binary_format::CompiledModule;
-use move_core_types::ident_str;
-use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
-use std::collections::{BTreeMap, HashSet};
-use std::fs;
-use std::path::Path;
-use std::sync::Arc;
+use fastcrypto::{hash::HashFunction, traits::KeyPair};
 use iota_config::genesis::{
     Genesis, GenesisCeremonyParameters, GenesisChainParameters, TokenDistributionSchedule,
     UnsignedGenesis,
@@ -20,37 +19,42 @@ use iota_config::genesis::{
 use iota_execution::{self, Executor};
 use iota_framework::{BuiltInFramework, SystemPackage};
 use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-use iota_types::base_types::{ExecutionDigests, ObjectID, SequenceNumber, TransactionDigest};
-use iota_types::bridge::{BridgeChainId, BRIDGE_CREATE_FUNCTION_NAME, BRIDGE_MODULE_NAME};
-use iota_types::committee::Committee;
-use iota_types::crypto::{
-    AuthorityKeyPair, AuthorityPublicKeyBytes, AuthoritySignInfo, AuthoritySignInfoTrait,
-    AuthoritySignature, DefaultHash, IotaAuthoritySignature,
+use iota_types::{
+    BRIDGE_ADDRESS, IOTA_BRIDGE_OBJECT_ID, IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS,
+    base_types::{ExecutionDigests, ObjectID, SequenceNumber, TransactionDigest},
+    bridge::{BRIDGE_CREATE_FUNCTION_NAME, BRIDGE_MODULE_NAME, BridgeChainId},
+    committee::Committee,
+    crypto::{
+        AuthorityKeyPair, AuthorityPublicKeyBytes, AuthoritySignInfo, AuthoritySignInfoTrait,
+        AuthoritySignature, DefaultHash, IotaAuthoritySignature,
+    },
+    deny_list_v1::{DENY_LIST_CREATE_FUNC, DENY_LIST_MODULE},
+    digests::ChainIdentifier,
+    effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents},
+    epoch_data::EpochData,
+    gas::IotaGasStatus,
+    gas_coin::GasCoin,
+    governance::StakedIota,
+    id::UID,
+    in_memory_storage::InMemoryStorage,
+    inner_temporary_store::InnerTemporaryStore,
+    iota_system_state::{IotaSystemState, IotaSystemStateTrait, get_iota_system_state},
+    is_system_package,
+    message_envelope::Message,
+    messages_checkpoint::{
+        CertifiedCheckpointSummary, CheckpointContents, CheckpointSummary,
+        CheckpointVersionSpecificData, CheckpointVersionSpecificDataV1,
+    },
+    metrics::LimitsMetrics,
+    object::{Object, Owner},
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    transaction::{
+        CallArg, CheckedInputObjects, Command, InputObjectKind, ObjectReadResult, Transaction,
+    },
 };
-use iota_types::deny_list_v1::{DENY_LIST_CREATE_FUNC, DENY_LIST_MODULE};
-use iota_types::digests::ChainIdentifier;
-use iota_types::effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents};
-use iota_types::epoch_data::EpochData;
-use iota_types::gas::IotaGasStatus;
-use iota_types::gas_coin::GasCoin;
-use iota_types::governance::StakedIota;
-use iota_types::id::UID;
-use iota_types::in_memory_storage::InMemoryStorage;
-use iota_types::inner_temporary_store::InnerTemporaryStore;
-use iota_types::is_system_package;
-use iota_types::message_envelope::Message;
-use iota_types::messages_checkpoint::{
-    CertifiedCheckpointSummary, CheckpointContents, CheckpointSummary,
-    CheckpointVersionSpecificData, CheckpointVersionSpecificDataV1,
-};
-use iota_types::metrics::LimitsMetrics;
-use iota_types::object::{Object, Owner};
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::iota_system_state::{get_iota_system_state, IotaSystemState, IotaSystemStateTrait};
-use iota_types::transaction::{
-    CallArg, CheckedInputObjects, Command, InputObjectKind, ObjectReadResult, Transaction,
-};
-use iota_types::{BRIDGE_ADDRESS, IOTA_BRIDGE_OBJECT_ID, IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS};
+use move_binary_format::CompiledModule;
+use move_core_types::ident_str;
+use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
 use tracing::trace;
 use validator_info::{GenesisValidatorInfo, GenesisValidatorMetadata, ValidatorInfo};
 
@@ -350,9 +354,11 @@ impl Builder {
             let metadata = onchain_validator.verified_metadata();
 
             // Validators should not have duplicate addresses so the result of insertion should be None.
-            assert!(address_to_pool_id
-                .insert(metadata.iota_address, onchain_validator.staking_pool.id)
-                .is_none());
+            assert!(
+                address_to_pool_id
+                    .insert(metadata.iota_address, onchain_validator.staking_pool.id)
+                    .is_none()
+            );
             assert_eq!(validator.info.iota_address(), metadata.iota_address);
             assert_eq!(validator.info.protocol_key(), metadata.iota_pubkey_bytes());
             assert_eq!(validator.info.network_key, metadata.network_pubkey);
@@ -486,7 +492,8 @@ impl Builder {
                     })
                     .map(|(k, _)| *k)
                     .expect("all allocations should be present");
-                let staked_iota_object = staked_iota_objects.remove(&staked_iota_object_id).unwrap();
+                let staked_iota_object =
+                    staked_iota_objects.remove(&staked_iota_object_id).unwrap();
                 assert_eq!(
                     staked_iota_object.0.owner,
                     Owner::AddressOwner(allocation.recipient_address)
@@ -719,7 +726,9 @@ fn build_unsigned_genesis_data(
     objects: &[Object],
 ) -> UnsignedGenesis {
     if !parameters.allow_insertion_of_extra_objects && !objects.is_empty() {
-        panic!("insertion of extra objects at genesis time is prohibited due to 'allow_insertion_of_extra_objects' parameter");
+        panic!(
+            "insertion of extra objects at genesis time is prohibited due to 'allow_insertion_of_extra_objects' parameter"
+        );
     }
 
     let genesis_chain_parameters = parameters.to_genesis_chain_parameters();
@@ -1146,7 +1155,9 @@ pub fn generate_genesis_system_object(
 
         if protocol_config.enable_bridge() {
             let bridge_uid = builder
-                .input(CallArg::Pure(UID::new(IOTA_BRIDGE_OBJECT_ID).to_bcs_bytes()))
+                .input(CallArg::Pure(
+                    UID::new(IOTA_BRIDGE_OBJECT_ID).to_bcs_bytes(),
+                ))
                 .unwrap();
             // TODO(bridge): this needs to be passed in as a parameter for next testnet regenesis
             // Hardcoding chain id to IotaCustom
@@ -1220,18 +1231,21 @@ pub fn generate_genesis_system_object(
 
 #[cfg(test)]
 mod test {
-    use crate::validator_info::ValidatorInfo;
-    use crate::Builder;
     use fastcrypto::traits::KeyPair;
-    use iota_config::genesis::*;
-    use iota_config::local_ip_utils;
-    use iota_config::node::DEFAULT_COMMISSION_RATE;
-    use iota_config::node::DEFAULT_VALIDATOR_GAS_PRICE;
-    use iota_types::base_types::IotaAddress;
-    use iota_types::crypto::{
-        generate_proof_of_possession, get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair,
-        NetworkKeyPair,
+    use iota_config::{
+        genesis::*,
+        local_ip_utils,
+        node::{DEFAULT_COMMISSION_RATE, DEFAULT_VALIDATOR_GAS_PRICE},
     };
+    use iota_types::{
+        base_types::IotaAddress,
+        crypto::{
+            AccountKeyPair, AuthorityKeyPair, NetworkKeyPair, generate_proof_of_possession,
+            get_key_pair_from_rng,
+        },
+    };
+
+    use crate::{Builder, validator_info::ValidatorInfo};
 
     #[test]
     fn allocation_csv() {

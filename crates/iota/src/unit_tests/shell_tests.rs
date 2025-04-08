@@ -2,19 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::BTreeMap;
-use std::env;
-use std::sync::Arc;
-
-use rustyline::completion::Completer;
-use rustyline::history::History;
-use rustyline::Context;
+use std::{collections::BTreeMap, env, sync::Arc};
 
 use iota_types::base_types::ObjectID;
+use rustyline::{Context, completion::Completer, history::History};
 
-use crate::shell::split_and_unescape;
 use crate::shell::{
-    substitute_env_variables, CacheKey, CommandStructure, CompletionCache, ShellHelper,
+    CacheKey, CommandStructure, CompletionCache, ShellHelper, split_and_unescape,
+    substitute_env_variables,
 };
 
 #[test]

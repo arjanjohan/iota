@@ -2,11 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{self, bail, Result};
+use std::{env, path::PathBuf, str::FromStr};
+
+use anyhow::{self, Result, bail};
 use clap::{ArgAction, Parser};
-use std::env;
-use std::path::PathBuf;
-use std::str::FromStr;
 use thiserror::Error;
 
 /// Tool for cutting duplicate versions of a subset of crates in a git repository.

@@ -2,24 +2,26 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use clap::Parser;
-use move_cli::base::{
-    self,
-    test::{self, UnitTestResult},
-};
-use move_package::BuildConfig;
-use move_unit_test::{extensions::set_extension_hook, UnitTestingConfig};
-use move_vm_runtime::native_extensions::NativeContextExtensions;
-use once_cell::sync::Lazy;
 use std::{cell::RefCell, collections::BTreeMap, path::Path, sync::Arc};
+
+use clap::Parser;
 use iota_move_build::decorate_warnings;
-use iota_move_natives::test_scenario::InMemoryTestStore;
-use iota_move_natives::{object_runtime::ObjectRuntime, NativesCostTable};
+use iota_move_natives::{
+    NativesCostTable, object_runtime::ObjectRuntime, test_scenario::InMemoryTestStore,
+};
 use iota_protocol_config::ProtocolConfig;
 use iota_types::{
     gas_model::tables::initial_cost_schedule_for_unit_tests, in_memory_storage::InMemoryStorage,
     metrics::LimitsMetrics,
 };
+use move_cli::base::{
+    self,
+    test::{self, UnitTestResult},
+};
+use move_package::BuildConfig;
+use move_unit_test::{UnitTestingConfig, extensions::set_extension_hook};
+use move_vm_runtime::native_extensions::NativeContextExtensions;
+use once_cell::sync::Lazy;
 
 // Move unit tests will halt after executing this many steps. This is a protection to avoid divergence
 const MAX_UNIT_TEST_INSTRUCTIONS: u64 = 1_000_000;
@@ -91,7 +93,8 @@ pub fn run_move_unit_tests(
             ..config
         },
         iota_move_natives::all_natives(
-            /* silent */ false,
+            // silent
+            false,
             &ProtocolConfig::get_for_max_version_UNSAFE(),
         ),
         Some(initial_cost_schedule_for_unit_tests()),

@@ -2,29 +2,27 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{env, path::PathBuf};
+
 use anyhow::Result;
 use async_trait::async_trait;
-use diesel::{dsl::sql, BoolExpressionMethods, ExpressionMethods};
-use diesel_async::{scoped_futures::ScopedFutureExt, AsyncConnection, RunQueryDsl};
+use diesel::{BoolExpressionMethods, ExpressionMethods, dsl::sql};
+use diesel_async::{AsyncConnection, RunQueryDsl, scoped_futures::ScopedFutureExt};
 use dotenvy::dotenv;
-use iota_service::metrics::start_basic_prometheus_server;
-use prometheus::Registry;
-use std::env;
-use std::path::PathBuf;
 use iota_data_ingestion_core::{
     DataIngestionMetrics, FileProgressStore, IndexerExecutor, ReaderOptions, Worker, WorkerPool,
 };
+use iota_service::metrics::start_basic_prometheus_server;
 use iota_types::full_checkpoint_content::CheckpointData;
-use tokio::sync::oneshot;
-use tracing::info;
-
 use iotans_indexer::{
-    get_connection_pool,
-    indexer::{format_update_field_query, format_update_subdomain_wrapper_query, IotaNSIndexer},
+    PgConnectionPool, get_connection_pool,
+    indexer::{IotaNSIndexer, format_update_field_query, format_update_subdomain_wrapper_query},
     models::VerifiedDomain,
     schema::domains,
-    PgConnectionPool,
 };
+use prometheus::Registry;
+use tokio::sync::oneshot;
+use tracing::info;
 
 struct IotaNSIndexerWorker {
     pg_pool: PgConnectionPool,
@@ -162,17 +160,17 @@ async fn main() -> Result<()> {
             pg_pool: get_connection_pool().await,
             indexer: indexer_setup,
         },
-        "iotans_indexing".to_string(), /* task name used as a key in the progress store */
-        100,                          /* concurrency */
+        "iotans_indexing".to_string(), // task name used as a key in the progress store
+        100,                           // concurrency
     );
     executor.register(worker_pool).await?;
 
     executor
         .run(
-            PathBuf::from(checkpoints_dir), /* directory should exist but can be empty */
-            remote_storage,                 /* remote_read_endpoint: If set */
-            vec![],                         /* aws credentials */
-            ReaderOptions::default(),       /* remote_read_batch_size */
+            PathBuf::from(checkpoints_dir), // directory should exist but can be empty
+            remote_storage,                 // remote_read_endpoint: If set
+            vec![],                         // aws credentials
+            ReaderOptions::default(),       // remote_read_batch_size
             exit_receiver,
         )
         .await?;

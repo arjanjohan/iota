@@ -2,34 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::balance::{self, Balance};
-use super::base64::Base64;
-use super::big_int::BigInt;
-use super::coin::CoinDowncastError;
-use super::coin_metadata::{CoinMetadata, CoinMetadataDowncastError};
-use super::cursor::Page;
-use super::display::DisplayEntry;
-use super::dynamic_field::{DynamicField, DynamicFieldName};
-use super::move_type::MoveType;
-use super::move_value::MoveValue;
-use super::object::{self, ObjectFilter, ObjectImpl, ObjectLookup, ObjectOwner, ObjectStatus};
-use super::owner::OwnerImpl;
-use super::stake::StakedIotaDowncastError;
-use super::iota_address::IotaAddress;
-use super::iotans_registration::{DomainFormat, IotaNSRegistration, IotaNSRegistrationDowncastError};
-use super::transaction_block::{self, TransactionBlock, TransactionBlockFilter};
-use super::type_filter::ExactTypeFilter;
-use super::uint53::UInt53;
-use super::{coin::Coin, object::Object};
-use crate::connection::ScanConnection;
-use crate::data::Db;
-use crate::error::Error;
-use crate::types::stake::StakedIota;
-use async_graphql::connection::Connection;
-use async_graphql::*;
+use async_graphql::{connection::Connection, *};
 use iota_json_rpc::name_service::NameServiceConfig;
-use iota_types::object::{Data, MoveObject as NativeMoveObject};
-use iota_types::TypeTag;
+use iota_types::{
+    TypeTag,
+    object::{Data, MoveObject as NativeMoveObject},
+};
+
+use super::{
+    balance::{self, Balance},
+    base64::Base64,
+    big_int::BigInt,
+    coin::{Coin, CoinDowncastError},
+    coin_metadata::{CoinMetadata, CoinMetadataDowncastError},
+    cursor::Page,
+    display::DisplayEntry,
+    dynamic_field::{DynamicField, DynamicFieldName},
+    iota_address::IotaAddress,
+    iotans_registration::{DomainFormat, IotaNSRegistration, IotaNSRegistrationDowncastError},
+    move_type::MoveType,
+    move_value::MoveValue,
+    object::{self, Object, ObjectFilter, ObjectImpl, ObjectLookup, ObjectOwner, ObjectStatus},
+    owner::OwnerImpl,
+    stake::StakedIotaDowncastError,
+    transaction_block::{self, TransactionBlock, TransactionBlockFilter},
+    type_filter::ExactTypeFilter,
+    uint53::UInt53,
+};
+use crate::{connection::ScanConnection, data::Db, error::Error, types::stake::StakedIota};
 
 #[derive(Clone)]
 pub(crate) struct MoveObject {
@@ -167,7 +167,7 @@ impl MoveObject {
 
     /// The coin objects for this object.
     ///
-    ///`type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
+    /// `type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
     pub(crate) async fn coins(
         &self,
         ctx: &Context<'_>,
@@ -410,7 +410,10 @@ impl MoveObject {
     }
 
     /// Attempts to convert the Move object into a `IotaNSRegistration` object.
-    async fn as_iotans_registration(&self, ctx: &Context<'_>) -> Result<Option<IotaNSRegistration>> {
+    async fn as_iotans_registration(
+        &self,
+        ctx: &Context<'_>,
+    ) -> Result<Option<IotaNSRegistration>> {
         let cfg: &NameServiceConfig = ctx.data_unchecked();
         let tag = IotaNSRegistration::type_(cfg.package_address.into());
 

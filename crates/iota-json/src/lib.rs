@@ -2,39 +2,42 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::{BTreeMap, VecDeque};
-use std::fmt::{self, Debug, Formatter};
-use std::str::FromStr;
+use std::{
+    collections::{BTreeMap, VecDeque},
+    fmt::{self, Debug, Formatter},
+    str::FromStr,
+};
 
 use anyhow::{anyhow, bail};
 use fastcrypto::encoding::{Encoding, Hex};
-use move_binary_format::CompiledModule;
-use move_binary_format::{binary_config::BinaryConfig, file_format::SignatureToken};
+use iota_types::{
+    MOVE_STDLIB_ADDRESS,
+    base_types::{
+        IotaAddress, ObjectID, RESOLVED_ASCII_STR, RESOLVED_STD_OPTION, RESOLVED_UTF8_STR,
+        STD_ASCII_MODULE_NAME, STD_ASCII_STRUCT_NAME, STD_OPTION_MODULE_NAME,
+        STD_OPTION_STRUCT_NAME, STD_UTF8_MODULE_NAME, STD_UTF8_STRUCT_NAME, TxContext,
+        TxContextKind, is_primitive_type_tag, move_ascii_str_layout, move_utf8_str_layout,
+    },
+    id::{self, ID, RESOLVED_IOTA_ID},
+    move_package::MovePackage,
+    object::bounded_visitor::BoundedVisitor,
+    transfer::RESOLVED_RECEIVING_STRUCT,
+};
+use move_binary_format::{
+    CompiledModule, binary_config::BinaryConfig, file_format::SignatureToken,
+};
 use move_bytecode_utils::resolve_struct;
 pub use move_core_types::annotated_value::MoveTypeLayout;
-use move_core_types::annotated_value::{MoveFieldLayout, MoveVariant};
-use move_core_types::u256::U256;
 use move_core_types::{
-    annotated_value::{MoveStruct, MoveValue},
+    annotated_value::{MoveFieldLayout, MoveStruct, MoveValue, MoveVariant},
     identifier::Identifier,
     language_storage::{StructTag, TypeTag},
     runtime_value as R,
+    u256::U256,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Number, Value as JsonValue};
-
-use iota_types::base_types::{
-    is_primitive_type_tag, move_ascii_str_layout, move_utf8_str_layout, ObjectID, IotaAddress,
-    TxContext, TxContextKind, RESOLVED_ASCII_STR, RESOLVED_STD_OPTION, RESOLVED_UTF8_STR,
-    STD_ASCII_MODULE_NAME, STD_ASCII_STRUCT_NAME, STD_OPTION_MODULE_NAME, STD_OPTION_STRUCT_NAME,
-    STD_UTF8_MODULE_NAME, STD_UTF8_STRUCT_NAME,
-};
-use iota_types::id::{self, ID, RESOLVED_IOTA_ID};
-use iota_types::move_package::MovePackage;
-use iota_types::object::bounded_visitor::BoundedVisitor;
-use iota_types::transfer::RESOLVED_RECEIVING_STRUCT;
-use iota_types::MOVE_STDLIB_ADDRESS;
+use serde_json::{Number, Value as JsonValue, json};
 
 const HEX_PREFIX: &str = "0x";
 
@@ -287,7 +290,8 @@ impl IotaJsonValue {
             {
                 if struct_layout.fields.len() != 1 {
                     bail!(
-                        "Cannot convert string arg {s} to {} which is expected to be a struct with one field", struct_layout.type_
+                        "Cannot convert string arg {s} to {} which is expected to be a struct with one field",
+                        struct_layout.type_
                     );
                 };
                 let addr = IotaAddress::from_str(s)?;
@@ -511,7 +515,9 @@ pub fn check_valid_homogeneous(val: &JsonValue) -> Result<(), IotaJsonValueError
 
 /// Check via BFS
 /// The invariant is that all types at a given level must be the same or be empty
-fn check_valid_homogeneous_rec(curr_q: &mut VecDeque<&JsonValue>) -> Result<(), IotaJsonValueError> {
+fn check_valid_homogeneous_rec(
+    curr_q: &mut VecDeque<&JsonValue>,
+) -> Result<(), IotaJsonValueError> {
     if curr_q.is_empty() {
         // Nothing to do
         return Ok(());
@@ -537,7 +543,7 @@ fn check_valid_homogeneous_rec(curr_q: &mut VecDeque<&JsonValue>) -> Result<(), 
                 return Err(IotaJsonValueError::new(
                     v,
                     IotaJsonValueErrorKind::ValueTypeNotAllowed,
-                ))
+                ));
             }
         };
 

@@ -4,15 +4,20 @@
 
 //! `BridgeClient` talks to BridgeNode.
 
-use crate::crypto::{verify_signed_bridge_action, BridgeAuthorityPublicKeyBytes};
-use crate::error::{BridgeError, BridgeResult};
-use crate::server::APPLICATION_JSON;
-use crate::types::{BridgeAction, BridgeCommittee, VerifiedSignedBridgeAction};
-use fastcrypto::encoding::{Encoding, Hex};
-use fastcrypto::traits::ToFromBytes;
-use std::str::FromStr;
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
+
+use fastcrypto::{
+    encoding::{Encoding, Hex},
+    traits::ToFromBytes,
+};
 use url::Url;
+
+use crate::{
+    crypto::{BridgeAuthorityPublicKeyBytes, verify_signed_bridge_action},
+    error::{BridgeError, BridgeResult},
+    server::APPLICATION_JSON,
+    types::{BridgeAction, BridgeCommittee, VerifiedSignedBridgeAction},
+};
 
 // Note: `base_url` is `Option<Url>` because `quorum_map_then_reduce_with_timeout_and_prefs`
 // uses `[]` to get Client based on key. Therefore even when the URL is invalid we need to
@@ -231,24 +236,31 @@ impl BridgeClient {
 
 #[cfg(test)]
 mod tests {
+    use ethers::types::{Address as EthAddress, TxHash};
+    use fastcrypto::{
+        hash::{HashFunction, Keccak256},
+        traits::KeyPair,
+    };
+    use iota_types::{
+        TypeTag,
+        base_types::IotaAddress,
+        bridge::{BridgeChainId, TOKEN_ID_BTC, TOKEN_ID_USDT},
+        crypto::get_key_pair,
+        digests::TransactionDigest,
+    };
+    use prometheus::Registry;
+
     use super::*;
-    use crate::test_utils::run_mock_bridge_server;
     use crate::{
         abi::EthToIotaTokenBridgeV1,
         crypto::BridgeAuthoritySignInfo,
         events::EmittedIotaToEthTokenBridgeV1,
         server::mock_handler::BridgeRequestMockHandler,
-        test_utils::{get_test_authority_and_key, get_test_iota_to_eth_bridge_action},
+        test_utils::{
+            get_test_authority_and_key, get_test_iota_to_eth_bridge_action, run_mock_bridge_server,
+        },
         types::SignedBridgeAction,
     };
-    use ethers::types::Address as EthAddress;
-    use ethers::types::TxHash;
-    use fastcrypto::hash::{HashFunction, Keccak256};
-    use fastcrypto::traits::KeyPair;
-    use prometheus::Registry;
-    use iota_types::bridge::{BridgeChainId, TOKEN_ID_BTC, TOKEN_ID_USDT};
-    use iota_types::TypeTag;
-    use iota_types::{base_types::IotaAddress, crypto::get_key_pair, digests::TransactionDigest};
 
     #[tokio::test]
     async fn test_bridge_client() {

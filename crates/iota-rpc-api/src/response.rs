@@ -9,12 +9,12 @@ use axum::{
 };
 
 use crate::{
+    RpcService,
     types::{
         X_IOTA_CHAIN, X_IOTA_CHAIN_ID, X_IOTA_CHECKPOINT_HEIGHT, X_IOTA_EPOCH,
         X_IOTA_LOWEST_AVAILABLE_CHECKPOINT, X_IOTA_LOWEST_AVAILABLE_CHECKPOINT_OBJECTS,
         X_IOTA_TIMESTAMP_MS,
     },
-    RpcService,
 };
 
 pub async fn append_info_headers(

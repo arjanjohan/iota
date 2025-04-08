@@ -4,24 +4,24 @@
 
 use std::{
     cell::RefCell,
-    collections::{hash_map::Entry, BTreeMap, HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet, hash_map::Entry},
     str::FromStr,
 };
 
-use crate::execution_value::IotaResolver;
+use iota_types::{
+    base_types::ObjectID,
+    error::{ExecutionError, IotaError, IotaResult},
+    move_package::{MovePackage, TypeOrigin, UpgradeInfo},
+    storage::{BackingPackageStore, PackageObject, get_module},
+};
 use move_core_types::{
     account_address::AccountAddress,
     identifier::{IdentStr, Identifier},
     language_storage::{ModuleId, StructTag},
     resolver::{LinkageResolver, ModuleResolver, ResourceResolver},
 };
-use iota_types::storage::{get_module, PackageObject};
-use iota_types::{
-    base_types::ObjectID,
-    error::{ExecutionError, IotaError, IotaResult},
-    move_package::{MovePackage, TypeOrigin, UpgradeInfo},
-    storage::BackingPackageStore,
-};
+
+use crate::execution_value::IotaResolver;
 
 /// Exposes module and linkage resolution to the Move runtime.  The first by delegating to
 /// `resolver` and the second via linkage information that is loaded from a move package.
@@ -293,7 +293,7 @@ impl<'state> LinkageResolver for LinkageView<'state> {
     }
 }
 
-/** Remaining implementations delegated to state_view *************************/
+/// Remaining implementations delegated to state_view ************************
 
 impl<'state> ResourceResolver for LinkageView<'state> {
     type Error = IotaError;

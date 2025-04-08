@@ -2,22 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use diesel::{
+    ExpressionMethods, QueryDsl,
+    backend::Backend,
+    deserialize::{self, FromSql, QueryableByName},
+    row::NamedRow,
+};
+use iota_indexer::{models::transactions::StoredTransaction, schema::transactions};
+use serde::{Deserialize, Serialize};
+
+use super::Query;
 use crate::{
     consistency::Checkpointed,
     filter,
     raw_query::RawQuery,
     types::cursor::{self, Paginated, RawPaginated, ScanLimited, Target},
 };
-use diesel::{
-    backend::Backend,
-    deserialize::{self, FromSql, QueryableByName},
-    row::NamedRow,
-    ExpressionMethods, QueryDsl,
-};
-use serde::{Deserialize, Serialize};
-use iota_indexer::{models::transactions::StoredTransaction, schema::transactions};
-
-use super::Query;
 
 pub(crate) type Cursor = cursor::JsonCursor<TransactionBlockCursor>;
 

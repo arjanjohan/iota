@@ -2,52 +2,52 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::abi::{
-    EthBridgeCommittee, EthBridgeConfig, EthBridgeLimiter, EthBridgeVault, EthIotaBridge,
-};
-use crate::config::{
-    default_ed25519_key_pair, BridgeNodeConfig, EthConfig, MetricsConfig, IotaConfig, WatchdogConfig,
-};
-use crate::crypto::BridgeAuthorityKeyPair;
-use crate::crypto::BridgeAuthorityPublicKeyBytes;
-use crate::server::APPLICATION_JSON;
-use crate::types::BridgeCommittee;
-use crate::types::{AddTokensOnIotaAction, BridgeAction};
+use std::{collections::BTreeMap, path::PathBuf, str::FromStr, sync::Arc};
+
 use anyhow::anyhow;
-use ethers::core::k256::ecdsa::SigningKey;
-use ethers::middleware::SignerMiddleware;
-use ethers::prelude::*;
-use ethers::providers::{Http, Provider};
-use ethers::signers::Wallet;
-use ethers::types::Address as EthAddress;
-use fastcrypto::ed25519::Ed25519KeyPair;
-use fastcrypto::encoding::{Encoding, Hex};
-use fastcrypto::secp256k1::Secp256k1KeyPair;
-use fastcrypto::traits::EncodeDecodeBase64;
-use fastcrypto::traits::KeyPair;
+use ethers::{
+    core::k256::ecdsa::SigningKey,
+    middleware::SignerMiddleware,
+    prelude::*,
+    providers::{Http, Provider},
+    signers::Wallet,
+    types::Address as EthAddress,
+};
+use fastcrypto::{
+    ed25519::Ed25519KeyPair,
+    encoding::{Encoding, Hex},
+    secp256k1::Secp256k1KeyPair,
+    traits::{EncodeDecodeBase64, KeyPair},
+};
 use futures::future::join_all;
-use std::collections::BTreeMap;
-use std::path::PathBuf;
-use std::str::FromStr;
-use std::sync::Arc;
 use iota_config::Config;
-use iota_json_rpc_types::IotaExecutionStatus;
-use iota_json_rpc_types::IotaTransactionBlockEffectsAPI;
-use iota_json_rpc_types::IotaTransactionBlockResponseOptions;
+use iota_json_rpc_types::{
+    IotaExecutionStatus, IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponseOptions,
+};
 use iota_keys::keypair_file::read_key;
 use iota_sdk::wallet_context::WalletContext;
 use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::base_types::IotaAddress;
-use iota_types::bridge::BridgeChainId;
-use iota_types::bridge::{BRIDGE_MODULE_NAME, BRIDGE_REGISTER_FOREIGN_TOKEN_FUNCTION_NAME};
-use iota_types::committee::StakeUnit;
-use iota_types::crypto::get_key_pair;
-use iota_types::crypto::IotaKeyPair;
-use iota_types::crypto::ToFromBytes;
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::iota_system_state::iota_system_state_summary::IotaSystemStateSummary;
-use iota_types::transaction::{ObjectArg, TransactionData};
-use iota_types::BRIDGE_PACKAGE_ID;
+use iota_types::{
+    BRIDGE_PACKAGE_ID,
+    base_types::IotaAddress,
+    bridge::{BRIDGE_MODULE_NAME, BRIDGE_REGISTER_FOREIGN_TOKEN_FUNCTION_NAME, BridgeChainId},
+    committee::StakeUnit,
+    crypto::{IotaKeyPair, ToFromBytes, get_key_pair},
+    iota_system_state::iota_system_state_summary::IotaSystemStateSummary,
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    transaction::{ObjectArg, TransactionData},
+};
+
+use crate::{
+    abi::{EthBridgeCommittee, EthBridgeConfig, EthBridgeLimiter, EthBridgeVault, EthIotaBridge},
+    config::{
+        BridgeNodeConfig, EthConfig, IotaConfig, MetricsConfig, WatchdogConfig,
+        default_ed25519_key_pair,
+    },
+    crypto::{BridgeAuthorityKeyPair, BridgeAuthorityPublicKeyBytes},
+    server::APPLICATION_JSON,
+    types::{AddTokensOnIotaAction, BridgeAction, BridgeCommittee},
+};
 
 pub type EthSigner = SignerMiddleware<Provider<Http>, Wallet<SigningKey>>;
 
@@ -312,7 +312,8 @@ pub async fn publish_and_register_coins_return_add_coins_on_iota_action(
         let mut uc = None;
         let mut metadata = None;
         for object_change in &object_changes {
-            if let o @ iota_json_rpc_types::ObjectChange::Created { object_type, .. } = object_change
+            if let o @ iota_json_rpc_types::ObjectChange::Created { object_type, .. } =
+                object_change
             {
                 if object_type.name.as_str().starts_with("TreasuryCap") {
                     assert!(tc.is_none() && type_.is_none());

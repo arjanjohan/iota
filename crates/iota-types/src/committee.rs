@@ -3,24 +3,31 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::base_types::*;
-use crate::crypto::{
-    random_committee_key_pairs_of_size, AuthorityKeyPair, AuthorityPublicKey, NetworkPublicKey,
+use std::{
+    collections::{BTreeMap, BTreeSet, HashMap},
+    fmt::{Display, Formatter, Write},
+    hash::{Hash, Hasher},
 };
-use crate::error::{IotaError, IotaResult};
-use crate::multiaddr::Multiaddr;
+
 use fastcrypto::traits::KeyPair;
+pub use iota_protocol_config::ProtocolVersion;
 use itertools::Itertools;
 use once_cell::sync::OnceCell;
-use rand::rngs::{StdRng, ThreadRng};
-use rand::seq::SliceRandom;
-use rand::{Rng, SeedableRng};
+use rand::{
+    Rng, SeedableRng,
+    rngs::{StdRng, ThreadRng},
+    seq::SliceRandom,
+};
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::fmt::Write;
-use std::fmt::{Display, Formatter};
-use std::hash::{Hash, Hasher};
-pub use iota_protocol_config::ProtocolVersion;
+
+use super::base_types::*;
+use crate::{
+    crypto::{
+        AuthorityKeyPair, AuthorityPublicKey, NetworkPublicKey, random_committee_key_pairs_of_size,
+    },
+    error::{IotaError, IotaResult},
+    multiaddr::Multiaddr,
+};
 
 pub type EpochId = u64;
 
@@ -439,9 +446,10 @@ impl Display for CommitteeWithNetworkMetadata {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use crate::crypto::{get_key_pair, AuthorityKeyPair};
     use fastcrypto::traits::KeyPair;
+
+    use super::*;
+    use crate::crypto::{AuthorityKeyPair, get_key_pair};
 
     #[test]
     fn test_shuffle_by_weight() {

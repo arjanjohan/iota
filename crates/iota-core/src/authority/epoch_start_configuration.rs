@@ -2,23 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use enum_dispatch::enum_dispatch;
-use serde::{Deserialize, Serialize};
-use iota_config::NodeConfig;
-
 use std::fmt;
-use iota_types::authenticator_state::get_authenticator_state_obj_initial_shared_version;
-use iota_types::base_types::SequenceNumber;
-use iota_types::bridge::{get_bridge_obj_initial_shared_version, is_bridge_committee_initiated};
-use iota_types::deny_list_v1::get_deny_list_obj_initial_shared_version;
-use iota_types::epoch_data::EpochData;
-use iota_types::error::IotaResult;
-use iota_types::messages_checkpoint::{CheckpointDigest, CheckpointTimestamp};
-use iota_types::randomness_state::get_randomness_state_obj_initial_shared_version;
-use iota_types::storage::ObjectStore;
-use iota_types::iota_system_state::epoch_start_iota_system_state::{
-    EpochStartSystemState, EpochStartSystemStateTrait,
+
+use enum_dispatch::enum_dispatch;
+use iota_config::NodeConfig;
+use iota_types::{
+    authenticator_state::get_authenticator_state_obj_initial_shared_version,
+    base_types::SequenceNumber,
+    bridge::{get_bridge_obj_initial_shared_version, is_bridge_committee_initiated},
+    deny_list_v1::get_deny_list_obj_initial_shared_version,
+    epoch_data::EpochData,
+    error::IotaResult,
+    iota_system_state::epoch_start_iota_system_state::{
+        EpochStartSystemState, EpochStartSystemStateTrait,
+    },
+    messages_checkpoint::{CheckpointDigest, CheckpointTimestamp},
+    randomness_state::get_randomness_state_obj_initial_shared_version,
+    storage::ObjectStore,
 };
+use serde::{Deserialize, Serialize};
 
 #[enum_dispatch]
 pub trait EpochStartConfigTrait {
@@ -158,19 +160,21 @@ impl EpochStartConfiguration {
         // We only need to implement this function for the latest version.
         // When a new version is introduced, this function should be updated.
         match self {
-            Self::V6(config) => {
-                Self::V6(EpochStartConfigurationV6 {
-                    system_state: config.system_state.new_at_next_epoch_for_testing(),
-                    epoch_digest: config.epoch_digest,
-                    flags: config.flags.clone(),
-                    authenticator_obj_initial_shared_version: config.authenticator_obj_initial_shared_version,
-                    randomness_obj_initial_shared_version: config.randomness_obj_initial_shared_version,
-                    coin_deny_list_obj_initial_shared_version: config.coin_deny_list_obj_initial_shared_version,
-                    bridge_obj_initial_shared_version: config.bridge_obj_initial_shared_version,
-                    bridge_committee_initiated: config.bridge_committee_initiated,
-                })
-            }
-            _ => panic!("This function is only implemented for the latest version of EpochStartConfiguration"),
+            Self::V6(config) => Self::V6(EpochStartConfigurationV6 {
+                system_state: config.system_state.new_at_next_epoch_for_testing(),
+                epoch_digest: config.epoch_digest,
+                flags: config.flags.clone(),
+                authenticator_obj_initial_shared_version: config
+                    .authenticator_obj_initial_shared_version,
+                randomness_obj_initial_shared_version: config.randomness_obj_initial_shared_version,
+                coin_deny_list_obj_initial_shared_version: config
+                    .coin_deny_list_obj_initial_shared_version,
+                bridge_obj_initial_shared_version: config.bridge_obj_initial_shared_version,
+                bridge_committee_initiated: config.bridge_committee_initiated,
+            }),
+            _ => panic!(
+                "This function is only implemented for the latest version of EpochStartConfiguration"
+            ),
         }
     }
 

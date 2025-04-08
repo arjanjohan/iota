@@ -2,34 +2,42 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    read_manifest, FileMetadata, FileType, Manifest, CHECKPOINT_FILE_MAGIC, SUMMARY_FILE_MAGIC,
+use std::{
+    borrow::Borrow,
+    future,
+    ops::Range,
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering},
+    },
+    time::Duration,
 };
-use anyhow::{anyhow, Context, Result};
-use bytes::buf::Reader;
-use bytes::{Buf, Bytes};
+
+use anyhow::{Context, Result, anyhow};
+use bytes::{Buf, Bytes, buf::Reader};
 use futures::{StreamExt, TryStreamExt};
-use prometheus::{register_int_counter_vec_with_registry, IntCounterVec, Registry};
-use rand::seq::SliceRandom;
-use std::borrow::Borrow;
-use std::future;
-use std::ops::Range;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
-use std::time::Duration;
 use iota_config::node::ArchiveReaderConfig;
-use iota_storage::object_store::http::HttpDownloaderBuilder;
-use iota_storage::object_store::util::get;
-use iota_storage::object_store::ObjectStoreGetExt;
-use iota_storage::{compute_sha3_checksum_for_bytes, make_iterator, verify_checkpoint};
-use iota_types::messages_checkpoint::{
-    CertifiedCheckpointSummary, CheckpointSequenceNumber,
-    FullCheckpointContents as CheckpointContents, VerifiedCheckpoint, VerifiedCheckpointContents,
+use iota_storage::{
+    compute_sha3_checksum_for_bytes, make_iterator,
+    object_store::{ObjectStoreGetExt, http::HttpDownloaderBuilder, util::get},
+    verify_checkpoint,
 };
-use iota_types::storage::WriteStore;
-use tokio::sync::oneshot::Sender;
-use tokio::sync::{oneshot, Mutex};
+use iota_types::{
+    messages_checkpoint::{
+        CertifiedCheckpointSummary, CheckpointSequenceNumber,
+        FullCheckpointContents as CheckpointContents, VerifiedCheckpoint,
+        VerifiedCheckpointContents,
+    },
+    storage::WriteStore,
+};
+use prometheus::{IntCounterVec, Registry, register_int_counter_vec_with_registry};
+use rand::seq::SliceRandom;
+use tokio::sync::{Mutex, oneshot, oneshot::Sender};
 use tracing::info;
+
+use crate::{
+    CHECKPOINT_FILE_MAGIC, FileMetadata, FileType, Manifest, SUMMARY_FILE_MAGIC, read_manifest,
+};
 
 #[derive(Debug)]
 pub struct ArchiveReaderMetrics {
@@ -193,12 +201,16 @@ impl ArchiveReader {
         summary_files.sort_by_key(|f| f.checkpoint_seq_range.start);
         contents_files.sort_by_key(|f| f.checkpoint_seq_range.start);
 
-        assert!(summary_files
-            .windows(2)
-            .all(|w| w[1].checkpoint_seq_range.start == w[0].checkpoint_seq_range.end));
-        assert!(contents_files
-            .windows(2)
-            .all(|w| w[1].checkpoint_seq_range.start == w[0].checkpoint_seq_range.end));
+        assert!(
+            summary_files
+                .windows(2)
+                .all(|w| w[1].checkpoint_seq_range.start == w[0].checkpoint_seq_range.end)
+        );
+        assert!(
+            contents_files
+                .windows(2)
+                .all(|w| w[1].checkpoint_seq_range.start == w[0].checkpoint_seq_range.end)
+        );
 
         let files: Vec<(FileMetadata, FileMetadata)> = summary_files
             .into_iter()

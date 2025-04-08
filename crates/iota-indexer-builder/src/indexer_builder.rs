@@ -2,19 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::cmp::min;
-use std::sync::Arc;
+use std::{cmp::min, sync::Arc};
 
 use anyhow::Error;
 use async_trait::async_trait;
 use futures::StreamExt;
+use iota_metrics::{metered_channel, spawn_monitored_task};
 use prometheus::{IntGauge, IntGaugeVec};
+use tap::tap::TapFallible;
 use tokio::task::JoinHandle;
 
-use crate::metrics::IndexerMetricProvider;
-use crate::{Task, Tasks};
-use iota_metrics::{metered_channel, spawn_monitored_task};
-use tap::tap::TapFallible;
+use crate::{Task, Tasks, metrics::IndexerMetricProvider};
 
 type CheckpointData<T> = (u64, Vec<T>);
 pub type DataSender<T> = metered_channel::Sender<CheckpointData<T>>;

@@ -2,19 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::indexer_reader::IndexerReader;
 use async_trait::async_trait;
-use jsonrpsee::core::RpcResult;
-use jsonrpsee::RpcModule;
-use iota_json_rpc::coin_api::{parse_to_struct_tag, parse_to_type_tag};
-use iota_json_rpc::error::IotaRpcInputError;
-use iota_json_rpc::IotaRpcModule;
-use iota_json_rpc_api::{cap_page_limit, CoinReadApiServer};
-use iota_json_rpc_types::{Balance, CoinPage, Page, IotaCoinMetadata};
+use iota_json_rpc::{
+    IotaRpcModule,
+    coin_api::{parse_to_struct_tag, parse_to_type_tag},
+    error::IotaRpcInputError,
+};
+use iota_json_rpc_api::{CoinReadApiServer, cap_page_limit};
+use iota_json_rpc_types::{Balance, CoinPage, IotaCoinMetadata, Page};
 use iota_open_rpc::Module;
-use iota_types::balance::Supply;
-use iota_types::base_types::{ObjectID, IotaAddress};
-use iota_types::gas_coin::{GAS, TOTAL_SUPPLY_NANOS};
+use iota_types::{
+    balance::Supply,
+    base_types::{IotaAddress, ObjectID},
+    gas_coin::{GAS, TOTAL_SUPPLY_NANOS},
+};
+use jsonrpsee::{RpcModule, core::RpcResult};
+
+use crate::indexer_reader::IndexerReader;
 
 pub(crate) struct CoinReadApi {
     inner: IndexerReader,

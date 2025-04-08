@@ -4,6 +4,16 @@
 
 use std::str::FromStr;
 
+use async_graphql::{connection::Connection, *};
+use diesel_async::scoped_futures::ScopedFutureExt;
+use iota_indexer::models::objects::StoredHistoryObject;
+use iota_json_rpc::name_service::{
+    Domain as NativeDomain, NameRecord, NameServiceConfig, NameServiceError,
+};
+use iota_types::{base_types::IotaAddress as NativeIotaAddress, dynamic_field::Field, id::UID};
+use move_core_types::{ident_str, identifier::IdentStr, language_storage::StructTag};
+use serde::{Deserialize, Serialize};
+
 use super::{
     available_range::AvailableRange,
     balance::{self, Balance},
@@ -14,32 +24,23 @@ use super::{
     cursor::Page,
     display::DisplayEntry,
     dynamic_field::{DynamicField, DynamicFieldName},
+    iota_address::IotaAddress,
     move_object::{MoveObject, MoveObjectImpl},
     move_value::MoveValue,
     object::{self, Object, ObjectFilter, ObjectImpl, ObjectOwner, ObjectStatus},
     owner::OwnerImpl,
     stake::StakedIota,
     string_input::impl_string_input,
-    iota_address::IotaAddress,
     transaction_block::{self, TransactionBlock, TransactionBlockFilter},
     type_filter::ExactTypeFilter,
     uint53::UInt53,
 };
 use crate::{
     connection::ScanConnection,
-    consistency::{build_objects_query, View},
+    consistency::{View, build_objects_query},
     data::{Db, DbConnection, QueryExecutor},
     error::Error,
 };
-use async_graphql::{connection::Connection, *};
-use diesel_async::scoped_futures::ScopedFutureExt;
-use move_core_types::{ident_str, identifier::IdentStr, language_storage::StructTag};
-use serde::{Deserialize, Serialize};
-use iota_indexer::models::objects::StoredHistoryObject;
-use iota_json_rpc::name_service::{
-    Domain as NativeDomain, NameRecord, NameServiceConfig, NameServiceError,
-};
-use iota_types::{base_types::IotaAddress as NativeIotaAddress, dynamic_field::Field, id::UID};
 
 const MOD_REGISTRATION: &IdentStr = ident_str!("iotans_registration");
 const TYPO_REGISTRATION: &IdentStr = ident_str!("IotaNSRegistration");
@@ -144,7 +145,7 @@ impl IotaNSRegistration {
 
     /// The coin objects for this object.
     ///
-    ///`type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
+    /// `type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
     pub(crate) async fn coins(
         &self,
         ctx: &Context<'_>,
@@ -474,7 +475,9 @@ impl NameService {
         // parent's `NameRecord`.
         let mut object_ids = vec![IotaAddress::from(config.record_field_id(&domain.0))];
         if domain.0.is_subdomain() {
-            object_ids.push(IotaAddress::from(config.record_field_id(&domain.0.parent())));
+            object_ids.push(IotaAddress::from(
+                config.record_field_id(&domain.0.parent()),
+            ));
         }
 
         // Create a page with a bound of `object_ids` length to fetch the relevant `NameRecord`s.

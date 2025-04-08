@@ -2,35 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::error::Result;
-use super::ObjectStore;
-use crate::base_types::{EpochId, MoveObjectType, ObjectID, SequenceNumber, IotaAddress};
-use crate::committee::Committee;
-use crate::digests::{
-    ChainIdentifier, CheckpointContentsDigest, CheckpointDigest, TransactionDigest,
-    TransactionEventsDigest,
-};
-use crate::dynamic_field::DynamicFieldType;
-use crate::effects::{TransactionEffects, TransactionEvents};
-use crate::full_checkpoint_content::CheckpointData;
-use crate::messages_checkpoint::{
-    CheckpointContents, CheckpointSequenceNumber, FullCheckpointContents, VerifiedCheckpoint,
-};
-use crate::transaction::VerifiedTransaction;
-use move_core_types::language_storage::StructTag;
-use move_core_types::language_storage::TypeTag;
-use serde::Deserialize;
-use serde::Serialize;
 use std::sync::Arc;
 
+use move_core_types::language_storage::{StructTag, TypeTag};
+use serde::{Deserialize, Serialize};
+
+use super::{ObjectStore, error::Result};
+use crate::{
+    base_types::{EpochId, IotaAddress, MoveObjectType, ObjectID, SequenceNumber},
+    committee::Committee,
+    digests::{
+        ChainIdentifier, CheckpointContentsDigest, CheckpointDigest, TransactionDigest,
+        TransactionEventsDigest,
+    },
+    dynamic_field::DynamicFieldType,
+    effects::{TransactionEffects, TransactionEvents},
+    full_checkpoint_content::CheckpointData,
+    messages_checkpoint::{
+        CheckpointContents, CheckpointSequenceNumber, FullCheckpointContents, VerifiedCheckpoint,
+    },
+    transaction::VerifiedTransaction,
+};
+
 pub trait ReadStore: ObjectStore {
-    //
     // Committee Getters
     //
 
     fn get_committee(&self, epoch: EpochId) -> Option<Arc<Committee>>;
 
-    //
     // Checkpoint Getters
     //
 
@@ -90,7 +89,6 @@ pub trait ReadStore: ObjectStore {
         sequence_number: CheckpointSequenceNumber,
     ) -> Option<CheckpointContents>;
 
-    //
     // Transaction Getters
     //
 
@@ -130,7 +128,6 @@ pub trait ReadStore: ObjectStore {
             .collect()
     }
 
-    //
     // Extra Checkpoint fetching apis
     //
 
@@ -155,10 +152,12 @@ pub trait ReadStore: ObjectStore {
         checkpoint: VerifiedCheckpoint,
         checkpoint_contents: CheckpointContents,
     ) -> anyhow::Result<CheckpointData> {
-        use super::ObjectKey;
-        use crate::effects::TransactionEffectsAPI;
-        use crate::full_checkpoint_content::CheckpointTransaction;
         use std::collections::HashMap;
+
+        use super::ObjectKey;
+        use crate::{
+            effects::TransactionEffectsAPI, full_checkpoint_content::CheckpointTransaction,
+        };
 
         let transaction_digests = checkpoint_contents
             .iter()

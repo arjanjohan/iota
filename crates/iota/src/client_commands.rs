@@ -2,16 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    clever_error_rendering::render_clever_error_opt,
-    client_ptb::ptb::PTB,
-    displays::Pretty,
-    key_identity::{get_identity_address, KeyIdentity},
-    upgrade_compatibility::check_compatibility,
-    verifier_meter::{AccumulatingMeter, Accumulator},
-};
 use std::{
-    collections::{btree_map::Entry, BTreeMap},
+    collections::{BTreeMap, btree_map::Entry},
     fmt::{Debug, Display, Formatter, Write},
     fs,
     path::{Path, PathBuf},
@@ -19,7 +11,7 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::{anyhow, bail, ensure, Context};
+use anyhow::{Context, anyhow, bail, ensure};
 use bip32::DerivationPath;
 use clap::*;
 use colored::Colorize;
@@ -27,76 +19,81 @@ use fastcrypto::{
     encoding::{Base64, Encoding},
     traits::ToFromBytes,
 };
-use reqwest::StatusCode;
-
-use move_binary_format::CompiledModule;
-use move_bytecode_verifier_meter::Scope;
-use move_core_types::{account_address::AccountAddress, language_storage::TypeTag};
-use move_package::BuildConfig as MoveBuildConfig;
-use prometheus::Registry;
-use serde::Serialize;
-use serde_json::{json, Value};
 use iota_config::verifier_signing_config::VerifierSigningConfig;
-use iota_move::manage_package::resolve_lock_file_path;
-use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-use iota_source_validation::{BytecodeSourceVerifier, ValidationMode};
-
-use shared_crypto::intent::Intent;
 use iota_json::IotaJsonValue;
 use iota_json_rpc_types::{
     Coin, DevInspectArgs, DevInspectResults, DryRunTransactionBlockResponse, DynamicFieldInfo,
     DynamicFieldPage, IotaCoinMetadata, IotaData, IotaExecutionStatus, IotaObjectData,
     IotaObjectDataOptions, IotaObjectResponse, IotaObjectResponseQuery, IotaParsedData,
-    IotaProtocolConfigValue, IotaRawData, IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI,
-    IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+    IotaProtocolConfigValue, IotaRawData, IotaTransactionBlockEffects,
+    IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse,
+    IotaTransactionBlockResponseOptions,
 };
 use iota_keys::keystore::AccountKeystore;
+use iota_move::manage_package::resolve_lock_file_path;
 use iota_move_build::{
-    build_from_resolution_graph, check_invalid_dependencies, check_unpublished_dependencies,
-    gather_published_ids, BuildConfig, CompiledPackage, PackageDependencies,
+    BuildConfig, CompiledPackage, PackageDependencies, build_from_resolution_graph,
+    check_invalid_dependencies, check_unpublished_dependencies, gather_published_ids,
 };
 use iota_package_management::{LockCommand, PublishedAtError};
+use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
 use iota_replay::ReplayToolCommand;
 use iota_sdk::{
+    IOTA_COIN_TYPE, IOTA_DEVNET_URL, IOTA_LOCAL_NETWORK_URL, IOTA_LOCAL_NETWORK_URL_0,
+    IOTA_TESTNET_URL, IotaClient,
     apis::ReadApi,
     iota_client_config::{IotaClientConfig, IotaEnv},
     wallet_context::WalletContext,
-    IotaClient, IOTA_COIN_TYPE, IOTA_DEVNET_URL, IOTA_LOCAL_NETWORK_URL, IOTA_LOCAL_NETWORK_URL_0,
-    IOTA_TESTNET_URL,
 };
+use iota_source_validation::{BytecodeSourceVerifier, ValidationMode};
 use iota_types::{
-    base_types::{ObjectID, SequenceNumber, IotaAddress},
+    base_types::{IotaAddress, ObjectID, SequenceNumber},
     crypto::{EmptySignInfo, SignatureScheme},
-    digests::TransactionDigest,
+    digests::{ChainIdentifier, TransactionDigest},
     error::IotaError,
     gas::GasCostSummary,
     gas_coin::GasCoin,
+    iota_serde,
     message_envelope::Envelope,
     metrics::BytecodeVerifierMetrics,
     move_package::UpgradeCap,
     object::Owner,
     parse_iota_type_tag,
     signature::GenericSignature,
-    iota_serde,
     transaction::{
         SenderSignedData, Transaction, TransactionData, TransactionDataAPI, TransactionKind,
     },
 };
-
 use json_to_table::json_to_table;
+use move_binary_format::CompiledModule;
+use move_bytecode_verifier_meter::Scope;
+use move_core_types::{account_address::AccountAddress, language_storage::TypeTag};
+use move_package::BuildConfig as MoveBuildConfig;
+use prometheus::Registry;
+use reqwest::StatusCode;
+use serde::Serialize;
+use serde_json::{Value, json};
+use shared_crypto::intent::Intent;
 use tabled::{
     builder::Builder as TableBuilder,
     settings::{
+        Alignment as TableAlignment, Border as TableBorder, Modify as TableModify,
+        Panel as TablePanel, Style as TableStyle,
         object::{Cell as TableCell, Columns as TableCols, Rows as TableRows},
         span::Span as TableSpan,
         style::HorizontalLine,
-        Alignment as TableAlignment, Border as TableBorder, Modify as TableModify,
-        Panel as TablePanel, Style as TableStyle,
     },
 };
-
-use iota_types::digests::ChainIdentifier;
 use tracing::{debug, info};
+
+use crate::{
+    clever_error_rendering::render_clever_error_opt,
+    client_ptb::ptb::PTB,
+    displays::Pretty,
+    key_identity::{KeyIdentity, get_identity_address},
+    upgrade_compatibility::check_compatibility,
+    verifier_meter::{AccumulatingMeter, Accumulator},
+};
 
 #[path = "unit_tests/profiler_tests.rs"]
 #[cfg(test)]
@@ -176,7 +173,7 @@ pub enum IotaClientCommands {
     /// Query a dynamic field by its address.
     #[clap(name = "dynamic-field")]
     DynamicFieldQuery {
-        ///The ID of the parent object
+        /// The ID of the parent object
         #[clap(name = "object_id")]
         id: ObjectID,
         /// Optional paging cursor
@@ -1248,7 +1245,9 @@ impl IotaClientCommands {
                 // without failing IotaJSON's checks.
                 let args = args
                     .into_iter()
-                    .map(|value| IotaJsonValue::new(convert_number_to_string(value.to_json_value())))
+                    .map(|value| {
+                        IotaJsonValue::new(convert_number_to_string(value.to_json_value()))
+                    })
                     .collect::<Result<_, _>>()?;
 
                 let type_args = type_args
@@ -1354,7 +1353,9 @@ impl IotaClientCommands {
 
                 if let Some(gas) = opts.gas {
                     if input_coins.contains(&gas) {
-                        bail!("Gas coin is in input coins of Pay transaction, use PayIota transaction instead!");
+                        bail!(
+                            "Gas coin is in input coins of Pay transaction, use PayIota transaction instead!"
+                        );
                     }
                 }
 
@@ -1513,10 +1514,16 @@ impl IotaClientCommands {
                         let network = match env.rpc.as_str() {
                             IOTA_DEVNET_URL => "https://faucet.devnet.iota.io/v1/gas",
                             IOTA_TESTNET_URL => {
-                                bail!("For testnet tokens, please use the Web UI: https://faucet.iota.io/?address={address}");
+                                bail!(
+                                    "For testnet tokens, please use the Web UI: https://faucet.iota.io/?address={address}"
+                                );
                             }
-                            IOTA_LOCAL_NETWORK_URL | IOTA_LOCAL_NETWORK_URL_0 => "http://127.0.0.1:9123/gas",
-                            _ => bail!("Cannot recognize the active network. Please provide the gas faucet full URL.")
+                            IOTA_LOCAL_NETWORK_URL | IOTA_LOCAL_NETWORK_URL_0 => {
+                                "http://127.0.0.1:9123/gas"
+                            }
+                            _ => bail!(
+                                "Cannot recognize the active network. Please provide the gas faucet full URL."
+                            ),
                         };
                         network.to_string()
                     } else {
@@ -1724,7 +1731,10 @@ impl IotaClientCommands {
 
     pub fn switch_env(config: &mut IotaClientConfig, env: &str) -> Result<(), anyhow::Error> {
         let env = Some(env.into());
-        ensure!(config.get_env(&env).is_some(), "Environment config not found for [{env:?}], add new environment config using the `iota client new-env` command.");
+        ensure!(
+            config.get_env(&env).is_some(),
+            "Environment config not found for [{env:?}], add new environment config using the `iota client new-env` command."
+        );
         config.active_env = env;
         Ok(())
     }
@@ -1743,16 +1753,20 @@ fn check_dep_verification_flags(
         ),
 
         (false, false) => {
-            eprintln!("{}: Dependency sources are no longer verified automatically during publication and upgrade. \
+            eprintln!(
+                "{}: Dependency sources are no longer verified automatically during publication and upgrade. \
                 You can pass the `--verify-deps` option if you would like to verify them as part of publication or upgrade.",
-                "[Note]".bold().yellow());
+                "[Note]".bold().yellow()
+            );
             Ok(verify_dependencies)
         }
 
         (true, false) => {
-            eprintln!("{}: Dependency sources are no longer verified automatically during publication and upgrade, \
+            eprintln!(
+                "{}: Dependency sources are no longer verified automatically during publication and upgrade, \
                 so the `--skip-dependency-verification` flag is no longer necessary.",
-                "[Warning]".bold().yellow());
+                "[Warning]".bold().yellow()
+            );
             Ok(verify_dependencies)
         }
 
@@ -2073,7 +2087,11 @@ impl Display for IotaClientCommandResult {
                 }
 
                 let mut builder = TableBuilder::default();
-                builder.set_header(vec!["gasCoinId", "nanosBalance (NANOS)", "iotaBalance (IOTA)"]);
+                builder.set_header(vec![
+                    "gasCoinId",
+                    "nanosBalance (NANOS)",
+                    "iotaBalance (IOTA)",
+                ]);
                 for coin in &gas_coins {
                     builder.push_record(vec![
                         coin.gas_coin_id.to_string(),
@@ -2659,7 +2677,9 @@ pub async fn request_tokens_from_faucet(
             if let Some(err) = faucet_resp.error {
                 bail!("Faucet request was unsuccessful: {err}")
             } else {
-                println!("Request successful. It can take up to 1 minute to get the coin. Run iota client gas to check your gas coins.");
+                println!(
+                    "Request successful. It can take up to 1 minute to get the coin. Run iota client gas to check your gas coins."
+                );
             }
         }
         StatusCode::BAD_REQUEST => {
@@ -2669,7 +2689,9 @@ pub async fn request_tokens_from_faucet(
             }
         }
         StatusCode::TOO_MANY_REQUESTS => {
-            bail!("Faucet service received too many requests from this IP address. Please try again after 60 minutes.");
+            bail!(
+                "Faucet service received too many requests from this IP address. Please try again after 60 minutes."
+            );
         }
         StatusCode::SERVICE_UNAVAILABLE => {
             bail!("Faucet service is currently overloaded or unavailable. Please try again later.");

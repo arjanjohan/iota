@@ -2,43 +2,44 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::cmp::Ordering;
-use std::collections::BTreeMap;
-use std::fmt;
-use std::fmt::Write;
-use std::fmt::{Display, Formatter};
+use std::{
+    cmp::Ordering,
+    collections::BTreeMap,
+    fmt,
+    fmt::{Display, Formatter, Write},
+};
 
 use anyhow::anyhow;
 use colored::Colorize;
 use fastcrypto::encoding::Base64;
-use move_bytecode_utils::module_cache::GetModule;
-use move_core_types::annotated_value::{MoveStructLayout, MoveValue};
-use move_core_types::identifier::Identifier;
-use move_core_types::language_storage::StructTag;
-use schemars::JsonSchema;
-use serde::Deserialize;
-use serde::Serialize;
-use serde_json::Value;
-use serde_with::serde_as;
-use serde_with::DisplayFromStr;
-
 use iota_protocol_config::ProtocolConfig;
-use iota_types::base_types::{
-    ObjectDigest, ObjectID, ObjectInfo, ObjectRef, ObjectType, SequenceNumber, IotaAddress,
-    TransactionDigest,
+use iota_types::{
+    base_types::{
+        IotaAddress, ObjectDigest, ObjectID, ObjectInfo, ObjectRef, ObjectType, SequenceNumber,
+        TransactionDigest,
+    },
+    error::{
+        ExecutionError, IotaError, IotaObjectResponseError, IotaResult, UserInputError,
+        UserInputResult,
+    },
+    gas_coin::GasCoin,
+    iota_serde::{BigInt, IotaStructTag, SequenceNumber as AsSequenceNumber},
+    messages_checkpoint::CheckpointSequenceNumber,
+    move_package::{MovePackage, TypeOrigin, UpgradeInfo},
+    object::{Data, MoveObject, Object, ObjectInner, ObjectRead, Owner},
 };
-use iota_types::error::{
-    ExecutionError, IotaError, IotaObjectResponseError, IotaResult, UserInputError, UserInputResult,
+use move_bytecode_utils::module_cache::GetModule;
+use move_core_types::{
+    annotated_value::{MoveStructLayout, MoveValue},
+    identifier::Identifier,
+    language_storage::StructTag,
 };
-use iota_types::gas_coin::GasCoin;
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-use iota_types::move_package::{MovePackage, TypeOrigin, UpgradeInfo};
-use iota_types::object::{Data, MoveObject, Object, ObjectInner, ObjectRead, Owner};
-use iota_types::iota_serde::BigInt;
-use iota_types::iota_serde::SequenceNumber as AsSequenceNumber;
-use iota_types::iota_serde::IotaStructTag;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use serde_with::{DisplayFromStr, serde_as};
 
-use crate::{Page, IotaMoveStruct, IotaMoveValue};
+use crate::{IotaMoveStruct, IotaMoveValue, Page};
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Clone, PartialEq, Eq)]
 pub struct IotaObjectResponse {
@@ -124,7 +125,9 @@ impl IotaObjectResponse {
                     digest: _,
                 }),
             ) => Ok(*object_id),
-            _ => Err(anyhow!("Could not get object_id, something went wrong with IotaObjectResponse construction.")),
+            _ => Err(anyhow!(
+                "Could not get object_id, something went wrong with IotaObjectResponse construction."
+            )),
         }
     }
 
@@ -692,7 +695,7 @@ pub trait IotaData: Sized {
     type ObjectType;
     type PackageType;
     fn try_from_object(object: MoveObject, layout: MoveStructLayout)
-        -> Result<Self, anyhow::Error>;
+    -> Result<Self, anyhow::Error>;
     fn try_from_package(package: MovePackage) -> Result<Self, anyhow::Error>;
     fn try_as_move(&self) -> Option<&Self::ObjectType>;
     fn try_into_move(self) -> Option<Self::ObjectType>;
@@ -787,11 +790,11 @@ impl IotaData for IotaParsedData {
             .map_err(|e| IotaError::ObjectSerializationError {
                 error: e.to_string(),
             })?;
-            let bytecode_str = d
-                .disassemble()
-                .map_err(|e| IotaError::ObjectSerializationError {
-                    error: e.to_string(),
-                })?;
+            let bytecode_str =
+                d.disassemble()
+                    .map_err(|e| IotaError::ObjectSerializationError {
+                        error: e.to_string(),
+                    })?;
             disassembled.insert(module.name().to_string(), Value::String(bytecode_str));
         }
 
@@ -876,7 +879,7 @@ impl IotaParsedData {
 
 pub trait IotaMoveObject: Sized {
     fn try_from_layout(object: MoveObject, layout: MoveStructLayout)
-        -> Result<Self, anyhow::Error>;
+    -> Result<Self, anyhow::Error>;
 
     fn try_from(o: MoveObject, resolver: &impl GetModule) -> Result<Self, anyhow::Error> {
         let layout = o.get_layout(resolver)?;
@@ -1260,7 +1263,10 @@ pub struct IotaObjectResponseQuery {
 }
 
 impl IotaObjectResponseQuery {
-    pub fn new(filter: Option<IotaObjectDataFilter>, options: Option<IotaObjectDataOptions>) -> Self {
+    pub fn new(
+        filter: Option<IotaObjectDataFilter>,
+        options: Option<IotaObjectDataOptions>,
+    ) -> Self {
         Self { filter, options }
     }
 

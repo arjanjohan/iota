@@ -9,12 +9,12 @@ use std::{
 };
 
 use clap::*;
-use move_vm_config::verifier::VerifierConfig;
-use serde::{Deserialize, Serialize};
-use serde_with::skip_serializing_none;
 use iota_protocol_config_macros::{
     ProtocolConfigAccessors, ProtocolConfigFeatureFlagsGetters, ProtocolConfigOverride,
 };
+use move_vm_config::verifier::VerifierConfig;
+use serde::{Deserialize, Serialize};
+use serde_with::skip_serializing_none;
 use tracing::{info, warn};
 
 /// The minimum and maximum protocol versions supported by this build.
@@ -1850,7 +1850,9 @@ impl ProtocolConfig {
         });
 
         if std::env::var("IOTA_PROTOCOL_CONFIG_OVERRIDE_ENABLE").is_ok() {
-            warn!("overriding ProtocolConfig settings with custom settings; this may break non-local networks");
+            warn!(
+                "overriding ProtocolConfig settings with custom settings; this may break non-local networks"
+            );
             let overrides: ProtocolConfigOptional =
                 serde_env::from_env_with_prefix("IOTA_PROTOCOL_CONFIG_OVERRIDE")
                     .expect("failed to parse ProtocolConfig override env variables");
@@ -2467,7 +2469,7 @@ impl ProtocolConfig {
                     // We maintain the same total size limit for events, but increase the number of
                     // events that can be emitted.
                     cfg.max_event_emit_size_total = Some(
-                        256 /* former event count limit */ * 250 * 1024, /* size limit per event */
+                        256 /* former event count limit */ * 250 * 1024, // size limit per event
                     );
                 }
                 20 => {
@@ -3295,7 +3297,7 @@ impl ProtocolConfig {
             max_back_edges_per_function,
             max_back_edges_per_module,
             max_basic_blocks_in_script: None,
-            max_idenfitier_len: self.max_move_identifier_len_as_option(), // Before protocol version 9, there was no limit
+            max_idenfitier_len: self.max_move_identifier_len_as_option(), /* Before protocol version 9, there was no limit */
             allow_receiving_object_id: self.allow_receiving_object_id(),
             reject_mutable_random_on_entry_functions: self
                 .reject_mutable_random_on_entry_functions(),
@@ -3605,9 +3607,10 @@ mod test {
         );
 
         // We didnt have this in version 1
-        assert!(prot
-            .lookup_attr("max_move_identifier_len".to_string())
-            .is_none());
+        assert!(
+            prot.lookup_attr("max_move_identifier_len".to_string())
+                .is_none()
+        );
 
         // But we did in version 9
         let prot: ProtocolConfig =
@@ -3620,11 +3623,12 @@ mod test {
         let prot: ProtocolConfig =
             ProtocolConfig::get_for_version(ProtocolVersion::new(1), Chain::Unknown);
         // We didnt have this in version 1
-        assert!(prot
-            .attr_map()
-            .get("max_move_identifier_len")
-            .unwrap()
-            .is_none());
+        assert!(
+            prot.attr_map()
+                .get("max_move_identifier_len")
+                .unwrap()
+                .is_none()
+        );
         // We had this in version 1
         assert!(
             prot.attr_map().get("max_arguments").unwrap()
@@ -3635,14 +3639,17 @@ mod test {
         let prot: ProtocolConfig =
             ProtocolConfig::get_for_version(ProtocolVersion::new(1), Chain::Unknown);
         // Does not exist
-        assert!(prot
-            .feature_flags
-            .lookup_attr("some random string".to_owned())
-            .is_none());
-        assert!(!prot
-            .feature_flags
-            .attr_map()
-            .contains_key("some random string"));
+        assert!(
+            prot.feature_flags
+                .lookup_attr("some random string".to_owned())
+                .is_none()
+        );
+        assert!(
+            !prot
+                .feature_flags
+                .attr_map()
+                .contains_key("some random string")
+        );
 
         // Was false in v1
         assert!(
@@ -3685,9 +3692,9 @@ mod test {
             LimitThresholdCrossed::Soft(255u128, 100)
         ));
         // This wont compile because lossy
-        //assert!(check_limit!(100000000u128, low, high) == LimitThresholdCrossed::None);
+        // assert!(check_limit!(100000000u128, low, high) == LimitThresholdCrossed::None);
         // This wont compile because lossy
-        //assert!(check_limit!(100000000usize, low, high) == LimitThresholdCrossed::None);
+        // assert!(check_limit!(100000000usize, low, high) == LimitThresholdCrossed::None);
 
         assert!(matches!(
             check_limit!(2550000u64, low, high),

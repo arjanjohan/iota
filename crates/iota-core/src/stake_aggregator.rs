@@ -2,18 +2,21 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    collections::{BTreeMap, HashMap, hash_map::Entry},
+    hash::Hash,
+    sync::Arc,
+};
+
+use iota_types::{
+    base_types::{AuthorityName, ConciseableName},
+    committee::{Committee, CommitteeTrait, StakeUnit},
+    crypto::{AuthorityQuorumSignInfo, AuthoritySignInfo, AuthoritySignInfoTrait},
+    error::IotaError,
+    message_envelope::{Envelope, Message},
+};
 use serde::Serialize;
 use shared_crypto::intent::Intent;
-use std::collections::hash_map::Entry;
-use std::collections::{BTreeMap, HashMap};
-use std::hash::Hash;
-use std::sync::Arc;
-use iota_types::base_types::AuthorityName;
-use iota_types::base_types::ConciseableName;
-use iota_types::committee::{Committee, CommitteeTrait, StakeUnit};
-use iota_types::crypto::{AuthorityQuorumSignInfo, AuthoritySignInfo, AuthoritySignInfoTrait};
-use iota_types::error::IotaError;
-use iota_types::message_envelope::{Envelope, Message};
 use tracing::warn;
 
 /// StakeAggregator allows us to keep track of the total stake of a set of validators.

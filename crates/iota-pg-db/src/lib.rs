@@ -2,18 +2,21 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::anyhow;
-use diesel::migration::{MigrationSource, MigrationVersion};
-use diesel::pg::Pg;
-use diesel_async::async_connection_wrapper::AsyncConnectionWrapper;
-use diesel_async::{
-    pooled_connection::{
-        bb8::{Pool, PooledConnection},
-        AsyncDieselConnectionManager,
-    },
-    AsyncPgConnection, RunQueryDsl,
-};
 use std::time::Duration;
+
+use anyhow::anyhow;
+use diesel::{
+    migration::{MigrationSource, MigrationVersion},
+    pg::Pg,
+};
+use diesel_async::{
+    AsyncPgConnection, RunQueryDsl,
+    async_connection_wrapper::AsyncConnectionWrapper,
+    pooled_connection::{
+        AsyncDieselConnectionManager,
+        bb8::{Pool, PooledConnection},
+    },
+};
 use tracing::info;
 use url::Url;
 
@@ -211,10 +214,11 @@ async fn pool(args: DbArgs) -> anyhow::Result<Pool<AsyncPgConnection>> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use diesel::prelude::QueryableByName;
     use diesel_async::RunQueryDsl;
     use diesel_migrations::EmbeddedMigrations;
+
+    use super::*;
 
     #[tokio::test]
     async fn temp_db_smoketest() {

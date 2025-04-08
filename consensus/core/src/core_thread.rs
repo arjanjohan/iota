@@ -6,14 +6,14 @@ use std::{
     collections::BTreeSet,
     fmt::Debug,
     sync::{
-        atomic::{AtomicU32, Ordering},
         Arc,
+        atomic::{AtomicU32, Ordering},
     },
 };
 
 use async_trait::async_trait;
 use iota_metrics::{
-    monitored_mpsc::{channel, Receiver, Sender, WeakSender},
+    monitored_mpsc::{Receiver, Sender, WeakSender, channel},
     monitored_scope, spawn_logged_monitored_task,
 };
 use parking_lot::RwLock;
@@ -22,6 +22,7 @@ use tokio::sync::{oneshot, watch};
 use tracing::warn;
 
 use crate::{
+    BlockAPI as _,
     block::{BlockRef, Round, VerifiedBlock},
     context::Context,
     core::Core,
@@ -29,7 +30,6 @@ use crate::{
     dag_state::DagState,
     error::{ConsensusError, ConsensusResult},
     round_prober::QuorumRound,
-    BlockAPI as _,
 };
 
 const CORE_THREAD_COMMANDS_CHANNEL_SIZE: usize = 2000;
@@ -58,7 +58,7 @@ pub enum CoreError {
 #[async_trait]
 pub trait CoreThreadDispatcher: Sync + Send + 'static {
     async fn add_blocks(&self, blocks: Vec<VerifiedBlock>)
-        -> Result<BTreeSet<BlockRef>, CoreError>;
+    -> Result<BTreeSet<BlockRef>, CoreError>;
 
     async fn check_block_refs(
         &self,
@@ -456,6 +456,7 @@ mod test {
 
     use super::*;
     use crate::{
+        CommitConsumer,
         block_manager::BlockManager,
         block_verifier::NoopBlockVerifier,
         commit_observer::CommitObserver,
@@ -465,7 +466,6 @@ mod test {
         leader_schedule::LeaderSchedule,
         storage::mem_store::MemStore,
         transaction::{TransactionClient, TransactionConsumer},
-        CommitConsumer,
     };
 
     #[tokio::test]

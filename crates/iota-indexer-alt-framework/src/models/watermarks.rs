@@ -4,7 +4,7 @@
 
 use std::{borrow::Cow, time::Duration};
 
-use chrono::{naive::NaiveDateTime, DateTime, Utc};
+use chrono::{DateTime, Utc, naive::NaiveDateTime};
 use diesel::{dsl::sql, prelude::*, sql_types};
 use diesel_async::RunQueryDsl;
 use iota_field_count::FieldCount;

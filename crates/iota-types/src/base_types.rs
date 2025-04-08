@@ -3,72 +3,64 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::coin::Coin;
-use crate::coin::CoinMetadata;
-use crate::coin::TreasuryCap;
-use crate::coin::COIN_MODULE_NAME;
-use crate::coin::COIN_STRUCT_NAME;
-pub use crate::committee::EpochId;
-use crate::crypto::{
-    AuthorityPublicKeyBytes, DefaultHash, PublicKey, SignatureScheme, IotaPublicKey, IotaSignature,
+use std::{
+    cmp::max,
+    convert::{TryFrom, TryInto},
+    fmt,
+    str::FromStr,
 };
-pub use crate::digests::{ObjectDigest, TransactionDigest, TransactionEffectsDigest};
-use crate::dynamic_field::DynamicFieldInfo;
-use crate::dynamic_field::DynamicFieldType;
-use crate::effects::TransactionEffects;
-use crate::effects::TransactionEffectsAPI;
-use crate::epoch_data::EpochData;
-use crate::error::ExecutionErrorKind;
-use crate::error::IotaError;
-use crate::error::{ExecutionError, IotaResult};
-use crate::gas_coin::GasCoin;
-use crate::gas_coin::GAS;
-use crate::governance::StakedIota;
-use crate::governance::STAKED_IOTA_STRUCT_NAME;
-use crate::governance::STAKING_POOL_MODULE_NAME;
-use crate::id::RESOLVED_IOTA_ID;
-use crate::messages_checkpoint::CheckpointTimestamp;
-use crate::multisig::MultiSigPublicKey;
-use crate::object::{Object, Owner};
-use crate::parse_iota_struct_tag;
-use crate::signature::GenericSignature;
-use crate::iota_serde::Readable;
-use crate::iota_serde::{to_iota_struct_tag_string, HexAccountAddress};
-use crate::transaction::Transaction;
-use crate::transaction::VerifiedTransaction;
-use crate::zk_login_authenticator::ZkLoginAuthenticator;
-use crate::MOVE_STDLIB_ADDRESS;
-use crate::IOTA_CLOCK_OBJECT_ID;
-use crate::IOTA_FRAMEWORK_ADDRESS;
-use crate::IOTA_SYSTEM_ADDRESS;
+
 use anyhow::anyhow;
-use fastcrypto::encoding::decode_bytes_hex;
-use fastcrypto::encoding::{Encoding, Hex};
-use fastcrypto::hash::HashFunction;
-use fastcrypto::traits::AllowedRng;
+use fastcrypto::{
+    encoding::{Encoding, Hex, decode_bytes_hex},
+    hash::HashFunction,
+    traits::AllowedRng,
+};
 use fastcrypto_zkp::bn254::zk_login::ZkLoginInputs;
-use move_binary_format::file_format::SignatureToken;
-use move_binary_format::CompiledModule;
+use move_binary_format::{CompiledModule, file_format::SignatureToken};
 use move_bytecode_utils::resolve_struct;
-use move_core_types::account_address::AccountAddress;
-use move_core_types::annotated_value as A;
-use move_core_types::ident_str;
-use move_core_types::identifier::IdentStr;
-use move_core_types::language_storage::ModuleId;
-use move_core_types::language_storage::StructTag;
-use move_core_types::language_storage::TypeTag;
+use move_core_types::{
+    account_address::AccountAddress,
+    annotated_value as A, ident_str,
+    identifier::IdentStr,
+    language_storage::{ModuleId, StructTag, TypeTag},
+};
 use rand::Rng;
 use schemars::JsonSchema;
-use serde::ser::Error;
-use serde::ser::SerializeSeq;
-use serde::Serializer;
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize, Serialize, Serializer,
+    ser::{Error, SerializeSeq},
+};
 use serde_with::serde_as;
 use shared_crypto::intent::HashingIntentScope;
-use std::cmp::max;
-use std::convert::{TryFrom, TryInto};
-use std::fmt;
-use std::str::FromStr;
+
+use crate::{
+    IOTA_CLOCK_OBJECT_ID, IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS, MOVE_STDLIB_ADDRESS,
+    coin::{COIN_MODULE_NAME, COIN_STRUCT_NAME, Coin, CoinMetadata, TreasuryCap},
+    crypto::{
+        AuthorityPublicKeyBytes, DefaultHash, IotaPublicKey, IotaSignature, PublicKey,
+        SignatureScheme,
+    },
+    dynamic_field::{DynamicFieldInfo, DynamicFieldType},
+    effects::{TransactionEffects, TransactionEffectsAPI},
+    epoch_data::EpochData,
+    error::{ExecutionError, ExecutionErrorKind, IotaError, IotaResult},
+    gas_coin::{GAS, GasCoin},
+    governance::{STAKED_IOTA_STRUCT_NAME, STAKING_POOL_MODULE_NAME, StakedIota},
+    id::RESOLVED_IOTA_ID,
+    iota_serde::{HexAccountAddress, Readable, to_iota_struct_tag_string},
+    messages_checkpoint::CheckpointTimestamp,
+    multisig::MultiSigPublicKey,
+    object::{Object, Owner},
+    parse_iota_struct_tag,
+    signature::GenericSignature,
+    transaction::{Transaction, VerifiedTransaction},
+    zk_login_authenticator::ZkLoginAuthenticator,
+};
+pub use crate::{
+    committee::EpochId,
+    digests::{ObjectDigest, TransactionDigest, TransactionEffectsDigest},
+};
 
 #[cfg(test)]
 #[path = "unit_tests/base_types_tests.rs"]

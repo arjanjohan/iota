@@ -8,9 +8,9 @@ use iota_default_config::DefaultConfig;
 use iota_indexer_alt_framework::{
     ingestion::IngestionConfig,
     pipeline::{
+        CommitterConfig,
         concurrent::{ConcurrentConfig, PrunerConfig},
         sequential::SequentialConfig,
-        CommitterConfig,
     },
 };
 use tracing::warn;

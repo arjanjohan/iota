@@ -13,6 +13,19 @@
 //! 2. Written into a mutable reference
 //! 3. Added to a vector
 //! 4. Passed to a function cal::;
+use std::{collections::BTreeMap, error::Error, num::NonZeroU64};
+
+use iota_types::{
+    BRIDGE_ADDRESS, IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS,
+    authenticator_state::AUTHENTICATOR_STATE_MODULE_NAME,
+    bridge::BRIDGE_MODULE_NAME,
+    clock::CLOCK_MODULE_NAME,
+    deny_list_v1::{DENY_LIST_CREATE_FUNC, DENY_LIST_MODULE},
+    error::{ExecutionError, VMMVerifierErrorSubStatusCode},
+    id::OBJECT_MODULE_NAME,
+    iota_system_state::IOTA_SYSTEM_MODULE_NAME,
+    randomness_state::RANDOMNESS_MODULE_NAME,
+};
 use move_abstract_interpreter::absint::{
     AbstractDomain, AbstractInterpreter, FunctionContext, JoinResult, TransferFunctions,
 };
@@ -28,22 +41,10 @@ use move_bytecode_verifier_meter::{Meter, Scope};
 use move_core_types::{
     account_address::AccountAddress, ident_str, identifier::IdentStr, vm_status::StatusCode,
 };
-use std::{collections::BTreeMap, error::Error, num::NonZeroU64};
-use iota_types::bridge::BRIDGE_MODULE_NAME;
-use iota_types::deny_list_v1::{DENY_LIST_CREATE_FUNC, DENY_LIST_MODULE};
-use iota_types::{
-    authenticator_state::AUTHENTICATOR_STATE_MODULE_NAME,
-    clock::CLOCK_MODULE_NAME,
-    error::{ExecutionError, VMMVerifierErrorSubStatusCode},
-    id::OBJECT_MODULE_NAME,
-    randomness_state::RANDOMNESS_MODULE_NAME,
-    iota_system_state::IOTA_SYSTEM_MODULE_NAME,
-    BRIDGE_ADDRESS, IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_ADDRESS,
-};
 
 use crate::{
-    check_for_verifier_timeout, to_verification_timeout_error, verification_failure,
-    TEST_SCENARIO_MODULE_NAME,
+    TEST_SCENARIO_MODULE_NAME, check_for_verifier_timeout, to_verification_timeout_error,
+    verification_failure,
 };
 pub(crate) const JOIN_BASE_COST: u128 = 10;
 pub(crate) const JOIN_PER_LOCAL_COST: u128 = 5;

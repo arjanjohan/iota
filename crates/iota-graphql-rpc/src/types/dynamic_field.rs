@@ -2,28 +2,35 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use async_graphql::connection::{Connection, CursorType, Edge};
-use async_graphql::*;
-use diesel_async::scoped_futures::ScopedFutureExt;
-use move_core_types::language_storage::TypeTag;
-use iota_indexer::models::objects::StoredHistoryObject;
-use iota_indexer::types::OwnerType;
-use iota_types::dynamic_field::visitor::{Field, FieldVisitor};
-use iota_types::dynamic_field::{derive_dynamic_field_id, DynamicFieldInfo, DynamicFieldType};
-
-use super::available_range::AvailableRange;
-use super::cursor::{Page, Target};
-use super::object::{self, Object, ObjectKind};
-use super::type_filter::ExactTypeFilter;
-use super::{
-    base64::Base64, move_object::MoveObject, move_value::MoveValue, iota_address::IotaAddress,
+use async_graphql::{
+    connection::{Connection, CursorType, Edge},
+    *,
 };
-use crate::consistency::{build_objects_query, View};
-use crate::data::package_resolver::PackageResolver;
-use crate::data::{Db, QueryExecutor};
-use crate::error::Error;
-use crate::filter;
-use crate::raw_query::RawQuery;
+use diesel_async::scoped_futures::ScopedFutureExt;
+use iota_indexer::{models::objects::StoredHistoryObject, types::OwnerType};
+use iota_types::dynamic_field::{
+    DynamicFieldInfo, DynamicFieldType, derive_dynamic_field_id,
+    visitor::{Field, FieldVisitor},
+};
+use move_core_types::language_storage::TypeTag;
+
+use super::{
+    available_range::AvailableRange,
+    base64::Base64,
+    cursor::{Page, Target},
+    iota_address::IotaAddress,
+    move_object::MoveObject,
+    move_value::MoveValue,
+    object::{self, Object, ObjectKind},
+    type_filter::ExactTypeFilter,
+};
+use crate::{
+    consistency::{View, build_objects_query},
+    data::{Db, QueryExecutor, package_resolver::PackageResolver},
+    error::Error,
+    filter,
+    raw_query::RawQuery,
+};
 
 pub(crate) struct DynamicField {
     pub super_: MoveObject,

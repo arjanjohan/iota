@@ -6,12 +6,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use proptest::sample::Index as PropIndex;
-use proptest_derive::Arbitrary;
 use std::{
     collections::BTreeSet,
     ops::{Deref, Index as OpsIndex},
 };
+
+use proptest::sample::Index as PropIndex;
+use proptest_derive::Arbitrary;
 
 /// Given a maximum value `max` and a list of [`Index`](proptest::sample::Index) instances, picks
 /// integers in the range `[0, max)` uniformly randomly and without duplication.

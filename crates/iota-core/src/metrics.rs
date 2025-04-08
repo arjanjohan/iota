@@ -2,13 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    collections::VecDeque,
+    default::Default,
+    sync::atomic::{AtomicU64, Ordering},
+};
+
 use parking_lot::Mutex;
-use std::collections::VecDeque;
-use std::default::Default;
-use std::sync::atomic::AtomicU64;
-use std::sync::atomic::Ordering;
-use tokio::time::Duration;
-use tokio::time::Instant;
+use tokio::time::{Duration, Instant};
 
 pub struct LatencyObserver {
     data: Mutex<LatencyObserverInner>,
@@ -149,12 +150,10 @@ impl RateTracker {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    use rand::rngs::StdRng;
-    use rand::Rng;
-    use rand::SeedableRng;
+    use rand::{Rng, SeedableRng, rngs::StdRng};
     use tokio::time::advance;
+
+    use super::*;
 
     #[tokio::test(flavor = "current_thread", start_paused = true)]
     pub async fn test_rate_tracker_basic() {

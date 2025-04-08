@@ -2,20 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use prost_types::FieldMask;
-use shared_crypto::intent::Intent;
 use iota_keys::keystore::AccountKeystore;
 use iota_macros::sim_test;
-use iota_rpc_api::proto::node::v2alpha::ResolveTransactionRequest;
-use iota_rpc_api::types::ResolveTransactionResponse;
-use iota_rpc_api::types::TransactionSimulationResponse;
-use iota_rpc_api::Client;
+use iota_rpc_api::{
+    Client,
+    proto::node::v2alpha::ResolveTransactionRequest,
+    types::{ResolveTransactionResponse, TransactionSimulationResponse},
+};
 use iota_sdk_transaction_builder::unresolved;
-use iota_sdk_types::Argument;
-use iota_sdk_types::Command;
-use iota_sdk_types::TransactionExpiration;
-use iota_types::base_types::IotaAddress;
-use iota_types::effects::TransactionEffectsAPI;
+use iota_sdk_types::{Argument, Command, TransactionExpiration};
+use iota_types::{base_types::IotaAddress, effects::TransactionEffectsAPI};
+use prost_types::FieldMask;
+use shared_crypto::intent::Intent;
 use test_cluster::TestClusterBuilder;
 
 fn build_resolve_request(

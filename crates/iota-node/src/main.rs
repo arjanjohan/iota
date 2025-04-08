@@ -2,24 +2,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use clap::{ArgGroup, Parser};
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::sync::broadcast;
-use tokio::time::sleep;
-use tracing::{error, info};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
+use clap::{ArgGroup, Parser};
 use iota_common::sync::async_once_cell::AsyncOnceCell;
-use iota_config::node::RunWithRange;
-use iota_config::{Config, NodeConfig};
+use iota_config::{Config, NodeConfig, node::RunWithRange};
 use iota_core::runtime::IotaRuntimes;
 use iota_node::metrics;
 use iota_telemetry::send_telemetry_event;
-use iota_types::committee::EpochId;
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-use iota_types::multiaddr::Multiaddr;
-use iota_types::supported_protocol_versions::SupportedProtocolVersions;
+use iota_types::{
+    committee::EpochId, messages_checkpoint::CheckpointSequenceNumber, multiaddr::Multiaddr,
+    supported_protocol_versions::SupportedProtocolVersions,
+};
+use tokio::{sync::broadcast, time::sleep};
+use tracing::{error, info};
 
 // Define the `GIT_REVISION` and `VERSION` consts
 bin_version::bin_version!();

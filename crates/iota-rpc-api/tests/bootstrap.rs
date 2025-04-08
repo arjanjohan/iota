@@ -2,10 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{collections::HashMap, path::PathBuf};
+
 use prost_types::FileDescriptorSet;
 use protox::prost::Message as _;
-use std::collections::HashMap;
-use std::path::PathBuf;
 
 #[test]
 fn bootstrap() {

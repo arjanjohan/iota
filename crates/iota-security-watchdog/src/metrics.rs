@@ -2,8 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use prometheus::{register_int_gauge_with_registry, IntGauge, Registry};
 use std::collections::HashMap;
+
+use prometheus::{IntGauge, Registry, register_int_gauge_with_registry};
 use tokio::sync::Mutex;
 
 /// Defines a structure to hold and manage metrics for a watchdog service.

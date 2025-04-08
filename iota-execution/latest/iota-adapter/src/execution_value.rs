@@ -2,12 +2,8 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use move_binary_format::file_format::AbilitySet;
-use move_core_types::{identifier::IdentStr, resolver::ResourceResolver};
-use move_vm_types::loaded_data::runtime_types::Type;
-use serde::Deserialize;
 use iota_types::{
-    base_types::{ObjectID, SequenceNumber, IotaAddress},
+    base_types::{IotaAddress, ObjectID, SequenceNumber},
     coin::Coin,
     error::{ExecutionError, ExecutionErrorKind, IotaError},
     execution_status::CommandArgumentError,
@@ -15,6 +11,10 @@ use iota_types::{
     storage::{BackingPackageStore, ChildObjectResolver, StorageView},
     transfer::Receiving,
 };
+use move_binary_format::file_format::AbilitySet;
+use move_core_types::{identifier::IdentStr, resolver::ResourceResolver};
+use move_vm_types::loaded_data::runtime_types::Type;
+use serde::Deserialize;
 
 pub trait IotaResolver: ResourceResolver<Error = IotaError> + BackingPackageStore {
     fn as_backing_package_store(&self) -> &dyn BackingPackageStore;

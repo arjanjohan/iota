@@ -34,21 +34,21 @@ macro_rules! var {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::admin::Labels;
-    use crate::histogram_relay::HistogramRelay;
-    use crate::prom_to_mimir::tests::*;
+    use std::{net::TcpListener, time::Duration};
 
-    use crate::{admin::CertKeyPair, config::RemoteWriteConfig, peers::IotaNodeProvider};
-    use axum::http::StatusCode;
-    use axum::routing::post;
-    use axum::Router;
-    use prometheus::Encoder;
-    use prometheus::PROTOBUF_FORMAT;
-    use protobuf::RepeatedField;
-    use std::net::TcpListener;
-    use std::time::Duration;
+    use axum::{Router, http::StatusCode, routing::post};
     use iota_tls::{ClientCertVerifier, TlsAcceptor};
+    use prometheus::{Encoder, PROTOBUF_FORMAT};
+    use protobuf::RepeatedField;
+
+    use super::*;
+    use crate::{
+        admin::{CertKeyPair, Labels},
+        config::RemoteWriteConfig,
+        histogram_relay::HistogramRelay,
+        peers::IotaNodeProvider,
+        prom_to_mimir::tests::*,
+    };
 
     async fn run_dummy_remote_write(listener: TcpListener) {
         /// i accept everything, send me the trash
@@ -92,7 +92,8 @@ mod tests {
     #[tokio::test]
     async fn test_axum_acceptor() {
         // generate self-signed certificates
-        let CertKeyPair(client_priv_cert, client_pub_key) = admin::generate_self_cert("iota".into());
+        let CertKeyPair(client_priv_cert, client_pub_key) =
+            admin::generate_self_cert("iota".into());
         let CertKeyPair(server_priv_cert, _) = admin::generate_self_cert("localhost".into());
 
         // create a fake rpc server
@@ -201,7 +202,8 @@ mod tests {
     #[tokio::test]
     async fn test_client_timeout() {
         // generate self-signed certificates
-        let CertKeyPair(client_priv_cert, client_pub_key) = admin::generate_self_cert("iota".into());
+        let CertKeyPair(client_priv_cert, client_pub_key) =
+            admin::generate_self_cert("iota".into());
         let CertKeyPair(server_priv_cert, _) = admin::generate_self_cert("localhost".into());
 
         // create a fake rpc server

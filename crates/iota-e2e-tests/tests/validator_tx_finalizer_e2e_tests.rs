@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::time::Duration;
+
 use iota_macros::sim_test;
 use iota_test_transaction_builder::publish_basics_package_and_make_counter;
 use iota_types::base_types::dbg_addr;

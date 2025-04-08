@@ -3,30 +3,32 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use async_trait::async_trait;
-use jsonrpsee::core::RpcResult;
-use jsonrpsee::core::SubscriptionResult;
-use jsonrpsee::{PendingSubscriptionSink, RpcModule};
-use tap::TapFallible;
-
-use iota_json_rpc::name_service::{Domain, NameRecord, NameServiceConfig, NameServiceError};
-use iota_json_rpc::IotaRpcModule;
-use iota_json_rpc_api::{cap_page_limit, IndexerApiServer};
+use iota_json_rpc::{
+    IotaRpcModule,
+    name_service::{Domain, NameRecord, NameServiceConfig, NameServiceError},
+};
+use iota_json_rpc_api::{IndexerApiServer, cap_page_limit};
 use iota_json_rpc_types::{
-    DynamicFieldPage, EventFilter, EventPage, ObjectsPage, Page, IotaObjectResponse,
-    IotaObjectResponseQuery, IotaTransactionBlockResponseQuery, TransactionBlocksPage,
-    TransactionFilter,
+    DynamicFieldPage, EventFilter, EventPage, IotaObjectResponse, IotaObjectResponseQuery,
+    IotaTransactionBlockResponseQuery, ObjectsPage, Page, TransactionBlocksPage, TransactionFilter,
 };
 use iota_open_rpc::Module;
-use iota_types::base_types::{ObjectID, IotaAddress};
-use iota_types::digests::TransactionDigest;
-use iota_types::dynamic_field::{DynamicFieldName, Field};
-use iota_types::error::IotaObjectResponseError;
-use iota_types::event::EventID;
-use iota_types::object::ObjectRead;
-use iota_types::TypeTag;
+use iota_types::{
+    TypeTag,
+    base_types::{IotaAddress, ObjectID},
+    digests::TransactionDigest,
+    dynamic_field::{DynamicFieldName, Field},
+    error::IotaObjectResponseError,
+    event::EventID,
+    object::ObjectRead,
+};
+use jsonrpsee::{
+    PendingSubscriptionSink, RpcModule,
+    core::{RpcResult, SubscriptionResult},
+};
+use tap::TapFallible;
 
-use crate::indexer_reader::IndexerReader;
-use crate::IndexerError;
+use crate::{IndexerError, indexer_reader::IndexerReader};
 
 pub(crate) struct IndexerApi {
     inner: IndexerReader,

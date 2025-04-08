@@ -4,54 +4,63 @@
 
 #[cfg(msim)]
 mod test {
-    use rand::{distributions::uniform::SampleRange, thread_rng, Rng};
-    use std::collections::HashSet;
-    use std::num::NonZeroUsize;
-    use std::path::PathBuf;
-    use std::str::FromStr;
-    use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::{Arc, Mutex};
-    use std::time::{Duration, Instant};
-    use iota_benchmark::bank::BenchmarkBank;
-    use iota_benchmark::system_state_observer::SystemStateObserver;
-    use iota_benchmark::workloads::adversarial::AdversarialPayloadCfg;
-    use iota_benchmark::workloads::expected_failure::ExpectedFailurePayloadCfg;
-    use iota_benchmark::workloads::workload::ExpectedFailureType;
-    use iota_benchmark::workloads::workload_configuration::{
-        WorkloadConfig, WorkloadConfiguration, WorkloadWeights,
+    use std::{
+        collections::HashSet,
+        num::NonZeroUsize,
+        path::PathBuf,
+        str::FromStr,
+        sync::{
+            Arc, Mutex,
+            atomic::{AtomicBool, Ordering},
+        },
+        time::{Duration, Instant},
     };
+
     use iota_benchmark::{
-        drivers::{bench_driver::BenchDriver, driver::Driver, Interval},
-        util::get_ed25519_keypair_from_keystore,
         LocalValidatorAggregatorProxy, ValidatorProxy,
+        bank::BenchmarkBank,
+        drivers::{Interval, bench_driver::BenchDriver, driver::Driver},
+        system_state_observer::SystemStateObserver,
+        util::get_ed25519_keypair_from_keystore,
+        workloads::{
+            adversarial::AdversarialPayloadCfg,
+            expected_failure::ExpectedFailurePayloadCfg,
+            workload::ExpectedFailureType,
+            workload_configuration::{WorkloadConfig, WorkloadConfiguration, WorkloadWeights},
+        },
     };
-    use iota_config::node::AuthorityOverloadConfig;
-    use iota_config::ExecutionCacheConfig;
-    use iota_config::{AUTHORITIES_DB_NAME, IOTA_KEYSTORE_FILENAME};
-    use iota_core::authority::authority_store_tables::AuthorityPerpetualTables;
-    use iota_core::authority::framework_injection;
-    use iota_core::authority::AuthorityState;
-    use iota_core::checkpoints::{CheckpointStore, CheckpointWatermark};
+    use iota_config::{
+        AUTHORITIES_DB_NAME, ExecutionCacheConfig, IOTA_KEYSTORE_FILENAME,
+        node::AuthorityOverloadConfig,
+    };
+    use iota_core::{
+        authority::{
+            AuthorityState, authority_store_tables::AuthorityPerpetualTables, framework_injection,
+        },
+        checkpoints::{CheckpointStore, CheckpointWatermark},
+    };
     use iota_framework::BuiltInFramework;
     use iota_macros::{
         clear_fail_point, nondeterministic, register_fail_point, register_fail_point_arg,
         register_fail_point_async, register_fail_point_if, register_fail_points, sim_test,
     };
     use iota_protocol_config::{PerObjectCongestionControlMode, ProtocolConfig, ProtocolVersion};
-    use iota_simulator::tempfile::TempDir;
-    use iota_simulator::{configs::*, SimConfig};
+    use iota_simulator::{SimConfig, configs::*, tempfile::TempDir};
     use iota_storage::blob::Blob;
     use iota_surfer::surf_strategy::SurfStrategy;
     use iota_swarm_config::network_config_builder::ConfigBuilder;
-    use iota_types::base_types::{ConciseableName, ObjectID, SequenceNumber};
-    use iota_types::digests::TransactionDigest;
-    use iota_types::full_checkpoint_content::CheckpointData;
-    use iota_types::messages_checkpoint::VerifiedCheckpoint;
-    use iota_types::supported_protocol_versions::SupportedProtocolVersions;
-    use iota_types::traffic_control::{FreqThresholdConfig, PolicyConfig, PolicyType};
-    use iota_types::transaction::{
-        DEFAULT_VALIDATOR_GAS_PRICE, TEST_ONLY_GAS_UNIT_FOR_HEAVY_COMPUTATION_STORAGE,
+    use iota_types::{
+        base_types::{ConciseableName, ObjectID, SequenceNumber},
+        digests::TransactionDigest,
+        full_checkpoint_content::CheckpointData,
+        messages_checkpoint::VerifiedCheckpoint,
+        supported_protocol_versions::SupportedProtocolVersions,
+        traffic_control::{FreqThresholdConfig, PolicyConfig, PolicyType},
+        transaction::{
+            DEFAULT_VALIDATOR_GAS_PRICE, TEST_ONLY_GAS_UNIT_FOR_HEAVY_COMPUTATION_STORAGE,
+        },
     };
+    use rand::{Rng, distributions::uniform::SampleRange, thread_rng};
     use test_cluster::{TestCluster, TestClusterBuilder};
     use tracing::{error, info, trace};
     use typed_store::traits::Map;
@@ -127,7 +136,7 @@ mod test {
 
         register_fail_point_if("correlated-crash-after-consensus-commit-boundary", || true);
         // TODO: enable this - right now it causes rocksdb errors when re-opening DBs
-        //register_fail_point_if("correlated-crash-process-certificate", || true);
+        // register_fail_point_if("correlated-crash-process-certificate", || true);
 
         let test_cluster = build_test_cluster(4, 10000, 1).await;
         test_simulated_load(test_cluster, 60).await;
@@ -519,25 +528,39 @@ mod test {
                 * TEST_ONLY_GAS_UNIT_FOR_HEAVY_COMPUTATION_STORAGE;
             config.set_per_object_congestion_control_mode_for_testing(mode);
             match mode {
-                PerObjectCongestionControlMode::None => panic!("Congestion control mode cannot be None in test_simulated_load_shared_object_congestion_control"),
+                PerObjectCongestionControlMode::None => panic!(
+                    "Congestion control mode cannot be None in test_simulated_load_shared_object_congestion_control"
+                ),
                 PerObjectCongestionControlMode::TotalGasBudget => {
-                    config.set_max_accumulated_txn_cost_per_object_in_narwhal_commit_for_testing(total_gas_limit);
-                    config.set_max_accumulated_txn_cost_per_object_in_mysticeti_commit_for_testing(total_gas_limit);
-                },
-                PerObjectCongestionControlMode::TotalTxCount => {
                     config.set_max_accumulated_txn_cost_per_object_in_narwhal_commit_for_testing(
-                        txn_count_limit
+                        total_gas_limit,
                     );
                     config.set_max_accumulated_txn_cost_per_object_in_mysticeti_commit_for_testing(
-                        txn_count_limit
+                        total_gas_limit,
                     );
-                },
+                }
+                PerObjectCongestionControlMode::TotalTxCount => {
+                    config.set_max_accumulated_txn_cost_per_object_in_narwhal_commit_for_testing(
+                        txn_count_limit,
+                    );
+                    config.set_max_accumulated_txn_cost_per_object_in_mysticeti_commit_for_testing(
+                        txn_count_limit,
+                    );
+                }
                 PerObjectCongestionControlMode::TotalGasBudgetWithCap => {
-                    config.set_max_accumulated_txn_cost_per_object_in_narwhal_commit_for_testing(total_gas_limit);
-                    config.set_max_accumulated_txn_cost_per_object_in_mysticeti_commit_for_testing(total_gas_limit);
-                    config.set_gas_budget_based_txn_cost_cap_factor_for_testing(total_gas_limit/cap_factor_denominator);
-                    config.set_gas_budget_based_txn_cost_absolute_cap_commit_count_for_testing(absolute_cap_factor);
-                },
+                    config.set_max_accumulated_txn_cost_per_object_in_narwhal_commit_for_testing(
+                        total_gas_limit,
+                    );
+                    config.set_max_accumulated_txn_cost_per_object_in_mysticeti_commit_for_testing(
+                        total_gas_limit,
+                    );
+                    config.set_gas_budget_based_txn_cost_cap_factor_for_testing(
+                        total_gas_limit / cap_factor_denominator,
+                    );
+                    config.set_gas_budget_based_txn_cost_absolute_cap_commit_count_for_testing(
+                        absolute_cap_factor,
+                    );
+                }
                 // TODO: Enable once ExecutionTimeEstimate mode is functional across epochs.
                 PerObjectCongestionControlMode::ExecutionTimeEstimate => unimplemented!(),
             }
@@ -934,7 +957,7 @@ mod test {
     }
 
     fn handle_bool_failpoint(
-        eligible_nodes: &HashSet<iota_simulator::task::NodeId>, // only given eligible nodes may fail
+        eligible_nodes: &HashSet<iota_simulator::task::NodeId>, /* only given eligible nodes may fail */
         probability: f64,
     ) -> bool {
         if !eligible_nodes.contains(&iota_simulator::current_simnode_id()) {
@@ -1072,7 +1095,9 @@ mod test {
         let system_state_observer = {
             let mut system_state_observer = SystemStateObserver::new(proxy.clone());
             if let Ok(_) = system_state_observer.state.changed().await {
-                info!("Got the new state (reference gas price and/or protocol config) from system state object");
+                info!(
+                    "Got the new state (reference gas price and/or protocol config) from system state object"
+                );
             }
             Arc::new(system_state_observer)
         };

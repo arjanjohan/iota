@@ -43,9 +43,8 @@ mod malloc_size;
 pub mod external_impls;
 
 pub use allocators::MallocSizeOfExt;
-pub use malloc_size::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
-
 pub use iota_util_mem_derive::*;
+pub use malloc_size::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 
 /// Heap size of structure.
 ///
@@ -99,8 +98,9 @@ impl MemoryAllocationTracker {
 #[cfg(feature = "std")]
 #[cfg(test)]
 mod test {
-    use super::{malloc_size, MallocSizeOf, MallocSizeOfExt};
     use std::sync::Arc;
+
+    use super::{MallocSizeOf, MallocSizeOfExt, malloc_size};
 
     #[test]
     fn test_arc() {

@@ -5,14 +5,14 @@
 use std::{collections::BTreeSet, sync::Arc};
 
 use crate::{
+    Round,
     block::{
-        genesis_blocks, BlockAPI, BlockRef, BlockTimestampMs, SignedBlock, VerifiedBlock,
-        GENESIS_ROUND,
+        BlockAPI, BlockRef, BlockTimestampMs, GENESIS_ROUND, SignedBlock, VerifiedBlock,
+        genesis_blocks,
     },
     context::Context,
     error::{ConsensusError, ConsensusResult},
     transaction::TransactionVerifier,
-    Round,
 };
 
 pub(crate) trait BlockVerifier: Send + Sync + 'static {
@@ -595,9 +595,11 @@ mod test {
                 .set_timestamp_ms(1500)
                 .build();
             let verified_block = VerifiedBlock::new_for_test(block);
-            assert!(verifier
-                .check_ancestors(&verified_block, &ancestor_blocks, gc_enabled, gc_round)
-                .is_ok());
+            assert!(
+                verifier
+                    .check_ancestors(&verified_block, &ancestor_blocks, gc_enabled, gc_round)
+                    .is_ok()
+            );
         }
 
         // Block not respecting timestamp invariant.
@@ -656,9 +658,11 @@ mod test {
                 .set_timestamp_ms(1600)
                 .build();
             let verified_block = VerifiedBlock::new_for_test(block);
-            assert!(verifier
-                .check_ancestors(&verified_block, &ancestor_blocks, gc_enabled, gc_round)
-                .is_ok());
+            assert!(
+                verifier
+                    .check_ancestors(&verified_block, &ancestor_blocks, gc_enabled, gc_round)
+                    .is_ok()
+            );
         }
 
         // Block not respecting timestamp invariant for the block that is garbage collected
@@ -669,9 +673,11 @@ mod test {
                 .set_timestamp_ms(1400)
                 .build();
             let verified_block = VerifiedBlock::new_for_test(block);
-            assert!(verifier
-                .check_ancestors(&verified_block, &ancestor_blocks, gc_enabled, gc_round)
-                .is_ok());
+            assert!(
+                verifier
+                    .check_ancestors(&verified_block, &ancestor_blocks, gc_enabled, gc_round)
+                    .is_ok()
+            );
         }
 
         // Block not respecting timestamp invariant for the blocks that are not garbage collected

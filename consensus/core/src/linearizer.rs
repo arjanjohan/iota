@@ -8,12 +8,12 @@ use consensus_config::AuthorityIndex;
 use parking_lot::RwLock;
 
 use crate::{
+    Round, TransactionIndex,
     block::{BlockAPI, BlockRef, VerifiedBlock},
-    commit::{sort_sub_dag_blocks, Commit, CommittedSubDag, TrustedCommit},
+    commit::{Commit, CommittedSubDag, TrustedCommit, sort_sub_dag_blocks},
     context::Context,
     dag_state::DagState,
     leader_schedule::LeaderSchedule,
-    Round, TransactionIndex,
 };
 
 /// The `StorageAPI` trait provides an interface for the block store and has been
@@ -234,7 +234,11 @@ impl Linearizer {
         // The above code should have not yielded any blocks that are <= gc_round, but just to make sure that we'll never
         // commit anything that should be garbage collected we attempt to prune here as well.
         if gc_enabled {
-            assert!(to_commit.iter().all(|block| block.round() > gc_round), "No blocks <= {gc_round} should be committed. Leader round {}, blocks {to_commit:?}.", leader_block_ref);
+            assert!(
+                to_commit.iter().all(|block| block.round() > gc_round),
+                "No blocks <= {gc_round} should be committed. Leader round {}, blocks {to_commit:?}.",
+                leader_block_ref
+            );
         }
 
         // Sort the blocks of the sub-dag blocks
@@ -304,13 +308,13 @@ mod tests {
 
     use super::*;
     use crate::{
+        CommitIndex,
         commit::{CommitAPI as _, CommitDigest, DEFAULT_WAVE_LENGTH},
         context::Context,
         leader_schedule::{LeaderSchedule, LeaderSwapTable},
         storage::mem_store::MemStore,
         test_dag_builder::DagBuilder,
         test_dag_parser::parse_dag,
-        CommitIndex,
     };
 
     #[tokio::test]

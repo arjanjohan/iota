@@ -2,20 +2,30 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use self::db_dump::{dump_table, duplicate_objects_summary, list_tables, table_summary, StoreName};
-use self::index_search::{search_index, SearchRange};
-use crate::db_tool::db_dump::{compact, print_table_metadata, prune_checkpoints, prune_objects};
+use std::path::{Path, PathBuf};
+
 use anyhow::{anyhow, bail};
 use clap::Parser;
-use std::path::{Path, PathBuf};
-use iota_core::authority::authority_per_epoch_store::AuthorityEpochTables;
-use iota_core::authority::authority_store_tables::AuthorityPerpetualTables;
-use iota_core::checkpoints::CheckpointStore;
-use iota_types::base_types::{EpochId, ObjectID};
-use iota_types::digests::{CheckpointContentsDigest, TransactionDigest};
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::messages_checkpoint::{CheckpointDigest, CheckpointSequenceNumber};
+use iota_core::{
+    authority::{
+        authority_per_epoch_store::AuthorityEpochTables,
+        authority_store_tables::AuthorityPerpetualTables,
+    },
+    checkpoints::CheckpointStore,
+};
+use iota_types::{
+    base_types::{EpochId, ObjectID},
+    digests::{CheckpointContentsDigest, TransactionDigest},
+    effects::TransactionEffectsAPI,
+    messages_checkpoint::{CheckpointDigest, CheckpointSequenceNumber},
+};
 use typed_store::rocks::MetricConf;
+
+use self::{
+    db_dump::{StoreName, dump_table, duplicate_objects_summary, list_tables, table_summary},
+    index_search::{SearchRange, search_index},
+};
+use crate::db_tool::db_dump::{compact, print_table_metadata, prune_checkpoints, prune_objects};
 pub mod db_dump;
 mod index_search;
 

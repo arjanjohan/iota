@@ -2,26 +2,29 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::authority_per_epoch_store::CancelConsensusCertificateReason;
-use crate::authority::epoch_start_configuration::EpochStartConfigTrait;
-use crate::authority::AuthorityPerEpochStore;
-use crate::execution_cache::ObjectCacheRead;
-use std::collections::BTreeMap;
-use std::collections::HashMap;
-use std::collections::HashSet;
-use iota_types::base_types::ConsensusObjectSequenceKey;
-use iota_types::base_types::TransactionDigest;
-use iota_types::crypto::RandomnessRound;
-use iota_types::effects::{TransactionEffects, TransactionEffectsAPI};
-use iota_types::executable_transaction::VerifiedExecutableTransaction;
-use iota_types::storage::{
-    transaction_non_shared_input_object_keys, transaction_receiving_object_keys, ObjectKey,
+use std::collections::{BTreeMap, HashMap, HashSet};
+
+use iota_types::{
+    IOTA_RANDOMNESS_STATE_OBJECT_ID,
+    base_types::{ConsensusObjectSequenceKey, SequenceNumber, TransactionDigest},
+    crypto::RandomnessRound,
+    effects::{TransactionEffects, TransactionEffectsAPI},
+    error::IotaResult,
+    executable_transaction::VerifiedExecutableTransaction,
+    storage::{
+        ObjectKey, transaction_non_shared_input_object_keys, transaction_receiving_object_keys,
+    },
+    transaction::{SenderSignedData, SharedInputObject, TransactionDataAPI, TransactionKey},
 };
-use iota_types::transaction::{
-    SenderSignedData, SharedInputObject, TransactionDataAPI, TransactionKey,
-};
-use iota_types::{base_types::SequenceNumber, error::IotaResult, IOTA_RANDOMNESS_STATE_OBJECT_ID};
 use tracing::{debug, trace};
+
+use crate::{
+    authority::{
+        AuthorityPerEpochStore, authority_per_epoch_store::CancelConsensusCertificateReason,
+        epoch_start_configuration::EpochStartConfigTrait,
+    },
+    execution_cache::ObjectCacheRead,
+};
 
 pub struct SharedObjVerManager {}
 
@@ -67,7 +70,10 @@ impl SharedObjVerManager {
                     randomness_obj_initial_shared_version,
                 ))
                 .expect("randomness state object must have been added in get_or_init_versions()");
-            debug!("assigning shared object versions for randomness: epoch {}, round {round:?} -> version {version:?}", epoch_store.epoch());
+            debug!(
+                "assigning shared object versions for randomness: epoch {}, round {round:?} -> version {version:?}",
+                epoch_store.epoch()
+            );
             assigned_versions.push((
                 TransactionKey::RandomnessRound(epoch_store.epoch(), round),
                 vec![(
@@ -308,26 +314,29 @@ fn get_or_init_versions<'a>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    use crate::authority::epoch_start_configuration::EpochStartConfigTrait;
-    use crate::authority::shared_object_version_manager::{
-        ConsensusSharedObjVerAssignment, SharedObjVerManager,
-    };
-    use crate::authority::test_authority_builder::TestAuthorityBuilder;
     use std::collections::{BTreeMap, HashMap};
+
     use iota_test_transaction_builder::TestTransactionBuilder;
-    use iota_types::base_types::{ObjectID, SequenceNumber, IotaAddress};
-    use iota_types::crypto::RandomnessRound;
-    use iota_types::digests::ObjectDigest;
-    use iota_types::effects::TestEffectsBuilder;
-    use iota_types::executable_transaction::{
-        CertificateProof, ExecutableTransaction, VerifiedExecutableTransaction,
+    use iota_types::{
+        IOTA_RANDOMNESS_STATE_OBJECT_ID,
+        base_types::{IotaAddress, ObjectID, SequenceNumber},
+        crypto::RandomnessRound,
+        digests::ObjectDigest,
+        effects::TestEffectsBuilder,
+        executable_transaction::{
+            CertificateProof, ExecutableTransaction, VerifiedExecutableTransaction,
+        },
+        object::{Object, Owner},
+        programmable_transaction_builder::ProgrammableTransactionBuilder,
+        transaction::{ObjectArg, SenderSignedData, TransactionKey},
     };
-    use iota_types::object::{Object, Owner};
-    use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-    use iota_types::transaction::{ObjectArg, SenderSignedData, TransactionKey};
-    use iota_types::IOTA_RANDOMNESS_STATE_OBJECT_ID;
+
+    use super::*;
+    use crate::authority::{
+        epoch_start_configuration::EpochStartConfigTrait,
+        shared_object_version_manager::{ConsensusSharedObjVerAssignment, SharedObjVerManager},
+        test_authority_builder::TestAuthorityBuilder,
+    };
 
     #[tokio::test]
     async fn test_assign_versions_from_consensus_basic() {

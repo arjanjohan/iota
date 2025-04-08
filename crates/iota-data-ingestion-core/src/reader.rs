@@ -2,31 +2,28 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::create_remote_store_client;
-use crate::executor::MAX_CHECKPOINTS_IN_PROGRESS;
+use std::{collections::BTreeMap, ffi::OsString, fs, path::PathBuf, sync::Arc, time::Duration};
+
 use anyhow::Result;
 use backoff::backoff::Backoff;
 use futures::StreamExt;
 use iota_metrics::spawn_monitored_task;
-#[cfg(not(target_os = "macos"))]
-use notify::{RecommendedWatcher, RecursiveMode};
-use object_store::path::Path;
-use object_store::ObjectStore;
-use std::ffi::OsString;
-use std::fs;
-use std::path::PathBuf;
-use std::time::Duration;
-use std::{collections::BTreeMap, sync::Arc};
 use iota_rpc_api::Client;
 use iota_storage::blob::Blob;
-use iota_types::full_checkpoint_content::CheckpointData;
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
+use iota_types::{
+    full_checkpoint_content::CheckpointData, messages_checkpoint::CheckpointSequenceNumber,
+};
+#[cfg(not(target_os = "macos"))]
+use notify::{RecommendedWatcher, RecursiveMode};
+use object_store::{ObjectStore, path::Path};
 use tap::pipe::Pipe;
-use tokio::sync::mpsc;
-use tokio::sync::mpsc::error::TryRecvError;
-use tokio::sync::oneshot;
-use tokio::time::timeout;
+use tokio::{
+    sync::{mpsc, mpsc::error::TryRecvError, oneshot},
+    time::timeout,
+};
 use tracing::{debug, error, info};
+
+use crate::{create_remote_store_client, executor::MAX_CHECKPOINTS_IN_PROGRESS};
 
 pub struct CheckpointReader {
     /// Used to read from a local directory when running with a colocated FN.

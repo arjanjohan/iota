@@ -7,22 +7,25 @@
 
 use std::str::FromStr;
 
-use fastcrypto::encoding::Base58;
-use fastcrypto::traits::EncodeDecodeBase64;
-use move_binary_format::file_format;
-
-use crate::crypto::bcs_signable_test::{Bar, Foo};
-use crate::crypto::{
-    get_key_pair, get_key_pair_from_bytes, AccountKeyPair, AuthorityKeyPair, AuthoritySignature,
-    Signature, IotaAuthoritySignature, IotaSignature,
-};
-use crate::digests::Digest;
-use crate::id::{ID, UID};
-use crate::{gas_coin::GasCoin, object::Object, IOTA_FRAMEWORK_ADDRESS};
-use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
+use fastcrypto::{encoding::Base58, traits::EncodeDecodeBase64};
 use iota_protocol_config::ProtocolConfig;
+use move_binary_format::file_format;
+use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
 
 use super::*;
+use crate::{
+    IOTA_FRAMEWORK_ADDRESS,
+    crypto::{
+        AccountKeyPair, AuthorityKeyPair, AuthoritySignature, IotaAuthoritySignature,
+        IotaSignature, Signature,
+        bcs_signable_test::{Bar, Foo},
+        get_key_pair, get_key_pair_from_bytes,
+    },
+    digests::Digest,
+    gas_coin::GasCoin,
+    id::{ID, UID},
+    object::Object,
+};
 
 #[test]
 fn test_bcs_enum() {
@@ -49,17 +52,20 @@ fn test_signatures() {
     let bar = IntentMessage::new(Intent::iota_transaction(), Bar("hello".into()));
 
     let s = Signature::new_secure(&foo, &sec1);
-    assert!(s
-        .verify_secure(&foo, addr1, SignatureScheme::ED25519)
-        .is_ok());
-    assert!(s
-        .verify_secure(&foo, addr2, SignatureScheme::ED25519)
-        .is_err());
-    assert!(s
-        .verify_secure(&foox, addr1, SignatureScheme::ED25519)
-        .is_err());
-    assert!(s
-        .verify_secure(
+    assert!(
+        s.verify_secure(&foo, addr1, SignatureScheme::ED25519)
+            .is_ok()
+    );
+    assert!(
+        s.verify_secure(&foo, addr2, SignatureScheme::ED25519)
+            .is_err()
+    );
+    assert!(
+        s.verify_secure(&foox, addr1, SignatureScheme::ED25519)
+            .is_err()
+    );
+    assert!(
+        s.verify_secure(
             &IntentMessage::new(
                 Intent::iota_app(IntentScope::SenderSignedTransaction),
                 Foo("hello".into())
@@ -67,12 +73,14 @@ fn test_signatures() {
             addr1,
             SignatureScheme::ED25519
         )
-        .is_err());
+        .is_err()
+    );
 
     // The struct type is different, but the serialization is the same.
-    assert!(s
-        .verify_secure(&bar, addr1, SignatureScheme::ED25519)
-        .is_ok());
+    assert!(
+        s.verify_secure(&bar, addr1, SignatureScheme::ED25519)
+            .is_ok()
+    );
 }
 
 #[test]

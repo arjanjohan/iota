@@ -2,16 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use futures::Future;
-use futures::{future::BoxFuture, stream::FuturesUnordered, StreamExt};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    sync::Arc,
+    time::{Duration, Instant},
+};
+
+use futures::{Future, StreamExt, future::BoxFuture, stream::FuturesUnordered};
 use iota_metrics::monitored_future;
-
-use std::collections::{BTreeMap, BTreeSet};
-use std::sync::Arc;
-use std::time::{Duration, Instant};
-use iota_types::base_types::ConciseableName;
-use iota_types::committee::{CommitteeTrait, StakeUnit};
-
+use iota_types::{
+    base_types::ConciseableName,
+    committee::{CommitteeTrait, StakeUnit},
+};
 use tokio::time::timeout;
 
 pub type AsyncResult<'a, T, E> = BoxFuture<'a, Result<T, E>>;

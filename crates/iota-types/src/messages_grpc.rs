@@ -2,16 +2,19 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::base_types::{ObjectID, SequenceNumber, TransactionDigest};
-use crate::crypto::{AuthoritySignInfo, AuthorityStrongQuorumSignInfo};
-use crate::effects::{
-    SignedTransactionEffects, TransactionEffects, TransactionEvents,
-    VerifiedSignedTransactionEffects,
-};
-use crate::object::Object;
-use crate::transaction::{CertifiedTransaction, SenderSignedData, SignedTransaction, Transaction};
 use move_core_types::annotated_value::MoveStructLayout;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    base_types::{ObjectID, SequenceNumber, TransactionDigest},
+    crypto::{AuthoritySignInfo, AuthorityStrongQuorumSignInfo},
+    effects::{
+        SignedTransactionEffects, TransactionEffects, TransactionEvents,
+        VerifiedSignedTransactionEffects,
+    },
+    object::Object,
+    transaction::{CertifiedTransaction, SenderSignedData, SignedTransaction, Transaction},
+};
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
 pub enum ObjectInfoRequestKind {
@@ -199,7 +202,6 @@ pub struct HandleCertificateResponseV3 {
     /// If requested, will included all initial versions of objects modified in this transaction.
     /// This includes owned objects included as input into the transaction as well as the assigned
     /// versions of shared objects.
-    //
     // TODO: In the future we may want to include shared objects or child objects which were read
     // but not modified during execution.
     pub input_objects: Option<Vec<Object>>,
@@ -246,7 +248,6 @@ pub struct HandleTransactionResponseV2 {
     /// If requested, will included all initial versions of objects modified in this transaction.
     /// This includes owned objects included as input into the transaction as well as the assigned
     /// versions of shared objects.
-    //
     // TODO: In the future we may want to include shared objects or child objects which were read
     // but not modified during execution.
     pub input_objects: Option<Vec<Object>>,

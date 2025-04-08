@@ -4,11 +4,12 @@
 
 use std::{fs::File, io::BufReader, path::PathBuf, str::FromStr};
 
-use crate::types::ReplayEngineError;
 use http::Uri;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use tracing::info;
+
+use crate::types::ReplayEngineError;
 
 pub const DEFAULT_CONFIG_PATH: &str = "~/.iota-replay/network-config.yaml";
 

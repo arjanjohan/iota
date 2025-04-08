@@ -2,13 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    crypto::{CompressedSignature, DefaultHash, SignatureScheme},
-    digests::ZKLoginInputsDigest,
-    signature::{AuthenticatorTrait, GenericSignature, VerifyParams},
-    signature_verification::VerifiedDigestCache,
-    zk_login_authenticator::ZkLoginAuthenticator,
+use std::{
+    hash::{Hash, Hasher},
+    str::FromStr,
+    sync::Arc,
 };
+
 pub use enum_dispatch::enum_dispatch;
 use fastcrypto::{
     ed25519::Ed25519PublicKey,
@@ -24,16 +23,15 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use shared_crypto::intent::IntentMessage;
-use std::{
-    hash::{Hash, Hasher},
-    str::FromStr,
-    sync::Arc,
-};
 
 use crate::{
     base_types::{EpochId, IotaAddress},
-    crypto::PublicKey,
+    crypto::{CompressedSignature, DefaultHash, PublicKey, SignatureScheme},
+    digests::ZKLoginInputsDigest,
     error::IotaError,
+    signature::{AuthenticatorTrait, GenericSignature, VerifyParams},
+    signature_verification::VerifiedDigestCache,
+    zk_login_authenticator::ZkLoginAuthenticator,
 };
 
 #[cfg(test)]

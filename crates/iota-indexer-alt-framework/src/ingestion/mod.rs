@@ -9,17 +9,21 @@
 
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
-use serde::{Deserialize, Serialize};
 use iota_types::full_checkpoint_content::CheckpointData;
+use serde::{Deserialize, Serialize};
 use tokio::{sync::mpsc, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 use url::Url;
 
-use crate::ingestion::broadcaster::broadcaster;
-use crate::ingestion::client::IngestionClient;
-use crate::ingestion::error::{Error, Result};
-use crate::ingestion::regulator::regulator;
-use crate::metrics::IndexerMetrics;
+use crate::{
+    ingestion::{
+        broadcaster::broadcaster,
+        client::IngestionClient,
+        error::{Error, Result},
+        regulator::regulator,
+    },
+    metrics::IndexerMetrics,
+};
 
 mod broadcaster;
 pub mod client;
@@ -189,11 +193,14 @@ mod tests {
     use reqwest::StatusCode;
     use wiremock::{MockServer, Request};
 
-    use crate::ingestion::remote_client::tests::{respond_with, status};
-    use crate::ingestion::test_utils::test_checkpoint_data;
-    use crate::metrics::tests::test_metrics;
-
     use super::*;
+    use crate::{
+        ingestion::{
+            remote_client::tests::{respond_with, status},
+            test_utils::test_checkpoint_data,
+        },
+        metrics::tests::test_metrics,
+    };
 
     async fn test_ingestion(
         uri: String,

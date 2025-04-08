@@ -2,68 +2,59 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+use std::{fs::File, io::Write, str::FromStr};
+
 use clap::*;
-use fastcrypto_zkp::bn254::zk_login::OIDCProvider;
-use fastcrypto_zkp::zk_login_utils::Bn254FrElement;
-use move_core_types::account_address::AccountAddress;
-use move_core_types::identifier::Identifier;
-use move_core_types::language_storage::{ModuleId, StructTag, TypeTag};
-use pretty_assertions::assert_str_eq;
-use rand::rngs::StdRng;
-use rand::SeedableRng;
-use roaring::RoaringBitmap;
-use serde_reflection::{Registry, Result, Samples, Tracer, TracerConfig};
-use shared_crypto::intent::{Intent, IntentMessage, PersonalMessage};
-use std::str::FromStr;
-use std::{fs::File, io::Write};
-use iota_types::base_types::IotaAddress;
-use iota_types::crypto::{
-    AggregateAuthoritySignature, AuthorityQuorumSignInfo, AuthorityStrongQuorumSignInfo,
-};
-use iota_types::effects::TransactionEvents;
-use iota_types::event::Event;
-use iota_types::execution_status::{
-    CommandArgumentError, ExecutionFailureStatus, ExecutionStatus, PackageUpgradeError,
-    TypeArgumentError,
-};
-use iota_types::full_checkpoint_content::{CheckpointData, CheckpointTransaction};
-use iota_types::messages_checkpoint::{CertifiedCheckpointSummary, CheckpointCommitment};
-use iota_types::messages_consensus::ConsensusDeterminedVersionAssignments;
-use iota_types::messages_grpc::ObjectInfoRequestKind;
-use iota_types::move_package::TypeOrigin;
-use iota_types::object::Object;
-use iota_types::transaction::{GenesisObject, SenderSignedData, TransactionData};
-use iota_types::type_input::{StructInput, TypeInput};
-use iota_types::{
-    base_types::MoveObjectType_,
-    crypto::Signer,
-    messages_checkpoint::{
-        CheckpointContents, CheckpointContentsDigest, CheckpointDigest, CheckpointSummary,
-        FullCheckpointContents,
-    },
-    transaction::TransactionExpiration,
-};
+use fastcrypto_zkp::{bn254::zk_login::OIDCProvider, zk_login_utils::Bn254FrElement};
 use iota_types::{
     base_types::{
-        self, MoveObjectType, ObjectDigest, ObjectID, TransactionDigest, TransactionEffectsDigest,
+        self, IotaAddress, MoveObjectType, MoveObjectType_, ObjectDigest, ObjectID,
+        TransactionDigest, TransactionEffectsDigest,
     },
     crypto::{
-        get_key_pair, get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair,
-        AuthorityPublicKeyBytes, AuthoritySignature, KeypairTraits, Signature, IotaKeyPair,
+        AccountKeyPair, AggregateAuthoritySignature, AuthorityKeyPair, AuthorityPublicKeyBytes,
+        AuthorityQuorumSignInfo, AuthoritySignature, AuthorityStrongQuorumSignInfo, IotaKeyPair,
+        KeypairTraits, PublicKey, Signature, Signer, ZkLoginPublicIdentifier, get_key_pair,
+        get_key_pair_from_rng,
     },
+    effects::{
+        IDOperation, ObjectIn, ObjectOut, TransactionEffects, TransactionEvents,
+        UnchangedSharedKind,
+    },
+    event::Event,
+    execution_status::{
+        CommandArgumentError, ExecutionFailureStatus, ExecutionStatus, PackageUpgradeError,
+        TypeArgumentError,
+    },
+    full_checkpoint_content::{CheckpointData, CheckpointTransaction},
+    messages_checkpoint::{
+        CertifiedCheckpointSummary, CheckpointCommitment, CheckpointContents,
+        CheckpointContentsDigest, CheckpointDigest, CheckpointSummary, FullCheckpointContents,
+    },
+    messages_consensus::ConsensusDeterminedVersionAssignments,
+    messages_grpc::ObjectInfoRequestKind,
+    move_package::TypeOrigin,
     multisig::{MultiSig, MultiSigPublicKey},
-    object::{Data, Owner},
+    object::{Data, Object, Owner},
     signature::GenericSignature,
     storage::DeleteKind,
     transaction::{
-        Argument, CallArg, Command, EndOfEpochTransactionKind, ObjectArg, TransactionKind,
+        Argument, CallArg, Command, EndOfEpochTransactionKind, GenesisObject, ObjectArg,
+        SenderSignedData, TransactionData, TransactionExpiration, TransactionKind,
     },
-};
-use iota_types::{
-    crypto::{PublicKey, ZkLoginPublicIdentifier},
-    effects::{IDOperation, ObjectIn, ObjectOut, TransactionEffects, UnchangedSharedKind},
+    type_input::{StructInput, TypeInput},
     utils::DEFAULT_ADDRESS_SEED,
 };
+use move_core_types::{
+    account_address::AccountAddress,
+    identifier::Identifier,
+    language_storage::{ModuleId, StructTag, TypeTag},
+};
+use pretty_assertions::assert_str_eq;
+use rand::{SeedableRng, rngs::StdRng};
+use roaring::RoaringBitmap;
+use serde_reflection::{Registry, Result, Samples, Tracer, TracerConfig};
+use shared_crypto::intent::{Intent, IntentMessage, PersonalMessage};
 use typed_store::TypedStoreError;
 fn get_registry() -> Result<Registry> {
     let config = TracerConfig::default()

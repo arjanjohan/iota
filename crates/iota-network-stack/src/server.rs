@@ -2,28 +2,31 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::metrics::{
-    DefaultMetricsCallbackProvider, MetricsCallbackProvider, MetricsHandler,
-    GRPC_ENDPOINT_PATH_HEADER,
+use std::{
+    convert::Infallible,
+    task::{Context, Poll},
 };
-use crate::{
-    config::Config,
-    multiaddr::{Multiaddr, Protocol},
-};
-use eyre::{eyre, Result};
-use std::convert::Infallible;
-use std::task::{Context, Poll};
+
+use eyre::{Result, eyre};
 use tokio_rustls::rustls::ServerConfig;
-use tonic::codegen::http::HeaderValue;
 use tonic::{
     body::BoxBody,
-    codegen::http::{Request, Response},
+    codegen::http::{HeaderValue, Request, Response},
     server::NamedService,
 };
 use tower::{Layer, Service, ServiceBuilder};
-use tower_http::propagate_header::PropagateHeaderLayer;
-use tower_http::set_header::SetRequestHeaderLayer;
-use tower_http::trace::TraceLayer;
+use tower_http::{
+    propagate_header::PropagateHeaderLayer, set_header::SetRequestHeaderLayer, trace::TraceLayer,
+};
+
+use crate::{
+    config::Config,
+    metrics::{
+        DefaultMetricsCallbackProvider, GRPC_ENDPOINT_PATH_HEADER, MetricsCallbackProvider,
+        MetricsHandler,
+    },
+    multiaddr::{Multiaddr, Protocol},
+};
 
 pub struct ServerBuilder<M: MetricsCallbackProvider = DefaultMetricsCallbackProvider> {
     config: Config,
@@ -181,15 +184,16 @@ fn update_tcp_port_in_multiaddr(addr: &Multiaddr, port: u16) -> Multiaddr {
 
 #[cfg(test)]
 mod test {
-    use crate::config::Config;
-    use crate::metrics::MetricsCallbackProvider;
-    use crate::Multiaddr;
-    use std::ops::Deref;
-    use std::sync::{Arc, Mutex};
-    use std::time::Duration;
+    use std::{
+        ops::Deref,
+        sync::{Arc, Mutex},
+        time::Duration,
+    };
+
     use tonic::Code;
-    use tonic_health::pb::health_client::HealthClient;
-    use tonic_health::pb::HealthCheckRequest;
+    use tonic_health::pb::{HealthCheckRequest, health_client::HealthClient};
+
+    use crate::{Multiaddr, config::Config, metrics::MetricsCallbackProvider};
 
     #[test]
     fn document_multiaddr_limitation_for_unix_protocol() {

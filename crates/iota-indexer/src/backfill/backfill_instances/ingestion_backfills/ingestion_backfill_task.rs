@@ -2,16 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::backfill::backfill_instances::ingestion_backfills::IngestionBackfillTrait;
-use crate::backfill::backfill_task::BackfillTask;
-use crate::database::ConnectionPool;
+use std::{ops::RangeInclusive, sync::Arc};
+
 use dashmap::DashMap;
-use std::ops::RangeInclusive;
-use std::sync::Arc;
-use iota_data_ingestion_core::{setup_single_workflow, ReaderOptions, Worker};
-use iota_types::full_checkpoint_content::CheckpointData;
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
+use iota_data_ingestion_core::{ReaderOptions, Worker, setup_single_workflow};
+use iota_types::{
+    full_checkpoint_content::CheckpointData, messages_checkpoint::CheckpointSequenceNumber,
+};
 use tokio::sync::Notify;
+
+use crate::{
+    backfill::{
+        backfill_instances::ingestion_backfills::IngestionBackfillTrait,
+        backfill_task::BackfillTask,
+    },
+    database::ConnectionPool,
+};
 
 pub struct IngestionBackfillTask<T: IngestionBackfillTrait> {
     ready_checkpoints: Arc<DashMap<CheckpointSequenceNumber, Vec<T::ProcessedType>>>,

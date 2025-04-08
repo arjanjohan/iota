@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_macros::sim_test;
-use iota_rpc_api::proto::node::v2alpha::node_service_client::NodeServiceClient;
-use iota_rpc_api::proto::node::v2alpha::GetCoinInfoRequest;
-use iota_rpc_api::proto::node::v2alpha::GetCoinInfoResponse;
+use iota_rpc_api::proto::node::v2alpha::{
+    GetCoinInfoRequest, GetCoinInfoResponse, node_service_client::NodeServiceClient,
+};
 use iota_sdk_types::TypeTag;
 use test_cluster::TestClusterBuilder;
 

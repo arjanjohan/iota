@@ -2,21 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::hash_map::{DefaultHasher, RandomState};
-use std::collections::HashMap;
-use std::error::Error;
-use std::fmt;
-use std::hash::{BuildHasher, Hash, Hasher};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::Arc;
-use std::time::Duration;
-
-use parking_lot::{ArcMutexGuard, ArcRwLockReadGuard, ArcRwLockWriteGuard, Mutex, RwLock};
-use tokio::task::JoinHandle;
-use tokio::time::Instant;
-use tracing::info;
+use std::{
+    collections::{
+        HashMap,
+        hash_map::{DefaultHasher, RandomState},
+    },
+    error::Error,
+    fmt,
+    hash::{BuildHasher, Hash, Hasher},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+    },
+    time::Duration,
+};
 
 use iota_metrics::spawn_monitored_task;
+use parking_lot::{ArcMutexGuard, ArcRwLockReadGuard, ArcRwLockWriteGuard, Mutex, RwLock};
+use tokio::{task::JoinHandle, time::Instant};
+use tracing::info;
 
 type OwnedMutexGuard<T> = ArcMutexGuard<parking_lot::RawMutex, T>;
 type OwnedRwLockReadGuard<T> = ArcRwLockReadGuard<parking_lot::RawRwLock, T>;

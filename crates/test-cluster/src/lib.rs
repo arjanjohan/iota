@@ -2,21 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use futures::{future::join_all, StreamExt};
-use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
-use rand::{distributions::*, rngs::OsRng, seq::SliceRandom};
-use std::collections::HashMap;
-use std::net::SocketAddr;
-use std::num::NonZeroUsize;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
-use iota_config::genesis::Genesis;
-use iota_config::node::{AuthorityOverloadConfig, DBCheckpointConfig, RunWithRange};
-use iota_config::{Config, ExecutionCacheConfig, IOTA_CLIENT_CONFIG, IOTA_NETWORK_CONFIG};
-use iota_config::{NodeConfig, PersistedConfig, IOTA_KEYSTORE_FILENAME};
-use iota_core::authority_aggregator::AuthorityAggregator;
-use iota_core::authority_client::NetworkAuthorityClient;
+use std::{
+    collections::HashMap,
+    net::SocketAddr,
+    num::NonZeroUsize,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
+
+use futures::{StreamExt, future::join_all};
+use iota_config::{
+    Config, ExecutionCacheConfig, IOTA_CLIENT_CONFIG, IOTA_KEYSTORE_FILENAME, IOTA_NETWORK_CONFIG,
+    NodeConfig, PersistedConfig,
+    genesis::Genesis,
+    node::{AuthorityOverloadConfig, DBCheckpointConfig, RunWithRange},
+};
+use iota_core::{
+    authority_aggregator::AuthorityAggregator, authority_client::NetworkAuthorityClient,
+};
 use iota_json_rpc_types::{
     IotaExecutionStatus, IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse,
     TransactionFilter,
@@ -24,42 +28,48 @@ use iota_json_rpc_types::{
 use iota_keys::keystore::{AccountKeystore, FileBasedKeystore, Keystore};
 use iota_node::IotaNodeHandle;
 use iota_protocol_config::ProtocolVersion;
-use iota_sdk::apis::QuorumDriverApi;
-use iota_sdk::iota_client_config::{IotaClientConfig, IotaEnv};
-use iota_sdk::wallet_context::WalletContext;
-use iota_sdk::{IotaClient, IotaClientBuilder};
+use iota_sdk::{
+    IotaClient, IotaClientBuilder,
+    apis::QuorumDriverApi,
+    iota_client_config::{IotaClientConfig, IotaEnv},
+    wallet_context::WalletContext,
+};
 use iota_swarm::memory::{Swarm, SwarmBuilder};
-use iota_swarm_config::genesis_config::{
-    AccountConfig, GenesisConfig, ValidatorGenesisConfig, DEFAULT_GAS_AMOUNT,
+use iota_swarm_config::{
+    genesis_config::{AccountConfig, DEFAULT_GAS_AMOUNT, GenesisConfig, ValidatorGenesisConfig},
+    network_config::NetworkConfig,
+    network_config_builder::{
+        ProtocolVersionsConfig, StateAccumulatorV2EnabledCallback, StateAccumulatorV2EnabledConfig,
+        SupportedProtocolVersionsCallback,
+    },
+    node_config_builder::{FullnodeConfigBuilder, ValidatorConfigBuilder},
 };
-use iota_swarm_config::network_config::NetworkConfig;
-use iota_swarm_config::network_config_builder::{
-    ProtocolVersionsConfig, StateAccumulatorV2EnabledCallback, StateAccumulatorV2EnabledConfig,
-    SupportedProtocolVersionsCallback,
-};
-use iota_swarm_config::node_config_builder::{FullnodeConfigBuilder, ValidatorConfigBuilder};
 use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::base_types::ConciseableName;
-use iota_types::base_types::{AuthorityName, ObjectID, ObjectRef, IotaAddress};
-use iota_types::committee::CommitteeTrait;
-use iota_types::committee::{Committee, EpochId};
-use iota_types::crypto::KeypairTraits;
-use iota_types::crypto::IotaKeyPair;
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::error::IotaResult;
-use iota_types::governance::MIN_VALIDATOR_JOINING_STAKE_NANOS;
-use iota_types::message_envelope::Message;
-use iota_types::object::Object;
-use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait;
-use iota_types::iota_system_state::IotaSystemState;
-use iota_types::iota_system_state::IotaSystemStateTrait;
-use iota_types::supported_protocol_versions::SupportedProtocolVersions;
-use iota_types::traffic_control::{PolicyConfig, RemoteFirewallConfig};
-use iota_types::transaction::{
-    CertifiedTransaction, Transaction, TransactionData, TransactionDataAPI, TransactionKind,
+use iota_types::{
+    base_types::{AuthorityName, ConciseableName, IotaAddress, ObjectID, ObjectRef},
+    committee::{Committee, CommitteeTrait, EpochId},
+    crypto::{IotaKeyPair, KeypairTraits},
+    effects::{TransactionEffects, TransactionEvents},
+    error::IotaResult,
+    governance::MIN_VALIDATOR_JOINING_STAKE_NANOS,
+    iota_system_state::{
+        IotaSystemState, IotaSystemStateTrait,
+        epoch_start_iota_system_state::EpochStartSystemStateTrait,
+    },
+    message_envelope::Message,
+    object::Object,
+    supported_protocol_versions::SupportedProtocolVersions,
+    traffic_control::{PolicyConfig, RemoteFirewallConfig},
+    transaction::{
+        CertifiedTransaction, Transaction, TransactionData, TransactionDataAPI, TransactionKind,
+    },
 };
-use tokio::time::{timeout, Instant};
-use tokio::{task::JoinHandle, time::sleep};
+use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
+use rand::{distributions::*, rngs::OsRng, seq::SliceRandom};
+use tokio::{
+    task::JoinHandle,
+    time::{Instant, sleep, timeout},
+};
 use tracing::{error, info};
 
 mod test_indexer_handle;
@@ -506,25 +516,29 @@ impl TestCluster {
     pub async fn wait_for_authenticator_state_update(&self) {
         timeout(
             Duration::from_secs(60),
-            self.fullnode_handle.iota_node.with_async(|node| async move {
-                let mut txns = node.state().subscription_handler.subscribe_transactions(
-                    TransactionFilter::ChangedObject(ObjectID::from_hex_literal("0x7").unwrap()),
-                );
-                let state = node.state();
+            self.fullnode_handle
+                .iota_node
+                .with_async(|node| async move {
+                    let mut txns = node.state().subscription_handler.subscribe_transactions(
+                        TransactionFilter::ChangedObject(
+                            ObjectID::from_hex_literal("0x7").unwrap(),
+                        ),
+                    );
+                    let state = node.state();
 
-                while let Some(tx) = txns.next().await {
-                    let digest = *tx.transaction_digest();
-                    let tx = state
-                        .get_transaction_cache_reader()
-                        .get_transaction_block(&digest)
-                        .unwrap();
-                    match &tx.data().intent_message().value.kind() {
-                        TransactionKind::EndOfEpochTransaction(_) => (),
-                        TransactionKind::AuthenticatorStateUpdate(_) => break,
-                        _ => panic!("{:?}", tx),
+                    while let Some(tx) = txns.next().await {
+                        let digest = *tx.transaction_digest();
+                        let tx = state
+                            .get_transaction_cache_reader()
+                            .get_transaction_block(&digest)
+                            .unwrap();
+                        match &tx.data().intent_message().value.kind() {
+                            TransactionKind::EndOfEpochTransaction(_) => (),
+                            TransactionKind::AuthenticatorStateUpdate(_) => break,
+                            _ => panic!("{:?}", tx),
+                        }
                     }
-                }
-            }),
+                }),
         )
         .await
         .expect("Timed out waiting for authenticator state update");
@@ -1091,7 +1105,7 @@ impl TestClusterBuilder {
         #[cfg(msim)]
         if !self.default_jwks {
             iota_node::set_jwk_injector(Arc::new(|_authority, provider| {
-                use fastcrypto_zkp::bn254::zk_login::{JwkId, JWK};
+                use fastcrypto_zkp::bn254::zk_login::{JWK, JwkId};
                 use rand::Rng;
 
                 // generate random (and possibly conflicting) id/key pairings.

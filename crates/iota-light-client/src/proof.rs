@@ -3,8 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::anyhow;
-
-use serde::{Deserialize, Serialize};
 use iota_types::{
     base_types::ObjectRef,
     committee::Committee,
@@ -14,6 +12,7 @@ use iota_types::{
     object::Object,
     transaction::Transaction,
 };
+use serde::{Deserialize, Serialize};
 
 /// Define aspect of IOTA state that need to be certified in a proof
 #[derive(Default, Debug, Serialize, Deserialize)]

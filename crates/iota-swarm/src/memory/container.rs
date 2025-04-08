@@ -2,16 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::node::RuntimeType;
+use std::{
+    sync::{Arc, Weak},
+    thread,
+};
+
 use futures::FutureExt;
-use std::sync::{Arc, Weak};
-use std::thread;
 use iota_config::NodeConfig;
 use iota_node::{IotaNode, IotaNodeHandle};
-use iota_types::base_types::ConciseableName;
-use iota_types::crypto::{AuthorityPublicKeyBytes, KeypairTraits};
+use iota_types::{
+    base_types::ConciseableName,
+    crypto::{AuthorityPublicKeyBytes, KeypairTraits},
+};
 use telemetry_subscribers::get_global_telemetry_config;
 use tracing::{info, trace};
+
+use super::node::RuntimeType;
 
 #[derive(Debug)]
 pub(crate) struct Container {
@@ -125,8 +131,7 @@ impl Container {
 
     /// Check to see that the Node is still alive by checking if the receiving side of the
     /// `cancel_sender` has been dropped.
-    ///
-    //TODO When we move to rust 1.61 we should also use
+    // TODO When we move to rust 1.61 we should also use
     // https://doc.rust-lang.org/stable/std/thread/struct.JoinHandle.html#method.is_finished
     // in order to check if the thread has finished.
     pub fn is_alive(&self) -> bool {

@@ -3,16 +3,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod compatibility_tests {
-    use move_package::source_package::{
-        manifest_parser::parse_move_manifest_from_file, parsed_manifest::SourceManifest,
-    };
-    use std::collections::BTreeMap;
-    use std::path::Path;
-    use iota_framework::{compare_system_package, BuiltInFramework};
+    use std::{collections::BTreeMap, path::Path};
+
+    use iota_framework::{BuiltInFramework, compare_system_package};
     use iota_framework_snapshot::{load_bytecode_snapshot, load_bytecode_snapshot_manifest};
     use iota_move_build::published_at_property;
     use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
     use iota_types::execution_config_utils::to_binary_config;
+    use move_package::source_package::{
+        manifest_parser::parse_move_manifest_from_file, parsed_manifest::SourceManifest,
+    };
 
     #[tokio::test]
     async fn test_framework_compatibility() {
@@ -66,10 +66,9 @@ mod compatibility_tests {
             .map(|p| (&p.id, p))
             .collect();
         assert_eq!(
-                latest_snapshot_ref,
-                current_framework,
-                "The current framework differs the latest bytecode snapshot. Did you forget to upgrade protocol version?"
-            );
+            latest_snapshot_ref, current_framework,
+            "The current framework differs the latest bytecode snapshot. Did you forget to upgrade protocol version?"
+        );
     }
 
     /// This test checks that the the `SinglePackage` entries in `manifest.json` match the metadata

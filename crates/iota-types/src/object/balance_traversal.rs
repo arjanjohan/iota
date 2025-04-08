@@ -72,14 +72,13 @@ fn is_balance(s: &StructTag) -> Option<TypeTag> {
 mod tests {
     use std::str::FromStr;
 
-    use crate::id::UID;
-
-    use super::*;
-
     use move_core_types::{
         account_address::AccountAddress, annotated_value as A, identifier::Identifier,
         language_storage::StructTag,
     };
+
+    use super::*;
+    use crate::id::UID;
 
     #[test]
     fn test_traverse_balance() {

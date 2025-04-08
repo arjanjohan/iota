@@ -263,7 +263,7 @@ pub mod row_filter {
         /// If multiple cells are produced with the same column and timestamp,
         /// they will all appear in the output row in an unspecified mutual order.
         /// Consider the following example, with three filters:
-        ///```ignore
+        /// ```ignore
         ///                                   input row
         ///                                       |
         ///             -----------------------------------------------------
@@ -329,7 +329,7 @@ pub mod row_filter {
         /// Hook for introspection into the RowFilter. Outputs all cells directly to
         /// the output of the read rather than to any parent filter. Consider the
         /// following example:
-        ///```ignore
+        /// ```ignore
         ///      Chain(
         ///        FamilyRegex("A"),
         ///        Interleave(
@@ -739,7 +739,7 @@ pub struct ReadRowsRequest {
     /// contents will not be affected by this flag.
     ///
     /// Example result set:
-    ///```ignore
+    /// ```ignore
     ///      [
     ///        {key: "k2", "f:col1": "v1", "f:col2": "v1"},
     ///        {key: "k1", "f:col1": "v2", "f:col2": "v2"}
@@ -802,7 +802,6 @@ pub struct ReadRowsResponse {
     /// key, allowing the client to skip that work on a retry.
     #[prost(bytes = "vec", tag = "2")]
     pub last_scanned_row_key: ::prost::alloc::vec::Vec<u8>,
-    ///
     /// If requested, provide enhanced query performance statistics. The semantics
     /// dictate:
     ///    * request_stats is empty on every (streamed) response, except
@@ -1420,8 +1419,7 @@ pub mod read_change_stream_response {
 /// Generated client implementations.
 pub mod bigtable_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
-    use tonic::codegen::http::Uri;
-    use tonic::codegen::*;
+    use tonic::codegen::{http::Uri, *};
     /// Service for reading from and writing to existing Bigtable tables.
     #[derive(Debug, Clone)]
     pub struct BigtableClient<T> {
@@ -1461,11 +1459,11 @@ pub mod bigtable_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
-                Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    http::Request<tonic::body::BoxBody>,
+                    Response = http::Response<
+                        <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    >,
                 >,
-            >,
             <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
                 Into<StdError> + Send + Sync,
         {

@@ -2,38 +2,44 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{MultiSigPublicKey, ThresholdUnit, WeightUnit};
-use crate::{
-    base_types::IotaAddress,
-    crypto::{
-        get_key_pair, get_key_pair_from_rng, Ed25519IotaSignature, PublicKey, Signature, IotaKeyPair,
-        IotaSignatureInner, ZkLoginPublicIdentifier,
-    },
-    multisig::{as_indices, MultiSig, MAX_SIGNER_IN_MULTISIG},
-    multisig_legacy::bitmap_to_u16,
-    signature::{AuthenticatorTrait, GenericSignature, VerifyParams},
-    signature_verification::VerifiedDigestCache,
-    utils::{
-        keys, load_test_vectors, make_transaction_data, make_zklogin_tx, DEFAULT_ADDRESS_SEED,
-        SHORT_ADDRESS_SEED,
-    },
-    zk_login_authenticator::ZkLoginAuthenticator,
-    zk_login_util::DEFAULT_JWK_BYTES,
-};
+use std::{str::FromStr, sync::Arc};
+
 use fastcrypto::{
     ed25519::Ed25519KeyPair,
     encoding::{Base64, Encoding},
     traits::ToFromBytes,
 };
-use fastcrypto_zkp::bn254::zk_login::{parse_jwks, JwkId, OIDCProvider, ZkLoginInputs, JWK};
-use fastcrypto_zkp::bn254::zk_login_api::ZkLoginEnv;
-use fastcrypto_zkp::zk_login_utils::Bn254FrElement;
+use fastcrypto_zkp::{
+    bn254::{
+        zk_login::{JWK, JwkId, OIDCProvider, ZkLoginInputs, parse_jwks},
+        zk_login_api::ZkLoginEnv,
+    },
+    zk_login_utils::Bn254FrElement,
+};
 use im::hashmap::HashMap as ImHashMap;
 use once_cell::sync::OnceCell;
-use rand::{rngs::StdRng, SeedableRng};
+use rand::{SeedableRng, rngs::StdRng};
 use roaring::RoaringBitmap;
 use shared_crypto::intent::{Intent, IntentMessage, PersonalMessage};
-use std::{str::FromStr, sync::Arc};
+
+use super::{MultiSigPublicKey, ThresholdUnit, WeightUnit};
+use crate::{
+    base_types::IotaAddress,
+    crypto::{
+        Ed25519IotaSignature, IotaKeyPair, IotaSignatureInner, PublicKey, Signature,
+        ZkLoginPublicIdentifier, get_key_pair, get_key_pair_from_rng,
+    },
+    multisig::{MAX_SIGNER_IN_MULTISIG, MultiSig, as_indices},
+    multisig_legacy::bitmap_to_u16,
+    signature::{AuthenticatorTrait, GenericSignature, VerifyParams},
+    signature_verification::VerifiedDigestCache,
+    utils::{
+        DEFAULT_ADDRESS_SEED, SHORT_ADDRESS_SEED, keys, load_test_vectors, make_transaction_data,
+        make_zklogin_tx,
+    },
+    zk_login_authenticator::ZkLoginAuthenticator,
+    zk_login_util::DEFAULT_JWK_BYTES,
+};
 #[test]
 fn test_combine_sigs() {
     let kp1: IotaKeyPair = IotaKeyPair::Ed25519(get_key_pair().1);
@@ -143,20 +149,24 @@ fn test_multisig_pk_new() {
     let pk3 = keys[2].public();
 
     // Fails on weight 0.
-    assert!(MultiSigPublicKey::new(
-        vec![pk1.clone(), pk2.clone(), pk3.clone()],
-        vec![0, 1, 1],
-        2
-    )
-    .is_err());
+    assert!(
+        MultiSigPublicKey::new(
+            vec![pk1.clone(), pk2.clone(), pk3.clone()],
+            vec![0, 1, 1],
+            2
+        )
+        .is_err()
+    );
 
     // Fails on threshold 0.
-    assert!(MultiSigPublicKey::new(
-        vec![pk1.clone(), pk2.clone(), pk3.clone()],
-        vec![1, 1, 1],
-        0
-    )
-    .is_err());
+    assert!(
+        MultiSigPublicKey::new(
+            vec![pk1.clone(), pk2.clone(), pk3.clone()],
+            vec![1, 1, 1],
+            0
+        )
+        .is_err()
+    );
 
     // Fails on incorrect array length.
     assert!(
@@ -215,12 +225,14 @@ fn test_max_sig() {
     }
 
     // multisig_pk with larger that max number of pks fails.
-    assert!(MultiSigPublicKey::new(
-        pks.clone(),
-        vec![WeightUnit::MAX; MAX_SIGNER_IN_MULTISIG + 1],
-        ThresholdUnit::MAX
-    )
-    .is_err());
+    assert!(
+        MultiSigPublicKey::new(
+            pks.clone(),
+            vec![WeightUnit::MAX; MAX_SIGNER_IN_MULTISIG + 1],
+            ThresholdUnit::MAX
+        )
+        .is_err()
+    );
 
     // multisig_pk with unreachable threshold fails.
     assert!(MultiSigPublicKey::new(pks.clone()[..5].to_vec(), vec![3; 5], 16).is_err());
@@ -249,10 +261,12 @@ fn test_max_sig() {
     )
     .unwrap();
     let sig = Signature::new_secure(&msg, &keys[0]).into();
-    assert!(MultiSig::combine(vec![sig; 1], low_threshold_pk)
-        .unwrap()
-        .init_and_validate()
-        .is_ok());
+    assert!(
+        MultiSig::combine(vec![sig; 1], low_threshold_pk)
+            .unwrap()
+            .init_and_validate()
+            .is_ok()
+    );
 }
 
 #[test]

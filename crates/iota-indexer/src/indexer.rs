@@ -2,33 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::env;
+use std::{collections::HashMap, env};
 
 use anyhow::Result;
+use async_trait::async_trait;
+use futures::future::try_join_all;
+use iota_data_ingestion_core::{
+    DataIngestionMetrics, IndexerExecutor, ProgressStore, ReaderOptions, WorkerPool,
+};
+use iota_metrics::spawn_monitored_task;
+use iota_types::messages_checkpoint::CheckpointSequenceNumber;
 use prometheus::Registry;
 use tokio::sync::oneshot;
 use tokio_util::sync::CancellationToken;
 use tracing::{info, warn};
 
-use async_trait::async_trait;
-use futures::future::try_join_all;
-use iota_metrics::spawn_monitored_task;
-use iota_data_ingestion_core::{
-    DataIngestionMetrics, IndexerExecutor, ProgressStore, ReaderOptions, WorkerPool,
+use crate::{
+    build_json_rpc_server,
+    config::{IngestionConfig, JsonRpcConfig, RetentionConfig, SnapshotLagConfig},
+    database::ConnectionPool,
+    errors::IndexerError,
+    handlers::{
+        checkpoint_handler::new_handlers, objects_snapshot_handler::start_objects_snapshot_handler,
+        pruner::Pruner,
+    },
+    indexer_reader::IndexerReader,
+    metrics::IndexerMetrics,
+    store::{IndexerStore, PgIndexerStore},
 };
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-
-use crate::build_json_rpc_server;
-use crate::config::{IngestionConfig, JsonRpcConfig, RetentionConfig, SnapshotLagConfig};
-use crate::database::ConnectionPool;
-use crate::errors::IndexerError;
-use crate::handlers::checkpoint_handler::new_handlers;
-use crate::handlers::objects_snapshot_handler::start_objects_snapshot_handler;
-use crate::handlers::pruner::Pruner;
-use crate::indexer_reader::IndexerReader;
-use crate::metrics::IndexerMetrics;
-use crate::store::{IndexerStore, PgIndexerStore};
 
 pub struct Indexer;
 
@@ -68,9 +69,11 @@ impl Indexer {
         .await?;
 
         if mvr_mode {
-            warn!("Indexer in MVR mode is configured to prune `objects_history` to 2 epochs. The other tables have a 2000 epoch retention.");
+            warn!(
+                "Indexer in MVR mode is configured to prune `objects_history` to 2 epochs. The other tables have a 2000 epoch retention."
+            );
             retention_config = Some(RetentionConfig {
-                epochs_to_keep: 2000, // epochs, roughly 5+ years. We really just care about pruning `objects_history` per the default 2 epochs.
+                epochs_to_keep: 2000, /* epochs, roughly 5+ years. We really just care about pruning `objects_history` per the default 2 epochs. */
                 overrides: Default::default(),
             });
         }

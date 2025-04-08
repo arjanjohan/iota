@@ -5,13 +5,14 @@
 use std::{sync::Arc, time::Instant};
 
 use consensus_config::{AuthorityIndex, Committee, NetworkKeyPair, Parameters, ProtocolKeyPair};
+use iota_protocol_config::{ConsensusNetwork, ProtocolConfig};
 use itertools::Itertools;
 use parking_lot::RwLock;
 use prometheus::Registry;
-use iota_protocol_config::{ConsensusNetwork, ProtocolConfig};
 use tracing::{info, warn};
 
 use crate::{
+    CommitConsumer, CommitConsumerMonitor,
     authority_service::AuthorityService,
     block_manager::BlockManager,
     block_verifier::SignedBlockVerifier,
@@ -27,15 +28,14 @@ use crate::{
     leader_timeout::{LeaderTimeoutTask, LeaderTimeoutTaskHandle},
     metrics::initialise_metrics,
     network::{
-        anemo_network::AnemoManager, tonic_network::TonicManager, NetworkClient as _,
-        NetworkManager,
+        NetworkClient as _, NetworkManager, anemo_network::AnemoManager,
+        tonic_network::TonicManager,
     },
     round_prober::{RoundProber, RoundProberHandle},
     storage::rocksdb_store::RocksDBStore,
     subscriber::Subscriber,
     synchronizer::{Synchronizer, SynchronizerHandle},
     transaction::{TransactionClient, TransactionConsumer, TransactionVerifier},
-    CommitConsumer, CommitConsumerMonitor,
 };
 
 /// ConsensusAuthority is used by IOTA to manage the lifetime of AuthorityNode.
@@ -429,21 +429,27 @@ where
 mod tests {
     #![allow(non_snake_case)]
 
-    use std::collections::BTreeMap;
-    use std::{collections::BTreeSet, sync::Arc, time::Duration};
+    use std::{
+        collections::{BTreeMap, BTreeSet},
+        sync::Arc,
+        time::Duration,
+    };
 
-    use consensus_config::{local_committee_and_keys, Parameters};
+    use consensus_config::{Parameters, local_committee_and_keys};
     use iota_metrics::monitored_mpsc::UnboundedReceiver;
+    use iota_protocol_config::ProtocolConfig;
     use prometheus::Registry;
     use rstest::rstest;
-    use iota_protocol_config::ProtocolConfig;
     use tempfile::TempDir;
     use tokio::time::{sleep, timeout};
     use typed_store::DBMetrics;
 
     use super::*;
-    use crate::block::GENESIS_ROUND;
-    use crate::{block::BlockAPI as _, transaction::NoopTransactionVerifier, CommittedSubDag};
+    use crate::{
+        CommittedSubDag,
+        block::{BlockAPI as _, GENESIS_ROUND},
+        transaction::NoopTransactionVerifier,
+    };
 
     #[rstest]
     #[tokio::test]
@@ -729,7 +735,10 @@ mod tests {
                 protocol_config.clone(),
             )
             .await;
-            assert!(authority.sync_last_known_own_block_enabled(), "Expected syncing of last known own block to be enabled as all authorities are of empty db and boot for first time.");
+            assert!(
+                authority.sync_last_known_own_block_enabled(),
+                "Expected syncing of last known own block to be enabled as all authorities are of empty db and boot for first time."
+            );
             boot_counters[index] += 1;
             output_receivers.push(receiver);
             authorities.insert(index, authority);

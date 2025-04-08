@@ -6,14 +6,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: MIT
 
-use http::{HeaderMap, HeaderValue, Request, Response};
-use pin_project_lite::pin_project;
 use std::{
     future::Future,
     pin::Pin,
-    task::{ready, Context, Poll},
+    task::{Context, Poll, ready},
     time::Duration,
 };
+
+use http::{HeaderMap, HeaderValue, Request, Response};
+use pin_project_lite::pin_project;
 use tokio::time::Sleep;
 use tonic::Status;
 use tower::Service;

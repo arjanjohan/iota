@@ -2,22 +2,28 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::AuthorityState;
-use iota_metrics::monitored_scope;
-use std::cmp::{max, min};
-use std::hash::Hasher;
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use std::sync::Weak;
-use std::time::Duration;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    cmp::{max, min},
+    hash::Hasher,
+    sync::{
+        Weak,
+        atomic::{AtomicBool, AtomicU32, Ordering},
+    },
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
+
 use iota_config::node::AuthorityOverloadConfig;
-use iota_types::digests::TransactionDigest;
-use iota_types::error::IotaError;
-use iota_types::error::IotaResult;
-use iota_types::fp_bail;
+use iota_metrics::monitored_scope;
+use iota_types::{
+    digests::TransactionDigest,
+    error::{IotaError, IotaResult},
+    fp_bail,
+};
 use tokio::time::sleep;
 use tracing::{debug, info};
 use twox_hash::XxHash64;
+
+use crate::authority::AuthorityState;
 
 #[derive(Default)]
 pub struct AuthorityOverloadInfo {
@@ -260,21 +266,24 @@ pub fn overload_monitor_accept_tx(
 #[cfg(test)]
 #[allow(clippy::disallowed_methods)] // allow unbounded_channel() since tests are simulating txn manager execution driver interaction.
 mod tests {
-    use super::*;
-
-    use crate::authority::test_authority_builder::TestAuthorityBuilder;
-    use rand::{
-        rngs::{OsRng, StdRng},
-        Rng, SeedableRng,
-    };
     use std::sync::Arc;
+
     use iota_macros::sim_test;
-    use tokio::sync::mpsc::unbounded_channel;
-    use tokio::sync::mpsc::UnboundedReceiver;
-    use tokio::sync::mpsc::UnboundedSender;
-    use tokio::sync::oneshot;
-    use tokio::task::JoinHandle;
-    use tokio::time::{interval, Instant, MissedTickBehavior};
+    use rand::{
+        Rng, SeedableRng,
+        rngs::{OsRng, StdRng},
+    };
+    use tokio::{
+        sync::{
+            mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
+            oneshot,
+        },
+        task::JoinHandle,
+        time::{Instant, MissedTickBehavior, interval},
+    };
+
+    use super::*;
+    use crate::authority::test_authority_builder::TestAuthorityBuilder;
 
     #[test]
     pub fn test_authority_overload_info() {

@@ -2,6 +2,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    collections::{BTreeMap, BTreeSet, HashSet},
+    time::Duration,
+};
+
+use move_core_types::language_storage::TypeTag;
+use once_cell::sync::Lazy;
+use serde::{Deserialize, Serialize};
+
 use crate::{
     base_types::{ObjectID, ObjectRef, SequenceNumber},
     digests::{ObjectDigest, TransactionDigest},
@@ -12,11 +21,6 @@ use crate::{
     transaction::{Argument, Command},
     type_input::TypeInput,
 };
-use move_core_types::language_storage::TypeTag;
-use once_cell::sync::Lazy;
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet, HashSet};
-use std::time::Duration;
 
 /// A type containing all of the information needed to work with a deleted shared object in
 /// execution and when committing the execution effects of the transaction. This holds:
@@ -82,8 +86,10 @@ pub struct ExecutionResultsV2 {
 }
 
 pub type ExecutionResult = (
-    /*  mutable_reference_outputs */ Vec<(Argument, Vec<u8>, TypeTag)>,
-    /*  return_values */ Vec<(Vec<u8>, TypeTag)>,
+    // mutable_reference_outputs
+    Vec<(Argument, Vec<u8>, TypeTag)>,
+    // return_values
+    Vec<(Vec<u8>, TypeTag)>,
 );
 
 impl ExecutionResultsV2 {

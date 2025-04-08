@@ -2,33 +2,40 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::committee::EpochId;
-use crate::crypto::{
-    CompressedSignature, PublicKey, SignatureScheme, IotaSignature, ZkLoginAuthenticatorAsBytes,
-};
-use crate::digests::ZKLoginInputsDigest;
-use crate::error::IotaError;
-use crate::multisig_legacy::MultiSigLegacy;
-use crate::passkey_authenticator::PasskeyAuthenticator;
-use crate::signature_verification::VerifiedDigestCache;
-use crate::zk_login_authenticator::ZkLoginAuthenticator;
-use crate::{base_types::IotaAddress, crypto::Signature, error::IotaResult, multisig::MultiSig};
+use std::{hash::Hash, sync::Arc};
+
 pub use enum_dispatch::enum_dispatch;
-use fastcrypto::ed25519::{Ed25519PublicKey, Ed25519Signature};
-use fastcrypto::secp256k1::{Secp256k1PublicKey, Secp256k1Signature};
-use fastcrypto::secp256r1::{Secp256r1PublicKey, Secp256r1Signature};
 use fastcrypto::{
+    ed25519::{Ed25519PublicKey, Ed25519Signature},
     error::FastCryptoError,
+    secp256k1::{Secp256k1PublicKey, Secp256k1Signature},
+    secp256r1::{Secp256r1PublicKey, Secp256r1Signature},
     traits::{EncodeDecodeBase64, ToFromBytes},
 };
-use fastcrypto_zkp::bn254::zk_login::{JwkId, OIDCProvider, JWK};
-use fastcrypto_zkp::bn254::zk_login_api::ZkLoginEnv;
+use fastcrypto_zkp::bn254::{
+    zk_login::{JWK, JwkId, OIDCProvider},
+    zk_login_api::ZkLoginEnv,
+};
 use im::hashmap::HashMap as ImHashMap;
 use schemars::JsonSchema;
 use serde::Serialize;
 use shared_crypto::intent::IntentMessage;
-use std::hash::Hash;
-use std::sync::Arc;
+
+use crate::{
+    base_types::IotaAddress,
+    committee::EpochId,
+    crypto::{
+        CompressedSignature, IotaSignature, PublicKey, Signature, SignatureScheme,
+        ZkLoginAuthenticatorAsBytes,
+    },
+    digests::ZKLoginInputsDigest,
+    error::{IotaError, IotaResult},
+    multisig::MultiSig,
+    multisig_legacy::MultiSigLegacy,
+    passkey_authenticator::PasskeyAuthenticator,
+    signature_verification::VerifiedDigestCache,
+    zk_login_authenticator::ZkLoginAuthenticator,
+};
 #[derive(Default, Debug, Clone)]
 pub struct VerifyParams {
     // map from JwkId (iss, kid) => JWK

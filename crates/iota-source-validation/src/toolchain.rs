@@ -18,14 +18,14 @@ use move_bytecode_source_map::utils::source_map_from_file;
 use move_command_line_common::{
     env::MOVE_HOME,
     files::{
-        extension_equals, find_filenames, MOVE_COMPILED_EXTENSION, MOVE_EXTENSION,
-        SOURCE_MAP_EXTENSION,
+        MOVE_COMPILED_EXTENSION, MOVE_EXTENSION, SOURCE_MAP_EXTENSION, extension_equals,
+        find_filenames,
     },
 };
 use move_compiler::{
     compiled_unit::NamedCompiledModule,
     editions::{Edition, Flavor},
-    shared::{files::FileName, NumericalAddress},
+    shared::{NumericalAddress, files::FileName},
 };
 use move_package::{
     compilation::{
@@ -48,8 +48,8 @@ const CANONICAL_WIN_BINARY_NAME: &str = "iota.exe";
 pub(crate) fn current_toolchain() -> ToolchainVersion {
     ToolchainVersion {
         compiler_version: CURRENT_COMPILER_VERSION.into(),
-        edition: Edition::LEGACY, /* does not matter, unused for current_toolchain */
-        flavor: Flavor::Iota,      /* does not matter, unused for current_toolchain */
+        edition: Edition::LEGACY, // does not matter, unused for current_toolchain
+        flavor: Flavor::Iota,     // does not matter, unused for current_toolchain
     }
 }
 
@@ -324,8 +324,7 @@ fn detect_platform(
 
 #[cfg(unix)]
 fn set_executable_permission(path: &OsStr) -> anyhow::Result<()> {
-    use std::fs;
-    use std::os::unix::prelude::PermissionsExt;
+    use std::{fs, os::unix::prelude::PermissionsExt};
     let mut perms = fs::metadata(path)?.permissions();
     perms.set_mode(0o755);
     fs::set_permissions(path, perms)?;

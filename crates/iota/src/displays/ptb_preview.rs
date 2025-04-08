@@ -2,17 +2,19 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::fmt::{Display, Formatter};
+
+use tabled::{
+    builder::Builder as TableBuilder,
+    settings::{Panel as TablePanel, Style as TableStyle, style::HorizontalLine},
+};
+
 use crate::{
     client_ptb::{
         ast::{GAS_BUDGET, GAS_COIN, JSON, SUMMARY, WARN_SHADOWS},
         ptb::PTBPreview,
     },
     sp,
-};
-use std::fmt::{Display, Formatter};
-use tabled::{
-    builder::Builder as TableBuilder,
-    settings::{style::HorizontalLine, Panel as TablePanel, Style as TableStyle},
 };
 
 impl<'a> Display for PTBPreview<'a> {

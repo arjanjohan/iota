@@ -2,18 +2,19 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use async_graphql::connection::Connection;
-use async_graphql::*;
+use async_graphql::{connection::Connection, *};
 use iota_types::{
     effects::{TransactionEffects as NativeTransactionEffects, TransactionEffectsAPI},
     gas::GasCostSummary as NativeGasCostSummary,
     transaction::GasData,
 };
 
-use super::{address::Address, big_int::BigInt, object::Object, iota_address::IotaAddress};
 use super::{
+    address::Address,
+    big_int::BigInt,
     cursor::Page,
-    object::{self, ObjectFilter, ObjectKey},
+    iota_address::IotaAddress,
+    object::{self, Object, ObjectFilter, ObjectKey},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -2,14 +2,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use async_graphql::connection::{Connection, CursorType, Edge};
-use async_graphql::*;
-use move_binary_format::errors::PartialVMResult;
-use move_binary_format::CompiledModule;
-use iota_types::base_types::SequenceNumber;
-use iota_types::digests::ChainIdentifier as IotaChainIdentifier;
+use async_graphql::{
+    connection::{Connection, CursorType, Edge},
+    *,
+};
 use iota_types::{
-    digests::TransactionDigest,
+    base_types::SequenceNumber,
+    digests::{ChainIdentifier as IotaChainIdentifier, TransactionDigest},
     object::Object as NativeObject,
     transaction::{
         AuthenticatorStateExpire as NativeAuthenticatorStateExpireTransaction,
@@ -17,16 +16,20 @@ use iota_types::{
         EndOfEpochTransactionKind as NativeEndOfEpochTransactionKind,
     },
 };
+use move_binary_format::{CompiledModule, errors::PartialVMResult};
 
-use crate::consistency::ConsistentIndexCursor;
-use crate::types::cursor::{JsonCursor, Page};
-use crate::types::iota_address::IotaAddress;
-use crate::types::uint53::UInt53;
 use crate::{
+    consistency::ConsistentIndexCursor,
     error::Error,
     types::{
-        big_int::BigInt, date_time::DateTime, epoch::Epoch, move_package::MovePackage,
+        big_int::BigInt,
+        cursor::{JsonCursor, Page},
+        date_time::DateTime,
+        epoch::Epoch,
+        iota_address::IotaAddress,
+        move_package::MovePackage,
         object::Object,
+        uint53::UInt53,
     },
 };
 

@@ -2,24 +2,26 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use diesel::prelude::*;
-use serde::de::DeserializeOwned;
-
-use move_core_types::annotated_value::MoveTypeLayout;
 use iota_json_rpc::coin_api::parse_to_struct_tag;
 use iota_json_rpc_types::{Balance, Coin as IotaCoin};
 use iota_package_resolver::{PackageStore, Resolver};
-use iota_types::base_types::{ObjectID, ObjectRef};
-use iota_types::digests::ObjectDigest;
-use iota_types::dynamic_field::{DynamicFieldType, Field};
-use iota_types::object::{Object, ObjectRead};
+use iota_types::{
+    base_types::{ObjectID, ObjectRef},
+    digests::ObjectDigest,
+    dynamic_field::{DynamicFieldType, Field},
+    object::{Object, ObjectRead},
+};
+use move_core_types::annotated_value::MoveTypeLayout;
+use serde::de::DeserializeOwned;
 
-use crate::errors::IndexerError;
-use crate::schema::{full_objects_history, objects, objects_history, objects_snapshot};
-use crate::types::{owner_to_owner_info, IndexedDeletedObject, IndexedObject, ObjectStatus};
+use crate::{
+    errors::IndexerError,
+    schema::{full_objects_history, objects, objects_history, objects_snapshot},
+    types::{IndexedDeletedObject, IndexedObject, ObjectStatus, owner_to_owner_info},
+};
 
 #[derive(Queryable)]
 pub struct DynamicFieldColumn {
@@ -525,14 +527,14 @@ impl TryFrom<StoredObjectSnapshot> for StoredObject {
 
 #[cfg(test)]
 mod tests {
-    use move_core_types::{account_address::AccountAddress, language_storage::StructTag};
     use iota_types::{
+        Identifier, TypeTag,
         coin::Coin,
         digests::TransactionDigest,
-        gas_coin::{GasCoin, GAS},
+        gas_coin::{GAS, GasCoin},
         object::{Data, MoveObject, ObjectInner, Owner},
-        Identifier, TypeTag,
     };
+    use move_core_types::{account_address::AccountAddress, language_storage::StructTag};
 
     use super::*;
 
@@ -545,7 +547,10 @@ mod tests {
 
         match stored_obj.object_type {
             Some(t) => {
-                assert_eq!(t, "0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>");
+                assert_eq!(
+                    t,
+                    "0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>"
+                );
             }
             None => {
                 panic!("object_type should not be none");
@@ -625,7 +630,10 @@ mod tests {
 
         match stored_obj.object_type {
             Some(t) => {
-                assert_eq!(t, "0x00000000000000000000000000000000000000000000000000000000000000e7::vec_coin::VecCoin<vector<0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>>>");
+                assert_eq!(
+                    t,
+                    "0x00000000000000000000000000000000000000000000000000000000000000e7::vec_coin::VecCoin<vector<0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>>>"
+                );
             }
             None => {
                 panic!("object_type should not be none");

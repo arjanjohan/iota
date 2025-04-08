@@ -2,24 +2,28 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    collections::{HashMap, HashSet},
+    path::Path,
+    sync::Arc,
+    time::Duration,
+};
+
 use indexmap::IndexSet;
-use move_binary_format::file_format::Visibility;
-use move_binary_format::normalized::Type;
-use move_core_types::language_storage::StructTag;
-use rand::rngs::StdRng;
-use std::collections::{HashMap, HashSet};
-use std::path::Path;
-use std::sync::Arc;
-use std::time::Duration;
 use iota_json_rpc_types::{IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI};
 use iota_move_build::BuildConfig;
 use iota_protocol_config::{Chain, ProtocolConfig};
-use iota_types::base_types::{ConsensusObjectSequenceKey, ObjectID, ObjectRef, IotaAddress};
-use iota_types::execution_config_utils::to_binary_config;
-use iota_types::object::{Object, Owner};
-use iota_types::storage::WriteKind;
-use iota_types::transaction::{CallArg, ObjectArg, TransactionData, TEST_ONLY_GAS_UNIT_FOR_PUBLISH};
-use iota_types::{Identifier, IOTA_FRAMEWORK_ADDRESS};
+use iota_types::{
+    IOTA_FRAMEWORK_ADDRESS, Identifier,
+    base_types::{ConsensusObjectSequenceKey, IotaAddress, ObjectID, ObjectRef},
+    execution_config_utils::to_binary_config,
+    object::{Object, Owner},
+    storage::WriteKind,
+    transaction::{CallArg, ObjectArg, TEST_ONLY_GAS_UNIT_FOR_PUBLISH, TransactionData},
+};
+use move_binary_format::{file_format::Visibility, normalized::Type};
+use move_core_types::language_storage::StructTag;
+use rand::rngs::StdRng;
 use test_cluster::TestCluster;
 use tokio::sync::RwLock;
 use tracing::{debug, error, info};

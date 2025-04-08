@@ -4,22 +4,20 @@
 
 use std::{sync::Arc, time::Duration};
 
-use serde::{Deserialize, Serialize};
 use iota_field_count::FieldCount;
 use iota_pg_db::{self as db, Db};
 use iota_types::full_checkpoint_content::CheckpointData;
+use serde::{Deserialize, Serialize};
 use tokio::{sync::mpsc, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 use tracing::info;
-
-use crate::{metrics::IndexerMetrics, models::watermarks::CommitterWatermark};
-
-use super::{processor::processor, CommitterConfig, Processor, WatermarkPart, PIPELINE_BUFFER};
 
 use self::{
     collector::collector, commit_watermark::commit_watermark, committer::committer, pruner::pruner,
     reader_watermark::reader_watermark,
 };
+use super::{CommitterConfig, PIPELINE_BUFFER, Processor, WatermarkPart, processor::processor};
+use crate::{metrics::IndexerMetrics, models::watermarks::CommitterWatermark};
 
 mod collector;
 mod commit_watermark;
@@ -74,7 +72,7 @@ pub trait Handler: Processor<Value: FieldCount> {
     /// Take a chunk of values and commit them to the database, returning the number of rows
     /// affected.
     async fn commit(values: &[Self::Value], conn: &mut db::Connection<'_>)
-        -> anyhow::Result<usize>;
+    -> anyhow::Result<usize>;
 
     /// Clean up data between checkpoints `_from` and `_to_exclusive` (exclusive) in the database, returning
     /// the number of rows affected. This function is optional, and defaults to not pruning at all.

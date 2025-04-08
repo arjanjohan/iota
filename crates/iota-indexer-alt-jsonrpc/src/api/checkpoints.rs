@@ -3,25 +3,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Context as _;
-
-use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 use iota_indexer_alt_schema::checkpoints::StoredCheckpoint;
 use iota_json_rpc_types::Checkpoint;
 use iota_open_rpc::Module;
 use iota_open_rpc_macros::open_rpc;
 use iota_types::{
     crypto::AuthorityQuorumSignInfo,
-    messages_checkpoint::{CheckpointContents, CheckpointSummary},
     iota_serde::BigInt,
+    messages_checkpoint::{CheckpointContents, CheckpointSummary},
 };
+use jsonrpsee::{core::RpcResult, proc_macros::rpc};
 
+use super::rpc_module::RpcModule;
 use crate::{
     context::Context,
     data::checkpoints::CheckpointKey,
-    error::{invalid_params, InternalContext, RpcError},
+    error::{InternalContext, RpcError, invalid_params},
 };
-
-use super::rpc_module::RpcModule;
 
 #[open_rpc(namespace = "iota", tag = "Checkpoints API")]
 #[rpc(server, namespace = "iota")]

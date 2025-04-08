@@ -2,13 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
-use iota_types::base_types::{FullObjectID, ObjectRef};
-use iota_types::effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents};
-use iota_types::inner_temporary_store::{InnerTemporaryStore, WrittenObjects};
-use iota_types::storage::{FullObjectKey, MarkerValue, ObjectKey};
-use iota_types::transaction::{TransactionDataAPI, VerifiedTransaction};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
+
+use iota_types::{
+    base_types::{FullObjectID, ObjectRef},
+    effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents},
+    inner_temporary_store::{InnerTemporaryStore, WrittenObjects},
+    storage::{FullObjectKey, MarkerValue, ObjectKey},
+    transaction::{TransactionDataAPI, VerifiedTransaction},
+};
 
 /// TransactionOutputs
 pub struct TransactionOutputs {

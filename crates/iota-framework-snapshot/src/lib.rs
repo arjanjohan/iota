@@ -2,21 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
-use std::{fs, io::Read, path::PathBuf};
-use iota_framework::{SystemPackage, SystemPackageMetadata};
-use iota_types::base_types::ObjectID;
-use iota_types::{
-    BRIDGE_PACKAGE_ID, DEEPBOOK_PACKAGE_ID, MOVE_STDLIB_PACKAGE_ID, IOTA_FRAMEWORK_PACKAGE_ID,
-    IOTA_SYSTEM_PACKAGE_ID,
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fs,
+    io::Read,
+    path::PathBuf,
 };
+
+use iota_framework::{SystemPackage, SystemPackageMetadata};
+use iota_types::{
+    BRIDGE_PACKAGE_ID, DEEPBOOK_PACKAGE_ID, IOTA_FRAMEWORK_PACKAGE_ID, IOTA_SYSTEM_PACKAGE_ID,
+    MOVE_STDLIB_PACKAGE_ID, base_types::ObjectID,
+};
+use serde::{Deserialize, Serialize};
 
 pub type SnapshotManifest = BTreeMap<u64, Snapshot>;
 
 /// Encapsulation of an entry in the manifest file corresponding to a single version of the system
 /// packages.
-///
 // Note: the [Snapshot] and [SnapshotPackage] types are similar to the
 // [iota_framework::{SystemPackageMetadata, SystemPackage}] types,
 // and also to the [iota::framework_versions::{FrameworkVersion, FrameworkPackage}] types.

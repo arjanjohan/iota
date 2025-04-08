@@ -2,12 +2,27 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    get_nth_struct_field, get_tag_and_layouts, legacy_test_cost,
-    object_runtime::{object_store::ChildObjectEffects, ObjectRuntime, RuntimeResults},
+use std::{
+    borrow::Borrow,
+    cell::RefCell,
+    collections::{BTreeMap, BTreeSet, VecDeque},
+    thread::LocalKey,
 };
+
 use better_any::{Tid, TidAble};
 use indexmap::{IndexMap, IndexSet};
+use iota_types::{
+    TypeTag,
+    base_types::{IotaAddress, ObjectID, SequenceNumber},
+    config,
+    digests::{ObjectDigest, TransactionDigest},
+    dynamic_field::DynamicFieldInfo,
+    execution::DynamicallyLoadedObjectMetadata,
+    id::UID,
+    in_memory_storage::InMemoryStorage,
+    object::{MoveObject, Object, Owner},
+    storage::ChildObjectResolver,
+};
 use move_binary_format::errors::{PartialVMError, PartialVMResult};
 use move_core_types::{
     account_address::AccountAddress,
@@ -24,23 +39,10 @@ use move_vm_types::{
     values::{self, StructRef, Value},
 };
 use smallvec::smallvec;
-use std::{
-    borrow::Borrow,
-    cell::RefCell,
-    collections::{BTreeMap, BTreeSet, VecDeque},
-    thread::LocalKey,
-};
-use iota_types::{
-    base_types::{ObjectID, SequenceNumber, IotaAddress},
-    config,
-    digests::{ObjectDigest, TransactionDigest},
-    dynamic_field::DynamicFieldInfo,
-    execution::DynamicallyLoadedObjectMetadata,
-    id::UID,
-    in_memory_storage::InMemoryStorage,
-    object::{MoveObject, Object, Owner},
-    storage::ChildObjectResolver,
-    TypeTag,
+
+use crate::{
+    get_nth_struct_field, get_tag_and_layouts, legacy_test_cost,
+    object_runtime::{ObjectRuntime, RuntimeResults, object_store::ChildObjectEffects},
 };
 
 const E_COULD_NOT_GENERATE_EFFECTS: u64 = 0;
@@ -802,7 +804,7 @@ fn pop_id(args: &mut VecDeque<Value>) -> PartialVMResult<ObjectID> {
         None => {
             return Err(PartialVMError::new(
                 StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR,
-            ))
+            ));
         }
         Some(v) => v,
     };

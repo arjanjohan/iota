@@ -81,9 +81,10 @@ impl ThresholdClock {
 
 #[cfg(test)]
 mod tests {
+    use consensus_config::AuthorityIndex;
+
     use super::*;
     use crate::block::BlockDigest;
-    use consensus_config::AuthorityIndex;
 
     #[tokio::test]
     async fn test_threshold_clock_add_block() {

@@ -7,18 +7,20 @@ pub use checked::*;
 
 #[iota_macros::with_checked_arithmetic]
 mod checked {
-    use crate::error::{UserInputError, UserInputResult};
-    use crate::gas::{self, GasCostSummary, IotaGasStatusAPI};
-    use crate::gas_model::gas_predicates::{cost_table_for_version, txn_base_cost_as_multiplier};
-    use crate::gas_model::units_types::CostTable;
-    use crate::transaction::ObjectReadResult;
-    use crate::{
-        error::{ExecutionError, ExecutionErrorKind},
-        gas_model::tables::{GasStatus, ZERO_COST_SCHEDULE},
-        ObjectID,
-    };
-    use move_core_types::vm_status::StatusCode;
     use iota_protocol_config::*;
+    use move_core_types::vm_status::StatusCode;
+
+    use crate::{
+        ObjectID,
+        error::{ExecutionError, ExecutionErrorKind, UserInputError, UserInputResult},
+        gas::{self, GasCostSummary, IotaGasStatusAPI},
+        gas_model::{
+            gas_predicates::{cost_table_for_version, txn_base_cost_as_multiplier},
+            tables::{GasStatus, ZERO_COST_SCHEDULE},
+            units_types::CostTable,
+        },
+        transaction::ObjectReadResult,
+    };
 
     /// A bucket defines a range of units that will be priced the same.
     /// After execution a call to `GasStatus::bucketize` will round the computation

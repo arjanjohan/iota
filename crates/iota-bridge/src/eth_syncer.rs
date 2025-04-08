@@ -7,19 +7,21 @@
 //! only query from that block number onwards. The syncer also keeps track of the last finalized
 //! block on Ethereum and will only query for events up to that block number.
 
-use crate::error::BridgeResult;
-use crate::eth_client::EthClient;
-use crate::metrics::BridgeMetrics;
-use crate::retry_with_max_elapsed_time;
-use crate::types::EthLog;
+use std::{collections::HashMap, sync::Arc};
+
 use ethers::types::Address as EthAddress;
 use iota_metrics::spawn_logged_monitored_task;
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::watch;
-use tokio::task::JoinHandle;
-use tokio::time::{self, Duration, Instant};
+use tokio::{
+    sync::watch,
+    task::JoinHandle,
+    time::{self, Duration, Instant},
+};
 use tracing::error;
+
+use crate::{
+    error::BridgeResult, eth_client::EthClient, metrics::BridgeMetrics,
+    retry_with_max_elapsed_time, types::EthLog,
+};
 
 const ETH_LOG_QUERY_MAX_BLOCK_RANGE: u64 = 1000;
 const ETH_EVENTS_CHANNEL_SIZE: usize = 1000;
@@ -210,17 +212,15 @@ where
 mod tests {
     use std::{collections::HashSet, str::FromStr};
 
-    use ethers::types::{Log, U256, U64};
+    use ethers::types::{Log, TxHash, U64, U256};
     use prometheus::Registry;
     use tokio::sync::mpsc::error::TryRecvError;
 
+    use super::*;
     use crate::{
         eth_mock_provider::EthMockProvider,
         test_utils::{mock_get_logs, mock_last_finalized_block},
     };
-
-    use super::*;
-    use ethers::types::TxHash;
 
     #[tokio::test]
     async fn test_last_finalized_block() -> anyhow::Result<()> {

@@ -2,30 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::BTreeMap;
-use std::num::NonZeroUsize;
-use std::path::PathBuf;
-use std::sync::Arc;
+use std::{collections::BTreeMap, num::NonZeroUsize, path::PathBuf, sync::Arc};
 
 use anyhow::Error;
 use diesel_async::RunQueryDsl;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use object_store::path::Path;
-use tokio::sync::Mutex;
-use tracing::{debug, info};
-
 use iota_config::object_storage_config::{ObjectStoreConfig, ObjectStoreType};
 use iota_core::authority::authority_store_tables::LiveObject;
 use iota_field_count::FieldCount;
 use iota_indexer_alt_framework::task::TrySpawnStreamExt;
-use iota_indexer_alt_schema::objects::StoredObjInfo;
-use iota_indexer_alt_schema::schema::obj_info;
+use iota_indexer_alt_schema::{objects::StoredObjInfo, schema::obj_info};
 use iota_pg_db::Db;
 use iota_snapshot::{
-    reader::{download_bytes, LiveObjectIter, StateSnapshotReaderV1},
     FileMetadata,
+    reader::{LiveObjectIter, StateSnapshotReaderV1, download_bytes},
 };
 use iota_storage::object_store::ObjectStoreGetExt;
+use object_store::path::Path;
+use tokio::sync::Mutex;
+use tracing::{debug, info};
 
 use crate::Args;
 

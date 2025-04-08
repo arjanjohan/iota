@@ -4,13 +4,13 @@
 
 use anyhow::Context;
 use clap::Parser;
-use prometheus::Registry;
 use iota_indexer_alt_jsonrpc::{
     args::{Args, Command},
     config::RpcConfig,
     start_rpc,
 };
 use iota_indexer_alt_metrics::MetricsService;
+use prometheus::Registry;
 use tokio::fs;
 use tokio_util::sync::CancellationToken;
 

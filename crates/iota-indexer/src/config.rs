@@ -2,15 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::db::ConnectionPoolConfig;
-use crate::{backfill::BackfillTaskKind, handlers::pruner::PrunableTable};
-use clap::{Args, Parser, Subcommand};
-use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, net::SocketAddr, path::PathBuf};
-use strum::IntoEnumIterator;
+
+use clap::{Args, Parser, Subcommand};
 use iota_json_rpc::name_service::NameServiceConfig;
-use iota_types::base_types::{ObjectID, IotaAddress};
+use iota_types::base_types::{IotaAddress, ObjectID};
+use serde::{Deserialize, Serialize};
+use strum::IntoEnumIterator;
 use url::Url;
+
+use crate::{
+    backfill::BackfillTaskKind, db::ConnectionPoolConfig, handlers::pruner::PrunableTable,
+};
 
 /// The primary purpose of objects_history is to serve consistency query.
 /// A short retention is sufficient.
@@ -451,10 +454,12 @@ pub struct BenchmarkConfig {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use std::io::Write;
+
     use tap::Pipe;
     use tempfile::NamedTempFile;
+
+    use super::*;
 
     fn parse_args<'a, T>(args: impl IntoIterator<Item = &'a str>) -> Result<T, clap::error::Error>
     where

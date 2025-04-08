@@ -7,17 +7,17 @@ use std::sync::Arc;
 use consensus_core::{TransactionIndex, TransactionVerifier, ValidationError};
 use fastcrypto_tbls::dkg_v1;
 use iota_metrics::monitored_scope;
-use prometheus::{register_int_counter_with_registry, IntCounter, Registry};
 use iota_types::{
     error::{IotaError, IotaResult},
     messages_consensus::{ConsensusTransaction, ConsensusTransactionKind},
     transaction::Transaction,
 };
+use prometheus::{IntCounter, Registry, register_int_counter_with_registry};
 use tap::TapFallible;
 use tracing::{debug, info, warn};
 
 use crate::{
-    authority::{authority_per_epoch_store::AuthorityPerEpochStore, AuthorityState},
+    authority::{AuthorityState, authority_per_epoch_store::AuthorityPerEpochStore},
     checkpoints::CheckpointServiceNotify,
     consensus_adapter::ConsensusOverloadChecker,
     transaction_manager::TransactionManager,
@@ -270,8 +270,8 @@ mod tests {
         authority::test_authority_builder::TestAuthorityBuilder,
         checkpoints::CheckpointServiceNoop,
         consensus_adapter::{
-            consensus_tests::{test_certificates, test_gas_objects},
             NoopConsensusOverloadChecker,
+            consensus_tests::{test_certificates, test_gas_objects},
         },
         consensus_validator::{IotaTxValidator, IotaTxValidatorMetrics},
     };
@@ -329,10 +329,11 @@ mod tests {
             .into_iter()
             .map(|mut cert| {
                 // set it to an all-zero user signature
-                cert.tx_signatures_mut_for_testing()[0] =
-                    GenericSignature::Signature(iota_types::crypto::Signature::Ed25519IotaSignature(
+                cert.tx_signatures_mut_for_testing()[0] = GenericSignature::Signature(
+                    iota_types::crypto::Signature::Ed25519IotaSignature(
                         Ed25519IotaSignature::default(),
-                    ));
+                    ),
+                );
                 bcs::to_bytes(&ConsensusTransaction::new_certificate_message(&name1, cert)).unwrap()
             })
             .collect();

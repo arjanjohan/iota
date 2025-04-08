@@ -3,11 +3,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_macros::sim_test;
-use iota_rpc_api::client::Client as CoreClient;
-use iota_rpc_api::proto::node::v2::node_service_client::NodeServiceClient;
-use iota_rpc_api::proto::node::v2::GetObjectOptions;
-use iota_rpc_api::proto::node::v2::GetObjectRequest;
-use iota_rpc_api::proto::node::v2::GetObjectResponse;
+use iota_rpc_api::{
+    client::Client as CoreClient,
+    proto::node::v2::{
+        GetObjectOptions, GetObjectRequest, GetObjectResponse,
+        node_service_client::NodeServiceClient,
+    },
+};
 use iota_sdk_types::ObjectId;
 use test_cluster::TestClusterBuilder;
 

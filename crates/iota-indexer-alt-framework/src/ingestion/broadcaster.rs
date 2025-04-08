@@ -2,17 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use futures::future::try_join_all;
 use std::sync::Arc;
+
+use futures::future::try_join_all;
 use iota_types::full_checkpoint_content::CheckpointData;
 use tokio::{sync::mpsc, task::JoinHandle};
 use tokio_stream::wrappers::ReceiverStream;
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
 
+use super::{IngestionConfig, client::IngestionClient};
 use crate::{ingestion::error::Error, task::TrySpawnStreamExt};
-
-use super::{client::IngestionClient, IngestionConfig};
 
 /// The broadcaster task is responsible for taking a stream of checkpoint sequence numbers from
 /// `checkpoint_rx`, fetching them using the `client` and disseminating them to all subscribers in

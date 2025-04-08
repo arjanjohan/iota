@@ -9,11 +9,11 @@ use std::{
 
 use async_graphql::dataloader::{DataLoader, Loader};
 use diesel::{ExpressionMethods, QueryDsl};
-use move_core_types::account_address::AccountAddress;
 use iota_indexer_alt_schema::{packages::StoredPackage, schema::sum_packages};
 use iota_package_resolver::{
-    error::Error, Package, PackageStore, PackageStoreWithLruCache, Resolver, Result,
+    Package, PackageStore, PackageStoreWithLruCache, Resolver, Result, error::Error,
 };
+use move_core_types::account_address::AccountAddress;
 
 use super::reader::Reader;
 

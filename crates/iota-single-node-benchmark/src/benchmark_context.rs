@@ -2,28 +2,32 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::command::Component;
-use crate::mock_account::{batch_create_account_and_gas, Account};
-use crate::mock_storage::InMemoryObjectStore;
-use crate::single_node::SingleValidator;
-use crate::tx_generator::SharedObjectCreateTxGenerator;
-use crate::tx_generator::{RootObjectCreateTxGenerator, TxGenerator};
-use crate::workload::Workload;
-use futures::stream::FuturesUnordered;
-use futures::StreamExt;
-use std::collections::{BTreeMap, HashMap};
-use std::ops::Deref;
-use std::sync::Arc;
+use std::{
+    collections::{BTreeMap, HashMap},
+    ops::Deref,
+    sync::Arc,
+};
+
+use futures::{StreamExt, stream::FuturesUnordered};
 use iota_config::node::RunWithRange;
 use iota_test_transaction_builder::PublishData;
-use iota_types::base_types::{ObjectID, ObjectRef, SequenceNumber, IotaAddress};
-use iota_types::effects::{TransactionEffects, TransactionEffectsAPI};
-use iota_types::messages_grpc::HandleTransactionResponse;
-use iota_types::mock_checkpoint_builder::ValidatorKeypairProvider;
-use iota_types::transaction::{
-    CertifiedTransaction, SignedTransaction, Transaction, VerifiedTransaction,
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber},
+    effects::{TransactionEffects, TransactionEffectsAPI},
+    messages_grpc::HandleTransactionResponse,
+    mock_checkpoint_builder::ValidatorKeypairProvider,
+    transaction::{CertifiedTransaction, SignedTransaction, Transaction, VerifiedTransaction},
 };
 use tracing::info;
+
+use crate::{
+    command::Component,
+    mock_account::{Account, batch_create_account_and_gas},
+    mock_storage::InMemoryObjectStore,
+    single_node::SingleValidator,
+    tx_generator::{RootObjectCreateTxGenerator, SharedObjectCreateTxGenerator, TxGenerator},
+    workload::Workload,
+};
 
 pub struct BenchmarkContext {
     validator: SingleValidator,

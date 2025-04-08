@@ -56,49 +56,43 @@ fn test_protocol_overrides_2() {
 #[cfg(msim)]
 mod sim_only_tests {
 
-    use super::*;
+    use std::{path::PathBuf, sync::Arc};
+
     use fastcrypto::encoding::Base64;
-    use move_binary_format::{file_format_common::VERSION_MAX, CompiledModule};
-    use move_core_types::ident_str;
-    use std::path::PathBuf;
-    use std::sync::Arc;
     use iota_core::authority::framework_injection;
     use iota_framework::BuiltInFramework;
     use iota_json_rpc_api::WriteApiClient;
     use iota_json_rpc_types::{IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI};
     use iota_macros::*;
     use iota_move_build::{BuildConfig, CompiledPackage};
-    use iota_types::base_types::ConciseableName;
-    use iota_types::base_types::{ObjectID, ObjectRef};
-    use iota_types::effects::{TransactionEffects, TransactionEffectsAPI};
-    use iota_types::id::ID;
-    use iota_types::object::Owner;
-    use iota_types::iota_system_state::{
-        epoch_start_iota_system_state::EpochStartSystemStateTrait, get_validator_from_table,
-        IotaSystemState, IotaSystemStateTrait, IOTA_SYSTEM_STATE_SIM_TEST_DEEP_V2,
-        IOTA_SYSTEM_STATE_SIM_TEST_SHALLOW_V2, IOTA_SYSTEM_STATE_SIM_TEST_V1,
-    };
-    use iota_types::supported_protocol_versions::SupportedProtocolVersions;
-    use iota_types::transaction::{
-        CallArg, Command, ObjectArg, ProgrammableMoveCall, ProgrammableTransaction,
-        TransactionData, TEST_ONLY_GAS_UNIT_FOR_GENERIC,
-    };
     use iota_types::{
-        base_types::{SequenceNumber, IotaAddress},
+        IOTA_AUTHENTICATOR_STATE_OBJECT_ID, IOTA_BRIDGE_OBJECT_ID, IOTA_CLOCK_OBJECT_ID,
+        IOTA_FRAMEWORK_PACKAGE_ID, IOTA_RANDOMNESS_STATE_OBJECT_ID, IOTA_SYSTEM_PACKAGE_ID,
+        IOTA_SYSTEM_STATE_OBJECT_ID, MOVE_STDLIB_PACKAGE_ID,
+        base_types::{ConciseableName, IotaAddress, ObjectID, ObjectRef, SequenceNumber},
         digests::TransactionDigest,
-        object::Object,
+        effects::{TransactionEffects, TransactionEffectsAPI},
+        id::ID,
+        iota_system_state::{
+            IOTA_SYSTEM_STATE_SIM_TEST_DEEP_V2, IOTA_SYSTEM_STATE_SIM_TEST_SHALLOW_V2,
+            IOTA_SYSTEM_STATE_SIM_TEST_V1, IotaSystemState, IotaSystemStateTrait,
+            epoch_start_iota_system_state::EpochStartSystemStateTrait, get_validator_from_table,
+        },
+        object::{Object, Owner},
         programmable_transaction_builder::ProgrammableTransactionBuilder,
-        transaction::TransactionKind,
-        MOVE_STDLIB_PACKAGE_ID, IOTA_BRIDGE_OBJECT_ID, IOTA_FRAMEWORK_PACKAGE_ID,
-        IOTA_SYSTEM_PACKAGE_ID,
+        supported_protocol_versions::SupportedProtocolVersions,
+        transaction::{
+            CallArg, Command, ObjectArg, ProgrammableMoveCall, ProgrammableTransaction,
+            TEST_ONLY_GAS_UNIT_FOR_GENERIC, TransactionData, TransactionKind,
+        },
     };
-    use iota_types::{
-        IOTA_AUTHENTICATOR_STATE_OBJECT_ID, IOTA_CLOCK_OBJECT_ID, IOTA_RANDOMNESS_STATE_OBJECT_ID,
-        IOTA_SYSTEM_STATE_OBJECT_ID,
-    };
+    use move_binary_format::{CompiledModule, file_format_common::VERSION_MAX};
+    use move_core_types::ident_str;
     use test_cluster::TestCluster;
-    use tokio::time::{sleep, Duration};
+    use tokio::time::{Duration, sleep};
     use tracing::info;
+
+    use super::*;
 
     const START: u64 = ProtocolVersion::MAX.as_u64();
     const FINISH: u64 = ProtocolVersion::MAX_ALLOWED.as_u64();
@@ -507,8 +501,10 @@ mod sim_only_tests {
                     IOTA_SYSTEM_PACKAGE_ID,
                     ident_str!("msim_extra_1").to_owned(),
                     ident_str!("mint").to_owned(),
-                    /* type_arguments */ vec![],
-                    /* call_args */ vec![],
+                    // type_arguments
+                    vec![],
+                    // call_args
+                    vec![],
                 )
                 .unwrap();
             builder.finish()
@@ -527,7 +523,8 @@ mod sim_only_tests {
                     IOTA_SYSTEM_PACKAGE_ID,
                     ident_str!("msim_extra_1").to_owned(),
                     ident_str!("wrap").to_owned(),
-                    /* type_arguments */ vec![],
+                    // type_arguments
+                    vec![],
                     vec![CallArg::Object(ObjectArg::ImmOrOwnedObject(obj))],
                 )
                 .unwrap();
@@ -573,9 +570,12 @@ mod sim_only_tests {
             .dev_inspect_transaction_block(
                 sender,
                 Base64::from_bytes(&bcs::to_bytes(&txn).unwrap()),
-                /* gas_price */ None,
-                /* epoch_id */ None,
-                /* additional_args */ None,
+                // gas_price
+                None,
+                // epoch_id
+                None,
+                // additional_args
+                None,
             )
             .await
             .unwrap();

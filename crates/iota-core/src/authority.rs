@@ -3,84 +3,37 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::congestion_tracker::CongestionTracker;
-use crate::consensus_adapter::ConsensusOverloadChecker;
-use crate::execution_cache::ExecutionCacheTraitPointers;
-use crate::execution_cache::TransactionCacheRead;
-use crate::jsonrpc_index::CoinIndexKey2;
-use crate::rpc_index::RpcIndexStore;
-use crate::transaction_outputs::TransactionOutputs;
-use crate::verify_indexes::verify_indexes;
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    fs,
+    fs::File,
+    io::Write,
+    path::{Path, PathBuf},
+    pin::Pin,
+    sync::{Arc, atomic::Ordering},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+    vec,
+};
+
 use anyhow::anyhow;
 use arc_swap::{ArcSwap, Guard};
 use async_trait::async_trait;
 use authority_per_epoch_store::CertLockGuard;
-use fastcrypto::encoding::Base58;
-use fastcrypto::encoding::Encoding;
-use fastcrypto::hash::MultisetHash;
-use itertools::Itertools;
-use move_binary_format::binary_config::BinaryConfig;
-use move_binary_format::CompiledModule;
-use move_core_types::annotated_value::MoveStructLayout;
-use move_core_types::language_storage::ModuleId;
-use iota_metrics::{TX_TYPE_SHARED_OBJ_TX, TX_TYPE_SINGLE_WRITER_TX};
-use parking_lot::Mutex;
-use prometheus::{
-    register_histogram_vec_with_registry, register_histogram_with_registry,
-    register_int_counter_vec_with_registry, register_int_counter_with_registry,
-    register_int_gauge_vec_with_registry, register_int_gauge_with_registry, Histogram,
-    HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec, Registry,
-};
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
-use std::fs::File;
-use std::io::Write;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::Ordering;
-use std::time::Duration;
-use std::time::Instant;
-use std::time::SystemTime;
-use std::time::UNIX_EPOCH;
-use std::{
-    collections::{HashMap, HashSet},
-    fs,
-    pin::Pin,
-    sync::Arc,
-    vec,
-};
-use iota_config::node::{AuthorityOverloadConfig, StateDebugDumpConfig};
-use iota_config::NodeConfig;
-use iota_types::crypto::RandomnessRound;
-use iota_types::dynamic_field::visitor as DFV;
-use iota_types::execution::ExecutionTiming;
-use iota_types::execution_status::ExecutionStatus;
-use iota_types::inner_temporary_store::PackageStoreWithFallback;
-use iota_types::layout_resolver::into_struct_layout;
-use iota_types::layout_resolver::LayoutResolver;
-use iota_types::messages_consensus::{AuthorityCapabilitiesV1, AuthorityCapabilitiesV2};
-use iota_types::object::bounded_visitor::BoundedVisitor;
-use iota_types::transaction_executor::SimulateTransactionResult;
-use tap::TapFallible;
-use tokio::sync::mpsc::unbounded_channel;
-use tokio::sync::RwLock;
-use tokio::sync::{mpsc, oneshot};
-use tokio::task::JoinHandle;
-use tracing::trace;
-use tracing::{debug, error, info, instrument, warn};
-
-use self::authority_store::ExecutionLockWriteGuard;
-use self::authority_store_pruner::AuthorityStorePruningMetrics;
 pub use authority_store::{AuthorityStore, ResolverWrapper, UpdateType};
-use iota_metrics::{monitored_scope, spawn_monitored_task};
-
-use crate::jsonrpc_index::IndexStore;
-use crate::jsonrpc_index::{CoinInfo, ObjectIndexChanges};
-use iota_common::debug_fatal;
-use shared_crypto::intent::{AppId, Intent, IntentMessage, IntentScope, IntentVersion};
+use fastcrypto::{
+    encoding::{Base58, Encoding},
+    hash::MultisetHash,
+};
 use iota_archival::reader::ArchiveReaderBalancer;
-use iota_config::genesis::Genesis;
-use iota_config::node::{DBCheckpointConfig, ExpensiveSafetyCheckConfig};
+use iota_common::debug_fatal;
+use iota_config::{
+    NodeConfig,
+    genesis::Genesis,
+    node::{
+        AuthorityOverloadConfig, DBCheckpointConfig, ExpensiveSafetyCheckConfig,
+        StateDebugDumpConfig,
+    },
+};
 use iota_framework::{BuiltInFramework, SystemPackage};
 use iota_json_rpc_types::{
     DevInspectResults, DryRunTransactionBlockResponse, EventFilter, IotaEvent, IotaMoveValue,
@@ -88,95 +41,133 @@ use iota_json_rpc_types::{
     IotaTransactionBlockEvents, TransactionFilter,
 };
 use iota_macros::{fail_point, fail_point_async, fail_point_if};
-use iota_storage::key_value_store::{TransactionKeyValueStore, TransactionKeyValueStoreTrait};
-use iota_storage::key_value_store_metrics::KeyValueStoreMetrics;
-use iota_types::authenticator_state::get_authenticator_state;
-use iota_types::committee::{EpochId, ProtocolVersion};
-use iota_types::crypto::{default_hash, AuthoritySignInfo, Signer};
-use iota_types::deny_list_v1::check_coin_deny_list_v1;
-use iota_types::digests::ChainIdentifier;
-use iota_types::digests::TransactionEventsDigest;
-use iota_types::dynamic_field::{DynamicFieldInfo, DynamicFieldName};
-use iota_types::effects::{
-    InputSharedObject, SignedTransactionEffects, TransactionEffects, TransactionEffectsAPI,
-    TransactionEvents, VerifiedSignedTransactionEffects,
+use iota_metrics::{
+    TX_TYPE_SHARED_OBJ_TX, TX_TYPE_SINGLE_WRITER_TX, monitored_scope, spawn_monitored_task,
 };
-use iota_types::error::{ExecutionError, UserInputError};
-use iota_types::event::{Event, EventID};
-use iota_types::executable_transaction::VerifiedExecutableTransaction;
-use iota_types::gas::{GasCostSummary, IotaGasStatus};
-use iota_types::inner_temporary_store::{
-    InnerTemporaryStore, ObjectMap, TemporaryModuleResolver, TxCoins, WrittenObjects,
+use iota_storage::{
+    key_value_store::{TransactionKeyValueStore, TransactionKeyValueStoreTrait},
+    key_value_store_metrics::KeyValueStoreMetrics,
 };
-use iota_types::message_envelope::Message;
-use iota_types::messages_checkpoint::{
-    CertifiedCheckpointSummary, CheckpointCommitment, CheckpointContents, CheckpointContentsDigest,
-    CheckpointDigest, CheckpointRequest, CheckpointRequestV2, CheckpointResponse,
-    CheckpointResponseV2, CheckpointSequenceNumber, CheckpointSummary, CheckpointSummaryResponse,
-    CheckpointTimestamp, ECMHLiveObjectSetDigest, VerifiedCheckpoint,
-};
-use iota_types::messages_grpc::{
-    HandleTransactionResponse, LayoutGenerationOption, ObjectInfoRequest, ObjectInfoRequestKind,
-    ObjectInfoResponse, TransactionInfoRequest, TransactionInfoResponse, TransactionStatus,
-};
-use iota_types::metrics::{BytecodeVerifierMetrics, LimitsMetrics};
-use iota_types::object::{MoveObject, Owner, PastObjectRead, OBJECT_START_VERSION};
-use iota_types::storage::{
-    BackingPackageStore, BackingStore, ObjectKey, ObjectOrTombstone, ObjectStore, WriteKind,
-};
-use iota_types::iota_system_state::epoch_start_iota_system_state::EpochStartSystemStateTrait;
-use iota_types::iota_system_state::IotaSystemStateTrait;
-use iota_types::iota_system_state::{get_iota_system_state, IotaSystemState};
-use iota_types::supported_protocol_versions::{ProtocolConfig, SupportedProtocolVersions};
-use iota_types::{
-    base_types::*,
-    committee::Committee,
-    crypto::AuthoritySignature,
-    error::{IotaError, IotaResult},
-    object::{Object, ObjectRead},
-    transaction::*,
-    IOTA_SYSTEM_ADDRESS,
-};
-use iota_types::{is_system_package, TypeTag};
-use typed_store::TypedStoreError;
-
-use crate::authority::authority_per_epoch_store::{AuthorityPerEpochStore, CertTxGuard};
-use crate::authority::authority_per_epoch_store_pruner::AuthorityPerEpochStorePruner;
-use crate::authority::authority_store::{ExecutionLockReadGuard, ObjectLockStatus};
-use crate::authority::authority_store_pruner::{
-    AuthorityStorePruner, EPOCH_DURATION_MS_FOR_TESTING,
-};
-use crate::authority::epoch_start_configuration::EpochStartConfigTrait;
-use crate::authority::epoch_start_configuration::EpochStartConfiguration;
-use crate::checkpoints::CheckpointStore;
-use crate::epoch::committee_store::CommitteeStore;
-use crate::execution_cache::{
-    CheckpointCache, ExecutionCacheCommit, ExecutionCacheReconfigAPI, ExecutionCacheWrite,
-    ObjectCacheRead, StateSyncAPI,
-};
-use crate::execution_driver::execution_process;
-use crate::metrics::LatencyObserver;
-use crate::metrics::RateTracker;
-use crate::module_cache_metrics::ResolverMetrics;
-use crate::overload_monitor::{overload_monitor_accept_tx, AuthorityOverloadInfo};
-use crate::stake_aggregator::StakeAggregator;
-use crate::state_accumulator::{AccumulatorStore, StateAccumulator, WrappedObject};
-use crate::subscription_handler::SubscriptionHandler;
-use crate::transaction_input_loader::TransactionInputLoader;
-use crate::transaction_manager::TransactionManager;
-
-#[cfg(msim)]
-pub use crate::checkpoints::checkpoint_executor::{
-    init_checkpoint_timeout_config, CheckpointTimeoutConfig,
-};
-
-use crate::authority::authority_store_tables::AuthorityPrunerTables;
-use crate::authority_client::NetworkAuthorityClient;
-use crate::validator_tx_finalizer::ValidatorTxFinalizer;
 #[cfg(msim)]
 use iota_types::committee::CommitteeTrait;
-use iota_types::deny_list_v2::check_coin_deny_list_v2_during_signing;
-use iota_types::execution_config_utils::to_binary_config;
+use iota_types::{
+    IOTA_SYSTEM_ADDRESS, TypeTag,
+    authenticator_state::get_authenticator_state,
+    base_types::*,
+    committee::{Committee, EpochId, ProtocolVersion},
+    crypto::{AuthoritySignInfo, AuthoritySignature, RandomnessRound, Signer, default_hash},
+    deny_list_v1::check_coin_deny_list_v1,
+    deny_list_v2::check_coin_deny_list_v2_during_signing,
+    digests::{ChainIdentifier, TransactionEventsDigest},
+    dynamic_field::{DynamicFieldInfo, DynamicFieldName, visitor as DFV},
+    effects::{
+        InputSharedObject, SignedTransactionEffects, TransactionEffects, TransactionEffectsAPI,
+        TransactionEvents, VerifiedSignedTransactionEffects,
+    },
+    error::{ExecutionError, IotaError, IotaResult, UserInputError},
+    event::{Event, EventID},
+    executable_transaction::VerifiedExecutableTransaction,
+    execution::ExecutionTiming,
+    execution_config_utils::to_binary_config,
+    execution_status::ExecutionStatus,
+    gas::{GasCostSummary, IotaGasStatus},
+    inner_temporary_store::{
+        InnerTemporaryStore, ObjectMap, PackageStoreWithFallback, TemporaryModuleResolver, TxCoins,
+        WrittenObjects,
+    },
+    iota_system_state::{
+        IotaSystemState, IotaSystemStateTrait,
+        epoch_start_iota_system_state::EpochStartSystemStateTrait, get_iota_system_state,
+    },
+    is_system_package,
+    layout_resolver::{LayoutResolver, into_struct_layout},
+    message_envelope::Message,
+    messages_checkpoint::{
+        CertifiedCheckpointSummary, CheckpointCommitment, CheckpointContents,
+        CheckpointContentsDigest, CheckpointDigest, CheckpointRequest, CheckpointRequestV2,
+        CheckpointResponse, CheckpointResponseV2, CheckpointSequenceNumber, CheckpointSummary,
+        CheckpointSummaryResponse, CheckpointTimestamp, ECMHLiveObjectSetDigest,
+        VerifiedCheckpoint,
+    },
+    messages_consensus::{AuthorityCapabilitiesV1, AuthorityCapabilitiesV2},
+    messages_grpc::{
+        HandleTransactionResponse, LayoutGenerationOption, ObjectInfoRequest,
+        ObjectInfoRequestKind, ObjectInfoResponse, TransactionInfoRequest, TransactionInfoResponse,
+        TransactionStatus,
+    },
+    metrics::{BytecodeVerifierMetrics, LimitsMetrics},
+    object::{
+        MoveObject, OBJECT_START_VERSION, Object, ObjectRead, Owner, PastObjectRead,
+        bounded_visitor::BoundedVisitor,
+    },
+    storage::{
+        BackingPackageStore, BackingStore, ObjectKey, ObjectOrTombstone, ObjectStore, WriteKind,
+    },
+    supported_protocol_versions::{ProtocolConfig, SupportedProtocolVersions},
+    transaction::*,
+    transaction_executor::SimulateTransactionResult,
+};
+use itertools::Itertools;
+use move_binary_format::{CompiledModule, binary_config::BinaryConfig};
+use move_core_types::{annotated_value::MoveStructLayout, language_storage::ModuleId};
+use parking_lot::Mutex;
+use prometheus::{
+    Histogram, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec, Registry,
+    register_histogram_vec_with_registry, register_histogram_with_registry,
+    register_int_counter_vec_with_registry, register_int_counter_with_registry,
+    register_int_gauge_vec_with_registry, register_int_gauge_with_registry,
+};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use shared_crypto::intent::{AppId, Intent, IntentMessage, IntentScope, IntentVersion};
+use tap::TapFallible;
+use tokio::{
+    sync::{RwLock, mpsc, mpsc::unbounded_channel, oneshot},
+    task::JoinHandle,
+};
+use tracing::{debug, error, info, instrument, trace, warn};
+use typed_store::TypedStoreError;
+
+use self::{
+    authority_store::ExecutionLockWriteGuard, authority_store_pruner::AuthorityStorePruningMetrics,
+};
+#[cfg(msim)]
+pub use crate::checkpoints::checkpoint_executor::{
+    CheckpointTimeoutConfig, init_checkpoint_timeout_config,
+};
+use crate::{
+    authority::{
+        authority_per_epoch_store::{AuthorityPerEpochStore, CertTxGuard},
+        authority_per_epoch_store_pruner::AuthorityPerEpochStorePruner,
+        authority_store::{ExecutionLockReadGuard, ObjectLockStatus},
+        authority_store_pruner::{AuthorityStorePruner, EPOCH_DURATION_MS_FOR_TESTING},
+        authority_store_tables::AuthorityPrunerTables,
+        epoch_start_configuration::{EpochStartConfigTrait, EpochStartConfiguration},
+    },
+    authority_client::NetworkAuthorityClient,
+    checkpoints::CheckpointStore,
+    congestion_tracker::CongestionTracker,
+    consensus_adapter::ConsensusOverloadChecker,
+    epoch::committee_store::CommitteeStore,
+    execution_cache::{
+        CheckpointCache, ExecutionCacheCommit, ExecutionCacheReconfigAPI,
+        ExecutionCacheTraitPointers, ExecutionCacheWrite, ObjectCacheRead, StateSyncAPI,
+        TransactionCacheRead,
+    },
+    execution_driver::execution_process,
+    jsonrpc_index::{CoinIndexKey2, CoinInfo, IndexStore, ObjectIndexChanges},
+    metrics::{LatencyObserver, RateTracker},
+    module_cache_metrics::ResolverMetrics,
+    overload_monitor::{AuthorityOverloadInfo, overload_monitor_accept_tx},
+    rpc_index::RpcIndexStore,
+    stake_aggregator::StakeAggregator,
+    state_accumulator::{AccumulatorStore, StateAccumulator, WrappedObject},
+    subscription_handler::SubscriptionHandler,
+    transaction_input_loader::TransactionInputLoader,
+    transaction_manager::TransactionManager,
+    transaction_outputs::TransactionOutputs,
+    validator_tx_finalizer::ValidatorTxFinalizer,
+    verify_indexes::verify_indexes,
+};
 
 #[cfg(test)]
 #[path = "unit_tests/authority_tests.rs"]
@@ -780,7 +771,6 @@ impl AuthorityMetrics {
 /// - Sync, i.e. can be safely shared between threads.
 ///
 /// Typically instantiated with Box::pin(keypair) where keypair is a `KeyPair`
-///
 pub type StableSyncAuthoritySigner = Pin<Arc<dyn Signer<AuthoritySignature> + Send + Sync>>;
 
 pub struct AuthorityState {
@@ -905,15 +895,16 @@ impl AuthorityState {
                 .unwrap_or(false),
         )?;
 
-        let (_gas_status, checked_input_objects) = iota_transaction_checks::check_transaction_input(
-            epoch_store.protocol_config(),
-            epoch_store.reference_gas_price(),
-            tx_data,
-            input_objects,
-            &receiving_objects,
-            &self.metrics.bytecode_verifier_metrics,
-            &self.config.verifier_signing_config,
-        )?;
+        let (_gas_status, checked_input_objects) =
+            iota_transaction_checks::check_transaction_input(
+                epoch_store.protocol_config(),
+                epoch_store.reference_gas_price(),
+                tx_data,
+                input_objects,
+                &receiving_objects,
+                &self.metrics.bytecode_verifier_metrics,
+                &self.config.verifier_signing_config,
+            )?;
 
         if epoch_store.coin_deny_list_v1_enabled() {
             check_coin_deny_list_v1(
@@ -2252,7 +2243,8 @@ impl AuthorityState {
             self.get_backing_store().as_ref(),
             protocol_config,
             self.metrics.limits_metrics.clone(),
-            /* expensive checks */ false,
+            // expensive checks
+            false,
             self.config.certificate_deny_config.certificate_deny_set(),
             &epoch_store.epoch_start_config().epoch_data().epoch_id(),
             epoch_store
@@ -2367,7 +2359,7 @@ impl AuthorityState {
             let cur_stake = (**committee).weight(&self.name);
             if cur_stake > 0 {
                 FAIL_STATE.with_borrow_mut(|fail_state| {
-                    //let (&mut failing_stake, &mut failing_validators) = fail_state;
+                    // let (&mut failing_stake, &mut failing_validators) = fail_state;
                     if fail_state.0 < committee.validity_threshold() {
                         fail_state.0 += cur_stake;
                         fail_state.1.insert(self.name);
@@ -2428,13 +2420,19 @@ impl AuthorityState {
             // For mutated objects, retrieve old owner and delete old index if there is a owner change.
             if let WriteKind::Mutate = kind {
                 let Some(old_version) = modified_at_version.get(id) else {
-                    panic!("tx_digest={:?}, error processing object owner index, cannot find modified at version for mutated object [{id}].", tx_digest);
+                    panic!(
+                        "tx_digest={:?}, error processing object owner index, cannot find modified at version for mutated object [{id}].",
+                        tx_digest
+                    );
                 };
                 // When we process the index, the latest object hasn't been written yet so
                 // the old object must be present.
                 let Some(old_object) = self.get_object_store().get_object_by_key(id, *old_version)
                 else {
-                    panic!("tx_digest={:?}, error processing object owner index, cannot find owner for object {:?} at version {:?}", tx_digest, id, old_version);
+                    panic!(
+                        "tx_digest={:?}, error processing object owner index, cannot find owner for object {:?} at version {:?}",
+                        tx_digest, id, old_version
+                    );
                 };
                 if old_object.owner != owner {
                     match old_object.owner {
@@ -2455,7 +2453,15 @@ impl AuthorityState {
                     let new_object = written.get(id).unwrap_or_else(
                         || panic!("tx_digest={:?}, error processing object owner index, written does not contain object {:?}", tx_digest, id)
                     );
-                    assert_eq!(new_object.version(), oref.1, "tx_digest={:?} error processing object owner index, object {:?} from written has mismatched version. Actual: {}, expected: {}", tx_digest, id, new_object.version(), oref.1);
+                    assert_eq!(
+                        new_object.version(),
+                        oref.1,
+                        "tx_digest={:?} error processing object owner index, object {:?} from written has mismatched version. Actual: {}, expected: {}",
+                        tx_digest,
+                        id,
+                        new_object.version(),
+                        oref.1
+                    );
 
                     let type_ = new_object
                         .type_()
@@ -2478,7 +2484,15 @@ impl AuthorityState {
                     let new_object = written.get(id).unwrap_or_else(
                         || panic!("tx_digest={:?}, error processing object owner index, written does not contain object {:?}", tx_digest, id)
                     );
-                    assert_eq!(new_object.version(), oref.1, "tx_digest={:?} error processing object owner index, object {:?} from written has mismatched version. Actual: {}, expected: {}", tx_digest, id, new_object.version(), oref.1);
+                    assert_eq!(
+                        new_object.version(),
+                        oref.1,
+                        "tx_digest={:?} error processing object owner index, object {:?} from written has mismatched version. Actual: {}, expected: {}",
+                        tx_digest,
+                        id,
+                        new_object.version(),
+                        oref.1
+                    );
 
                     let Some(df_info) = self
                         .try_create_dynamic_field_info(new_object, written, layout_resolver.as_mut())
@@ -3937,7 +3951,9 @@ impl AuthorityState {
     }
 
     #[cfg(msim)]
-    pub fn get_highest_pruned_checkpoint_for_testing(&self) -> IotaResult<CheckpointSequenceNumber> {
+    pub fn get_highest_pruned_checkpoint_for_testing(
+        &self,
+    ) -> IotaResult<CheckpointSequenceNumber> {
         self.database_for_testing()
             .perpetual_tables
             .get_highest_pruned_checkpoint()
@@ -4076,7 +4092,7 @@ impl AuthorityState {
     ) -> IotaResult<Vec<IotaEvent>> {
         let index_store = self.get_indexes()?;
 
-        //Get the tx_num from tx_digest
+        // Get the tx_num from tx_digest
         let (tx_num, event_num) = if let Some(cursor) = cursor.as_ref() {
             let tx_seq = index_store.get_transaction_seq(&cursor.tx_digest)?.ok_or(
                 IotaError::TransactionNotFound {
@@ -4130,7 +4146,7 @@ impl AuthorityState {
                     error: UserInputError::Unsupported(
                         "'Any' queries are not supported by the fullnode.".to_string(),
                     ),
-                })
+                });
             }
         };
 
@@ -5152,7 +5168,10 @@ impl AuthorityState {
         );
         for digest in pending_certificates {
             if epoch_store.is_transaction_executed_in_checkpoint(&digest)? {
-                info!("Not reverting pending consensus transaction {:?} - it was included in checkpoint", digest);
+                info!(
+                    "Not reverting pending consensus transaction {:?} - it was included in checkpoint",
+                    digest
+                );
                 continue;
             }
             info!("Reverting {:?} at the end of epoch", digest);
@@ -5311,9 +5330,13 @@ impl RandomnessRoundReceiver {
                 Err(_) => {
                     if cfg!(debug_assertions) {
                         // Crash on randomness update execution timeout in debug builds.
-                        panic!("randomness state update transaction execution timed out at epoch {epoch}, round {round}");
+                        panic!(
+                            "randomness state update transaction execution timed out at epoch {epoch}, round {round}"
+                        );
                     }
-                    warn!("randomness state update transaction execution timed out at epoch {epoch}, round {round}");
+                    warn!(
+                        "randomness state update transaction execution timed out at epoch {epoch}, round {round}"
+                    );
                     // Continue waiting as long as necessary in non-debug builds.
                     authority_state
                         .get_transaction_cache_reader()
@@ -5324,9 +5347,13 @@ impl RandomnessRoundReceiver {
 
             let effects = effects.pop().expect("should return effects");
             if *effects.status() != ExecutionStatus::Success {
-                panic!("failed to execute randomness state update transaction at epoch {epoch}, round {round}: {effects:?}");
+                panic!(
+                    "failed to execute randomness state update transaction at epoch {epoch}, round {round}: {effects:?}"
+                );
             }
-            debug!("successfully executed randomness state update transaction at epoch {epoch}, round {round}");
+            debug!(
+                "successfully executed randomness state update transaction at epoch {epoch}, round {round}"
+            );
         });
     }
 }
@@ -5468,12 +5495,17 @@ impl TransactionKeyValueStoreTrait for AuthorityState {
 
 #[cfg(msim)]
 pub mod framework_injection {
-    use move_binary_format::CompiledModule;
-    use std::collections::BTreeMap;
-    use std::{cell::RefCell, collections::BTreeSet};
+    use std::{
+        cell::RefCell,
+        collections::{BTreeMap, BTreeSet},
+    };
+
     use iota_framework::{BuiltInFramework, SystemPackage};
-    use iota_types::base_types::{AuthorityName, ObjectID};
-    use iota_types::is_system_package;
+    use iota_types::{
+        base_types::{AuthorityName, ObjectID},
+        is_system_package,
+    };
+    use move_binary_format::CompiledModule;
 
     type FrameworkOverrideConfig = BTreeMap<ObjectID, PackageOverrideConfig>;
 
@@ -5656,7 +5688,7 @@ impl NodeStateDump {
                 }
                 InputSharedObject::ReadDeleted(..)
                 | InputSharedObject::MutateDeleted(..)
-                | InputSharedObject::Cancelled(..) => (), // TODO: consider record congested objects.
+                | InputSharedObject::Cancelled(..) => (), /* TODO: consider record congested objects. */
             }
         }
 

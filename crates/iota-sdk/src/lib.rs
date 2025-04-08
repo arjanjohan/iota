@@ -44,7 +44,6 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), anyhow::Error> {
-//!
 //!     let iota = IotaClientBuilder::default()
 //!         .build("http://127.0.0.1:9000") // provide the IOTA network URL
 //!         .await?;
@@ -62,7 +61,6 @@
 //!     let iota_testnet = IotaClientBuilder::default().build_testnet().await?;
 //!     println!("IOTA testnet version: {:?}", iota_testnet.api_version());
 //!     Ok(())
-//!
 //! }
 //! ```
 //!
@@ -71,40 +69,44 @@
 //! For detailed examples, please check the APIs docs and the examples folder
 //! in the [main repository](https://github.com/iotaledger/iota/tree/main/crates/iota-sdk/examples).
 
-use std::fmt::Debug;
-use std::fmt::Formatter;
-use std::sync::Arc;
-use std::time::Duration;
+use std::{
+    fmt::{Debug, Formatter},
+    sync::Arc,
+    time::Duration,
+};
 
 use async_trait::async_trait;
 use base64::Engine;
-use jsonrpsee::core::client::ClientT;
-use jsonrpsee::http_client::{HeaderMap, HeaderValue, HttpClient, HttpClientBuilder};
-use jsonrpsee::rpc_params;
-use jsonrpsee::ws_client::{WsClient, WsClientBuilder};
-use serde_json::Value;
-
-use move_core_types::language_storage::StructTag;
 pub use iota_json as json;
 use iota_json_rpc_api::{
     CLIENT_SDK_TYPE_HEADER, CLIENT_SDK_VERSION_HEADER, CLIENT_TARGET_API_VERSION_HEADER,
 };
 pub use iota_json_rpc_types as rpc_types;
 use iota_json_rpc_types::{
-    ObjectsPage, IotaObjectDataFilter, IotaObjectDataOptions, IotaObjectResponse,
-    IotaObjectResponseQuery,
+    IotaObjectDataFilter, IotaObjectDataOptions, IotaObjectResponse, IotaObjectResponseQuery,
+    ObjectsPage,
 };
 use iota_transaction_builder::{DataReader, TransactionBuilder};
 pub use iota_types as types;
-use iota_types::base_types::{ObjectID, ObjectInfo, IotaAddress};
+use iota_types::base_types::{IotaAddress, ObjectID, ObjectInfo};
+use jsonrpsee::{
+    core::client::ClientT,
+    http_client::{HeaderMap, HeaderValue, HttpClient, HttpClientBuilder},
+    rpc_params,
+    ws_client::{WsClient, WsClientBuilder},
+};
+use move_core_types::language_storage::StructTag;
+use serde_json::Value;
 
-use crate::apis::{CoinReadApi, EventApi, GovernanceApi, QuorumDriverApi, ReadApi};
-use crate::error::{Error, IotaRpcResult};
+use crate::{
+    apis::{CoinReadApi, EventApi, GovernanceApi, QuorumDriverApi, ReadApi},
+    error::{Error, IotaRpcResult},
+};
 
 pub mod apis;
 pub mod error;
-pub mod json_rpc_error;
 pub mod iota_client_config;
+pub mod json_rpc_error;
 pub mod wallet_context;
 
 pub const IOTA_COIN_TYPE: &str = "0x2::iota::IOTA";
@@ -297,9 +299,7 @@ impl IotaClientBuilder {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), anyhow::Error> {
-    ///     let iota = IotaClientBuilder::default()
-    ///         .build_localnet()
-    ///         .await?;
+    ///     let iota = IotaClientBuilder::default().build_localnet().await?;
     ///
     ///     println!("IOTA local version: {:?}", iota.api_version());
     ///     Ok(())
@@ -320,9 +320,7 @@ impl IotaClientBuilder {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), anyhow::Error> {
-    ///     let iota = IotaClientBuilder::default()
-    ///         .build_devnet()
-    ///         .await?;
+    ///     let iota = IotaClientBuilder::default().build_devnet().await?;
     ///
     ///     println!("{:?}", iota.api_version());
     ///     Ok(())
@@ -343,9 +341,7 @@ impl IotaClientBuilder {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), anyhow::Error> {
-    ///     let iota = IotaClientBuilder::default()
-    ///         .build_testnet()
-    ///         .await?;
+    ///     let iota = IotaClientBuilder::default().build_testnet().await?;
     ///
     ///     println!("{:?}", iota.api_version());
     ///     Ok(())
@@ -366,9 +362,7 @@ impl IotaClientBuilder {
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), anyhow::Error> {
-    ///     let iota = IotaClientBuilder::default()
-    ///         .build_mainnet()
-    ///         .await?;
+    ///     let iota = IotaClientBuilder::default().build_mainnet().await?;
     ///
     ///     println!("{:?}", iota.api_version());
     ///     Ok(())
@@ -436,15 +430,15 @@ impl IotaClientBuilder {
 /// # Examples
 ///
 /// ```rust,no_run
-/// use iota_sdk::types::base_types::IotaAddress;
-/// use iota_sdk::IotaClientBuilder;
 /// use std::str::FromStr;
+///
+/// use iota_sdk::{IotaClientBuilder, types::base_types::IotaAddress};
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), anyhow::Error> {
 ///     let iota = IotaClientBuilder::default()
-///      .build("http://127.0.0.1:9000")
-///      .await?;
+///         .build("http://127.0.0.1:9000")
+///         .await?;
 ///
 ///     println!("{:?}", iota.available_rpc_methods());
 ///     println!("{:?}", iota.available_subscriptions());
@@ -452,9 +446,9 @@ impl IotaClientBuilder {
 ///
 ///     let address = IotaAddress::from_str("0x0000....0000")?;
 ///     let owned_objects = iota
-///        .read_api()
-///        .get_owned_objects(address, None, None, None)
-///        .await?;
+///         .read_api()
+///         .get_owned_objects(address, None, None, None)
+///         .await?;
 ///
 ///     println!("{:?}", owned_objects);
 ///

@@ -2,10 +2,11 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{fs::create_dir_all, io::Write, path::Path};
+
 use clap::Parser;
 use move_cli::base::new;
 use move_package::source_package::layout::SourcePackageLayout;
-use std::{fs::create_dir_all, io::Write, path::Path};
 
 const IOTA_PKG_NAME: &str = "IOTA";
 

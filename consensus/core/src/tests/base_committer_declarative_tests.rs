@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use core::panic;
-use parking_lot::RwLock;
 use std::sync::Arc;
+
+use parking_lot::RwLock;
 
 use crate::{
     base_committer::base_committer_builder::BaseCommitterBuilder, block::BlockAPI,
@@ -222,7 +223,9 @@ async fn indirect_commit() {
     if let LeaderStatus::Undecided(direct_undecided) = leader_status_wave1 {
         tracing::info!("Direct undecided leader at wave 1: {direct_undecided}");
     } else {
-        panic!("Expected LeaderStatus::Undecided for a leader in wave 1, applying a direct decicion rule, got {leader_status_wave1}");
+        panic!(
+            "Expected LeaderStatus::Undecided for a leader in wave 1, applying a direct decicion rule, got {leader_status_wave1}"
+        );
     }
 
     let leader_round_wave2 = committer.leader_round(2);
@@ -302,7 +305,9 @@ async fn indirect_skip() {
     if let LeaderStatus::Commit(committed) = leader_status_wave1 {
         tracing::info!("Direct undecided leader at wave 1: {committed}");
     } else {
-        panic!("Expected LeaderStatus::Commit for a leader in wave 1, applying a direct decicion rule, got {leader_status_wave1}");
+        panic!(
+            "Expected LeaderStatus::Commit for a leader in wave 1, applying a direct decicion rule, got {leader_status_wave1}"
+        );
     }
 
     let leader_round_wave_2 = committer.leader_round(2);

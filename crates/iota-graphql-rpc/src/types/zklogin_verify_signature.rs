@@ -4,28 +4,34 @@
 
 use std::sync::Arc;
 
-use crate::config::ZkLoginConfig;
-use crate::error::Error;
-use crate::server::watermark_task::Watermark;
-use crate::types::base64::Base64;
-use crate::types::dynamic_field::{DynamicField, DynamicFieldName};
-use crate::types::epoch::Epoch;
-use crate::types::iota_address::IotaAddress;
-use crate::types::type_filter::ExactTypeFilter;
 use async_graphql::*;
 use im::hashmap::HashMap as ImHashMap;
+use iota_types::{
+    IOTA_AUTHENTICATOR_STATE_ADDRESS, TypeTag,
+    authenticator_state::{ActiveJwk, AuthenticatorStateInner},
+    crypto::ToFromBytes,
+    dynamic_field::{DynamicFieldType, Field},
+    signature::{GenericSignature, VerifyParams},
+    signature_verification::VerifiedDigestCache,
+    transaction::TransactionData,
+};
 use shared_crypto::intent::{
     AppId, Intent, IntentMessage, IntentScope, IntentVersion, PersonalMessage,
 };
-use iota_types::authenticator_state::{ActiveJwk, AuthenticatorStateInner};
-use iota_types::crypto::ToFromBytes;
-use iota_types::dynamic_field::{DynamicFieldType, Field};
-use iota_types::signature::GenericSignature;
-use iota_types::signature::VerifyParams;
-use iota_types::signature_verification::VerifiedDigestCache;
-use iota_types::transaction::TransactionData;
-use iota_types::{TypeTag, IOTA_AUTHENTICATOR_STATE_ADDRESS};
 use tracing::warn;
+
+use crate::{
+    config::ZkLoginConfig,
+    error::Error,
+    server::watermark_task::Watermark,
+    types::{
+        base64::Base64,
+        dynamic_field::{DynamicField, DynamicFieldName},
+        epoch::Epoch,
+        iota_address::IotaAddress,
+        type_filter::ExactTypeFilter,
+    },
+};
 
 /// An enum that specifies the intent scope to be used to parse the bytes for signature
 /// verification.

@@ -4,24 +4,22 @@
 
 use std::{collections::BTreeMap, sync::Arc};
 
-use futures::stream::FuturesUnordered;
-use futures::StreamExt;
+use futures::{StreamExt, stream::FuturesUnordered};
 use iota_pg_db::Db;
 use tokio::{
     sync::Semaphore,
     task::JoinHandle,
-    time::{interval, MissedTickBehavior},
+    time::{MissedTickBehavior, interval},
 };
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, error, info, warn};
 
+use super::{Handler, PrunerConfig};
 use crate::{
     metrics::IndexerMetrics,
     models::watermarks::PrunerWatermark,
     pipeline::logging::{LoggerWatermark, WatermarkLogger},
 };
-
-use super::{Handler, PrunerConfig};
 
 #[derive(Default)]
 struct PendingRanges {

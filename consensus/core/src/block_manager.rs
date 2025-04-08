@@ -9,17 +9,17 @@ use std::{
     time::Instant,
 };
 
-use itertools::Itertools as _;
 use iota_metrics::monitored_scope;
+use itertools::Itertools as _;
 use parking_lot::RwLock;
 use tracing::{debug, trace, warn};
 
 use crate::{
-    block::{BlockAPI, BlockRef, VerifiedBlock, GENESIS_ROUND},
+    Round,
+    block::{BlockAPI, BlockRef, GENESIS_ROUND, VerifiedBlock},
     block_verifier::BlockVerifier,
     context::Context,
     dag_state::DagState,
-    Round,
 };
 
 struct SuspendedBlock {
@@ -264,7 +264,10 @@ impl BlockManager {
                         );
                         ancestor_blocks.push(None);
                     } else {
-                        panic!("Unsuspended block {:?} has a missing ancestor! Ancestor not found in DagState: {:?}", b, ancestor_ref);
+                        panic!(
+                            "Unsuspended block {:?} has a missing ancestor! Ancestor not found in DagState: {:?}",
+                            b, ancestor_ref
+                        );
                     }
                 }
                 if let Err(e) =
@@ -520,7 +523,10 @@ impl BlockManager {
 
             blocks_gc_ed += 1;
 
-            assert!(!self.suspended_blocks.contains_key(block_ref), "Block should not be suspended, as we are causally GC'ing and no suspended block should exist for a missing ancestor.");
+            assert!(
+                !self.suspended_blocks.contains_key(block_ref),
+                "Block should not be suspended, as we are causally GC'ing and no suspended block should exist for a missing ancestor."
+            );
 
             // Also remove it from the missing list - we don't want to keep looking for it.
             self.missing_blocks.remove(block_ref);
@@ -623,10 +629,11 @@ mod tests {
 
     use consensus_config::AuthorityIndex;
     use parking_lot::RwLock;
-    use rand::{prelude::StdRng, seq::SliceRandom, SeedableRng};
+    use rand::{SeedableRng, prelude::StdRng, seq::SliceRandom};
     use rstest::rstest;
 
     use crate::{
+        CommitDigest, Round,
         block::{BlockAPI, BlockDigest, BlockRef, SignedBlock, VerifiedBlock},
         block_manager::BlockManager,
         block_verifier::{BlockVerifier, NoopBlockVerifier},
@@ -637,7 +644,6 @@ mod tests {
         storage::mem_store::MemStore,
         test_dag_builder::DagBuilder,
         test_dag_parser::parse_dag,
-        CommitDigest, Round,
     };
 
     #[tokio::test]
@@ -1176,9 +1182,11 @@ mod tests {
         let missing_block_refs_from_find =
             block_manager.try_find_blocks(round_2_blocks.iter().map(|b| b.reference()).collect());
         assert_eq!(missing_block_refs_from_find.len(), 10);
-        assert!(missing_block_refs_from_find
-            .iter()
-            .all(|block_ref| block_ref.round == 2));
+        assert!(
+            missing_block_refs_from_find
+                .iter()
+                .all(|block_ref| block_ref.round == 2)
+        );
 
         // Try accept blocks which will cause blocks to be suspended and added to missing
         // in block manager.
@@ -1215,9 +1223,11 @@ mod tests {
         );
 
         assert_eq!(missing_block_refs_from_find.len(), 4);
-        assert!(missing_block_refs_from_find
-            .iter()
-            .all(|block_ref| block_ref.round == 3));
+        assert!(
+            missing_block_refs_from_find
+                .iter()
+                .all(|block_ref| block_ref.round == 3)
+        );
         assert_eq!(
             block_manager.missing_blocks(),
             missing_block_refs_from_accept

@@ -9,35 +9,36 @@ use std::{
 
 use bytes::Bytes;
 use consensus_config::AuthorityIndex;
-use futures::{stream::FuturesUnordered, StreamExt as _};
-use itertools::Itertools as _;
+use futures::{StreamExt as _, stream::FuturesUnordered};
+use iota_macros::fail_point_async;
 use iota_metrics::{
     monitored_future,
-    monitored_mpsc::{channel, Receiver, Sender},
+    monitored_mpsc::{Receiver, Sender, channel},
     monitored_scope,
 };
+use itertools::Itertools as _;
 use parking_lot::{Mutex, RwLock};
 use rand::{prelude::SliceRandom as _, rngs::ThreadRng};
-use iota_macros::fail_point_async;
 use tap::TapFallible;
 use tokio::{
     runtime::Handle,
     sync::{mpsc::error::TrySendError, oneshot},
     task::{JoinError, JoinSet},
-    time::{sleep, sleep_until, timeout, Instant},
+    time::{Instant, sleep, sleep_until, timeout},
 };
 use tracing::{debug, error, info, trace, warn};
 
-use crate::{authority_service::COMMIT_LAG_MULTIPLIER, core_thread::CoreThreadDispatcher};
 use crate::{
+    BlockAPI, CommitIndex, Round,
+    authority_service::COMMIT_LAG_MULTIPLIER,
     block::{BlockRef, SignedBlock, VerifiedBlock},
     block_verifier::BlockVerifier,
     commit_vote_monitor::CommitVoteMonitor,
     context::Context,
+    core_thread::CoreThreadDispatcher,
     dag_state::DagState,
     error::{ConsensusError, ConsensusResult},
     network::NetworkClient,
-    BlockAPI, CommitIndex, Round,
 };
 
 /// The number of concurrent fetch blocks requests per authority
@@ -878,7 +879,9 @@ impl<C: NetworkClient, V: BlockVerifier, D: CoreThreadDispatcher> Synchronizer<C
 
             // If no missing blocks are within the acceptable thresholds to sync while we commit lag, then we disable the scheduler completely for this run.
             if missing_blocks.is_empty() {
-                trace!("Scheduled synchronizer temporarily disabled as local commit is falling behind from quorum {last_commit_index} << {quorum_commit_index} and missing blocks are too far in the future.");
+                trace!(
+                    "Scheduled synchronizer temporarily disabled as local commit is falling behind from quorum {last_commit_index} << {quorum_commit_index} and missing blocks are too far in the future."
+                );
                 self.context
                     .metrics
                     .node_metrics
@@ -892,14 +895,29 @@ impl<C: NetworkClient, V: BlockVerifier, D: CoreThreadDispatcher> Synchronizer<C
         self.fetch_blocks_scheduler_task
             .spawn(monitored_future!(async move {
                 let _scope = monitored_scope("FetchMissingBlocksScheduler");
-                context.metrics.node_metrics.fetch_blocks_scheduler_inflight.inc();
+                context
+                    .metrics
+                    .node_metrics
+                    .fetch_blocks_scheduler_inflight
+                    .inc();
                 let total_requested = missing_blocks.len();
 
                 fail_point_async!("consensus-delay");
 
                 // Fetch blocks from peers
-                let results = Self::fetch_blocks_from_authorities(context.clone(), blocks_to_fetch.clone(), network_client, missing_blocks, dag_state).await;
-                context.metrics.node_metrics.fetch_blocks_scheduler_inflight.dec();
+                let results = Self::fetch_blocks_from_authorities(
+                    context.clone(),
+                    blocks_to_fetch.clone(),
+                    network_client,
+                    missing_blocks,
+                    dag_state,
+                )
+                .await;
+                context
+                    .metrics
+                    .node_metrics
+                    .fetch_blocks_scheduler_inflight
+                    .dec();
                 if results.is_empty() {
                     return;
                 }
@@ -909,12 +927,29 @@ impl<C: NetworkClient, V: BlockVerifier, D: CoreThreadDispatcher> Synchronizer<C
                 for (blocks_guard, fetched_blocks, peer) in results {
                     total_fetched += fetched_blocks.len();
 
-                    if let Err(err) = Self::process_fetched_blocks(fetched_blocks, peer, blocks_guard, core_dispatcher.clone(), block_verifier.clone(), commit_vote_monitor.clone(), context.clone(), commands_sender.clone(), "periodic").await {
-                        warn!("Error occurred while processing fetched blocks from peer {peer}: {err}");
+                    if let Err(err) = Self::process_fetched_blocks(
+                        fetched_blocks,
+                        peer,
+                        blocks_guard,
+                        core_dispatcher.clone(),
+                        block_verifier.clone(),
+                        commit_vote_monitor.clone(),
+                        context.clone(),
+                        commands_sender.clone(),
+                        "periodic",
+                    )
+                    .await
+                    {
+                        warn!(
+                            "Error occurred while processing fetched blocks from peer {peer}: {err}"
+                        );
                     }
                 }
 
-                debug!("Total blocks requested to fetch: {}, total fetched: {}", total_requested, total_fetched);
+                debug!(
+                    "Total blocks requested to fetch: {}, total fetched: {}",
+                    total_requested, total_fetched
+                );
             }));
         Ok(())
     }
@@ -1096,29 +1131,22 @@ mod tests {
     use tokio::{sync::Mutex, time::sleep};
 
     use crate::{
+        BlockAPI, CommitDigest, CommitIndex,
         authority_service::COMMIT_LAG_MULTIPLIER,
-        core_thread::MockCoreThreadDispatcher,
-        synchronizer::{MAX_BLOCKS_PER_FETCH, SYNC_MISSING_BLOCK_ROUND_THRESHOLD},
-    };
-    use crate::{
         block::{BlockDigest, BlockRef, Round, TestBlock, VerifiedBlock},
         block_verifier::NoopBlockVerifier,
-        commit::CommitRange,
+        commit::{CommitRange, CommitVote, TrustedCommit},
         commit_vote_monitor::CommitVoteMonitor,
         context::Context,
-        core_thread::CoreThreadDispatcher,
+        core_thread::{CoreThreadDispatcher, MockCoreThreadDispatcher},
         dag_state::DagState,
         error::{ConsensusError, ConsensusResult},
         network::{BlockStream, NetworkClient},
         storage::mem_store::MemStore,
         synchronizer::{
-            InflightBlocksMap, Synchronizer, FETCH_BLOCKS_CONCURRENCY, FETCH_REQUEST_TIMEOUT,
+            FETCH_BLOCKS_CONCURRENCY, FETCH_REQUEST_TIMEOUT, InflightBlocksMap,
+            MAX_BLOCKS_PER_FETCH, SYNC_MISSING_BLOCK_ROUND_THRESHOLD, Synchronizer,
         },
-        CommitDigest, CommitIndex,
-    };
-    use crate::{
-        commit::{CommitVote, TrustedCommit},
-        BlockAPI,
     };
 
     type FetchRequestKey = (Vec<BlockRef>, AuthorityIndex);
@@ -1502,16 +1530,18 @@ mod tests {
         assert_eq!(added_blocks, expected_blocks);
 
         // AND missing blocks should have been consumed by the stub
-        assert!(core_dispatcher
-            .get_missing_blocks()
-            .await
-            .unwrap()
-            .is_empty());
+        assert!(
+            core_dispatcher
+                .get_missing_blocks()
+                .await
+                .unwrap()
+                .is_empty()
+        );
     }
 
     #[tokio::test(flavor = "current_thread", start_paused = true)]
-    async fn synchronizer_periodic_task_when_commit_lagging_with_missing_blocks_in_acceptable_thresholds(
-    ) {
+    async fn synchronizer_periodic_task_when_commit_lagging_with_missing_blocks_in_acceptable_thresholds()
+     {
         // GIVEN
         let (context, _) = Context::new_for_test(4);
         let context = Arc::new(context);

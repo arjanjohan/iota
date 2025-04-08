@@ -2,26 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::metrics::BridgeIndexerMetrics;
-use crate::postgres_manager::{update_iota_progress_store, write, PgPool};
-use crate::types::RetrievedTransaction;
-use crate::{
-    BridgeDataSource, ProcessedTxnData, TokenTransfer, TokenTransferData, TokenTransferStatus,
-};
+use std::time::Duration;
+
 use anyhow::Result;
 use futures::StreamExt;
-use iota_types::digests::TransactionDigest;
-
-use std::time::Duration;
 use iota_bridge::events::{
     MoveTokenDepositedEvent, MoveTokenTransferApproved, MoveTokenTransferClaimed,
 };
-
 use iota_json_rpc_types::IotaTransactionBlockEffectsAPI;
-
 use iota_metrics::metered_channel::{Receiver, ReceiverStream};
-use iota_types::BRIDGE_ADDRESS;
+use iota_types::{BRIDGE_ADDRESS, digests::TransactionDigest};
 use tracing::{error, info};
+
+use crate::{
+    BridgeDataSource, ProcessedTxnData, TokenTransfer, TokenTransferData, TokenTransferStatus,
+    metrics::BridgeIndexerMetrics,
+    postgres_manager::{PgPool, update_iota_progress_store, write},
+    types::RetrievedTransaction,
+};
 
 pub(crate) const COMMIT_BATCH_SIZE: usize = 10;
 

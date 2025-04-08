@@ -2,6 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{collections::HashMap, num::NonZeroUsize, time::Duration};
+
+use anemo::{PeerId, Request};
+use anyhow::anyhow;
+use iota_archival::{reader::ArchiveReaderBalancer, writer::ArchiveWriter};
+use iota_config::{
+    node::ArchiveReaderConfig,
+    object_storage_config::{ObjectStoreConfig, ObjectStoreType},
+};
+use iota_storage::{FileCompression, StorageFormat};
+use iota_swarm_config::test_utils::{CommitteeFixture, empty_contents};
+use iota_types::{
+    messages_checkpoint::CheckpointDigest,
+    storage::{ReadStore, SharedInMemoryStore, WriteStore},
+};
+use prometheus::Registry;
+use tempfile::tempdir;
+use tokio::time::{Instant, timeout};
+
 use crate::{
     state_sync::{
         Builder, GetCheckpointSummaryRequest, PeerStateSyncInfo, StateSync, StateSyncMessage,
@@ -9,23 +28,6 @@ use crate::{
     },
     utils::build_network,
 };
-use anemo::{PeerId, Request};
-use anyhow::anyhow;
-use prometheus::Registry;
-use std::num::NonZeroUsize;
-use std::{collections::HashMap, time::Duration};
-use iota_archival::reader::ArchiveReaderBalancer;
-use iota_archival::writer::ArchiveWriter;
-use iota_config::node::ArchiveReaderConfig;
-use iota_config::object_storage_config::{ObjectStoreConfig, ObjectStoreType};
-use iota_storage::{FileCompression, StorageFormat};
-use iota_swarm_config::test_utils::{empty_contents, CommitteeFixture};
-use iota_types::{
-    messages_checkpoint::CheckpointDigest,
-    storage::{ReadStore, SharedInMemoryStore, WriteStore},
-};
-use tempfile::tempdir;
-use tokio::time::{timeout, Instant};
 
 #[tokio::test]
 async fn server_push_checkpoint() {

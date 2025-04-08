@@ -2,15 +2,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_core::{
+    authority_aggregator::AuthAggMetrics,
+    quorum_driver::reconfig_observer::{OnsiteReconfigObserver, ReconfigObserver},
+    safe_client::SafeClientMetricsBase,
+};
+use iota_macros::sim_test;
 use prometheus::Registry;
-use iota_core::authority_aggregator::AuthAggMetrics;
-use iota_core::quorum_driver::reconfig_observer::OnsiteReconfigObserver;
-use iota_core::quorum_driver::reconfig_observer::ReconfigObserver;
-use iota_core::safe_client::SafeClientMetricsBase;
 use test_cluster::TestClusterBuilder;
 use tracing::info;
-
-use iota_macros::sim_test;
 
 #[sim_test]
 async fn test_onsite_reconfig_observer_basic() {

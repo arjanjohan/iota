@@ -4,10 +4,12 @@
 
 use async_graphql::*;
 
-use super::move_enum::MoveEnum;
-use super::move_module::MoveModule;
-use super::move_struct::{MoveStruct, MoveStructTypeParameter};
-use super::open_move_type::MoveAbility;
+use super::{
+    move_enum::MoveEnum,
+    move_module::MoveModule,
+    move_struct::{MoveStruct, MoveStructTypeParameter},
+    open_move_type::MoveAbility,
+};
 
 /// Interface implemented by all GraphQL types that represent a Move datatype (either structs or
 /// enums). This interface is used to provide a way to access fields that are shared by both

@@ -2,18 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use futures::future::{join_all, Either};
-use parking_lot::Mutex;
-use parking_lot::MutexGuard;
-use std::collections::hash_map::DefaultHasher;
-use std::collections::HashMap;
-use std::future::Future;
-use std::hash::{Hash, Hasher};
-use std::mem;
-use std::pin::Pin;
-use std::sync::atomic::AtomicUsize;
-use std::sync::atomic::Ordering;
-use std::task::{Context, Poll};
+use std::{
+    collections::{HashMap, hash_map::DefaultHasher},
+    future::Future,
+    hash::{Hash, Hasher},
+    mem,
+    pin::Pin,
+    sync::atomic::{AtomicUsize, Ordering},
+    task::{Context, Poll},
+};
+
+use futures::future::{Either, join_all};
+use parking_lot::{Mutex, MutexGuard};
 use tokio::sync::oneshot;
 
 type Registrations<V> = Vec<oneshot::Sender<V>>;
@@ -178,8 +178,9 @@ impl<K: Eq + Hash + Clone, V: Clone> Default for NotifyRead<K, V> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use futures::future::join_all;
+
+    use super::*;
 
     #[tokio::test]
     pub async fn test_notify_read() {

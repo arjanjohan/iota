@@ -2,18 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashSet;
-use std::net::SocketAddr;
-use std::path::PathBuf;
+use std::{collections::HashSet, net::SocketAddr, path::PathBuf};
+
 use iota_core::authority_client::AuthorityAPI;
 use iota_macros::*;
 use iota_test_transaction_builder::publish_package;
-use iota_types::base_types::{ObjectID, ObjectRef};
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::error::{IotaError, UserInputError};
-use iota_types::object::Owner;
-use iota_types::transaction::{CallArg, ObjectArg, Transaction};
+use iota_types::{
+    base_types::{ObjectID, ObjectRef},
+    effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents},
+    error::{IotaError, UserInputError},
+    object::Owner,
+    transaction::{CallArg, ObjectArg, Transaction},
+};
 use test_cluster::{TestCluster, TestClusterBuilder};
 
 #[sim_test]
@@ -217,11 +217,7 @@ impl TestEnvironment {
                 .iter()
                 .find_map(
                     |(oref, _)| {
-                        if oref.0 == child.0 {
-                            Some(*oref)
-                        } else {
-                            None
-                        }
+                        if oref.0 == child.0 { Some(*oref) } else { None }
                     },
                 )
                 .unwrap();

@@ -3,25 +3,27 @@
 // SPDX-License-Identifier: Apache-2.0
 #[cfg(msim)]
 mod test {
-    use crate::node::{AuthorityNode, Config};
+    use std::{sync::Arc, time::Duration};
+
     use consensus_config::{
         Authority, AuthorityIndex, AuthorityKeyPair, Committee, Epoch, NetworkKeyPair,
         ProtocolKeyPair, Stake,
     };
-    use iota_network_stack::Multiaddr;
-    use prometheus::Registry;
-    use rand::{rngs::StdRng, SeedableRng as _};
-    use std::{sync::Arc, time::Duration};
     use iota_config::local_ip_utils;
     use iota_macros::sim_test;
+    use iota_network_stack::Multiaddr;
     use iota_protocol_config::ProtocolConfig;
     use iota_simulator::{
-        configs::{bimodal_latency_ms, env_config, uniform_latency_ms},
         SimConfig,
+        configs::{bimodal_latency_ms, env_config, uniform_latency_ms},
     };
+    use prometheus::Registry;
+    use rand::{SeedableRng as _, rngs::StdRng};
     use tempfile::TempDir;
     use tokio::time::sleep;
     use typed_store::DBMetrics;
+
+    use crate::node::{AuthorityNode, Config};
 
     fn test_config() -> SimConfig {
         env_config(

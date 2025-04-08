@@ -2,15 +2,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::anyhow;
-use anyhow::Result;
-use std::sync::Mutex;
-use std::sync::MutexGuard;
+use std::sync::{Mutex, MutexGuard};
+
+use anyhow::{Result, anyhow};
 use iota_config::NodeConfig;
 use iota_node::IotaNodeHandle;
-use iota_types::base_types::AuthorityName;
-use iota_types::base_types::ConciseableName;
-use iota_types::crypto::KeypairTraits;
+use iota_types::{
+    base_types::{AuthorityName, ConciseableName},
+    crypto::KeypairTraits,
+};
 use tap::TapFallible;
 use tracing::{error, info};
 

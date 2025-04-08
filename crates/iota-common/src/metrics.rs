@@ -2,9 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
 use iota_metrics::RegistryService;
 use prometheus::Encoder;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tracing::{debug, error, info};
 
 const METRICS_PUSH_TIMEOUT: Duration = Duration::from_secs(45);

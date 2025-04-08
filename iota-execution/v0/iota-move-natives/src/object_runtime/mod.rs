@@ -2,7 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    sync::Arc,
+};
+
 use better_any::{Tid, TidAble};
+use iota_protocol_config::{LimitThresholdCrossed, ProtocolConfig, check_limit_by_meter};
+use iota_types::{
+    IOTA_CLOCK_OBJECT_ID, IOTA_SYSTEM_STATE_OBJECT_ID,
+    base_types::{IotaAddress, MoveObjectType, ObjectID, SequenceNumber},
+    error::{ExecutionError, ExecutionErrorKind, VMMemoryLimitExceededSubStatusCode},
+    execution::DynamicallyLoadedObjectMetadata,
+    id::UID,
+    metrics::LimitsMetrics,
+    object::{MoveObject, Owner},
+    storage::{ChildObjectResolver, DeleteKind, WriteKind},
+};
 use linked_hash_map::LinkedHashMap;
 use move_binary_format::errors::{PartialVMError, PartialVMResult};
 use move_core_types::{
@@ -13,28 +29,12 @@ use move_vm_types::{
     loaded_data::runtime_types::Type,
     values::{GlobalValue, Value},
 };
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    sync::Arc,
-};
-use iota_protocol_config::{check_limit_by_meter, LimitThresholdCrossed, ProtocolConfig};
-use iota_types::{
-    base_types::{MoveObjectType, ObjectID, SequenceNumber, IotaAddress},
-    error::{ExecutionError, ExecutionErrorKind, VMMemoryLimitExceededSubStatusCode},
-    execution::DynamicallyLoadedObjectMetadata,
-    id::UID,
-    metrics::LimitsMetrics,
-    object::{MoveObject, Owner},
-    storage::{ChildObjectResolver, DeleteKind, WriteKind},
-    IOTA_CLOCK_OBJECT_ID, IOTA_SYSTEM_STATE_OBJECT_ID,
-};
 
 pub(crate) mod object_store;
 
 use object_store::ObjectStore;
 
 use self::object_store::{ChildObjectEffect, ObjectResult};
-
 use super::get_object_id;
 
 pub enum ObjectEvent {
@@ -291,7 +291,7 @@ impl<'a> ObjectRuntime<'a> {
 
         if let LimitThresholdCrossed::Hard(_, lim) = check_limit_by_meter!(
             // TODO: is this not redundant? Metered TX implies framework obj cannot be transferred
-            self.is_metered && !is_framework_obj, // We have higher limits for unmetered transactions and framework obj
+            self.is_metered && !is_framework_obj, /* We have higher limits for unmetered transactions and framework obj */
             self.state.transfers.len(),
             self.constants.max_num_transferred_move_object_ids,
             self.constants.max_num_transferred_move_object_ids_system_tx,

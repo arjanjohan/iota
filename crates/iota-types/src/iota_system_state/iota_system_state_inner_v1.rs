@@ -2,25 +2,32 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::balance::Balance;
-use crate::base_types::{ObjectID, IotaAddress};
-use crate::collection_types::{Bag, Table, TableVec, VecMap, VecSet};
-use crate::committee::{CommitteeWithNetworkMetadata, NetworkMetadata};
-use crate::crypto::{verify_proof_of_possession, AuthorityPublicKey, AuthoritySignature};
-use crate::crypto::{AuthorityPublicKeyBytes, NetworkPublicKey};
-use crate::error::IotaError;
-use crate::id::ID;
-use crate::multiaddr::Multiaddr;
-use crate::storage::ObjectStore;
-use crate::iota_system_state::epoch_start_iota_system_state::EpochStartSystemState;
 use anyhow::Result;
 use fastcrypto::traits::ToFromBytes;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 
-use super::epoch_start_iota_system_state::EpochStartValidatorInfoV1;
-use super::iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary};
-use super::{get_validators_from_table_vec, AdvanceEpochParams, IotaSystemStateTrait};
+use super::{
+    AdvanceEpochParams, IotaSystemStateTrait,
+    epoch_start_iota_system_state::EpochStartValidatorInfoV1,
+    get_validators_from_table_vec,
+    iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary},
+};
+use crate::{
+    balance::Balance,
+    base_types::{IotaAddress, ObjectID},
+    collection_types::{Bag, Table, TableVec, VecMap, VecSet},
+    committee::{CommitteeWithNetworkMetadata, NetworkMetadata},
+    crypto::{
+        AuthorityPublicKey, AuthorityPublicKeyBytes, AuthoritySignature, NetworkPublicKey,
+        verify_proof_of_possession,
+    },
+    error::IotaError,
+    id::ID,
+    iota_system_state::epoch_start_iota_system_state::EpochStartSystemState,
+    multiaddr::Multiaddr,
+    storage::ObjectStore,
+};
 
 const E_METADATA_INVALID_POP: u64 = 0;
 const E_METADATA_INVALID_PUBKEY: u64 = 1;

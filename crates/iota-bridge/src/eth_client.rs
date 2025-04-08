@@ -2,22 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashSet;
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
-use crate::abi::EthBridgeEvent;
-use crate::error::{BridgeError, BridgeResult};
-use crate::metered_eth_provider::{new_metered_eth_provider, MeteredEthHttpProvider};
-use crate::metrics::BridgeMetrics;
-use crate::types::{BridgeAction, EthLog, RawEthLog};
-use ethers::providers::{JsonRpcClient, Middleware, Provider};
-use ethers::types::TxHash;
-use ethers::types::{Block, Filter};
+use ethers::{
+    providers::{JsonRpcClient, Middleware, Provider},
+    types::{Address as EthAddress, Block, Filter, TxHash},
+};
 use tap::TapFallible;
 
 #[cfg(test)]
 use crate::eth_mock_provider::EthMockProvider;
-use ethers::types::Address as EthAddress;
+use crate::{
+    abi::EthBridgeEvent,
+    error::{BridgeError, BridgeResult},
+    metered_eth_provider::{MeteredEthHttpProvider, new_metered_eth_provider},
+    metrics::BridgeMetrics,
+    types::{BridgeAction, EthLog, RawEthLog},
+};
 pub struct EthClient<P> {
     provider: Provider<P>,
     contract_addresses: HashSet<EthAddress>,
@@ -256,7 +257,10 @@ where
             "Provider returns log without block_number".into(),
         ))?;
         if receipt_block_num.as_u64() != block_number {
-            return Err(BridgeError::ProviderError(format!("Provider returns receipt with different block number from log. Receipt: {:?}, Log: {:?}", receipt, log)));
+            return Err(BridgeError::ProviderError(format!(
+                "Provider returns receipt with different block number from log. Receipt: {:?}, Log: {:?}",
+                receipt, log
+            )));
         }
 
         // Find the log index in the transaction
@@ -266,7 +270,10 @@ where
             if receipt_log.log_index == Some(log_index) {
                 // make sure the topics and data match
                 if receipt_log.topics != log.topics || receipt_log.data != log.data {
-                    return Err(BridgeError::ProviderError(format!("Provider returns receipt with different log from log. Receipt: {:?}, Log: {:?}", receipt, log)));
+                    return Err(BridgeError::ProviderError(format!(
+                        "Provider returns receipt with different log from log. Receipt: {:?}, Log: {:?}",
+                        receipt, log
+                    )));
                 }
                 log_index_in_tx = Some(idx);
             }

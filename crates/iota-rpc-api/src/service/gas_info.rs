@@ -2,10 +2,10 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::proto::node::v2alpha::GetGasInfoRequest;
-use crate::proto::node::v2alpha::GetGasInfoResponse;
-use crate::Result;
-use crate::RpcService;
+use crate::{
+    Result, RpcService,
+    proto::node::v2alpha::{GetGasInfoRequest, GetGasInfoResponse},
+};
 
 impl RpcService {
     pub fn get_gas_info(&self, _request: GetGasInfoRequest) -> Result<GetGasInfoResponse> {

@@ -2,10 +2,6 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::schema::{
-    kv_transactions, tx_affected_addresses, tx_affected_objects, tx_balance_changes, tx_calls,
-    tx_digests, tx_kinds,
-};
 use diesel::{
     backend::Backend,
     deserialize::{self, FromSqlRow},
@@ -14,9 +10,14 @@ use diesel::{
     serialize,
     sql_types::SmallInt,
 };
-use serde::{Deserialize, Serialize};
 use iota_field_count::FieldCount;
 use iota_types::object::Owner;
+use serde::{Deserialize, Serialize};
+
+use crate::schema::{
+    kv_transactions, tx_affected_addresses, tx_affected_objects, tx_balance_changes, tx_calls,
+    tx_digests, tx_kinds,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BalanceChange {

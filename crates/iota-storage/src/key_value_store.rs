@@ -5,20 +5,23 @@
 //! Immutable key/value store trait for storing/retrieving transactions, effects, and events
 //! to/from a scalable.
 
-use crate::key_value_store_metrics::KeyValueStoreMetrics;
+use std::{sync::Arc, time::Instant};
+
 use async_trait::async_trait;
-use std::sync::Arc;
-use std::time::Instant;
-use iota_types::base_types::{ObjectID, SequenceNumber, VersionNumber};
-use iota_types::digests::{CheckpointDigest, TransactionDigest};
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::error::{IotaError, IotaResult, UserInputError};
-use iota_types::messages_checkpoint::{
-    CertifiedCheckpointSummary, CheckpointContents, CheckpointSequenceNumber,
+use iota_types::{
+    base_types::{ObjectID, SequenceNumber, VersionNumber},
+    digests::{CheckpointDigest, TransactionDigest},
+    effects::{TransactionEffects, TransactionEvents},
+    error::{IotaError, IotaResult, UserInputError},
+    messages_checkpoint::{
+        CertifiedCheckpointSummary, CheckpointContents, CheckpointSequenceNumber,
+    },
+    object::Object,
+    transaction::Transaction,
 };
-use iota_types::object::Object;
-use iota_types::transaction::Transaction;
 use tracing::instrument;
+
+use crate::key_value_store_metrics::KeyValueStoreMetrics;
 
 pub type KVStoreTransactionData = (Vec<Option<Transaction>>, Vec<Option<TransactionEffects>>);
 

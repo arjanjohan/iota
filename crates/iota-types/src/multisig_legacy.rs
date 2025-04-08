@@ -2,14 +2,11 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    crypto::{CompressedSignature, SignatureScheme},
-    digests::ZKLoginInputsDigest,
-    multisig::{MultiSig, MultiSigPublicKey},
-    signature::{AuthenticatorTrait, GenericSignature, VerifyParams},
-    signature_verification::VerifiedDigestCache,
-    iota_serde::IotaBitmap,
+use std::{
+    hash::{Hash, Hasher},
+    sync::Arc,
 };
+
 pub use enum_dispatch::enum_dispatch;
 use fastcrypto::{
     encoding::Base64,
@@ -19,18 +16,19 @@ use fastcrypto::{
 use once_cell::sync::OnceCell;
 use roaring::RoaringBitmap;
 use schemars::JsonSchema;
-use serde::{ser::SerializeSeq, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer, ser::SerializeSeq};
 use serde_with::serde_as;
 use shared_crypto::intent::IntentMessage;
-use std::{
-    hash::{Hash, Hasher},
-    sync::Arc,
-};
 
 use crate::{
     base_types::{EpochId, IotaAddress},
-    crypto::PublicKey,
+    crypto::{CompressedSignature, PublicKey, SignatureScheme},
+    digests::ZKLoginInputsDigest,
     error::IotaError,
+    iota_serde::IotaBitmap,
+    multisig::{MultiSig, MultiSigPublicKey},
+    signature::{AuthenticatorTrait, GenericSignature, VerifyParams},
+    signature_verification::VerifiedDigestCache,
 };
 
 pub type WeightUnit = u8;

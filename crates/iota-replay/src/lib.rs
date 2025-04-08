@@ -2,34 +2,28 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{cmp::max, env, io::BufRead, path::PathBuf, str::FromStr};
+
 use async_recursion::async_recursion;
 use clap::Parser;
 use config::ReplayableNetworkConfigSet;
-use fuzz::ReplayFuzzer;
-use fuzz::ReplayFuzzerConfig;
+use fuzz::{ReplayFuzzer, ReplayFuzzerConfig};
 use fuzz_mutations::base_fuzzers;
-use std::cmp::max;
-use iota_types::base_types::ObjectID;
-use iota_types::base_types::SequenceNumber;
-use iota_types::digests::get_mainnet_chain_identifier;
-use iota_types::digests::get_testnet_chain_identifier;
-use iota_types::message_envelope::Message;
-use tracing::warn;
-use transaction_provider::{FuzzStartPoint, TransactionSource};
-
-use crate::config::get_rpc_url;
-use crate::replay::ExecutionSandboxState;
-use crate::replay::LocalExec;
-use crate::replay::ProtocolVersionSummary;
-use move_vm_config::runtime::get_default_output_filepath;
-use std::env;
-use std::io::BufRead;
-use std::path::PathBuf;
-use std::str::FromStr;
 use iota_config::node::ExpensiveSafetyCheckConfig;
 use iota_protocol_config::Chain;
-use iota_types::digests::TransactionDigest;
-use tracing::{error, info};
+use iota_types::{
+    base_types::{ObjectID, SequenceNumber},
+    digests::{TransactionDigest, get_mainnet_chain_identifier, get_testnet_chain_identifier},
+    message_envelope::Message,
+};
+use move_vm_config::runtime::get_default_output_filepath;
+use tracing::{error, info, warn};
+use transaction_provider::{FuzzStartPoint, TransactionSource};
+
+use crate::{
+    config::get_rpc_url,
+    replay::{ExecutionSandboxState, LocalExec, ProtocolVersionSummary},
+};
 
 pub mod batch_replay;
 pub mod config;
@@ -417,8 +411,12 @@ pub async fn execute_replay_command(
             // We need this for other activities in this session
             lx.current_protocol_version = *epoch_table.keys().peekable().last().unwrap();
 
-            println!("  Protocol Version  |                Epoch Change TX               |      Epoch Range     |   Checkpoint Range   ");
-            println!("---------------------------------------------------------------------------------------------------------------");
+            println!(
+                "  Protocol Version  |                Epoch Change TX               |      Epoch Range     |   Checkpoint Range   "
+            );
+            println!(
+                "---------------------------------------------------------------------------------------------------------------"
+            );
 
             for (
                 protocol_version,
@@ -589,7 +587,10 @@ fn parse_configs_versions(
 ) -> Option<Vec<(ObjectID, SequenceNumber)>> {
     let configs_and_versions = configs_and_versions?;
 
-    assert!(configs_and_versions.len() % 2 == 0, "Invalid number of arguments for configs and version -- you must supply a version for each config");
+    assert!(
+        configs_and_versions.len() % 2 == 0,
+        "Invalid number of arguments for configs and version -- you must supply a version for each config"
+    );
     Some(
         configs_and_versions
             .chunks_exact(2)

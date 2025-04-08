@@ -2,19 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::system_state_observer::SystemStateObserver;
-use crate::workloads::payload::Payload;
-use crate::workloads::{Gas, GasCoinConfig};
-use crate::ValidatorProxy;
+use std::{str::FromStr, sync::Arc};
+
 use anyhow::anyhow;
 use async_trait::async_trait;
-use rand::distributions::{Distribution, Standard};
-use rand::Rng;
-use std::str::FromStr;
-use std::sync::Arc;
+use iota_types::gas_coin::NANOS_PER_IOTA;
+use rand::{
+    Rng,
+    distributions::{Distribution, Standard},
+};
 use strum::{EnumCount, IntoEnumIterator};
 use strum_macros::{EnumCount as EnumCountMacro, EnumIter};
-use iota_types::gas_coin::NANOS_PER_IOTA;
+
+use crate::{
+    ValidatorProxy,
+    system_state_observer::SystemStateObserver,
+    workloads::{Gas, GasCoinConfig, payload::Payload},
+};
 
 // This is the maximum gas we will transfer from primary coin into any gas coin
 // for running the benchmark

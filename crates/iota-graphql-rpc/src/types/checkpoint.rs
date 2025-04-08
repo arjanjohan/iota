@@ -4,6 +4,21 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
+use async_graphql::{
+    connection::{Connection, CursorType, Edge},
+    dataloader::Loader,
+    *,
+};
+use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
+use diesel_async::scoped_futures::ScopedFutureExt;
+use fastcrypto::encoding::{Base58, Encoding};
+use iota_indexer::{
+    models::{checkpoints::StoredCheckpoint, raw_checkpoints::StoredRawCheckpoint},
+    schema::{checkpoints, raw_checkpoints},
+};
+use iota_types::messages_checkpoint::{CertifiedCheckpointSummary, CheckpointDigest};
+use serde::{Deserialize, Serialize};
+
 use super::{
     base64::Base64,
     cursor::{self, Page, Paginated, ScanLimited, Target},
@@ -14,26 +29,12 @@ use super::{
     transaction_block::{self, TransactionBlock, TransactionBlockFilter},
     uint53::UInt53,
 };
-use crate::{connection::ScanConnection, consistency::Checkpointed};
 use crate::{
+    connection::ScanConnection,
+    consistency::Checkpointed,
     data::{self, Conn, DataLoader, Db, DbConnection, QueryExecutor},
     error::Error,
 };
-use async_graphql::{
-    connection::{Connection, CursorType, Edge},
-    dataloader::Loader,
-    *,
-};
-use diesel::{ExpressionMethods, OptionalExtension, QueryDsl};
-use diesel_async::scoped_futures::ScopedFutureExt;
-use fastcrypto::encoding::{Base58, Encoding};
-use serde::{Deserialize, Serialize};
-use iota_indexer::{
-    models::{checkpoints::StoredCheckpoint, raw_checkpoints::StoredRawCheckpoint},
-    schema::checkpoints,
-    schema::raw_checkpoints,
-};
-use iota_types::messages_checkpoint::{CertifiedCheckpointSummary, CheckpointDigest};
 
 /// Filter either by the digest, or the sequence number, or neither, to get the latest checkpoint.
 #[derive(Default, InputObject)]

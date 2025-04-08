@@ -2,6 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::fmt::Write;
+
+use super::Cursor;
 use crate::{
     data::pg::bytea_literal,
     filter, query,
@@ -13,10 +16,6 @@ use crate::{
         type_filter::{ModuleFilter, TypeFilter},
     },
 };
-
-use std::fmt::Write;
-
-use super::Cursor;
 
 fn select_ev(sender: Option<IotaAddress>, from: &str) -> RawQuery {
     let query = query!(format!(

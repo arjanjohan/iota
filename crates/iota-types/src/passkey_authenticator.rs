@@ -1,30 +1,35 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::crypto::PublicKey;
-use crate::crypto::Secp256r1IotaSignature;
-use crate::crypto::IotaSignatureInner;
-use crate::signature_verification::VerifiedDigestCache;
-use crate::{
-    base_types::{EpochId, IotaAddress},
-    crypto::{DefaultHash, Signature, SignatureScheme, IotaSignature},
-    digests::ZKLoginInputsDigest,
-    error::{IotaError, IotaResult},
-    signature::{AuthenticatorTrait, VerifyParams},
+use std::{
+    hash::{Hash, Hasher},
+    sync::Arc,
 };
-use fastcrypto::hash::{HashFunction, Sha256};
-use fastcrypto::rsa::{Base64UrlUnpadded, Encoding};
-use fastcrypto::secp256r1::{Secp256r1PublicKey, Secp256r1Signature};
-use fastcrypto::traits::VerifyingKey;
-use fastcrypto::{error::FastCryptoError, traits::ToFromBytes};
+
+use fastcrypto::{
+    error::FastCryptoError,
+    hash::{HashFunction, Sha256},
+    rsa::{Base64UrlUnpadded, Encoding},
+    secp256r1::{Secp256r1PublicKey, Secp256r1Signature},
+    traits::{ToFromBytes, VerifyingKey},
+};
 use once_cell::sync::OnceCell;
 use passkey_types::webauthn::{ClientDataType, CollectedClientData};
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize};
 use shared_crypto::intent::IntentMessage;
-use std::hash::Hash;
-use std::hash::Hasher;
-use std::sync::Arc;
+
+use crate::{
+    base_types::{EpochId, IotaAddress},
+    crypto::{
+        DefaultHash, IotaSignature, IotaSignatureInner, PublicKey, Secp256r1IotaSignature,
+        Signature, SignatureScheme,
+    },
+    digests::ZKLoginInputsDigest,
+    error::{IotaError, IotaResult},
+    signature::{AuthenticatorTrait, VerifyParams},
+    signature_verification::VerifiedDigestCache,
+};
 
 #[cfg(test)]
 #[path = "unit_tests/passkey_authenticator_test.rs"]

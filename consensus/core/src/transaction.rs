@@ -4,7 +4,7 @@
 use std::{collections::BTreeMap, sync::Arc};
 
 use iota_common::debug_fatal;
-use iota_metrics::monitored_mpsc::{channel, Receiver, Sender};
+use iota_metrics::monitored_mpsc::{Receiver, Sender, channel};
 use parking_lot::Mutex;
 use tap::tap::TapFallible;
 use thiserror::Error;
@@ -12,9 +12,9 @@ use tokio::sync::oneshot;
 use tracing::{error, warn};
 
 use crate::{
+    Round,
     block::{BlockRef, Transaction, TransactionIndex},
     context::Context,
-    Round,
 };
 
 /// The maximum number of transactions pending to the queue to be pulled for block proposal
@@ -116,7 +116,10 @@ impl TransactionConsumer {
 
         if let Some(t) = self.pending_transactions.take() {
             if let Some(pending_transactions) = handle_txs(t) {
-                debug_fatal!("Previously pending transaction(s) should fit into an empty block! Dropping: {:?}", pending_transactions.transactions);
+                debug_fatal!(
+                    "Previously pending transaction(s) should fit into an empty block! Dropping: {:?}",
+                    pending_transactions.transactions
+                );
             }
         }
 
@@ -374,16 +377,18 @@ mod tests {
     use std::{sync::Arc, time::Duration};
 
     use consensus_config::AuthorityIndex;
-    use futures::{stream::FuturesUnordered, StreamExt};
+    use futures::{StreamExt, stream::FuturesUnordered};
     use iota_protocol_config::ProtocolConfig;
     use tokio::time::timeout;
 
-    use crate::transaction::NoopTransactionVerifier;
     use crate::{
         block::{BlockDigest, BlockRef},
         block_verifier::SignedBlockVerifier,
         context::Context,
-        transaction::{BlockStatus, LimitReached, TransactionClient, TransactionConsumer},
+        transaction::{
+            BlockStatus, LimitReached, NoopTransactionVerifier, TransactionClient,
+            TransactionConsumer,
+        },
     };
 
     #[tokio::test(flavor = "current_thread", start_paused = true)]

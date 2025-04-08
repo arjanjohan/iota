@@ -8,47 +8,48 @@ pub(crate) mod safe_iter;
 pub mod util;
 pub(crate) mod values;
 
-use self::{iter::Iter, keys::Keys, values::Values};
-use crate::rocks::errors::typed_store_err_from_bcs_err;
-use crate::rocks::errors::typed_store_err_from_bincode_err;
-use crate::rocks::errors::typed_store_err_from_rocks_err;
-use crate::rocks::safe_iter::SafeIter;
-use crate::TypedStoreError;
-use crate::{
-    metrics::{DBMetrics, RocksDBPerfContext, SamplingInterval},
-    traits::{Map, TableSummary},
-};
-use bincode::Options;
-use collectable::TryExtend;
-use itertools::Itertools;
-use prometheus::{Histogram, HistogramTimer};
-use rocksdb::properties::num_files_at_level;
-use rocksdb::{
-    checkpoint::Checkpoint, BlockBasedOptions, BottommostLevelCompaction, Cache, CompactOptions,
-    DBPinnableSlice, LiveFile, OptimisticTransactionDB, SnapshotWithThreadMode,
-};
-use rocksdb::{
-    properties, AsColumnFamilyRef, CStrLike, ColumnFamilyDescriptor, DBWithThreadMode, Error,
-    ErrorKind, IteratorMode, MultiThreaded, OptimisticTransactionOptions, ReadOptions, Transaction,
-    WriteBatch, WriteBatchWithTransaction, WriteOptions,
-};
-use serde::{de::DeserializeOwned, Serialize};
-use std::ops::Bound;
 use std::{
     borrow::Borrow,
-    collections::BTreeMap,
+    collections::{BTreeMap, HashSet},
     env,
+    ffi::CStr,
     marker::PhantomData,
-    ops::RangeBounds,
+    ops::{Bound, RangeBounds},
     path::{Path, PathBuf},
     sync::Arc,
     time::Duration,
 };
-use std::{collections::HashSet, ffi::CStr};
+
+use bincode::Options;
+use collectable::TryExtend;
 use iota_macros::{fail_point, nondeterministic};
+use itertools::Itertools;
+use prometheus::{Histogram, HistogramTimer};
+use rocksdb::{
+    AsColumnFamilyRef, BlockBasedOptions, BottommostLevelCompaction, CStrLike, Cache,
+    ColumnFamilyDescriptor, CompactOptions, DBPinnableSlice, DBWithThreadMode, Error, ErrorKind,
+    IteratorMode, LiveFile, MultiThreaded, OptimisticTransactionDB, OptimisticTransactionOptions,
+    ReadOptions, SnapshotWithThreadMode, Transaction, WriteBatch, WriteBatchWithTransaction,
+    WriteOptions, checkpoint::Checkpoint, properties, properties::num_files_at_level,
+};
+use serde::{Serialize, de::DeserializeOwned};
 use tap::TapFallible;
 use tokio::sync::oneshot;
 use tracing::{debug, error, info, instrument, warn};
+
+use self::{iter::Iter, keys::Keys, values::Values};
+use crate::{
+    TypedStoreError,
+    metrics::{DBMetrics, RocksDBPerfContext, SamplingInterval},
+    rocks::{
+        errors::{
+            typed_store_err_from_bcs_err, typed_store_err_from_bincode_err,
+            typed_store_err_from_rocks_err,
+        },
+        safe_iter::SafeIter,
+    },
+    traits::{Map, TableSummary},
+};
 
 // Write buffer size per RocksDB instance can be set via the env var below.
 // If the env var is not set, use the default value in MiB.
@@ -120,7 +121,6 @@ mod tests;
 /// Ok(())
 /// }
 /// ```
-///
 #[macro_export]
 macro_rules! reopen {
     ( $db:expr, $($cf:expr;<$K:ty, $V:ty>),*) => {
@@ -147,11 +147,12 @@ macro_rules! retry_transaction {
         $(,)?
 
     ) => {{
+        use std::time::Duration;
+
         use rand::{
             distributions::{Distribution, Uniform},
             rngs::ThreadRng,
         };
-        use std::time::Duration;
         use tracing::{error, info};
 
         let mut retries = 0;
@@ -807,21 +808,39 @@ impl<K, V> DBMap<K, V> {
     /// if no column family is passed, the default column family is used.
     ///
     /// ```
-    ///    use typed_store::rocks::*;
-    ///    use typed_store::metrics::DBMetrics;
-    ///    use tempfile::tempdir;
-    ///    use prometheus::Registry;
-    ///    use std::sync::Arc;
-    ///    use core::fmt::Error;
-    ///    #[tokio::main]
-    ///    async fn main() -> Result<(), Error> {
-    ///    /// Open the DB with all needed column families first.
-    ///    let rocks = open_cf(tempdir().unwrap(), None, MetricConf::default(), &["First_CF", "Second_CF"]).unwrap();
-    ///    /// Attach the column families to specific maps.
-    ///    let db_cf_1 = DBMap::<u32,u32>::reopen(&rocks, Some("First_CF"), &ReadWriteOptions::default(), false).expect("Failed to open storage");
-    ///    let db_cf_2 = DBMap::<u32,u32>::reopen(&rocks, Some("Second_CF"), &ReadWriteOptions::default(), false).expect("Failed to open storage");
-    ///    Ok(())
-    ///    }
+    /// use core::fmt::Error;
+    /// use std::sync::Arc;
+    ///
+    /// use prometheus::Registry;
+    /// use tempfile::tempdir;
+    /// use typed_store::{metrics::DBMetrics, rocks::*};
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Error> {
+    ///     /// Open the DB with all needed column families first.
+    ///     let rocks = open_cf(
+    ///         tempdir().unwrap(),
+    ///         None,
+    ///         MetricConf::default(),
+    ///         &["First_CF", "Second_CF"],
+    ///     )
+    ///     .unwrap();
+    ///     /// Attach the column families to specific maps.
+    ///     let db_cf_1 = DBMap::<u32, u32>::reopen(
+    ///         &rocks,
+    ///         Some("First_CF"),
+    ///         &ReadWriteOptions::default(),
+    ///         false,
+    ///     )
+    ///     .expect("Failed to open storage");
+    ///     let db_cf_2 = DBMap::<u32, u32>::reopen(
+    ///         &rocks,
+    ///         Some("Second_CF"),
+    ///         &ReadWriteOptions::default(),
+    ///         false,
+    ///     )
+    ///     .expect("Failed to open storage");
+    ///     Ok(())
+    /// }
     /// ```
     #[instrument(level = "debug", skip(db), err)]
     pub fn reopen(
@@ -956,7 +975,8 @@ impl<K, V> DBMap<K, V> {
             .batched_multi_get_cf_opt(
                 &self.cf(),
                 keys_bytes?,
-                /*sorted_keys=*/ false,
+                // sorted_keys=
+                false,
                 &self.opts.readopts(),
             )
             .into_iter()
@@ -1349,47 +1369,61 @@ impl<K, V> DBMap<K, V> {
 /// with each operation.
 ///
 /// ```
-/// use typed_store::rocks::*;
-/// use tempfile::tempdir;
-/// use typed_store::Map;
-/// use typed_store::metrics::DBMetrics;
-/// use prometheus::Registry;
 /// use core::fmt::Error;
 /// use std::sync::Arc;
 ///
+/// use prometheus::Registry;
+/// use tempfile::tempdir;
+/// use typed_store::{Map, metrics::DBMetrics, rocks::*};
+///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Error> {
-/// let rocks = open_cf(tempfile::tempdir().unwrap(), None, MetricConf::default(), &["First_CF", "Second_CF"]).unwrap();
+///     let rocks = open_cf(
+///         tempfile::tempdir().unwrap(),
+///         None,
+///         MetricConf::default(),
+///         &["First_CF", "Second_CF"],
+///     )
+///     .unwrap();
 ///
-/// let db_cf_1 = DBMap::reopen(&rocks, Some("First_CF"), &ReadWriteOptions::default(), false)
+///     let db_cf_1 = DBMap::reopen(
+///         &rocks,
+///         Some("First_CF"),
+///         &ReadWriteOptions::default(),
+///         false,
+///     )
 ///     .expect("Failed to open storage");
-/// let keys_vals_1 = (1..100).map(|i| (i, i.to_string()));
+///     let keys_vals_1 = (1..100).map(|i| (i, i.to_string()));
 ///
-/// let db_cf_2 = DBMap::reopen(&rocks, Some("Second_CF"), &ReadWriteOptions::default(), false)
+///     let db_cf_2 = DBMap::reopen(
+///         &rocks,
+///         Some("Second_CF"),
+///         &ReadWriteOptions::default(),
+///         false,
+///     )
 ///     .expect("Failed to open storage");
-/// let keys_vals_2 = (1000..1100).map(|i| (i, i.to_string()));
+///     let keys_vals_2 = (1000..1100).map(|i| (i, i.to_string()));
 ///
-/// let mut batch = db_cf_1.batch();
-/// batch
-///     .insert_batch(&db_cf_1, keys_vals_1.clone())
-///     .expect("Failed to batch insert")
-///     .insert_batch(&db_cf_2, keys_vals_2.clone())
-///     .expect("Failed to batch insert");
+///     let mut batch = db_cf_1.batch();
+///     batch
+///         .insert_batch(&db_cf_1, keys_vals_1.clone())
+///         .expect("Failed to batch insert")
+///         .insert_batch(&db_cf_2, keys_vals_2.clone())
+///         .expect("Failed to batch insert");
 ///
-/// let _ = batch.write().expect("Failed to execute batch");
-/// for (k, v) in keys_vals_1 {
-///     let val = db_cf_1.get(&k).expect("Failed to get inserted key");
-///     assert_eq!(Some(v), val);
-/// }
+///     let _ = batch.write().expect("Failed to execute batch");
+///     for (k, v) in keys_vals_1 {
+///         let val = db_cf_1.get(&k).expect("Failed to get inserted key");
+///         assert_eq!(Some(v), val);
+///     }
 ///
-/// for (k, v) in keys_vals_2 {
-///     let val = db_cf_2.get(&k).expect("Failed to get inserted key");
-///     assert_eq!(Some(v), val);
-/// }
-/// Ok(())
+///     for (k, v) in keys_vals_2 {
+///         let val = db_cf_2.get(&k).expect("Failed to get inserted key");
+///         assert_eq!(Some(v), val);
+///     }
+///     Ok(())
 /// }
 /// ```
-///
 pub struct DBBatch {
     rocksdb: Arc<RocksDB>,
     batch: RocksDBBatch,

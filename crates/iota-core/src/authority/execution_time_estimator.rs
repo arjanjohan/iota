@@ -8,12 +8,8 @@ use std::{
     time::{Duration, Instant},
 };
 
-use super::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::consensus_adapter::SubmitToConsensus;
-use itertools::Itertools;
 use iota_common::debug_fatal;
 use iota_metrics::monitored_scope;
-use simple_moving_average::{SingleSumSMA, SMA};
 use iota_protocol_config::PerObjectCongestionControlMode;
 use iota_types::{
     committee::Committee,
@@ -24,8 +20,13 @@ use iota_types::{
         Command, ProgrammableTransaction, TransactionData, TransactionDataAPI, TransactionKind,
     },
 };
+use itertools::Itertools;
+use simple_moving_average::{SMA, SingleSumSMA};
 use tokio::sync::mpsc;
 use tracing::{debug, info, warn};
+
+use super::authority_per_epoch_store::AuthorityPerEpochStore;
+use crate::consensus_adapter::SubmitToConsensus;
 
 const LOCAL_OBSERVATION_WINDOW_SIZE: usize = 10;
 
@@ -62,7 +63,9 @@ impl ExecutionTimeObserver {
             .per_object_congestion_control_mode()
             != PerObjectCongestionControlMode::ExecutionTimeEstimate
         {
-            info!("ExecutionTimeObserver disabled because per-object congestion control mode is not ExecutionTimeEstimate");
+            info!(
+                "ExecutionTimeObserver disabled because per-object congestion control mode is not ExecutionTimeEstimate"
+            );
             return;
         }
 
@@ -324,14 +327,19 @@ fn command_length(command: &Command) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::authority::test_authority_builder::TestAuthorityBuilder;
-    use crate::consensus_adapter::{
-        ConnectionMonitorStatusForTests, ConsensusAdapter, ConsensusAdapterMetrics,
-        MockConsensusClient,
+    use iota_types::{
+        base_types::{IotaAddress, ObjectID},
+        transaction::{Argument, ProgrammableMoveCall},
     };
-    use iota_types::base_types::{ObjectID, IotaAddress};
-    use iota_types::transaction::{Argument, ProgrammableMoveCall};
+
+    use super::*;
+    use crate::{
+        authority::test_authority_builder::TestAuthorityBuilder,
+        consensus_adapter::{
+            ConnectionMonitorStatusForTests, ConsensusAdapter, ConsensusAdapterMetrics,
+            MockConsensusClient,
+        },
+    };
 
     #[tokio::test]
     async fn test_record_local_observations() {

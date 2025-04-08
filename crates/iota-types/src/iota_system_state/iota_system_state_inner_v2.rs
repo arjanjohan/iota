@@ -2,22 +2,27 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::epoch_start_iota_system_state::EpochStartValidatorInfoV1;
-use super::iota_system_state_inner_v1::ValidatorV1;
-use super::iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary};
-use super::{AdvanceEpochParams, IotaSystemStateTrait};
-use crate::balance::Balance;
-use crate::base_types::IotaAddress;
-use crate::collection_types::{Bag, Table, TableVec, VecMap, VecSet};
-use crate::committee::{CommitteeWithNetworkMetadata, NetworkMetadata};
-use crate::error::IotaError;
-use crate::storage::ObjectStore;
-use crate::iota_system_state::epoch_start_iota_system_state::EpochStartSystemState;
-use crate::iota_system_state::get_validators_from_table_vec;
-use crate::iota_system_state::iota_system_state_inner_v1::{
-    StakeSubsidyV1, StorageFundV1, ValidatorSetV1,
-};
 use serde::{Deserialize, Serialize};
+
+use super::{
+    AdvanceEpochParams, IotaSystemStateTrait,
+    epoch_start_iota_system_state::EpochStartValidatorInfoV1,
+    iota_system_state_inner_v1::ValidatorV1,
+    iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary},
+};
+use crate::{
+    balance::Balance,
+    base_types::IotaAddress,
+    collection_types::{Bag, Table, TableVec, VecMap, VecSet},
+    committee::{CommitteeWithNetworkMetadata, NetworkMetadata},
+    error::IotaError,
+    iota_system_state::{
+        epoch_start_iota_system_state::EpochStartSystemState,
+        get_validators_from_table_vec,
+        iota_system_state_inner_v1::{StakeSubsidyV1, StorageFundV1, ValidatorSetV1},
+    },
+    storage::ObjectStore,
+};
 
 /// Rust version of the Move iota::iota_system::SystemParametersV2 type
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]

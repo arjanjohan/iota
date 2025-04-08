@@ -2,64 +2,71 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::client_commands::IotaClientCommands;
-use crate::console::start_console;
-use crate::fire_drill::{run_fire_drill, FireDrill};
-use crate::genesis_ceremony::{run, Ceremony};
-use crate::keytool::KeyToolCommand;
-use crate::validator_commands::IotaValidatorCommand;
-use anyhow::{anyhow, bail, ensure, Context};
+use std::{
+    fs, io,
+    io::{Write, stderr, stdout},
+    net::{AddrParseError, IpAddr, Ipv4Addr, SocketAddr},
+    num::NonZeroUsize,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
+
+use anyhow::{Context, anyhow, bail, ensure};
 use clap::*;
 use colored::Colorize;
 use fastcrypto::traits::KeyPair;
-use move_analyzer::analyzer;
-use move_package::BuildConfig;
-use rand::rngs::OsRng;
-use std::io::{stderr, stdout, Write};
-use std::net::{AddrParseError, IpAddr, Ipv4Addr, SocketAddr};
-use std::num::NonZeroUsize;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use std::{fs, io};
-use iota_bridge::config::BridgeCommitteeConfig;
-use iota_bridge::metrics::BridgeMetrics;
-use iota_bridge::iota_client::IotaBridgeClient;
-use iota_bridge::iota_transaction_builder::build_committee_register_transaction;
-use iota_config::node::Genesis;
-use iota_config::p2p::SeedPeer;
-use iota_config::{
-    genesis_blob_exists, iota_config_dir, Config, PersistedConfig, FULL_NODE_DB_PATH,
-    IOTA_CLIENT_CONFIG, IOTA_FULLNODE_CONFIG, IOTA_NETWORK_CONFIG,
+use iota_bridge::{
+    config::BridgeCommitteeConfig, iota_client::IotaBridgeClient,
+    iota_transaction_builder::build_committee_register_transaction, metrics::BridgeMetrics,
 };
 use iota_config::{
-    IOTA_BENCHMARK_GENESIS_GAS_KEYSTORE_FILENAME, IOTA_GENESIS_FILENAME, IOTA_KEYSTORE_FILENAME,
+    Config, FULL_NODE_DB_PATH, IOTA_BENCHMARK_GENESIS_GAS_KEYSTORE_FILENAME, IOTA_CLIENT_CONFIG,
+    IOTA_FULLNODE_CONFIG, IOTA_GENESIS_FILENAME, IOTA_KEYSTORE_FILENAME, IOTA_NETWORK_CONFIG,
+    PersistedConfig, genesis_blob_exists, iota_config_dir, node::Genesis, p2p::SeedPeer,
 };
-use iota_faucet::{create_wallet_context, start_faucet, AppState, FaucetConfig, SimpleFaucet};
-use iota_indexer::test_utils::{
-    start_indexer_jsonrpc_for_testing, start_indexer_writer_for_testing,
-};
-
+use iota_faucet::{AppState, FaucetConfig, SimpleFaucet, create_wallet_context, start_faucet};
 use iota_graphql_rpc::{
     config::{ConnectionConfig, ServiceConfig},
     test_infra::cluster::start_graphql_server_with_fn_rpc,
 };
-
-use iota_keys::keypair_file::read_key;
-use iota_keys::keystore::{AccountKeystore, FileBasedKeystore, Keystore};
+use iota_indexer::test_utils::{
+    start_indexer_jsonrpc_for_testing, start_indexer_writer_for_testing,
+};
+use iota_keys::{
+    keypair_file::read_key,
+    keystore::{AccountKeystore, FileBasedKeystore, Keystore},
+};
 use iota_move::{self, execute_move_command};
 use iota_move_build::IotaPackageHooks;
-use iota_sdk::iota_client_config::{IotaClientConfig, IotaEnv};
-use iota_sdk::wallet_context::WalletContext;
+use iota_sdk::{
+    iota_client_config::{IotaClientConfig, IotaEnv},
+    wallet_context::WalletContext,
+};
 use iota_swarm::memory::Swarm;
-use iota_swarm_config::genesis_config::{GenesisConfig, DEFAULT_NUMBER_OF_AUTHORITIES};
-use iota_swarm_config::network_config::NetworkConfig;
-use iota_swarm_config::network_config_builder::ConfigBuilder;
-use iota_swarm_config::node_config_builder::FullnodeConfigBuilder;
-use iota_types::base_types::IotaAddress;
-use iota_types::crypto::{SignatureScheme, IotaKeyPair, ToFromBytes};
+use iota_swarm_config::{
+    genesis_config::{DEFAULT_NUMBER_OF_AUTHORITIES, GenesisConfig},
+    network_config::NetworkConfig,
+    network_config_builder::ConfigBuilder,
+    node_config_builder::FullnodeConfigBuilder,
+};
+use iota_types::{
+    base_types::IotaAddress,
+    crypto::{IotaKeyPair, SignatureScheme, ToFromBytes},
+};
+use move_analyzer::analyzer;
+use move_package::BuildConfig;
+use rand::rngs::OsRng;
 use tempfile::tempdir;
-use tracing;
-use tracing::info;
+use tracing::{self, info};
+
+use crate::{
+    client_commands::IotaClientCommands,
+    console::start_console,
+    fire_drill::{FireDrill, run_fire_drill},
+    genesis_ceremony::{Ceremony, run},
+    keytool::KeyToolCommand,
+    validator_commands::IotaValidatorCommand,
+};
 
 const CONCURRENCY_LIMIT: usize = 30;
 const DEFAULT_EPOCH_DURATION_MS: u64 = 60_000;
@@ -266,7 +273,7 @@ pub enum IotaCommand {
     KeyTool {
         #[clap(long)]
         keystore_path: Option<PathBuf>,
-        ///Return command outputs in json format
+        /// Return command outputs in json format
         #[clap(long, global = true)]
         json: bool,
         /// Subcommands.
@@ -512,8 +519,8 @@ impl IotaCommand {
                             // The exception is when --dump-bytecode-as-base64 is specified: In this
                             // case, we should resolve the correct addresses for the respective chain
                             // (e.g., testnet, mainnet) from the Move.lock under automated address management.
-                            let config =
-                                client_config.unwrap_or(iota_config_dir()?.join(IOTA_CLIENT_CONFIG));
+                            let config = client_config
+                                .unwrap_or(iota_config_dir()?.join(IOTA_CLIENT_CONFIG));
                             prompt_if_no_config(&config, false).await?;
                             let context = WalletContext::new(&config, None, None)?;
                             if let Ok(client) = context.get_client().await {
@@ -846,8 +853,8 @@ async fn start(
             // We ensured above that this is set to something if --with-indexer is set
             data_ingestion_dir,
             None,
-            None, /* start_checkpoint */
-            None, /* end_checkpoint */
+            None, // start_checkpoint
+            None, // end_checkpoint
         )
         .await;
         info!("Indexer started in writer mode");
@@ -1011,16 +1018,23 @@ async fn genesis(
                 }
             } else {
                 fs::remove_dir_all(iota_config_dir).map_err(|err| {
-                    anyhow!(err)
-                        .context(format!("Cannot remove IOTA config dir {:?}", iota_config_dir))
+                    anyhow!(err).context(format!(
+                        "Cannot remove IOTA config dir {:?}",
+                        iota_config_dir
+                    ))
                 })?;
                 fs::create_dir(iota_config_dir).map_err(|err| {
-                    anyhow!(err)
-                        .context(format!("Cannot create IOTA config dir {:?}", iota_config_dir))
+                    anyhow!(err).context(format!(
+                        "Cannot create IOTA config dir {:?}",
+                        iota_config_dir
+                    ))
                 })?;
             }
         } else if files.len() != 2 || !client_path.exists() || !keystore_path.exists() {
-            bail!("Cannot run genesis with non-empty IOTA config directory {}, please use the --force/-f option to remove the existing configuration", iota_config_dir.to_str().unwrap());
+            bail!(
+                "Cannot run genesis with non-empty IOTA config directory {}, please use the --force/-f option to remove the existing configuration",
+                iota_config_dir.to_str().unwrap()
+            );
         }
     }
 
@@ -1225,7 +1239,10 @@ async fn prompt_if_no_config(
             }),
             None => {
                 if accept_defaults {
-                    print!("Creating config file [{:?}] with default (devnet) Full node server and ed25519 key scheme.", wallet_conf_path);
+                    print!(
+                        "Creating config file [{:?}] with default (devnet) Full node server and ed25519 key scheme.",
+                        wallet_conf_path
+                    );
                 } else {
                     print!(
                         "Config file [{:?}] doesn't exist, do you want to connect to a IOTA Full node server [y/N]?",
@@ -1291,7 +1308,9 @@ async fn prompt_if_no_config(
             let key_scheme = if accept_defaults {
                 SignatureScheme::ED25519
             } else {
-                println!("Select key scheme to generate keypair (0 for ed25519, 1 for secp256k1, 2: for secp256r1):");
+                println!(
+                    "Select key scheme to generate keypair (0 for ed25519, 1 for secp256k1, 2: for secp256r1):"
+                );
                 match SignatureScheme::from_flag(read_line()?.trim()) {
                     Ok(s) => s,
                     Err(e) => return Err(anyhow!("{e}")),

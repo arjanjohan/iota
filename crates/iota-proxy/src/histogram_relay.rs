@@ -1,22 +1,27 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use anyhow::{bail, Result};
-use axum::{extract::Extension, http::StatusCode, routing::get, Router};
-use once_cell::sync::Lazy;
-use prometheus::proto::{Metric, MetricFamily};
-use prometheus::{register_counter_vec, register_histogram_vec};
-use prometheus::{CounterVec, HistogramVec};
-use std::net::TcpListener;
-use std::time::{SystemTime, UNIX_EPOCH};
 use std::{
     collections::VecDeque,
+    net::TcpListener,
     sync::{Arc, Mutex},
+    time::{SystemTime, UNIX_EPOCH},
+};
+
+use anyhow::{Result, bail};
+use axum::{Router, extract::Extension, http::StatusCode, routing::get};
+use once_cell::sync::Lazy;
+use prometheus::{
+    CounterVec, HistogramVec,
+    proto::{Metric, MetricFamily},
+    register_counter_vec, register_histogram_vec,
 };
 use tower::ServiceBuilder;
-use tower_http::trace::{DefaultOnResponse, TraceLayer};
-use tower_http::LatencyUnit;
-use tracing::{info, Level};
+use tower_http::{
+    LatencyUnit,
+    trace::{DefaultOnResponse, TraceLayer},
+};
+use tracing::{Level, info};
 
 use crate::var;
 

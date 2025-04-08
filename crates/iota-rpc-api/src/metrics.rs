@@ -2,14 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use axum::http;
 use std::{borrow::Cow, sync::Arc, time::Instant};
 
+use axum::http;
 use iota_network_stack::callback::{MakeCallbackHandler, ResponseHandler};
 use prometheus::{
+    HistogramVec, IntCounterVec, IntGauge, IntGaugeVec, Registry,
     register_histogram_vec_with_registry, register_int_counter_vec_with_registry,
-    register_int_gauge_vec_with_registry, register_int_gauge_with_registry, HistogramVec,
-    IntCounterVec, IntGauge, IntGaugeVec, Registry,
+    register_int_gauge_vec_with_registry, register_int_gauge_with_registry,
 };
 
 #[derive(Clone)]

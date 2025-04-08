@@ -2,28 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::object_store::{
-    ObjectStoreDeleteExt, ObjectStoreGetExt, ObjectStoreListExt, ObjectStorePutExt,
+use std::{
+    collections::BTreeMap, num::NonZeroUsize, ops::Range, path::PathBuf, sync::Arc, time::Duration,
 };
-use anyhow::{anyhow, Context, Result};
+
+use anyhow::{Context, Result, anyhow};
 use backoff::future::retry;
 use bytes::Bytes;
-use futures::StreamExt;
-use futures::TryStreamExt;
+use futures::{StreamExt, TryStreamExt};
 use indicatif::ProgressBar;
 use itertools::Itertools;
-use object_store::path::Path;
-use object_store::{DynObjectStore, Error, ObjectStore};
+use object_store::{DynObjectStore, Error, ObjectStore, path::Path};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
-use std::num::NonZeroUsize;
-use std::ops::Range;
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::Duration;
 use tokio::time::Instant;
 use tracing::{error, warn};
 use url::Url;
+
+use crate::object_store::{
+    ObjectStoreDeleteExt, ObjectStoreGetExt, ObjectStoreListExt, ObjectStorePutExt,
+};
 
 pub const MANIFEST_FILENAME: &str = "MANIFEST";
 
@@ -358,7 +355,9 @@ pub async fn find_missing_epochs_dirs(
             }
             Err(_) => {
                 // Probably a transient error
-                warn!("Failed while trying to read success marker in db checkpoint for epoch: {epoch_num}");
+                warn!(
+                    "Failed while trying to read success marker in db checkpoint for epoch: {epoch_num}"
+                );
             }
             Ok(_) => {
                 // Nothing to do
@@ -412,14 +411,15 @@ pub async fn write_snapshot_manifest<S: ObjectStoreListExt + ObjectStorePutExt>(
 
 #[cfg(test)]
 mod tests {
-    use crate::object_store::util::{
-        copy_recursively, delete_recursively, write_snapshot_manifest, MANIFEST_FILENAME,
-    };
-    use object_store::path::Path;
-    use std::fs;
-    use std::num::NonZeroUsize;
+    use std::{fs, num::NonZeroUsize};
+
     use iota_config::object_storage_config::{ObjectStoreConfig, ObjectStoreType};
+    use object_store::path::Path;
     use tempfile::TempDir;
+
+    use crate::object_store::util::{
+        MANIFEST_FILENAME, copy_recursively, delete_recursively, write_snapshot_manifest,
+    };
 
     #[tokio::test]
     pub async fn test_copy_recursively() -> anyhow::Result<()> {
@@ -462,11 +462,13 @@ mod tests {
         assert!(output_path.join("child").exists());
         assert!(output_path.join("child").join("file1").exists());
         assert!(output_path.join("child").join("grand_child").exists());
-        assert!(output_path
-            .join("child")
-            .join("grand_child")
-            .join("file2")
-            .exists());
+        assert!(
+            output_path
+                .join("child")
+                .join("grand_child")
+                .join("file2")
+                .exists()
+        );
         let content = fs::read_to_string(output_path.join("child").join("file1"))?;
         assert_eq!(content, "Lorem ipsum");
         let content =
@@ -540,11 +542,13 @@ mod tests {
         .await?;
 
         assert!(!input_path.join("child").join("file1").exists());
-        assert!(!input_path
-            .join("child")
-            .join("grand_child")
-            .join("file2")
-            .exists());
+        assert!(
+            !input_path
+                .join("child")
+                .join("grand_child")
+                .join("file2")
+                .exists()
+        );
         Ok(())
     }
 }

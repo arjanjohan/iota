@@ -6,16 +6,16 @@ use std::str::FromStr;
 
 use anyhow::Context as _;
 use futures::future::OptionFuture;
-use move_core_types::annotated_value::{MoveDatatypeLayout, MoveTypeLayout};
 use iota_indexer_alt_schema::transactions::{
     BalanceChange, StoredTransaction, StoredTxBalanceChange,
 };
 use iota_json_rpc_types::{
-    BalanceChange as IotaBalanceChange, ObjectChange as IotaObjectChange, IotaEvent,
-    IotaTransactionBlock, IotaTransactionBlockData, IotaTransactionBlockEffects,
-    IotaTransactionBlockEvents, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+    BalanceChange as IotaBalanceChange, IotaEvent, IotaTransactionBlock, IotaTransactionBlockData,
+    IotaTransactionBlockEffects, IotaTransactionBlockEvents, IotaTransactionBlockResponse,
+    IotaTransactionBlockResponseOptions, ObjectChange as IotaObjectChange,
 };
 use iota_types::{
+    TypeTag,
     base_types::{ObjectID, SequenceNumber},
     digests::{ObjectDigest, TransactionDigest},
     effects::{IDOperation, ObjectChange, TransactionEffects, TransactionEffectsAPI},
@@ -23,20 +23,19 @@ use iota_types::{
     object::Object,
     signature::GenericSignature,
     transaction::{TransactionData, TransactionDataAPI},
-    TypeTag,
 };
+use move_core_types::annotated_value::{MoveDatatypeLayout, MoveTypeLayout};
 use tokio::join;
 
+use super::error::Error;
 use crate::{
     context::Context,
     data::{
         objects::VersionedObjectKey, transactions::TransactionKey,
         tx_balance_changes::TxBalanceChangeKey,
     },
-    error::{internal_error, invalid_params, rpc_bail, RpcError},
+    error::{RpcError, internal_error, invalid_params, rpc_bail},
 };
-
-use super::error::Error;
 
 /// Fetch the necessary data from the stores in `ctx` and transform it to build a response for the
 /// transaction identified by `digest`, according to the response `options`.
@@ -115,9 +114,12 @@ async fn input(
         bcs::from_bytes(&tx.user_signatures).context("Failed to deserialize user signatures")?;
 
     Ok(IotaTransactionBlock {
-        data: IotaTransactionBlockData::try_from_with_package_resolver(data, ctx.package_resolver())
-            .await
-            .context("Failed to resolve types in transaction data")?,
+        data: IotaTransactionBlockData::try_from_with_package_resolver(
+            data,
+            ctx.package_resolver(),
+        )
+        .await
+        .context("Failed to resolve types in transaction data")?,
         tx_signatures,
     })
 }

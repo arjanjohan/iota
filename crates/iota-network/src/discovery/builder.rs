@@ -2,17 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{
-    metrics::Metrics, server::Server, Discovery, DiscoveryEventLoop, DiscoveryServer, State,
-};
-use crate::discovery::TrustedPeerChangeEvent;
-use anemo::codegen::InboundRequestLayer;
-use anemo_tower::rate_limit;
-use fastcrypto::traits::KeyPair;
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
 };
+
+use anemo::codegen::InboundRequestLayer;
+use anemo_tower::rate_limit;
+use fastcrypto::traits::KeyPair;
 use iota_config::p2p::P2pConfig;
 use iota_types::crypto::NetworkKeyPair;
 use tap::Pipe;
@@ -20,6 +17,11 @@ use tokio::{
     sync::{oneshot, watch},
     task::JoinSet,
 };
+
+use super::{
+    Discovery, DiscoveryEventLoop, DiscoveryServer, State, metrics::Metrics, server::Server,
+};
+use crate::discovery::TrustedPeerChangeEvent;
 
 /// Discovery Service Builder.
 pub struct Builder {

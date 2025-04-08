@@ -2,14 +2,15 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::consensus_handler::{
-    SequencedConsensusTransactionKind, VerifiedSequencedConsensusTransaction,
-};
 use iota_metrics::monitored_scope;
 use iota_protocol_config::ConsensusTransactionOrdering;
 use iota_types::{
     messages_consensus::{ConsensusTransaction, ConsensusTransactionKind},
     transaction::TransactionDataAPI as _,
+};
+
+use crate::consensus_handler::{
+    SequencedConsensusTransactionKind, VerifiedSequencedConsensusTransaction,
 };
 
 pub struct PostConsensusTxReorder {}

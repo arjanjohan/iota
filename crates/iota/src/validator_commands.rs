@@ -2,8 +2,6 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{anyhow, bail, Result};
-use move_core_types::ident_str;
 use std::{
     collections::{BTreeMap, HashSet},
     fmt::{self, Debug, Display, Formatter, Write},
@@ -11,56 +9,58 @@ use std::{
     path::PathBuf,
     sync::Arc,
 };
-use iota_genesis_builder::validator_info::GenesisValidatorInfo;
-use url::{ParseError, Url};
 
-use iota_types::{
-    base_types::{ObjectID, ObjectRef, IotaAddress},
-    crypto::{AuthorityPublicKey, NetworkPublicKey, Signable, DEFAULT_EPOCH_ID},
-    dynamic_field::Field,
-    multiaddr::Multiaddr,
-    object::Owner,
-    iota_system_state::{
-        iota_system_state_inner_v1::{UnverifiedValidatorOperationCapV1, ValidatorV1},
-        iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary},
-    },
-    IOTA_SYSTEM_PACKAGE_ID,
-};
-use tap::tap::TapOptional;
-
-use crate::fire_drill::get_gas_obj_ref;
+use anyhow::{Result, anyhow, bail};
 use clap::*;
 use colored::Colorize;
-use fastcrypto::traits::ToFromBytes;
 use fastcrypto::{
     encoding::{Base64, Encoding},
-    traits::KeyPair,
+    traits::{KeyPair, ToFromBytes},
 };
-use serde::Serialize;
-use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
-use iota_bridge::metrics::BridgeMetrics;
-use iota_bridge::iota_client::IotaClient as IotaBridgeClient;
-use iota_bridge::iota_transaction_builder::{
-    build_committee_register_transaction, build_committee_update_url_transaction,
+use iota_bridge::{
+    iota_client::IotaClient as IotaBridgeClient,
+    iota_transaction_builder::{
+        build_committee_register_transaction, build_committee_update_url_transaction,
+    },
+    metrics::BridgeMetrics,
 };
+use iota_genesis_builder::validator_info::GenesisValidatorInfo;
 use iota_json_rpc_types::{
     IotaObjectDataOptions, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
 };
 use iota_keys::{
     key_derive::generate_new_key,
     keypair_file::{
-        read_authority_keypair_from_file, read_keypair_from_file, read_network_keypair_from_file,
-        write_authority_keypair_to_file, write_keypair_to_file,
+        read_authority_keypair_from_file, read_key, read_keypair_from_file,
+        read_network_keypair_from_file, write_authority_keypair_to_file, write_keypair_to_file,
     },
+    keystore::AccountKeystore,
 };
-use iota_keys::{keypair_file::read_key, keystore::AccountKeystore};
-use iota_sdk::wallet_context::WalletContext;
-use iota_sdk::IotaClient;
-use iota_types::crypto::{
-    generate_proof_of_possession, get_authority_key_pair, AuthorityPublicKeyBytes,
+use iota_sdk::{IotaClient, wallet_context::WalletContext};
+use iota_types::{
+    IOTA_SYSTEM_PACKAGE_ID,
+    base_types::{IotaAddress, ObjectID, ObjectRef},
+    crypto::{
+        AuthorityKeyPair, AuthorityPublicKey, AuthorityPublicKeyBytes, DEFAULT_EPOCH_ID,
+        IotaKeyPair, NetworkKeyPair, NetworkPublicKey, Signable, SignatureScheme,
+        generate_proof_of_possession, get_authority_key_pair,
+    },
+    dynamic_field::Field,
+    iota_system_state::{
+        iota_system_state_inner_v1::{UnverifiedValidatorOperationCapV1, ValidatorV1},
+        iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary},
+    },
+    multiaddr::Multiaddr,
+    object::Owner,
+    transaction::{CallArg, ObjectArg, Transaction, TransactionData},
 };
-use iota_types::crypto::{AuthorityKeyPair, NetworkKeyPair, SignatureScheme, IotaKeyPair};
-use iota_types::transaction::{CallArg, ObjectArg, Transaction, TransactionData};
+use move_core_types::ident_str;
+use serde::Serialize;
+use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
+use tap::tap::TapOptional;
+use url::{ParseError, Url};
+
+use crate::fire_drill::get_gas_obj_ref;
 
 #[path = "unit_tests/validator_tests.rs"]
 #[cfg(test)]
@@ -545,7 +545,10 @@ impl IotaValidatorCommand {
                 {
                     bail!("Address {} is not in the committee", address);
                 }
-                println!("Starting bridge committee registration for IOTA validator: {address}, with bridge public key: {} and url: {}", ecdsa_keypair.public, bridge_authority_url);
+                println!(
+                    "Starting bridge committee registration for IOTA validator: {address}, with bridge public key: {} and url: {}",
+                    ecdsa_keypair.public, bridge_authority_url
+                );
                 let iota_rpc_url = &context.config.get_active_env().unwrap().rpc;
                 let bridge_metrics = Arc::new(BridgeMetrics::new_for_testing());
                 let bridge_client = IotaBridgeClient::new(iota_rpc_url, bridge_metrics).await?;
@@ -798,7 +801,10 @@ async fn get_validator_summary_from_cap_id(
 ) -> anyhow::Result<(ValidatorStatus, IotaValidatorSummary)> {
     let resp = client
         .read_api()
-        .get_object_with_options(operation_cap_id, IotaObjectDataOptions::default().with_bcs())
+        .get_object_with_options(
+            operation_cap_id,
+            IotaObjectDataOptions::default().with_bcs(),
+        )
         .await?;
     let bcs = resp.move_object_bcs().ok_or_else(|| {
         anyhow::anyhow!(
@@ -1299,5 +1305,8 @@ async fn check_status(
     if allowed_status.contains(&status) {
         return Ok(status);
     }
-    bail!("Validator {validator_address} is {:?}, this operation is not supported in this tool or prohibited.", status)
+    bail!(
+        "Validator {validator_address} is {:?}, this operation is not supported in this tool or prohibited.",
+        status
+    )
 }

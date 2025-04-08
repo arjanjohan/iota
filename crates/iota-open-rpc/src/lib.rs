@@ -4,12 +4,13 @@
 
 extern crate core;
 
-use std::collections::btree_map::Entry::Occupied;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, btree_map::Entry::Occupied};
 
-use schemars::gen::{SchemaGenerator, SchemaSettings};
-use schemars::schema::SchemaObject;
-use schemars::JsonSchema;
+use schemars::{
+    JsonSchema,
+    gen::{SchemaGenerator, SchemaSettings},
+    schema::SchemaObject,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use versions::Versioning;

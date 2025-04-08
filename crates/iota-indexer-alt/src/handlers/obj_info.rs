@@ -8,7 +8,7 @@ use anyhow::Result;
 use diesel::sql_query;
 use diesel_async::RunQueryDsl;
 use iota_field_count::FieldCount;
-use iota_indexer_alt_framework::pipeline::{concurrent::Handler, Processor};
+use iota_indexer_alt_framework::pipeline::{Processor, concurrent::Handler};
 use iota_indexer_alt_schema::{objects::StoredObjInfo, schema::obj_info};
 use iota_pg_db as db;
 use iota_types::{base_types::ObjectID, full_checkpoint_content::CheckpointData, object::Object};
@@ -184,9 +184,9 @@ impl TryInto<StoredObjInfo> for &ProcessedObjInfo {
 #[cfg(test)]
 mod tests {
     use iota_indexer_alt_framework::Indexer;
-    use iota_indexer_alt_schema::{objects::StoredOwnerKind, MIGRATIONS};
+    use iota_indexer_alt_schema::{MIGRATIONS, objects::StoredOwnerKind};
     use iota_types::{
-        base_types::{dbg_addr, SequenceNumber},
+        base_types::{SequenceNumber, dbg_addr},
         object::{Authenticator, Owner},
         test_checkpoint_data_builder::TestCheckpointDataBuilder,
     };

@@ -2,26 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
+
+use iota_json_rpc_types::IotaTransactionBlockResponse;
 use iota_metrics::init_metrics;
+use iota_pg_db::temp::{TempDb, get_available_port};
+use simulacrum::Simulacrum;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
-use simulacrum::Simulacrum;
-use std::net::SocketAddr;
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::Duration;
-use iota_json_rpc_types::IotaTransactionBlockResponse;
-use iota_pg_db::temp::{get_available_port, TempDb};
-
-use crate::config::{IngestionConfig, RetentionConfig, SnapshotLagConfig, UploadOptions};
-use crate::database::Connection;
-use crate::database::ConnectionPool;
-use crate::db::ConnectionPoolConfig;
-use crate::errors::IndexerError;
-use crate::indexer::Indexer;
-use crate::store::PgIndexerStore;
-use crate::IndexerMetrics;
+use crate::{
+    IndexerMetrics,
+    config::{IngestionConfig, RetentionConfig, SnapshotLagConfig, UploadOptions},
+    database::{Connection, ConnectionPool},
+    db::ConnectionPoolConfig,
+    errors::IndexerError,
+    indexer::Indexer,
+    store::PgIndexerStore,
+};
 
 /// Wrapper over `Indexer::start_reader` to make it easier to configure an indexer jsonrpc reader
 /// for testing.
@@ -302,10 +300,10 @@ pub async fn set_up_on_mvr_mode(
         None,
         None,
         Some(data_ingestion_path),
-        None,     /* cancel */
-        None,     /* start_checkpoint */
-        None,     /* end_checkpoint */
-        mvr_mode, /* mvr_mode */
+        None,     // cancel
+        None,     // start_checkpoint
+        None,     // end_checkpoint
+        mvr_mode, // mvr_mode
     )
     .await;
     (server_handle, pg_store, pg_handle, database)
@@ -337,7 +335,7 @@ pub async fn set_up_with_start_and_end_checkpoints(
         None,
         None,
         Some(data_ingestion_path),
-        None, /* cancel */
+        None, // cancel
         Some(start_checkpoint),
         Some(end_checkpoint),
     )

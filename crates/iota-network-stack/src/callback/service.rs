@@ -2,10 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{CallbackLayer, MakeCallbackHandler, ResponseBody, ResponseFuture};
-use http::{Request, Response};
 use std::task::{Context, Poll};
+
+use http::{Request, Response};
 use tower::Service;
+
+use super::{CallbackLayer, MakeCallbackHandler, ResponseBody, ResponseFuture};
 
 /// Middleware that adds callbacks to a [`Service`].
 ///
@@ -56,10 +58,10 @@ impl<S, M> Callback<S, M> {
 impl<S, M, RequestBody, ResponseBodyT> Service<Request<RequestBody>> for Callback<S, M>
 where
     S: Service<
-        Request<RequestBody>,
-        Response = Response<ResponseBodyT>,
-        Error: std::fmt::Display + 'static,
-    >,
+            Request<RequestBody>,
+            Response = Response<ResponseBodyT>,
+            Error: std::fmt::Display + 'static,
+        >,
     M: MakeCallbackHandler,
     RequestBody: http_body::Body<Error: std::fmt::Display + 'static>,
     ResponseBodyT: http_body::Body<Error: std::fmt::Display + 'static>,

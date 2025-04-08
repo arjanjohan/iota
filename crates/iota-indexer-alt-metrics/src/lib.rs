@@ -4,7 +4,7 @@
 
 use std::net::SocketAddr;
 
-use axum::{http::StatusCode, routing::get, Extension, Router};
+use axum::{Extension, Router, http::StatusCode, routing::get};
 use prometheus::{Registry, TextEncoder};
 use tokio::{net::TcpListener, task::JoinHandle};
 use tokio_util::sync::CancellationToken;

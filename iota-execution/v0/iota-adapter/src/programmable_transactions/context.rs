@@ -12,20 +12,31 @@ mod checked {
         sync::Arc,
     };
 
-    use crate::adapter::new_native_extensions;
-    use crate::error::convert_vm_error;
-    use crate::execution_mode::ExecutionMode;
-    use crate::execution_value::{
-        CommandKind, ExecutionState, InputObjectMetadata, InputValue, ObjectContents, ObjectValue,
-        RawValueType, ResultValue, TryFromValue, UsageKind, Value,
+    use iota_move_natives::object_runtime::{
+        self, ObjectRuntime, RuntimeResults, get_all_uids, max_event_error,
     };
-    use crate::gas_charger::GasCharger;
-    use crate::programmable_transactions::linkage_view::{LinkageInfo, LinkageView, SavedLinkage};
-    use crate::type_resolver::TypeTagResolver;
+    use iota_protocol_config::ProtocolConfig;
+    use iota_types::{
+        balance::Balance,
+        base_types::{IotaAddress, MoveObjectType, ObjectID, SequenceNumber, TxContext},
+        coin::Coin,
+        error::{ExecutionError, ExecutionErrorKind, command_argument_error},
+        event::Event,
+        execution::{ExecutionResults, ExecutionResultsV1},
+        execution_status::CommandArgumentError,
+        metrics::LimitsMetrics,
+        move_package::MovePackage,
+        object::{Data, MoveObject, Object, ObjectInner, Owner},
+        storage::{
+            BackingPackageStore, ChildObjectResolver, DeleteKind, DeleteKindWithOldVersion,
+            ObjectChange, PackageObject, WriteKind,
+        },
+        transaction::{Argument, CallArg, ObjectArg},
+    };
     use move_binary_format::{
+        CompiledModule,
         errors::{Location, VMError, VMResult},
         file_format::{CodeOffset, FunctionDefinitionIndex, TypeParameterIndex},
-        CompiledModule,
     };
     use move_core_types::{
         account_address::AccountAddress,
@@ -33,27 +44,18 @@ mod checked {
     };
     use move_vm_runtime::{move_vm::MoveVM, session::Session};
     use move_vm_types::loaded_data::runtime_types::Type;
-    use iota_move_natives::object_runtime::{
-        self, get_all_uids, max_event_error, ObjectRuntime, RuntimeResults,
-    };
-    use iota_protocol_config::ProtocolConfig;
-    use iota_types::execution_status::CommandArgumentError;
-    use iota_types::storage::PackageObject;
-    use iota_types::{
-        balance::Balance,
-        base_types::{MoveObjectType, ObjectID, SequenceNumber, IotaAddress, TxContext},
-        coin::Coin,
-        error::{command_argument_error, ExecutionError, ExecutionErrorKind},
-        event::Event,
-        execution::{ExecutionResults, ExecutionResultsV1},
-        metrics::LimitsMetrics,
-        move_package::MovePackage,
-        object::{Data, MoveObject, Object, ObjectInner, Owner},
-        storage::{
-            BackingPackageStore, ChildObjectResolver, DeleteKind, DeleteKindWithOldVersion,
-            ObjectChange, WriteKind,
+
+    use crate::{
+        adapter::new_native_extensions,
+        error::convert_vm_error,
+        execution_mode::ExecutionMode,
+        execution_value::{
+            CommandKind, ExecutionState, InputObjectMetadata, InputValue, ObjectContents,
+            ObjectValue, RawValueType, ResultValue, TryFromValue, UsageKind, Value,
         },
-        transaction::{Argument, CallArg, ObjectArg},
+        gas_charger::GasCharger,
+        programmable_transactions::linkage_view::{LinkageInfo, LinkageView, SavedLinkage},
+        type_resolver::TypeTagResolver,
     };
 
     /// Maintains all runtime state specific to programmable transactions
@@ -152,7 +154,8 @@ mod checked {
                     state_view,
                     &mut tmp_session,
                     &mut input_object_map,
-                    /* imm override */ false,
+                    // imm override
+                    false,
                     gas_coin,
                 )?;
                 // subtract the max gas budget. This amount is off limits in the programmable transaction,
@@ -601,7 +604,9 @@ mod checked {
                     ..
                 } = &object_metadata
                 else {
-                    unreachable!("Found non-input object metadata for input object when adding writes to input objects -- impossible in v0");
+                    unreachable!(
+                        "Found non-input object metadata for input object when adding writes to input objects -- impossible in v0"
+                    );
                 };
                 input_object_metadata.insert(object_metadata.id(), object_metadata.clone());
                 let Some(Value::Object(object_value)) = value else {
@@ -634,7 +639,7 @@ mod checked {
                                     result_idx: i as u16,
                                     secondary_idx: j as u16,
                                 }
-                                .into())
+                                .into());
                             }
                             Some(Value::Raw(RawValueType::Any, _)) => (),
                             Some(Value::Raw(RawValueType::Loaded { abilities, .. }, _)) => {
@@ -793,20 +798,26 @@ mod checked {
                 let delete_kind_with_seq = match delete_kind {
                     DeleteKind::Normal | DeleteKind::Wrap => {
                         let old_version = match input_object_metadata.get(&id) {
-                        Some(metadata) => {
-                            assert_invariant!(
-                                !matches!(metadata, InputObjectMetadata::InputObject { owner: Owner::Immutable, .. }),
-                                "Attempting to delete immutable object {id} via delete kind {delete_kind}"
-                            );
-                            metadata.version()
-                        }
-                        None => {
-                            match loaded_child_objects.get(&id) {
-                                Some(version) => *version,
-                                None => invariant_violation!("Deleted/wrapped object {id} must be either in input or loaded child objects")
+                            Some(metadata) => {
+                                assert_invariant!(
+                                    !matches!(
+                                        metadata,
+                                        InputObjectMetadata::InputObject {
+                                            owner: Owner::Immutable,
+                                            ..
+                                        }
+                                    ),
+                                    "Attempting to delete immutable object {id} via delete kind {delete_kind}"
+                                );
+                                metadata.version()
                             }
-                        }
-                    };
+                            None => match loaded_child_objects.get(&id) {
+                                Some(version) => *version,
+                                None => invariant_violation!(
+                                    "Deleted/wrapped object {id} must be either in input or loaded child objects"
+                                ),
+                            },
+                        };
                         if delete_kind == DeleteKind::Normal {
                             DeleteKindWithOldVersion::Normal(old_version)
                         } else {
@@ -862,8 +873,8 @@ mod checked {
 
         /// Special case errors for type arguments to Move functions
         pub fn convert_type_argument_error(&self, idx: usize, error: VMError) -> ExecutionError {
-            use move_core_types::vm_status::StatusCode;
             use iota_types::execution_status::TypeArgumentError;
+            use move_core_types::vm_status::StatusCode;
             match error.major_status() {
                 StatusCode::NUMBER_OF_TYPE_ARGUMENTS_MISMATCH => {
                     ExecutionErrorKind::TypeArityMismatch.into()
@@ -1253,7 +1264,8 @@ mod checked {
                 state_view,
                 session,
                 input_object_map,
-                /* imm override */ false,
+                // imm override
+                false,
                 id,
             ),
             ObjectArg::SharedObject { id, mutable, .. } => load_object(
@@ -1261,7 +1273,8 @@ mod checked {
                 state_view,
                 session,
                 input_object_map,
-                /* imm override */ !mutable,
+                // imm override
+                !mutable,
                 id,
             ),
             ObjectArg::Receiving(_) => unreachable!("Impossible to hit Receiving in v0"),

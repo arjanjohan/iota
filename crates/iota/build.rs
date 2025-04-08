@@ -2,11 +2,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{env, fs::File};
 use std::{
+    env,
+    fs::File,
     io::{BufWriter, Write},
     path::Path,
 };
+
 use iota_framework_snapshot::{load_bytecode_snapshot_manifest, manifest_path};
 
 /// Output a file `OUT_DIR/framework_version_table.rs` containing the contents of the manifest as a
@@ -35,8 +37,7 @@ fn generate_framework_version_table() -> anyhow::Result<()> {
             writeln!(
                 &mut file,
                 "          FrameworkPackage {{ package_name: \"{}\".into(), repo_path: \"{}\".into() }},",
-                package.name,
-                package.path,
+                package.name, package.path,
             )?;
         }
         writeln!(&mut file, "        ].into(),")?;

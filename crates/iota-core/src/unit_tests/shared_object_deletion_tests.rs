@@ -5,40 +5,42 @@
 
 use std::sync::Arc;
 
+use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
 use iota_types::{
-    base_types::{FullObjectID, ObjectID, ObjectRef, SequenceNumber, IotaAddress},
-    crypto::{get_key_pair, AccountKeyPair},
-    effects::TransactionEffects,
-    execution_status::{CommandArgumentError, ExecutionFailureStatus},
+    base_types::{
+        FullObjectID, IotaAddress, ObjectID, ObjectRef, SequenceNumber, TransactionDigest,
+    },
+    committee::EpochId,
+    crypto::{AccountKeyPair, get_key_pair},
+    effects::{TransactionEffects, TransactionEffectsAPI},
+    error::{ExecutionError, IotaError},
+    execution_status::{
+        CommandArgumentError, ExecutionFailureStatus,
+        ExecutionFailureStatus::{InputObjectDeleted, SharedObjectOperationNotAllowed},
+    },
     object::Object,
     programmable_transaction_builder::ProgrammableTransactionBuilder,
     storage::FullObjectKey,
-    transaction::{ProgrammableTransaction, Transaction, TEST_ONLY_GAS_UNIT_FOR_PUBLISH},
+    transaction::{
+        ObjectArg, ProgrammableTransaction, TEST_ONLY_GAS_UNIT_FOR_PUBLISH, Transaction,
+        VerifiedCertificate,
+    },
 };
+use move_core_types::ident_str;
 
-use crate::authority::authority_test_utils::execute_sequenced_certificate_to_effects;
 use crate::{
     authority::{
+        AuthorityState,
+        authority_test_utils::execute_sequenced_certificate_to_effects,
         authority_tests::{
             build_programmable_transaction, certify_shared_obj_transaction_no_execution,
             enqueue_all_and_execute_all, execute_programmable_transaction,
         },
         move_integration_tests::build_and_publish_test_package,
         test_authority_builder::TestAuthorityBuilder,
-        AuthorityState,
     },
     move_call,
 };
-use move_core_types::ident_str;
-use iota_protocol_config::{Chain, ProtocolConfig, ProtocolVersion};
-use iota_types::base_types::TransactionDigest;
-use iota_types::committee::EpochId;
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::error::{ExecutionError, IotaError};
-use iota_types::execution_status::ExecutionFailureStatus::{
-    InputObjectDeleted, SharedObjectOperationNotAllowed,
-};
-use iota_types::transaction::{ObjectArg, VerifiedCertificate};
 
 pub struct TestRunner {
     pub sender: IotaAddress,
@@ -1493,15 +1495,17 @@ async fn test_delete_with_shared_after_mutate_enqueued() {
     assert!(delete_effects.status().is_ok());
     let deleted_obj_ver = delete_effects.deleted()[0].1;
 
-    assert!(user_1
-        .object_exists_in_marker_table(
-            FullObjectKey::new(
-                FullObjectID::new(shared_obj_id, Some(initial_shared_version)),
-                deleted_obj_ver
-            ),
-            0
-        )
-        .is_some());
+    assert!(
+        user_1
+            .object_exists_in_marker_table(
+                FullObjectKey::new(
+                    FullObjectID::new(shared_obj_id, Some(initial_shared_version)),
+                    deleted_obj_ver
+                ),
+                0
+            )
+            .is_some()
+    );
 
     let mutate_effects = res.get(1).unwrap();
     assert!(mutate_effects.status().is_ok());

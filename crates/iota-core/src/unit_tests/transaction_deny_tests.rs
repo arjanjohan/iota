@@ -2,34 +2,44 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::authority::auth_unit_test_utils::{
-    publish_package_on_single_authority, upgrade_package_on_single_authority,
+use std::{path::PathBuf, sync::Arc};
+
+use fastcrypto::{ed25519::Ed25519KeyPair, traits::KeyPair};
+use iota_config::{
+    certificate_deny_config::CertificateDenyConfigBuilder,
+    transaction_deny_config::{TransactionDenyConfig, TransactionDenyConfigBuilder},
 };
-use crate::authority::test_authority_builder::TestAuthorityBuilder;
-use crate::authority::AuthorityState;
-use crate::test_utils::make_transfer_iota_transaction;
-use fastcrypto::ed25519::Ed25519KeyPair;
-use fastcrypto::traits::KeyPair;
-use move_core_types::ident_str;
-use std::path::PathBuf;
-use std::sync::Arc;
-use iota_config::certificate_deny_config::CertificateDenyConfigBuilder;
-use iota_config::transaction_deny_config::{TransactionDenyConfig, TransactionDenyConfigBuilder};
-use iota_swarm_config::genesis_config::{AccountConfig, DEFAULT_GAS_AMOUNT};
-use iota_swarm_config::network_config::NetworkConfig;
+use iota_swarm_config::{
+    genesis_config::{AccountConfig, DEFAULT_GAS_AMOUNT},
+    network_config::NetworkConfig,
+};
 use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::base_types::{ObjectID, ObjectRef, IotaAddress};
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::error::{IotaError, IotaResult, UserInputError};
-use iota_types::execution_status::{ExecutionFailureStatus, ExecutionStatus};
-use iota_types::messages_grpc::HandleTransactionResponse;
-use iota_types::transaction::{
-    CallArg, CertifiedTransaction, Transaction, TransactionData, VerifiedCertificate,
-    VerifiedTransaction, TEST_ONLY_GAS_UNIT_FOR_TRANSFER,
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef},
+    effects::TransactionEffectsAPI,
+    error::{IotaError, IotaResult, UserInputError},
+    execution_status::{ExecutionFailureStatus, ExecutionStatus},
+    messages_grpc::HandleTransactionResponse,
+    transaction::{
+        CallArg, CertifiedTransaction, TEST_ONLY_GAS_UNIT_FOR_TRANSFER, Transaction,
+        TransactionData, VerifiedCertificate, VerifiedTransaction,
+    },
+    utils::{
+        get_zklogin_user_address, make_zklogin_tx, to_sender_signed_transaction,
+        to_sender_signed_transaction_with_multi_signers,
+    },
 };
-use iota_types::utils::get_zklogin_user_address;
-use iota_types::utils::{
-    make_zklogin_tx, to_sender_signed_transaction, to_sender_signed_transaction_with_multi_signers,
+use move_core_types::ident_str;
+
+use crate::{
+    authority::{
+        AuthorityState,
+        auth_unit_test_utils::{
+            publish_package_on_single_authority, upgrade_package_on_single_authority,
+        },
+        test_authority_builder::TestAuthorityBuilder,
+    },
+    test_utils::make_transfer_iota_transaction,
 };
 
 const ACCOUNT_NUM: usize = 5;

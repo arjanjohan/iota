@@ -2,13 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::Arc;
+
 use anyhow::anyhow;
 use async_trait::async_trait;
-use std::sync::Arc;
-use iota_core::authority_aggregator::AuthorityAggregator;
-use iota_core::quorum_driver::AuthorityAggregatorUpdatable;
 use iota_core::{
-    authority_client::NetworkAuthorityClient, quorum_driver::reconfig_observer::ReconfigObserver,
+    authority_aggregator::AuthorityAggregator,
+    authority_client::NetworkAuthorityClient,
+    quorum_driver::{AuthorityAggregatorUpdatable, reconfig_observer::ReconfigObserver},
 };
 use iota_network::default_iota_network_config;
 use iota_types::iota_system_state::IotaSystemStateTrait;
@@ -56,8 +57,7 @@ impl EmbeddedReconfigObserver {
                 if new_epoch <= cur_epoch {
                     trace!(
                         cur_epoch,
-                        new_epoch,
-                        "Ignored Committee from a previous or current epoch",
+                        new_epoch, "Ignored Committee from a previous or current epoch",
                     );
                     return Ok(auth_agg);
                 }

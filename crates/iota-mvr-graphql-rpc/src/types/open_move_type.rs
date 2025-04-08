@@ -5,9 +5,9 @@
 use std::fmt;
 
 use async_graphql::*;
+use iota_package_resolver::{OpenSignature, OpenSignatureBody, Reference};
 use move_binary_format::file_format::{Ability, AbilitySet, Visibility};
 use serde::{Deserialize, Serialize};
-use iota_package_resolver::{OpenSignature, OpenSignatureBody, Reference};
 
 pub(crate) struct OpenMoveType {
     signature: OpenMoveTypeSignature,
@@ -287,13 +287,12 @@ pub(crate) fn abilities(set: AbilitySet) -> Vec<MoveAbility> {
 mod tests {
     use std::str::FromStr;
 
-    use super::*;
-
-    use expect_test::expect;
-    use move_core_types::language_storage::StructTag;
-    use iota_package_resolver::{DatatypeKey, DatatypeRef};
-
     use OpenSignatureBody as S;
+    use expect_test::expect;
+    use iota_package_resolver::{DatatypeKey, DatatypeRef};
+    use move_core_types::language_storage::StructTag;
+
+    use super::*;
 
     fn struct_key(s: &str) -> DatatypeKey {
         DatatypeRef::from(&StructTag::from_str(s).unwrap()).as_key()
@@ -360,7 +359,9 @@ mod tests {
             vec![S::TypeParameter(0), S::TypeParameter(1)],
         ));
 
-        let expect = expect!["0x0000000000000000000000000000000000000000000000000000000000000002::table::Table<$0, $1>"];
+        let expect = expect![
+            "0x0000000000000000000000000000000000000000000000000000000000000002::table::Table<$0, $1>"
+        ];
         expect.assert_eq(&format!("{signature}"));
     }
 
@@ -371,7 +372,9 @@ mod tests {
             vec![S::Datatype(struct_key("0x2::iota::IOTA"), vec![])],
         ));
 
-        let expect = expect!["0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>"];
+        let expect = expect![
+            "0x0000000000000000000000000000000000000000000000000000000000000002::coin::Coin<0x0000000000000000000000000000000000000000000000000000000000000002::iota::IOTA>"
+        ];
         expect.assert_eq(&format!("{signature}"));
     }
 }

@@ -2,17 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_types::{
+    base_types::{MoveObjectType, ObjectDigest, SequenceNumber, TransactionDigest},
+    coin::Coin,
+    crypto::{Signable, default_hash},
+    error::IotaError,
+    move_package::MovePackage,
+    object::{Data, MoveObject, Object, ObjectInner, Owner},
+    storage::ObjectKey,
+};
 use serde::{Deserialize, Serialize};
-use serde_with::serde_as;
-use serde_with::Bytes;
-use iota_types::base_types::MoveObjectType;
-use iota_types::base_types::{ObjectDigest, SequenceNumber, TransactionDigest};
-use iota_types::coin::Coin;
-use iota_types::crypto::{default_hash, Signable};
-use iota_types::error::IotaError;
-use iota_types::move_package::MovePackage;
-use iota_types::object::{Data, MoveObject, Object, ObjectInner, Owner};
-use iota_types::storage::ObjectKey;
+use serde_with::{Bytes, serde_as};
 
 pub type ObjectContentDigest = ObjectDigest;
 
@@ -271,7 +271,7 @@ pub(crate) fn try_construct_object(
         _ => {
             return Err(IotaError::Storage(
                 "corrupted field: inconsistent object representation".to_string(),
-            ))
+            ));
         }
     };
 

@@ -2,27 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{sync::Arc, time::Duration};
+
 use fastcrypto::encoding::{Base64, Encoding};
-use rand::rngs::StdRng;
-use rand::SeedableRng;
+use iota_graphql_rpc::{
+    client::{ClientError, simple_client::GraphqlQueryVariable},
+    config::{Limits, ServiceConfig},
+    test_infra::cluster::{prep_executor_cluster, start_cluster},
+};
+use iota_types::{
+    DEEPBOOK_ADDRESS, IOTA_FRAMEWORK_ADDRESS, IOTA_FRAMEWORK_PACKAGE_ID,
+    digests::ChainIdentifier,
+    gas_coin::GAS,
+    transaction::{CallArg, ObjectArg, TransactionDataAPI},
+};
+use rand::{SeedableRng, rngs::StdRng};
 use serde_json::json;
 use simulacrum::Simulacrum;
-use std::sync::Arc;
-use std::time::Duration;
-use iota_graphql_rpc::client::simple_client::GraphqlQueryVariable;
-use iota_graphql_rpc::client::ClientError;
-use iota_graphql_rpc::config::Limits;
-use iota_graphql_rpc::config::ServiceConfig;
-use iota_graphql_rpc::test_infra::cluster::prep_executor_cluster;
-use iota_graphql_rpc::test_infra::cluster::start_cluster;
-use iota_types::digests::ChainIdentifier;
-use iota_types::gas_coin::GAS;
-use iota_types::transaction::CallArg;
-use iota_types::transaction::ObjectArg;
-use iota_types::transaction::TransactionDataAPI;
-use iota_types::DEEPBOOK_ADDRESS;
-use iota_types::IOTA_FRAMEWORK_ADDRESS;
-use iota_types::IOTA_FRAMEWORK_PACKAGE_ID;
 use tempfile::tempdir;
 use tokio::time::sleep;
 
@@ -378,14 +374,12 @@ async fn test_transaction_execution() {
 
 #[tokio::test]
 async fn test_zklogin_sig_verify() {
-    use shared_crypto::intent::Intent;
-    use shared_crypto::intent::IntentMessage;
     use iota_test_transaction_builder::TestTransactionBuilder;
-    use iota_types::base_types::IotaAddress;
-    use iota_types::crypto::Signature;
-    use iota_types::signature::GenericSignature;
-    use iota_types::utils::load_test_vectors;
-    use iota_types::zk_login_authenticator::ZkLoginAuthenticator;
+    use iota_types::{
+        base_types::IotaAddress, crypto::Signature, signature::GenericSignature,
+        utils::load_test_vectors, zk_login_authenticator::ZkLoginAuthenticator,
+    };
+    use shared_crypto::intent::{Intent, IntentMessage};
 
     telemetry_subscribers::init_for_testing();
 
@@ -736,12 +730,13 @@ async fn test_dry_run_failed_execution() {
     // Execution failed so the results are null.
     assert!(res.get("results").unwrap().is_null());
     // Check that the error is not null and contains the error message.
-    assert!(res
-        .get("error")
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .contains("UnusedValueWithoutDrop"));
+    assert!(
+        res.get("error")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .contains("UnusedValueWithoutDrop")
+    );
 }
 
 #[tokio::test]
@@ -779,12 +774,14 @@ async fn test_epoch_live_object_set_digest() {
     let binding = res.response_body().data.clone().into_json().unwrap();
 
     // Check that liveObjectSetDigest is not null
-    assert!(!binding
-        .get("epoch")
-        .unwrap()
-        .get("liveObjectSetDigest")
-        .unwrap()
-        .is_null());
+    assert!(
+        !binding
+            .get("epoch")
+            .unwrap()
+            .get("liveObjectSetDigest")
+            .unwrap()
+            .is_null()
+    );
 }
 
 #[tokio::test]

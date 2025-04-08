@@ -3,17 +3,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::checkpoints::CheckpointServiceNoop;
-use crate::consensus_handler::SequencedConsensusTransaction;
 use core::default::Default;
-use fastcrypto::hash::MultisetHash;
-use fastcrypto::traits::KeyPair;
-use iota_types::crypto::{AccountKeyPair, AuthorityKeyPair};
-use iota_types::messages_consensus::ConsensusTransaction;
-use iota_types::utils::to_sender_signed_transaction;
 
-use super::test_authority_builder::TestAuthorityBuilder;
-use super::*;
+use fastcrypto::{hash::MultisetHash, traits::KeyPair};
+use iota_types::{
+    crypto::{AccountKeyPair, AuthorityKeyPair},
+    messages_consensus::ConsensusTransaction,
+    utils::to_sender_signed_transaction,
+};
+
+use super::{test_authority_builder::TestAuthorityBuilder, *};
+use crate::{checkpoints::CheckpointServiceNoop, consensus_handler::SequencedConsensusTransaction};
 
 pub async fn send_and_confirm_transaction(
     authority: &AuthorityState,
@@ -21,9 +21,9 @@ pub async fn send_and_confirm_transaction(
 ) -> Result<(CertifiedTransaction, SignedTransactionEffects), IotaError> {
     send_and_confirm_transaction_(
         authority,
-        None, /* no fullnode_key_pair */
+        None, // no fullnode_key_pair
         transaction,
-        false, /* no shared objects */
+        false, // no shared objects
     )
     .await
 }
@@ -224,7 +224,8 @@ pub async fn init_state_with_objects<I: IntoIterator<Item = Object>>(
     objects: I,
 ) -> Arc<AuthorityState> {
     let dir = tempfile::TempDir::new().unwrap();
-    let network_config = iota_swarm_config::network_config_builder::ConfigBuilder::new(&dir).build();
+    let network_config =
+        iota_swarm_config::network_config_builder::ConfigBuilder::new(&dir).build();
     let genesis = network_config.genesis;
     let keypair = network_config.validator_configs[0]
         .protocol_key_pair()

@@ -6,18 +6,16 @@
 //! they should nearly all be tokio::test rather than simtest.
 
 use core::panic;
+use std::{fs::File, num::NonZeroUsize, time::Duration};
+
 use fastcrypto::encoding::Base64;
-use jsonrpsee::{core::client::ClientT, rpc_params};
-use std::fs::File;
-use std::num::NonZeroUsize;
-use std::time::Duration;
-use iota_core::authority_client::make_network_authority_clients_with_network_config;
-use iota_core::authority_client::AuthorityAPI;
-use iota_core::traffic_controller::{
-    nodefw_test_server::NodeFwTestServer, TrafficController, TrafficSim,
+use iota_core::{
+    authority_client::{AuthorityAPI, make_network_authority_clients_with_network_config},
+    traffic_controller::{TrafficController, TrafficSim, nodefw_test_server::NodeFwTestServer},
 };
 use iota_json_rpc_types::{
-    IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
+    IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse,
+    IotaTransactionBlockResponseOptions,
 };
 use iota_macros::sim_test;
 use iota_network::default_iota_network_config;
@@ -31,6 +29,7 @@ use iota_types::{
         FreqThresholdConfig, PolicyConfig, PolicyType, RemoteFirewallConfig, Weight,
     },
 };
+use jsonrpsee::{core::client::ClientT, rpc_params};
 use test_cluster::{TestCluster, TestClusterBuilder};
 
 #[tokio::test]

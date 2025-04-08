@@ -159,8 +159,7 @@ impl ReplayFuzzer {
                     Err(e) => {
                         error!(
                             "Error executing transaction: base tx: {}, mutation: {:?} with error{:?}",
-                            self.sandbox_state.transaction_info.tx_digest,
-                            mutation, e
+                            self.sandbox_state.transaction_info.tx_digest, mutation, e
                         );
                         if self.config.fail_over_on_err {
                             return Err(e);
@@ -203,7 +202,7 @@ pub enum ReplayFuzzError {
     )]
     LocalExecError { err: ReplayEngineError },
     // TODO: how exactly do we catch this?
-    //Panic(TransactionDigest, TransactionKind),
+    // Panic(TransactionDigest, TransactionKind),
 }
 
 impl From<ReplayEngineError> for ReplayFuzzError {

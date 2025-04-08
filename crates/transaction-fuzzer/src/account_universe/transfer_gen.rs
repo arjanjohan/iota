@@ -6,25 +6,27 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account_universe::AccountCurrent;
-use crate::{
-    account_universe::{AUTransactionGen, AccountPairGen, AccountTriple, AccountUniverse},
-    executor::{ExecutionResult, Executor},
-};
-use once_cell::sync::Lazy;
-use proptest::prelude::*;
-use proptest_derive::Arbitrary;
 use std::sync::Arc;
+
 use iota_protocol_config::ProtocolConfig;
-use iota_types::base_types::ObjectRef;
-use iota_types::execution_status::{ExecutionFailureStatus, ExecutionStatus};
 use iota_types::{
-    base_types::IotaAddress,
+    base_types::{IotaAddress, ObjectRef},
     error::{IotaError, UserInputError},
+    execution_status::{ExecutionFailureStatus, ExecutionStatus},
     object::Object,
     programmable_transaction_builder::ProgrammableTransactionBuilder,
     transaction::{GasData, Transaction, TransactionData, TransactionKind},
     utils::{to_sender_signed_transaction, to_sender_signed_transaction_with_multi_signers},
+};
+use once_cell::sync::Lazy;
+use proptest::prelude::*;
+use proptest_derive::Arbitrary;
+
+use crate::{
+    account_universe::{
+        AUTransactionGen, AccountCurrent, AccountPairGen, AccountTriple, AccountUniverse,
+    },
+    executor::{ExecutionResult, Executor},
 };
 
 const GAS_UNIT_PRICE: u64 = 2;
@@ -504,12 +506,12 @@ impl AUTransactionGen for P2PTransferGenRandomGasRandomPriceRandomSponsorship {
             } => Err(IotaError::UserInputError {
                 error: UserInputError::IncorrectUserSignature {
                     error: format!(
-                               "Object {} is owned by account address {}, but given owner/signer address is {}",
-                               gas_object.id(),
-                                   sender_address,
-                                   payer.initial_data.account.address,
-                           )
-                }
+                        "Object {} is owned by account address {}, but given owner/signer address is {}",
+                        gas_object.id(),
+                        sender_address,
+                        payer.initial_data.account.address,
+                    ),
+                },
             }),
             RunInfo {
                 enough_max_gas: true,

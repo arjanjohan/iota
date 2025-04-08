@@ -2,18 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{fs, path::PathBuf, time::Duration};
+
 use consensus_config::Epoch;
 use iota_metrics::spawn_logged_monitored_task;
 use prometheus::{
-    register_int_counter_vec_with_registry, register_int_counter_with_registry,
-    register_int_gauge_with_registry, IntCounter, IntCounterVec, IntGauge, Registry,
+    IntCounter, IntCounterVec, IntGauge, Registry, register_int_counter_vec_with_registry,
+    register_int_counter_with_registry, register_int_gauge_with_registry,
 };
-use std::fs;
-use std::path::PathBuf;
-use std::time::Duration;
 use tokio::{
     sync::mpsc,
-    time::{sleep, Instant},
+    time::{Instant, sleep},
 };
 use tracing::{error, info};
 use typed_store::rocks::safe_drop_db;
@@ -66,10 +65,12 @@ impl ConsensusStorePruner {
         let metrics = Metrics::new(registry);
 
         let _handle = spawn_logged_monitored_task!(async {
-            info!("Starting consensus store pruner with epoch retention {epoch_retention} and prune period {epoch_prune_period:?}");
+            info!(
+                "Starting consensus store pruner with epoch retention {epoch_retention} and prune period {epoch_prune_period:?}"
+            );
 
             let mut timeout = tokio::time::interval_at(
-                Instant::now() + Duration::from_secs(60), // allow some time for the node to boot etc before attempting to prune
+                Instant::now() + Duration::from_secs(60), /* allow some time for the node to boot etc before attempting to prune */
                 epoch_prune_period,
             );
 
@@ -221,10 +222,12 @@ impl ConsensusStorePruner {
 
 #[cfg(test)]
 mod tests {
-    use crate::epoch::consensus_store_pruner::{ConsensusStorePruner, Metrics};
-    use prometheus::Registry;
     use std::fs;
+
+    use prometheus::Registry;
     use tokio::time::sleep;
+
+    use crate::epoch::consensus_store_pruner::{ConsensusStorePruner, Metrics};
 
     #[tokio::test]
     async fn test_remove_old_epoch_data() {

@@ -6,7 +6,7 @@ use consensus_config::AuthorityIndex;
 use rstest::rstest;
 use tempfile::TempDir;
 
-use super::{mem_store::MemStore, rocksdb_store::RocksDBStore, Store, WriteBatch};
+use super::{Store, WriteBatch, mem_store::MemStore, rocksdb_store::RocksDBStore};
 use crate::{
     block::{BlockAPI, BlockDigest, BlockRef, Slot, TestBlock, VerifiedBlock},
     commit::{CommitDigest, TrustedCommit},

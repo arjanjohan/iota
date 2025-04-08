@@ -3,12 +3,15 @@
 // SPDX-License-Identifier: Apache-2.0
 #![allow(dead_code)]
 
+use std::{
+    future::Future,
+    task::{Context, Poll},
+};
+
 use async_trait::async_trait;
-use std::future::Future;
 // TODO: complete tests - This kinda sorta facades the whole tokio::mpsc::{Sender, Receiver}: without tests, this will be fragile to maintain.
 use futures::{FutureExt, Stream, TryFutureExt};
 use prometheus::{IntCounter, IntGauge};
-use std::task::{Context, Poll};
 use tokio::sync::mpsc::{
     self,
     error::{SendError, TryRecvError, TrySendError},
@@ -258,7 +261,6 @@ impl<T> Sender<T> {
 ////////////////////////////////
 
 /// A wrapper around [`crate::metered_channel::Receiver`] that implements [`Stream`].
-///
 #[derive(Debug)]
 pub struct ReceiverStream<T> {
     inner: Receiver<T>,

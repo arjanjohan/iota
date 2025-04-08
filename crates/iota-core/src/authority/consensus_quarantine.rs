@@ -4,37 +4,33 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use crate::authority::authority_per_epoch_store::{EncG, ExecutionIndicesWithStats, PkG};
-use crate::authority::transaction_deferral::DeferralKey;
-use crate::epoch::randomness::SINGLETON_KEY;
 use fastcrypto_tbls::{dkg_v1, nodes::PartyId};
-use fastcrypto_zkp::bn254::zk_login::{JwkId, JWK};
-use iota_types::base_types::{AuthorityName, SequenceNumber};
-use iota_types::crypto::RandomnessRound;
-use iota_types::error::IotaResult;
+use fastcrypto_zkp::bn254::zk_login::{JWK, JwkId};
 use iota_types::{
-    base_types::{ConsensusObjectSequenceKey, ObjectID},
+    base_types::{AuthorityName, ConsensusObjectSequenceKey, ObjectID, SequenceNumber},
+    crypto::RandomnessRound,
     digests::TransactionDigest,
+    error::IotaResult,
     messages_consensus::{Round, TimestampMs, VersionedDkgConfirmation},
     signature::GenericSignature,
 };
 use typed_store::rocks::DBBatch;
 
+use super::*;
 use crate::{
     authority::{
-        authority_per_epoch_store::AuthorityPerEpochStore,
+        authority_per_epoch_store::{AuthorityPerEpochStore, EncG, ExecutionIndicesWithStats, PkG},
         epoch_start_configuration::EpochStartConfigTrait,
         shared_object_congestion_tracker::CongestionPerObjectDebt,
+        transaction_deferral::DeferralKey,
     },
     checkpoints::PendingCheckpointV2,
     consensus_handler::{SequencedConsensusTransactionKey, VerifiedSequencedConsensusTransaction},
     epoch::{
-        randomness::{VersionedProcessedMessage, VersionedUsedProcessedMessages},
+        randomness::{SINGLETON_KEY, VersionedProcessedMessage, VersionedUsedProcessedMessages},
         reconfiguration::ReconfigState,
     },
 };
-
-use super::*;
 
 #[derive(Default)]
 pub(crate) struct ConsensusCommitOutput {

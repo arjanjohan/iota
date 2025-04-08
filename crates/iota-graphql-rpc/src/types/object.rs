@@ -2,57 +2,69 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::fmt::Write;
+use std::{
+    collections::{BTreeMap, BTreeSet, HashMap},
+    fmt::Write,
+};
 
-use super::available_range::AvailableRange;
-use super::balance::{self, Balance};
-use super::big_int::BigInt;
-use super::coin::Coin;
-use super::coin_metadata::CoinMetadata;
-use super::cursor::{self, Page, RawPaginated, ScanLimited, Target};
-use super::digest::Digest;
-use super::display::{Display, DisplayEntry};
-use super::dynamic_field::{DynamicField, DynamicFieldName};
-use super::move_object::MoveObject;
-use super::move_package::MovePackage;
-use super::owner::{Authenticator, OwnerImpl};
-use super::stake::StakedIota;
-use super::iota_address::addr;
-use super::iotans_registration::{DomainFormat, IotaNSRegistration};
-use super::transaction_block;
-use super::transaction_block::TransactionBlockFilter;
-use super::type_filter::{ExactTypeFilter, TypeFilter};
-use super::uint53::UInt53;
-use super::{owner::Owner, iota_address::IotaAddress, transaction_block::TransactionBlock};
-use crate::connection::ScanConnection;
-use crate::consistency::{build_objects_query, Checkpointed, View};
-use crate::data::package_resolver::PackageResolver;
-use crate::data::{DataLoader, Db, DbConnection, QueryExecutor};
-use crate::error::Error;
-use crate::raw_query::RawQuery;
-use crate::types::address::Address;
-use crate::types::base64::Base64;
-use crate::types::intersect;
-use crate::{filter, or_filter};
-use async_graphql::connection::{CursorType, Edge};
-use async_graphql::dataloader::Loader;
-use async_graphql::{connection::Connection, *};
+use async_graphql::{
+    connection::{Connection, CursorType, Edge},
+    dataloader::Loader,
+    *,
+};
 use diesel::{BoolExpressionMethods, ExpressionMethods, QueryDsl, SelectableHelper};
 use diesel_async::scoped_futures::ScopedFutureExt;
-use move_core_types::annotated_value::{MoveStruct, MoveTypeLayout};
-use move_core_types::language_storage::StructTag;
-use serde::{Deserialize, Serialize};
-use iota_indexer::models::obj_indices::StoredObjectVersion;
-use iota_indexer::models::objects::{StoredFullHistoryObject, StoredHistoryObject};
-use iota_indexer::schema::{full_objects_history, objects_version};
-use iota_indexer::types::ObjectStatus as NativeObjectStatus;
-use iota_indexer::types::OwnerType;
-use iota_types::object::bounded_visitor::BoundedVisitor;
-use iota_types::object::{
-    MoveObject as NativeMoveObject, Object as NativeObject, Owner as NativeOwner,
+use iota_indexer::{
+    models::{
+        obj_indices::StoredObjectVersion,
+        objects::{StoredFullHistoryObject, StoredHistoryObject},
+    },
+    schema::{full_objects_history, objects_version},
+    types::{ObjectStatus as NativeObjectStatus, OwnerType},
 };
-use iota_types::TypeTag;
+use iota_types::{
+    TypeTag,
+    object::{
+        MoveObject as NativeMoveObject, Object as NativeObject, Owner as NativeOwner,
+        bounded_visitor::BoundedVisitor,
+    },
+};
+use move_core_types::{
+    annotated_value::{MoveStruct, MoveTypeLayout},
+    language_storage::StructTag,
+};
+use serde::{Deserialize, Serialize};
+
+use super::{
+    available_range::AvailableRange,
+    balance::{self, Balance},
+    big_int::BigInt,
+    coin::Coin,
+    coin_metadata::CoinMetadata,
+    cursor::{self, Page, RawPaginated, ScanLimited, Target},
+    digest::Digest,
+    display::{Display, DisplayEntry},
+    dynamic_field::{DynamicField, DynamicFieldName},
+    iota_address::{IotaAddress, addr},
+    iotans_registration::{DomainFormat, IotaNSRegistration},
+    move_object::MoveObject,
+    move_package::MovePackage,
+    owner::{Authenticator, Owner, OwnerImpl},
+    stake::StakedIota,
+    transaction_block,
+    transaction_block::{TransactionBlock, TransactionBlockFilter},
+    type_filter::{ExactTypeFilter, TypeFilter},
+    uint53::UInt53,
+};
+use crate::{
+    connection::ScanConnection,
+    consistency::{Checkpointed, View, build_objects_query},
+    data::{DataLoader, Db, DbConnection, QueryExecutor, package_resolver::PackageResolver},
+    error::Error,
+    filter, or_filter,
+    raw_query::RawQuery,
+    types::{address::Address, base64::Base64, intersect},
+};
 
 #[derive(Clone, Debug)]
 pub(crate) struct Object {
@@ -381,7 +393,7 @@ impl Object {
 
     /// The coin objects for this object.
     ///
-    ///`type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
+    /// `type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
     pub(crate) async fn coins(
         &self,
         ctx: &Context<'_>,
@@ -1747,8 +1759,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::str::FromStr;
+
+    use super::*;
 
     #[test]
     fn test_owner_filter_intersection() {

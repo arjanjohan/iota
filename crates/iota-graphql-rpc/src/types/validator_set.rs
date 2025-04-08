@@ -2,14 +2,19 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::consistency::ConsistentIndexCursor;
-use crate::types::cursor::{JsonCursor, Page};
-use crate::types::iota_address::IotaAddress;
-use async_graphql::connection::{Connection, CursorType, Edge};
+use async_graphql::{
+    connection::{Connection, CursorType, Edge},
+    *,
+};
 
-use super::big_int::BigInt;
-use super::validator::Validator;
-use async_graphql::*;
+use super::{big_int::BigInt, validator::Validator};
+use crate::{
+    consistency::ConsistentIndexCursor,
+    types::{
+        cursor::{JsonCursor, Page},
+        iota_address::IotaAddress,
+    },
+};
 
 /// Representation of `0x3::validator_set::ValidatorSet`.
 #[derive(Clone, Debug, SimpleObject, Default)]

@@ -2,13 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::stake_with_validator;
 use iota_macros::sim_test;
-use iota_rpc_api::proto::node::v2::node_service_client::NodeServiceClient;
 use iota_rpc_api::proto::node::v2::{
     GetTransactionOptions, GetTransactionRequest, GetTransactionResponse,
+    node_service_client::NodeServiceClient,
 };
 use test_cluster::TestClusterBuilder;
+
+use crate::stake_with_validator;
 
 #[sim_test]
 async fn get_transaction() {

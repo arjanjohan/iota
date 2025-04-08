@@ -6,18 +6,23 @@ use std::net::{IpAddr, SocketAddr};
 
 use anyhow::Result;
 use fastcrypto::traits::KeyPair;
-use rand::{rngs::StdRng, SeedableRng};
-use serde::{Deserialize, Serialize};
-use iota_config::genesis::{GenesisCeremonyParameters, TokenAllocation};
-use iota_config::node::{DEFAULT_COMMISSION_RATE, DEFAULT_VALIDATOR_GAS_PRICE};
-use iota_config::{local_ip_utils, Config};
-use iota_genesis_builder::validator_info::{GenesisValidatorInfo, ValidatorInfo};
-use iota_types::base_types::IotaAddress;
-use iota_types::crypto::{
-    generate_proof_of_possession, get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair,
-    AuthorityPublicKeyBytes, NetworkKeyPair, NetworkPublicKey, PublicKey, IotaKeyPair,
+use iota_config::{
+    Config,
+    genesis::{GenesisCeremonyParameters, TokenAllocation},
+    local_ip_utils,
+    node::{DEFAULT_COMMISSION_RATE, DEFAULT_VALIDATOR_GAS_PRICE},
 };
-use iota_types::multiaddr::Multiaddr;
+use iota_genesis_builder::validator_info::{GenesisValidatorInfo, ValidatorInfo};
+use iota_types::{
+    base_types::IotaAddress,
+    crypto::{
+        AccountKeyPair, AuthorityKeyPair, AuthorityPublicKeyBytes, IotaKeyPair, NetworkKeyPair,
+        NetworkPublicKey, PublicKey, generate_proof_of_possession, get_key_pair_from_rng,
+    },
+    multiaddr::Multiaddr,
+};
+use rand::{SeedableRng, rngs::StdRng};
+use serde::{Deserialize, Serialize};
 use tracing::info;
 
 // All information needed to build a NodeConfig for a state sync fullnode.

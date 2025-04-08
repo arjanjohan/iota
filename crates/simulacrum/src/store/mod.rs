@@ -3,26 +3,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::BTreeMap;
+
 use iota_config::genesis;
-use iota_types::base_types::ObjectRef;
-use iota_types::error::UserInputError;
-use iota_types::transaction::InputObjects;
-use iota_types::transaction::ObjectReadResult;
-use iota_types::transaction::ReceivingObjectReadResult;
-use iota_types::transaction::ReceivingObjects;
 use iota_types::{
-    base_types::{ObjectID, SequenceNumber, IotaAddress},
+    base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber},
     committee::{Committee, EpochId},
     digests::{ObjectDigest, TransactionDigest, TransactionEventsDigest},
     effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents},
-    error::IotaResult,
+    error::{IotaResult, UserInputError},
     messages_checkpoint::{
         CheckpointContents, CheckpointContentsDigest, CheckpointDigest, CheckpointSequenceNumber,
         VerifiedCheckpoint,
     },
     object::Object,
     storage::{BackingStore, ChildObjectResolver, ParentSync},
-    transaction::{InputObjectKind, VerifiedTransaction},
+    transaction::{
+        InputObjectKind, InputObjects, ObjectReadResult, ReceivingObjectReadResult,
+        ReceivingObjects, VerifiedTransaction,
+    },
 };
 pub mod in_mem_store;
 
@@ -76,7 +74,7 @@ pub trait SimulatorStore:
     fn get_transaction_effects(&self, digest: &TransactionDigest) -> Option<TransactionEffects>;
 
     fn get_transaction_events(&self, digest: &TransactionEventsDigest)
-        -> Option<TransactionEvents>;
+    -> Option<TransactionEvents>;
 
     fn get_transaction_events_by_tx_digest(
         &self,

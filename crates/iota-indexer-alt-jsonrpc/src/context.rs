@@ -5,9 +5,9 @@
 use std::sync::Arc;
 
 use async_graphql::dataloader::DataLoader;
-use prometheus::Registry;
 use iota_package_resolver::Resolver;
 use iota_pg_db::DbArgs;
+use prometheus::Registry;
 
 use crate::{
     data::{

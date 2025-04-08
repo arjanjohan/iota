@@ -4,14 +4,16 @@
 
 #[cfg(msim)]
 mod sim_only_tests {
-    use std::path::PathBuf;
-    use std::time::Duration;
+    use std::{path::PathBuf, time::Duration};
+
     use iota_json_rpc_types::{IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI};
     use iota_macros::sim_test;
     use iota_node::IotaNode;
     use iota_test_transaction_builder::publish_package;
-    use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-    use iota_types::{base_types::ObjectID, digests::TransactionDigest};
+    use iota_types::{
+        base_types::ObjectID, digests::TransactionDigest,
+        messages_checkpoint::CheckpointSequenceNumber,
+    };
     use test_cluster::{TestCluster, TestClusterBuilder};
     use tokio::time::timeout;
 
@@ -202,11 +204,13 @@ mod sim_only_tests {
             .effects
             .unwrap();
         assert_eq!(effects.wrapped().len(), 1);
-        assert!(test_cluster
-            .get_object_or_tombstone_from_fullnode_store(child_id)
-            .await
-            .2
-            .is_wrapped());
+        assert!(
+            test_cluster
+                .get_object_or_tombstone_from_fullnode_store(child_id)
+                .await
+                .2
+                .is_wrapped()
+        );
         effects
     }
 

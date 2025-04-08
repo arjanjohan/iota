@@ -2,55 +2,62 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::ops::Not;
-use std::sync::Arc;
-use std::{iter, mem, thread};
+use std::{iter, mem, ops::Not, sync::Arc, thread};
 
-use crate::authority::authority_per_epoch_store::AuthorityPerEpochStore;
-use crate::authority::authority_store_pruner::{
-    AuthorityStorePruner, AuthorityStorePruningMetrics, EPOCH_DURATION_MS_FOR_TESTING,
-};
-use crate::authority::authority_store_types::{
-    get_store_object_pair, ObjectContentDigest, StoreObject, StoreObjectPair, StoreObjectWrapper,
-};
-use crate::authority::epoch_start_configuration::{EpochFlag, EpochStartConfiguration};
-use crate::rpc_index::RpcIndexStore;
-use crate::state_accumulator::AccumulatorStore;
-use crate::transaction_outputs::TransactionOutputs;
 use either::Either;
 use fastcrypto::hash::{HashFunction, MultisetHash, Sha3_256};
 use futures::stream::FuturesUnordered;
-use itertools::izip;
-use move_core_types::resolver::ModuleResolver;
-use serde::{Deserialize, Serialize};
+use iota_common::sync::notify_read::NotifyRead;
 use iota_config::node::AuthorityStorePruningConfig;
 use iota_macros::fail_point_arg;
 use iota_storage::mutex_table::{MutexGuard, MutexTable, RwLockGuard, RwLockTable};
-use iota_types::accumulator::Accumulator;
-use iota_types::digests::TransactionEventsDigest;
-use iota_types::error::UserInputError;
-use iota_types::execution::TypeLayoutStore;
-use iota_types::message_envelope::Message;
-use iota_types::storage::{
-    get_module, BackingPackageStore, FullObjectKey, MarkerValue, ObjectKey, ObjectOrTombstone,
-    ObjectStore,
+use iota_types::{
+    accumulator::Accumulator,
+    base_types::SequenceNumber,
+    digests::TransactionEventsDigest,
+    effects::{TransactionEffects, TransactionEvents},
+    error::UserInputError,
+    execution::TypeLayoutStore,
+    fp_bail, fp_ensure,
+    gas_coin::TOTAL_SUPPLY_NANOS,
+    iota_system_state::get_iota_system_state,
+    message_envelope::Message,
+    storage::{
+        BackingPackageStore, FullObjectKey, MarkerValue, ObjectKey, ObjectOrTombstone, ObjectStore,
+        get_module,
+    },
 };
-use iota_types::iota_system_state::get_iota_system_state;
-use iota_types::{base_types::SequenceNumber, fp_bail, fp_ensure};
+use itertools::izip;
+use move_core_types::resolver::ModuleResolver;
+use serde::{Deserialize, Serialize};
 use tokio::time::Instant;
 use tracing::{debug, info, trace};
-use typed_store::traits::Map;
 use typed_store::{
-    rocks::{DBBatch, DBMap},
     TypedStoreError,
+    rocks::{DBBatch, DBMap, util::is_ref_count_value},
+    traits::Map,
 };
 
-use super::authority_store_tables::LiveObject;
-use super::{authority_store_tables::AuthorityPerpetualTables, *};
-use iota_common::sync::notify_read::NotifyRead;
-use iota_types::effects::{TransactionEffects, TransactionEvents};
-use iota_types::gas_coin::TOTAL_SUPPLY_NANOS;
-use typed_store::rocks::util::is_ref_count_value;
+use super::{
+    authority_store_tables::{AuthorityPerpetualTables, LiveObject},
+    *,
+};
+use crate::{
+    authority::{
+        authority_per_epoch_store::AuthorityPerEpochStore,
+        authority_store_pruner::{
+            AuthorityStorePruner, AuthorityStorePruningMetrics, EPOCH_DURATION_MS_FOR_TESTING,
+        },
+        authority_store_types::{
+            ObjectContentDigest, StoreObject, StoreObjectPair, StoreObjectWrapper,
+            get_store_object_pair,
+        },
+        epoch_start_configuration::{EpochFlag, EpochStartConfiguration},
+    },
+    rpc_index::RpcIndexStore,
+    state_accumulator::AccumulatorStore,
+    transaction_outputs::TransactionOutputs,
+};
 
 const NUM_SHARDS: usize = 4096;
 
@@ -1095,11 +1102,13 @@ impl AuthorityStore {
         ) {
             let Some(live_marker) = live_marker else {
                 let latest_lock = self.get_latest_live_version_for_object_id(obj_ref.0)?;
-                fp_bail!(UserInputError::ObjectVersionUnavailableForConsumption {
-                    provided_obj_ref: *obj_ref,
-                    current_version: latest_lock.1
-                }
-                .into());
+                fp_bail!(
+                    UserInputError::ObjectVersionUnavailableForConsumption {
+                        provided_obj_ref: *obj_ref,
+                        current_version: latest_lock.1
+                    }
+                    .into()
+                );
             };
 
             let live_marker = live_marker.map(|l| l.migrate().into_inner());
@@ -1192,7 +1201,7 @@ impl AuthorityStore {
         Ok(iterator
             .next()
             .and_then(|value| {
-                if value.0 .0 == object_id {
+                if value.0.0 == object_id {
                     Some(value)
                 } else {
                     None
@@ -1219,11 +1228,13 @@ impl AuthorityStore {
         for (lock, obj_ref) in locks.into_iter().zip(objects) {
             if lock.is_none() {
                 let latest_lock = self.get_latest_live_version_for_object_id(obj_ref.0)?;
-                fp_bail!(UserInputError::ObjectVersionUnavailableForConsumption {
-                    provided_obj_ref: *obj_ref,
-                    current_version: latest_lock.1
-                }
-                .into());
+                fp_bail!(
+                    UserInputError::ObjectVersionUnavailableForConsumption {
+                        provided_obj_ref: *obj_ref,
+                        current_version: latest_lock.1
+                    }
+                    .into()
+                );
             }
         }
         Ok(())
@@ -1742,7 +1753,9 @@ impl AuthorityStore {
         if !should_reaccumulate {
             return;
         }
-        info!("[Re-accumulate] simplified_unwrap_then_delete is enabled in the new protocol version, re-accumulating state hash");
+        info!(
+            "[Re-accumulate] simplified_unwrap_then_delete is enabled in the new protocol version, re-accumulating state hash"
+        );
         let cur_time = Instant::now();
         std::thread::scope(|s| {
             let pending_tasks = FuturesUnordered::new();
@@ -1790,10 +1803,10 @@ impl AuthorityStore {
                                     );
                                 }
                                 if matches!(prev.1.inner(), StoreObject::Wrapped)
-                                    && object_key.0 != prev.0 .0
+                                    && object_key.0 != prev.0.0
                                 {
                                     wrapped_objects_to_remove
-                                        .push(WrappedObject::new(prev.0 .0, prev.0 .1));
+                                        .push(WrappedObject::new(prev.0.0, prev.0.1));
                                 }
 
                                 prev = (object_key, object);
@@ -1805,7 +1818,7 @@ impl AuthorityStore {
                         }
                     }
                     if matches!(prev.1.inner(), StoreObject::Wrapped) {
-                        wrapped_objects_to_remove.push(WrappedObject::new(prev.0 .0, prev.0 .1));
+                        wrapped_objects_to_remove.push(WrappedObject::new(prev.0.0, prev.0.1));
                     }
                     info!(
                         "[Re-accumulate] Task {}: object scanned: {}, wrapped objects: {}",

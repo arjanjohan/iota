@@ -2,27 +2,29 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::crypto::PublicKey;
-use crate::signature_verification::VerifiedDigestCache;
-use crate::{
-    base_types::{EpochId, IotaAddress},
-    crypto::{DefaultHash, Signature, SignatureScheme, IotaSignature},
-    digests::ZKLoginInputsDigest,
-    error::{IotaError, IotaResult},
-    signature::{AuthenticatorTrait, VerifyParams},
+use std::{
+    hash::{Hash, Hasher},
+    sync::Arc,
 };
+
 use fastcrypto::{error::FastCryptoError, traits::ToFromBytes};
-use fastcrypto_zkp::bn254::zk_login::JwkId;
-use fastcrypto_zkp::bn254::zk_login::{OIDCProvider, JWK};
-use fastcrypto_zkp::bn254::zk_login_api::ZkLoginEnv;
-use fastcrypto_zkp::bn254::{zk_login::ZkLoginInputs, zk_login_api::verify_zk_login};
+use fastcrypto_zkp::bn254::{
+    zk_login::{JWK, JwkId, OIDCProvider, ZkLoginInputs},
+    zk_login_api::{ZkLoginEnv, verify_zk_login},
+};
 use once_cell::sync::OnceCell;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use shared_crypto::intent::IntentMessage;
-use std::hash::Hash;
-use std::hash::Hasher;
-use std::sync::Arc;
+
+use crate::{
+    base_types::{EpochId, IotaAddress},
+    crypto::{DefaultHash, IotaSignature, PublicKey, Signature, SignatureScheme},
+    digests::ZKLoginInputsDigest,
+    error::{IotaError, IotaResult},
+    signature::{AuthenticatorTrait, VerifyParams},
+    signature_verification::VerifiedDigestCache,
+};
 #[cfg(test)]
 #[path = "unit_tests/zk_login_authenticator_test.rs"]
 mod zk_login_authenticator_test;
@@ -284,11 +286,7 @@ impl AddressSeed {
         }
 
         // If the value is '0' then just return a slice of length 1 of the final byte
-        if buf.is_empty() {
-            &self.0[31..]
-        } else {
-            buf
-        }
+        if buf.is_empty() { &self.0[31..] } else { buf }
     }
 
     pub fn padded(&self) -> &[u8] {
@@ -354,9 +352,10 @@ impl<'de> Deserialize<'de> for AddressSeed {
 mod test {
     use std::str::FromStr;
 
-    use super::AddressSeed;
     use num_bigint::BigUint;
     use proptest::prelude::*;
+
+    use super::AddressSeed;
 
     #[test]
     fn unpadded_slice() {

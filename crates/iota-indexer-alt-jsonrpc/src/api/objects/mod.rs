@@ -4,23 +4,22 @@
 
 use filter::IotaObjectResponseQuery;
 use futures::future;
-use jsonrpsee::{core::RpcResult, proc_macros::rpc};
-use serde::{Deserialize, Serialize};
 use iota_json_rpc_types::{
-    Page, IotaGetPastObjectRequest, IotaObjectDataOptions, IotaObjectResponse, IotaPastObjectResponse,
+    IotaGetPastObjectRequest, IotaObjectDataOptions, IotaObjectResponse, IotaPastObjectResponse,
+    Page,
 };
 use iota_open_rpc::Module;
 use iota_open_rpc_macros::open_rpc;
-use iota_types::base_types::{ObjectID, SequenceNumber, IotaAddress};
-
-use crate::{
-    context::Context,
-    error::{invalid_params, InternalContext},
-};
-
-use super::rpc_module::RpcModule;
+use iota_types::base_types::{IotaAddress, ObjectID, SequenceNumber};
+use jsonrpsee::{core::RpcResult, proc_macros::rpc};
+use serde::{Deserialize, Serialize};
 
 use self::error::Error;
+use super::rpc_module::RpcModule;
+use crate::{
+    context::Context,
+    error::{InternalContext, invalid_params},
+};
 
 mod error;
 mod filter;

@@ -2,35 +2,29 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::ConnectionConfig;
-use crate::config::ServerConfig;
-use crate::config::ServiceConfig;
-use crate::config::Version;
-use crate::server::graphiql_server::start_graphiql_server;
-use rand::rngs::StdRng;
-use rand::SeedableRng;
-use simulacrum::Simulacrum;
-use std::net::SocketAddr;
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::Duration;
+use std::{net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
+
 use iota_graphql_rpc_client::simple_client::SimpleClient;
-pub use iota_indexer::config::RetentionConfig;
-pub use iota_indexer::config::SnapshotLagConfig;
-use iota_indexer::errors::IndexerError;
-use iota_indexer::store::PgIndexerStore;
-use iota_indexer::test_utils::start_indexer_writer_for_testing_with_mvr_mode;
-use iota_pg_db::temp::{get_available_port, TempDb};
+pub use iota_indexer::config::{RetentionConfig, SnapshotLagConfig};
+use iota_indexer::{
+    errors::IndexerError, store::PgIndexerStore,
+    test_utils::start_indexer_writer_for_testing_with_mvr_mode,
+};
+use iota_pg_db::temp::{TempDb, get_available_port};
 use iota_swarm_config::genesis_config::{AccountConfig, DEFAULT_GAS_AMOUNT};
 use iota_types::storage::RpcStateReader;
-use tempfile::tempdir;
-use tempfile::TempDir;
-use test_cluster::TestCluster;
-use test_cluster::TestClusterBuilder;
-use tokio::join;
-use tokio::task::JoinHandle;
+use rand::{SeedableRng, rngs::StdRng};
+use simulacrum::Simulacrum;
+use tempfile::{TempDir, tempdir};
+use test_cluster::{TestCluster, TestClusterBuilder};
+use tokio::{join, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 use tracing::info;
+
+use crate::{
+    config::{ConnectionConfig, ServerConfig, ServiceConfig, Version},
+    server::graphiql_server::start_graphiql_server,
+};
 
 const VALIDATOR_COUNT: usize = 4;
 /// Set default epoch duration to 300s. This high value is to turn the TestCluster into a lockstep
@@ -134,8 +128,8 @@ pub async fn start_network_cluster() -> NetworkCluster {
         None,
         Some(data_ingestion_path.path().to_path_buf()),
         Some(cancellation_token.clone()),
-        None, /* start_checkpoint */
-        None, /* end_checkpoint */
+        None, // start_checkpoint
+        None, // end_checkpoint
         true,
     )
     .await;

@@ -13,17 +13,39 @@ mod checked {
         sync::Arc,
     };
 
-    use crate::execution_mode::ExecutionMode;
-    use crate::execution_value::{
-        CommandKind, ExecutionState, ObjectContents, ObjectValue, RawValueType, Value,
+    use iota_move_natives::object_runtime::ObjectRuntime;
+    use iota_protocol_config::ProtocolConfig;
+    use iota_types::{
+        IOTA_FRAMEWORK_ADDRESS,
+        base_types::{
+            IotaAddress, MoveObjectType, ObjectID, RESOLVED_ASCII_STR, RESOLVED_STD_OPTION,
+            RESOLVED_UTF8_STR, TX_CONTEXT_MODULE_NAME, TX_CONTEXT_STRUCT_NAME, TxContext,
+            TxContextKind,
+        },
+        coin::Coin,
+        error::{ExecutionError, ExecutionErrorKind, command_argument_error},
+        execution_config_utils::to_binary_config,
+        execution_status::{CommandArgumentError, PackageUpgradeError},
+        id::{RESOLVED_IOTA_ID, UID},
+        metrics::LimitsMetrics,
+        move_package::{
+            MovePackage, TypeOrigin, UpgradeCap, UpgradePolicy, UpgradeReceipt, UpgradeTicket,
+            normalize_deserialized_modules,
+        },
+        storage::{PackageObject, get_package_objects},
+        transaction::{Argument, Command, ProgrammableMoveCall, ProgrammableTransaction},
     };
-    use crate::gas_charger::GasCharger;
+    use iota_verifier::{
+        INIT_FN_NAME,
+        private_generics::{EVENT_MODULE, PRIVATE_TRANSFER_FUNCTIONS, TRANSFER_MODULE},
+    };
     use move_binary_format::{
+        CompiledModule,
         compatibility::{Compatibility, InclusionCheck},
         errors::{Location, PartialVMResult, VMResult},
         file_format::{AbilitySet, CodeOffset, FunctionDefinitionIndex, LocalIndex, Visibility},
         file_format_common::VERSION_6,
-        normalized, CompiledModule,
+        normalized,
     };
     use move_core_types::{
         account_address::AccountAddress,
@@ -36,35 +58,17 @@ mod checked {
         session::{LoadedFunctionInstantiation, SerializedReturnValues},
     };
     use move_vm_types::loaded_data::runtime_types::{CachedDatatype, Type};
-    use serde::{de::DeserializeSeed, Deserialize};
-    use iota_move_natives::object_runtime::ObjectRuntime;
-    use iota_protocol_config::ProtocolConfig;
-    use iota_types::execution_config_utils::to_binary_config;
-    use iota_types::execution_status::{CommandArgumentError, PackageUpgradeError};
-    use iota_types::storage::{get_package_objects, PackageObject};
-    use iota_types::{
-        base_types::{
-            MoveObjectType, ObjectID, IotaAddress, TxContext, TxContextKind, RESOLVED_ASCII_STR,
-            RESOLVED_STD_OPTION, RESOLVED_UTF8_STR, TX_CONTEXT_MODULE_NAME, TX_CONTEXT_STRUCT_NAME,
-        },
-        coin::Coin,
-        error::{command_argument_error, ExecutionError, ExecutionErrorKind},
-        id::{RESOLVED_IOTA_ID, UID},
-        metrics::LimitsMetrics,
-        move_package::{
-            normalize_deserialized_modules, MovePackage, TypeOrigin, UpgradeCap, UpgradePolicy,
-            UpgradeReceipt, UpgradeTicket,
-        },
-        transaction::{Argument, Command, ProgrammableMoveCall, ProgrammableTransaction},
-        IOTA_FRAMEWORK_ADDRESS,
-    };
-    use iota_verifier::{
-        private_generics::{EVENT_MODULE, PRIVATE_TRANSFER_FUNCTIONS, TRANSFER_MODULE},
-        INIT_FN_NAME,
-    };
+    use serde::{Deserialize, de::DeserializeSeed};
 
-    use crate::adapter::substitute_package_id;
-    use crate::programmable_transactions::context::*;
+    use crate::{
+        adapter::substitute_package_id,
+        execution_mode::ExecutionMode,
+        execution_value::{
+            CommandKind, ExecutionState, ObjectContents, ObjectValue, RawValueType, Value,
+        },
+        gas_charger::GasCharger,
+        programmable_transactions::context::*,
+    };
 
     pub fn execute<Mode: ExecutionMode>(
         protocol_config: &ProtocolConfig,
@@ -311,7 +315,8 @@ mod checked {
                     &function,
                     loaded_type_arguments,
                     arguments,
-                    /* is_init */ false,
+                    // is_init
+                    false,
                 );
 
                 context.reset_linkage();
@@ -428,7 +433,8 @@ mod checked {
             .map(|(bytes, kind)| {
                 // only non entry functions have return values
                 make_value(
-                    context, kind, bytes, /* used_in_non_entry_move_call */ true,
+                    context, kind, bytes, // used_in_non_entry_move_call
+                    true,
                 )
             })
             .collect()
@@ -535,8 +541,10 @@ mod checked {
                 context.vm,
                 &mut context.session,
                 UpgradeCap::type_().into(),
-                /* has_public_transfer */ true,
-                /* used_in_non_entry_move_call */ false,
+                // has_public_transfer
+                true,
+                // used_in_non_entry_move_call
+                false,
                 &bcs::to_bytes(cap).unwrap(),
             )?)]
         };
@@ -807,9 +815,9 @@ mod checked {
         }
     }
 
-    /***************************************************************************************************
-     * Move execution
-     **************************************************************************************************/
+    /// *************************************************************************************************
+    /// Move execution
+    /// ***********************************************************************************************
 
     fn vm_move_call(
         context: &mut ExecutionContext<'_, '_, '_>,
@@ -944,7 +952,8 @@ mod checked {
                 INIT_FN_NAME,
                 vec![],
                 vec![],
-                /* is_init */ true,
+                // is_init
+                true,
             )?;
 
             assert_invariant!(
@@ -956,9 +965,9 @@ mod checked {
         Ok(())
     }
 
-    /***************************************************************************************************
-     * Move signatures
-     **************************************************************************************************/
+    /// *************************************************************************************************
+    /// Move signatures
+    /// ***********************************************************************************************
 
     /// Helper marking what function we are invoking
     #[derive(PartialEq, Eq, Clone, Copy)]
@@ -1147,7 +1156,7 @@ mod checked {
                     Type::Reference(_) | Type::MutableReference(_) => {
                         return Err(ExecutionError::from_kind(
                             ExecutionErrorKind::InvalidPublicFunctionReturnType { idx: idx as u16 },
-                        ))
+                        ));
                     }
                     t => t,
                 };
@@ -1224,7 +1233,7 @@ mod checked {
 
     type ArgInfo = (
         TxContextKind,
-        /* mut ref */
+        // mut ref
         Vec<(LocalIndex, ValueKind)>,
         Vec<Vec<u8>>,
     );
@@ -1492,9 +1501,9 @@ mod checked {
         })
     }
 
-    /***************************************************************************************************
-     * Special serialization formats
-     **************************************************************************************************/
+    /// *************************************************************************************************
+    /// Special serialization formats
+    /// ***********************************************************************************************
 
     /// Special enum for values that need additional validation, in other words
     /// There is validation to do on top of the BCS layout. Currently only needed for

@@ -2,20 +2,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::collections::VecDeque;
+
+use iota_types::nitro_attestation::{parse_nitro_attestation, verify_nitro_attestation};
 use move_binary_format::errors::{PartialVMError, PartialVMResult};
 use move_core_types::{gas_algebra::InternalGas, vm_status::StatusCode};
-use move_vm_runtime::native_functions::NativeContext;
+use move_vm_runtime::{native_charge_gas_early_exit, native_functions::NativeContext};
 use move_vm_types::{
     loaded_data::runtime_types::Type,
     natives::function::NativeResult,
     pop_arg,
     values::{Struct, Value, Vector, VectorRef},
 };
-use std::collections::VecDeque;
-use iota_types::nitro_attestation::{parse_nitro_attestation, verify_nitro_attestation};
 
-use crate::{object_runtime::ObjectRuntime, NativesCostTable};
-use move_vm_runtime::native_charge_gas_early_exit;
+use crate::{NativesCostTable, object_runtime::ObjectRuntime};
 
 pub const NOT_SUPPORTED_ERROR: u64 = 0;
 pub const PARSE_ERROR: u64 = 1;

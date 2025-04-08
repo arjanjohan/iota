@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use diesel_async::RunQueryDsl;
-use iota_indexer_alt_framework::pipeline::{concurrent::Handler, Processor};
+use iota_indexer_alt_framework::pipeline::{Processor, concurrent::Handler};
 use iota_indexer_alt_schema::{objects::StoredObjVersion, schema::obj_versions};
 use iota_pg_db as db;
 use iota_types::full_checkpoint_content::CheckpointData;

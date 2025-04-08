@@ -2,21 +2,6 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    AppState, BatchFaucetResponse, BatchStatusFaucetResponse, FaucetConfig, FaucetError,
-    FaucetRequest, FaucetResponse, FixedAmountRequest, RequestMetricsLayer,
-};
-use axum::{
-    error_handling::HandleErrorLayer,
-    extract::{ConnectInfo, Host, Path},
-    http::{header::HeaderMap, StatusCode},
-    response::{IntoResponse, Redirect, Response},
-    routing::{get, post},
-    BoxError, Extension, Json, Router,
-};
-use http::Method;
-use iota_metrics::spawn_monitored_task;
-use prometheus::Registry;
 use std::{
     borrow::Cow,
     net::{IpAddr, SocketAddr},
@@ -24,22 +9,36 @@ use std::{
     sync::Arc,
     time::{Duration, Instant},
 };
+
+use anyhow::ensure;
+use axum::{
+    BoxError, Extension, Json, Router,
+    error_handling::HandleErrorLayer,
+    extract::{ConnectInfo, Host, Path},
+    http::{StatusCode, header::HeaderMap},
+    response::{IntoResponse, Redirect, Response},
+    routing::{get, post},
+};
+use dashmap::{DashMap, mapref::entry::Entry};
+use http::Method;
 use iota_config::IOTA_CLIENT_CONFIG;
+use iota_metrics::spawn_monitored_task;
 use iota_sdk::wallet_context::WalletContext;
+use once_cell::sync::Lazy;
+use prometheus::Registry;
+use serde::Deserialize;
 use tower::ServiceBuilder;
 use tower_governor::{
-    governor::GovernorConfigBuilder, key_extractor::GlobalKeyExtractor, GovernorLayer,
+    GovernorLayer, governor::GovernorConfigBuilder, key_extractor::GlobalKeyExtractor,
 };
 use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info, warn};
 use uuid::Uuid;
 
-use crate::faucet::Faucet;
-use dashmap::{mapref::entry::Entry, DashMap};
-use serde::Deserialize;
-
-use anyhow::ensure;
-use once_cell::sync::Lazy;
+use crate::{
+    AppState, BatchFaucetResponse, BatchStatusFaucetResponse, FaucetConfig, FaucetError,
+    FaucetRequest, FaucetResponse, FixedAmountRequest, RequestMetricsLayer, faucet::Faucet,
+};
 
 const DEFAULT_FAUCET_WEB_APP_URL: &str = "https://faucet.iota.io";
 
@@ -208,8 +207,10 @@ pub async fn start_faucet(
     prometheus_registry: &Registry,
 ) -> Result<(), anyhow::Error> {
     let (cloudflare_turnstile_url, turnstile_secret_key) = if app_state.config.authenticated {
-        ensure!(TURNSTILE_SECRET_KEY.is_some() && CLOUDFLARE_TURNSTILE_URL.is_some(),
-                "Both CLOUDFLARE_TURNSTILE_URL and TURNSTILE_SECRET_KEY env vars must be set for testnet deployment (--authenticated flag was set)");
+        ensure!(
+            TURNSTILE_SECRET_KEY.is_some() && CLOUDFLARE_TURNSTILE_URL.is_some(),
+            "Both CLOUDFLARE_TURNSTILE_URL and TURNSTILE_SECRET_KEY env vars must be set for testnet deployment (--authenticated flag was set)"
+        );
 
         (
             CLOUDFLARE_TURNSTILE_URL.as_ref().unwrap().to_string(),
@@ -557,7 +558,7 @@ async fn request_gas(
                 Json(FaucetResponse::from(FaucetError::Internal(
                     "Input Error.".to_string(),
                 ))),
-            )
+            );
         }
     };
     match result {
@@ -619,12 +620,18 @@ fn secs_to_human_readable(seconds: u64) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::{
+        net::{IpAddr, Ipv4Addr},
+        time::Duration,
+    };
+
     use serde_json::json;
-    use std::net::{IpAddr, Ipv4Addr};
-    use std::time::Duration;
-    use wiremock::matchers::{method, path};
-    use wiremock::{Mock, MockServer, ResponseTemplate};
+    use wiremock::{
+        Mock, MockServer, ResponseTemplate,
+        matchers::{method, path},
+    };
+
+    use super::*;
 
     const MAX_REQUESTS_PER_IP: u64 = 3;
     const RESET_TIME_INTERVAL: Duration = Duration::from_secs(5);

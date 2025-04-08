@@ -5,18 +5,17 @@
 use std::sync::Arc;
 
 use diesel::prelude::ConnectionError;
-use diesel_async::pooled_connection::bb8::Pool;
-use diesel_async::pooled_connection::bb8::PooledConnection;
-use diesel_async::pooled_connection::bb8::RunError;
-use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-use diesel_async::pooled_connection::PoolError;
-use diesel_async::RunQueryDsl;
-use diesel_async::{AsyncConnection, AsyncPgConnection};
+use diesel_async::{
+    AsyncConnection, AsyncPgConnection, RunQueryDsl,
+    pooled_connection::{
+        AsyncDieselConnectionManager, PoolError,
+        bb8::{Pool, PooledConnection, RunError},
+    },
+};
 use futures::FutureExt;
 use url::Url;
 
-use crate::db::ConnectionConfig;
-use crate::db::ConnectionPoolConfig;
+use crate::db::{ConnectionConfig, ConnectionPoolConfig};
 
 #[derive(Clone, Debug)]
 pub struct ConnectionPool {

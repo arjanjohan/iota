@@ -2,6 +2,12 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    fs::File,
+    io::{BufReader, Read},
+    path::{Path, PathBuf},
+};
+
 use clap::Parser;
 use move_binary_format::CompiledModule;
 use move_bytecode_source_map::utils::serialize_to_json_string;
@@ -9,10 +15,6 @@ use move_cli::base;
 use move_disassembler::disassembler::Disassembler;
 use move_ir_types::location::Spanned;
 use move_package::BuildConfig;
-use std::fs::File;
-use std::io::{BufReader, Read};
-use std::path::Path;
-use std::path::PathBuf;
 
 #[derive(Parser)]
 #[group(id = "iota-move-disassemmble")]

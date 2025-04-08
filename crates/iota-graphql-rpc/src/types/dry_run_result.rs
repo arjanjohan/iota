@@ -2,16 +2,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::base64::Base64;
-use super::move_type::MoveType;
-use super::transaction_block::{TransactionBlock, TransactionBlockInner};
-use super::transaction_block_kind::programmable::TransactionArgument;
-use crate::error::Error;
 use async_graphql::*;
 use iota_json_rpc_types::{DevInspectResults, IotaExecutionResult};
-use iota_types::effects::TransactionEffects as NativeTransactionEffects;
-use iota_types::transaction::TransactionData as NativeTransactionData;
-use iota_types::TypeTag;
+use iota_types::{
+    TypeTag, effects::TransactionEffects as NativeTransactionEffects,
+    transaction::TransactionData as NativeTransactionData,
+};
+
+use super::{
+    base64::Base64,
+    move_type::MoveType,
+    transaction_block::{TransactionBlock, TransactionBlockInner},
+    transaction_block_kind::programmable::TransactionArgument,
+};
+use crate::error::Error;
 
 #[derive(Clone, Debug, SimpleObject)]
 pub(crate) struct DryRunResult {

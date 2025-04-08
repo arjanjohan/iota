@@ -2,25 +2,28 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::anyhow;
-use std::borrow::Cow;
-use std::borrow::Cow::Owned;
-use std::cmp::Ordering;
-use std::collections::BTreeMap;
-use std::env;
-use std::fmt::Display;
-use std::io::Write;
-use std::sync::{Arc, RwLock};
+use std::{
+    borrow::{Cow, Cow::Owned},
+    cmp::Ordering,
+    collections::BTreeMap,
+    env,
+    fmt::Display,
+    io::Write,
+    sync::{Arc, RwLock},
+};
 
+use anyhow::anyhow;
 use async_trait::async_trait;
 use clap::*;
 use colored::Colorize;
-use rustyline::completion::{Completer, Pair};
-use rustyline::error::ReadlineError;
-use rustyline::highlight::Highlighter;
-use rustyline::hint::Hinter;
-use rustyline::validate::Validator;
-use rustyline::{Config, Context, Editor};
+use rustyline::{
+    Config, Context, Editor,
+    completion::{Completer, Pair},
+    error::ReadlineError,
+    highlight::Highlighter,
+    hint::Hinter,
+    validate::Validator,
+};
 use rustyline_derive::Helper;
 use unescape::unescape;
 
@@ -357,16 +360,22 @@ impl PartialOrd<Self> for CacheKey {
 /// the command field for `CacheKey` is optional and can be used as a wildcard when equal `None`
 /// # Examples
 /// ```
-/// use std::cmp::Ordering;
-/// use std::collections::BTreeMap;
+/// use std::{cmp::Ordering, collections::BTreeMap};
+///
 /// use iota::shell::CacheKey;
 ///
-/// assert_eq!(Ordering::Equal, CacheKey::flag("--flag").cmp(&CacheKey::new("any command", "--flag")));
+/// assert_eq!(
+///     Ordering::Equal,
+///     CacheKey::flag("--flag").cmp(&CacheKey::new("any command", "--flag"))
+/// );
 ///
 /// let mut data = BTreeMap::new();
 /// data.insert(CacheKey::flag("--flag"), "Some Data");
 ///
-/// assert_eq!(Some(&"Some Data"), data.get(&CacheKey::new("This can be anything", "--flag")));
+/// assert_eq!(
+///     Some(&"Some Data"),
+///     data.get(&CacheKey::new("This can be anything", "--flag"))
+/// );
 /// assert_eq!(Some(&"Some Data"), data.get(&CacheKey::flag("--flag")));
 /// ```
 impl Ord for CacheKey {

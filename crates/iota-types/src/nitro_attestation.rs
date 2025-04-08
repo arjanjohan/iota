@@ -2,20 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use serde::de::{MapAccess, Visitor};
-use serde::{ser::SerializeSeq, Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
-use x509_parser::public_key::PublicKey;
-use x509_parser::time::ASN1Time;
-use x509_parser::x509::SubjectPublicKeyInfo;
-
-use crate::error::{IotaError, IotaResult};
 
 use ciborium::value::{Integer, Value};
 use once_cell::sync::Lazy;
-use p384::ecdsa::signature::Verifier;
-use p384::ecdsa::{Signature, VerifyingKey};
-use x509_parser::{certificate::X509Certificate, prelude::FromDer};
+use p384::ecdsa::{Signature, VerifyingKey, signature::Verifier};
+use serde::{
+    Deserialize, Deserializer, Serialize, Serializer,
+    de::{MapAccess, Visitor},
+    ser::SerializeSeq,
+};
+use x509_parser::{
+    certificate::X509Certificate, prelude::FromDer, public_key::PublicKey, time::ASN1Time,
+    x509::SubjectPublicKeyInfo,
+};
+
+use crate::error::{IotaError, IotaResult};
 
 #[cfg(test)]
 #[path = "unit_tests/nitro_attestation_tests.rs"]
@@ -211,8 +213,9 @@ impl<'de> Deserialize<'de> for CaseSign1 {
     where
         D: Deserializer<'de>,
     {
-        use serde::de::{Error, SeqAccess, Visitor};
         use std::fmt;
+
+        use serde::de::{Error, SeqAccess, Visitor};
 
         struct CaseSign1Visitor;
 
@@ -298,7 +301,7 @@ impl CaseSign1 {
             Some(_) => {
                 return Err(NitroAttestationVerifyError::InvalidCaseSign1(
                     "invalid tag".to_string(),
-                ))
+                ));
             }
         }
 
@@ -408,7 +411,7 @@ impl AttestationDocument {
                 return Err(NitroAttestationVerifyError::InvalidAttestationDoc(format!(
                     "expected map, got {:?}",
                     document_data
-                )))
+                )));
             }
         };
 
@@ -469,7 +472,7 @@ impl AttestationDocument {
             _ => {
                 return Err(NitroAttestationVerifyError::InvalidAttestationDoc(
                     "cannot parse timestamp".to_string(),
-                ))
+                ));
             }
         };
 
@@ -498,7 +501,7 @@ impl AttestationDocument {
             _ => {
                 return Err(NitroAttestationVerifyError::InvalidAttestationDoc(
                     "cannot parse PCRs".to_string(),
-                ))
+                ));
             }
         };
 
@@ -521,7 +524,7 @@ impl AttestationDocument {
             _ => {
                 return Err(NitroAttestationVerifyError::InvalidAttestationDoc(
                     "cannot parse cabundle".to_string(),
-                ))
+                ));
             }
         };
 

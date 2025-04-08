@@ -6,65 +6,63 @@ pub use checked::*;
 
 #[iota_macros::with_checked_arithmetic]
 mod checked {
-    use std::collections::BTreeSet;
     use std::{
         borrow::Borrow,
-        collections::{BTreeMap, HashMap},
+        collections::{BTreeMap, BTreeSet, HashMap},
         sync::Arc,
     };
 
-    use crate::adapter::new_native_extensions;
-    use crate::error::convert_vm_error;
-    use crate::execution_mode::ExecutionMode;
-    use crate::execution_value::{CommandKind, ObjectContents, TryFromValue, Value};
-    use crate::execution_value::{
-        ExecutionState, InputObjectMetadata, InputValue, ObjectValue, RawValueType, ResultValue,
-        UsageKind,
+    use iota_move_natives::object_runtime::{
+        self, LoadedRuntimeObject, ObjectRuntime, RuntimeResults, get_all_uids, max_event_error,
     };
-    use crate::gas_charger::GasCharger;
-    use crate::programmable_transactions::linkage_view::LinkageView;
-    use crate::type_resolver::TypeTagResolver;
+    use iota_protocol_config::ProtocolConfig;
+    use iota_types::{
+        balance::Balance,
+        base_types::{IotaAddress, MoveObjectType, ObjectID, TxContext},
+        coin::Coin,
+        error::{ExecutionError, ExecutionErrorKind, command_argument_error},
+        event::Event,
+        execution::{ExecutionResults, ExecutionResultsV2},
+        execution_status::CommandArgumentError,
+        metrics::LimitsMetrics,
+        move_package::MovePackage,
+        object::{Data, MoveObject, Object, ObjectInner, Owner},
+        storage::{BackingPackageStore, DenyListResult, PackageObject},
+        transaction::{Argument, CallArg, ObjectArg},
+    };
     use move_binary_format::{
+        CompiledModule,
         errors::{Location, PartialVMError, PartialVMResult, VMError, VMResult},
         file_format::{CodeOffset, FunctionDefinitionIndex, TypeParameterIndex},
-        CompiledModule,
     };
-    use move_core_types::resolver::ModuleResolver;
-    use move_core_types::vm_status::StatusCode;
     use move_core_types::{
         account_address::AccountAddress,
         identifier::IdentStr,
         language_storage::{ModuleId, StructTag, TypeTag},
+        resolver::ModuleResolver,
+        vm_status::StatusCode,
     };
     use move_trace_format::format::MoveTraceBuilder;
-    use move_vm_runtime::native_extensions::NativeContextExtensions;
     use move_vm_runtime::{
         move_vm::MoveVM,
+        native_extensions::NativeContextExtensions,
         session::{LoadedFunctionInstantiation, SerializedReturnValues},
     };
-    use move_vm_types::data_store::DataStore;
-    use move_vm_types::loaded_data::runtime_types::Type;
-    use iota_move_natives::object_runtime::{
-        self, get_all_uids, max_event_error, LoadedRuntimeObject, ObjectRuntime, RuntimeResults,
-    };
-    use iota_protocol_config::ProtocolConfig;
-    use iota_types::execution::ExecutionResults;
-    use iota_types::storage::{DenyListResult, PackageObject};
-    use iota_types::{
-        balance::Balance,
-        base_types::{MoveObjectType, ObjectID, IotaAddress, TxContext},
-        coin::Coin,
-        error::{ExecutionError, ExecutionErrorKind},
-        event::Event,
-        execution::ExecutionResultsV2,
-        metrics::LimitsMetrics,
-        move_package::MovePackage,
-        object::{Data, MoveObject, Object, ObjectInner, Owner},
-        storage::BackingPackageStore,
-        transaction::{Argument, CallArg, ObjectArg},
-    };
-    use iota_types::{error::command_argument_error, execution_status::CommandArgumentError};
+    use move_vm_types::{data_store::DataStore, loaded_data::runtime_types::Type};
     use tracing::instrument;
+
+    use crate::{
+        adapter::new_native_extensions,
+        error::convert_vm_error,
+        execution_mode::ExecutionMode,
+        execution_value::{
+            CommandKind, ExecutionState, InputObjectMetadata, InputValue, ObjectContents,
+            ObjectValue, RawValueType, ResultValue, TryFromValue, UsageKind, Value,
+        },
+        gas_charger::GasCharger,
+        programmable_transactions::linkage_view::LinkageView,
+        type_resolver::TypeTagResolver,
+    };
 
     /// Maintains all runtime state specific to programmable transactions
     pub struct ExecutionContext<'vm, 'state, 'a> {
@@ -154,7 +152,8 @@ mod checked {
                     &mut linkage_view,
                     &[],
                     &mut input_object_map,
-                    /* imm override */ false,
+                    // imm override
+                    false,
                     gas_coin,
                 )?;
                 // subtract the max gas budget. This amount is off limits in the programmable transaction,
@@ -660,7 +659,7 @@ mod checked {
                                     result_idx: i as u16,
                                     secondary_idx: j as u16,
                                 }
-                                .into())
+                                .into());
                             }
                             Some(Value::Raw(RawValueType::Any, _)) => (),
                             Some(Value::Raw(RawValueType::Loaded { abilities, .. }, _)) => {
@@ -875,8 +874,8 @@ mod checked {
 
         /// Special case errors for type arguments to Move functions
         pub fn convert_type_argument_error(&self, idx: usize, error: VMError) -> ExecutionError {
-            use move_core_types::vm_status::StatusCode;
             use iota_types::execution_status::TypeArgumentError;
+            use move_core_types::vm_status::StatusCode;
             match error.major_status() {
                 StatusCode::NUMBER_OF_TYPE_ARGUMENTS_MISMATCH => {
                     ExecutionErrorKind::TypeArityMismatch.into()
@@ -1152,7 +1151,7 @@ mod checked {
                 Type::Vector(Box::new(load_type(vm, linkage_view, new_packages, inner)?))
             }
             TypeTag::Struct(struct_tag) => {
-                return load_type_from_struct(vm, linkage_view, new_packages, struct_tag)
+                return load_type_from_struct(vm, linkage_view, new_packages, struct_tag);
             }
         })
     }
@@ -1347,7 +1346,8 @@ mod checked {
                 linkage_view,
                 new_packages,
                 input_object_map,
-                /* imm override */ false,
+                // imm override
+                false,
                 id,
             ),
             ObjectArg::SharedObject { id, mutable, .. } => load_object(
@@ -1357,7 +1357,8 @@ mod checked {
                 linkage_view,
                 new_packages,
                 input_object_map,
-                /* imm override */ !mutable,
+                // imm override
+                !mutable,
                 id,
             ),
             ObjectArg::Receiving((id, version, _)) => {

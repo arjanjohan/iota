@@ -1,40 +1,42 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::certificate_deny_config::CertificateDenyConfig;
-use crate::genesis;
-use crate::object_storage_config::ObjectStoreConfig;
-use crate::p2p::P2pConfig;
-use crate::transaction_deny_config::TransactionDenyConfig;
-use crate::verifier_signing_config::VerifierSigningConfig;
-use crate::Config;
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    net::SocketAddr,
+    num::NonZeroUsize,
+    path::{Path, PathBuf},
+    sync::Arc,
+    time::Duration,
+};
+
 use anyhow::Result;
 use consensus_config::Parameters as ConsensusParameters;
 use iota_common::fatal;
+use iota_keys::keypair_file::{read_authority_keypair_from_file, read_keypair_from_file};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID},
+    committee::EpochId,
+    crypto::{
+        AccountKeyPair, AuthorityKeyPair, AuthorityPublicKeyBytes, IotaKeyPair, KeypairTraits,
+        NetworkKeyPair, get_key_pair_from_rng,
+    },
+    messages_checkpoint::CheckpointSequenceNumber,
+    multiaddr::Multiaddr,
+    supported_protocol_versions::{Chain, SupportedProtocolVersions},
+    traffic_control::{PolicyConfig, RemoteFirewallConfig},
+};
 use once_cell::sync::OnceCell;
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use std::collections::{BTreeMap, BTreeSet};
-use std::net::SocketAddr;
-use std::num::NonZeroUsize;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use std::time::Duration;
-use iota_keys::keypair_file::{read_authority_keypair_from_file, read_keypair_from_file};
-use iota_types::base_types::{ObjectID, IotaAddress};
-use iota_types::committee::EpochId;
-use iota_types::crypto::AuthorityPublicKeyBytes;
-use iota_types::crypto::KeypairTraits;
-use iota_types::crypto::NetworkKeyPair;
-use iota_types::crypto::IotaKeyPair;
-use iota_types::messages_checkpoint::CheckpointSequenceNumber;
-use iota_types::supported_protocol_versions::{Chain, SupportedProtocolVersions};
-use iota_types::traffic_control::{PolicyConfig, RemoteFirewallConfig};
-
-use iota_types::crypto::{get_key_pair_from_rng, AccountKeyPair, AuthorityKeyPair};
-use iota_types::multiaddr::Multiaddr;
 use tracing::info;
+
+use crate::{
+    Config, certificate_deny_config::CertificateDenyConfig, genesis,
+    object_storage_config::ObjectStoreConfig, p2p::P2pConfig,
+    transaction_deny_config::TransactionDenyConfig, verifier_signing_config::VerifierSigningConfig,
+};
 
 // Default max number of concurrent requests served
 pub const DEFAULT_GRPC_CONCURRENCY_LIMIT: usize = 20000000000;
@@ -474,10 +476,10 @@ pub fn default_zklogin_oauth_providers() -> BTreeMap<Chain, BTreeSet<String>> {
         "Threedos".to_string(),
         "Onefc".to_string(),
         "FanTV".to_string(),
-        "AwsTenant-region:us-east-1-tenant_id:us-east-1_LPSLCkC3A".to_string(), // test tenant in iota aws
-        "AwsTenant-region:us-east-1-tenant_id:us-east-1_qPsZxYqd8".to_string(), // Ambrus, external partner
+        "AwsTenant-region:us-east-1-tenant_id:us-east-1_LPSLCkC3A".to_string(), /* test tenant in iota aws */
+        "AwsTenant-region:us-east-1-tenant_id:us-east-1_qPsZxYqd8".to_string(), /* Ambrus, external partner */
         "Arden".to_string(),                                                    // Arden partner
-        "AwsTenant-region:eu-west-3-tenant_id:eu-west-3_gGVCx53Es".to_string(), // Trace, external partner
+        "AwsTenant-region:eu-west-3-tenant_id:eu-west-3_gGVCx53Es".to_string(), /* Trace, external partner */
     ]);
 
     // providers that are available for mainnet and testnet.
@@ -486,13 +488,13 @@ pub fn default_zklogin_oauth_providers() -> BTreeMap<Chain, BTreeSet<String>> {
         "Facebook".to_string(),
         "Twitch".to_string(),
         "Apple".to_string(),
-        "AwsTenant-region:us-east-1-tenant_id:us-east-1_qPsZxYqd8".to_string(), // Ambrus, external partner
+        "AwsTenant-region:us-east-1-tenant_id:us-east-1_qPsZxYqd8".to_string(), /* Ambrus, external partner */
         "KarrierOne".to_string(),
         "Credenza3".to_string(),
         "Playtron".to_string(),
         "Onefc".to_string(),
         "Threedos".to_string(),
-        "AwsTenant-region:eu-west-3-tenant_id:eu-west-3_gGVCx53Es".to_string(), // Trace, external partner
+        "AwsTenant-region:eu-west-3-tenant_id:eu-west-3_gGVCx53Es".to_string(), /* Trace, external partner */
         "Arden".to_string(),
         "FanTV".to_string(),
     ]);
@@ -1332,9 +1334,11 @@ mod tests {
     use std::path::PathBuf;
 
     use fastcrypto::traits::KeyPair;
-    use rand::{rngs::StdRng, SeedableRng};
     use iota_keys::keypair_file::{write_authority_keypair_to_file, write_keypair_to_file};
-    use iota_types::crypto::{get_key_pair_from_rng, AuthorityKeyPair, NetworkKeyPair, IotaKeyPair};
+    use iota_types::crypto::{
+        AuthorityKeyPair, IotaKeyPair, NetworkKeyPair, get_key_pair_from_rng,
+    };
+    use rand::{SeedableRng, rngs::StdRng};
 
     use super::Genesis;
     use crate::NodeConfig;

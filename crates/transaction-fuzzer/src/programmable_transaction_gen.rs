@@ -4,14 +4,15 @@
 
 use std::{cmp, str::FromStr};
 
+use iota_protocol_config::ProtocolConfig;
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef},
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    transaction::{Argument, CallArg, Command, ProgrammableTransaction},
+};
 use move_core_types::identifier::Identifier;
 use once_cell::sync::Lazy;
-use proptest::collection::vec;
-use proptest::prelude::*;
-use iota_protocol_config::ProtocolConfig;
-use iota_types::base_types::{ObjectID, ObjectRef, IotaAddress};
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::transaction::{Argument, CallArg, Command, ProgrammableTransaction};
+use proptest::{collection::vec, prelude::*};
 
 static PROTOCOL_CONFIG: Lazy<ProtocolConfig> =
     Lazy::new(ProtocolConfig::get_for_max_version_UNSAFE);
@@ -349,7 +350,7 @@ pub fn gen_merge_coins_input(
                     cap,
                     coins_needed,
                     usable_coins,
-                    1, /* one available coin already used */
+                    1, // one available coin already used
                     output.len(),
                     &mut coins,
                     cmd_inc,
@@ -487,7 +488,7 @@ fn gen_transfer_or_move_vec_input_internal(
                     cap,
                     coins_needed,
                     usable_coins,
-                    0, /* no available coins used */
+                    0, // no available coins used
                     output.len(),
                     coins,
                     cmd_inc,

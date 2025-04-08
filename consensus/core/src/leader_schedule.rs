@@ -10,14 +10,14 @@ use std::{
 
 use consensus_config::{AuthorityIndex, Stake};
 use parking_lot::RwLock;
-use rand::{prelude::SliceRandom, rngs::StdRng, SeedableRng};
+use rand::{SeedableRng, prelude::SliceRandom, rngs::StdRng};
 
 use crate::{
+    CommitIndex, Round,
     commit::CommitRange,
     context::Context,
     dag_state::DagState,
     leader_scoring::{ReputationScoreCalculator, ReputationScores},
-    CommitIndex, Round,
 };
 
 /// The `LeaderSchedule` is responsible for producing the leader schedule across
@@ -72,15 +72,15 @@ impl LeaderSchedule {
             .consensus_distributed_vote_scoring_strategy()
         {
             tracing::info!(
-            "LeaderSchedule recovered using {leader_swap_table:?}. There are {} committed subdags scored in DagState.",
-            dag_state.read().scoring_subdags_count(),
-        );
+                "LeaderSchedule recovered using {leader_swap_table:?}. There are {} committed subdags scored in DagState.",
+                dag_state.read().scoring_subdags_count(),
+            );
         } else {
             // TODO: Remove when DistributedVoteScoring is enabled.
             tracing::info!(
-            "LeaderSchedule recovered using {leader_swap_table:?}. There are {} pending unscored subdags in DagState.",
-            dag_state.read().unscored_committed_subdags_count(),
-        );
+                "LeaderSchedule recovered using {leader_swap_table:?}. There are {} pending unscored subdags in DagState.",
+                dag_state.read().unscored_committed_subdags_count(),
+            );
         }
 
         // create the schedule
@@ -271,7 +271,8 @@ impl LeaderSchedule {
         // preceding commit range of the old swap table.
         if *old_commit_range != CommitRange::default() {
             assert!(
-                old_commit_range.is_next_range(new_commit_range) && old_commit_range.is_equal_size(new_commit_range),
+                old_commit_range.is_next_range(new_commit_range)
+                    && old_commit_range.is_equal_size(new_commit_range),
                 "The new LeaderSwapTable has an invalid CommitRange. Old LeaderSwapTable {old_commit_range:?} vs new LeaderSwapTable {new_commit_range:?}",
             );
         }
@@ -514,7 +515,7 @@ mod tests {
     use crate::{
         block::{BlockDigest, BlockRef, BlockTimestampMs, TestBlock, VerifiedBlock},
         commit::{CommitDigest, CommitInfo, CommitRef, CommittedSubDag, TrustedCommit},
-        storage::{mem_store::MemStore, Store, WriteBatch},
+        storage::{Store, WriteBatch, mem_store::MemStore},
         test_dag_builder::DagBuilder,
     };
 
@@ -872,9 +873,11 @@ mod tests {
             AuthorityIndex::new_for_test(2)
         );
         assert_eq!(leader_swap_table.bad_nodes.len(), 1);
-        assert!(leader_swap_table
-            .bad_nodes
-            .contains_key(&AuthorityIndex::new_for_test(0)));
+        assert!(
+            leader_swap_table
+                .bad_nodes
+                .contains_key(&AuthorityIndex::new_for_test(0))
+        );
         assert_eq!(
             leader_schedule.elect_leader(4, 0),
             AuthorityIndex::new_for_test(2)
@@ -900,9 +903,11 @@ mod tests {
             AuthorityIndex::new_for_test(3)
         );
         assert_eq!(leader_swap_table.bad_nodes.len(), 1);
-        assert!(leader_swap_table
-            .bad_nodes
-            .contains_key(&AuthorityIndex::new_for_test(0)));
+        assert!(
+            leader_swap_table
+                .bad_nodes
+                .contains_key(&AuthorityIndex::new_for_test(0))
+        );
     }
 
     #[tokio::test]
@@ -1386,9 +1391,11 @@ mod tests {
             AuthorityIndex::new_for_test(2)
         );
         assert_eq!(leader_swap_table.bad_nodes.len(), 1);
-        assert!(leader_swap_table
-            .bad_nodes
-            .contains_key(&AuthorityIndex::new_for_test(0)));
+        assert!(
+            leader_swap_table
+                .bad_nodes
+                .contains_key(&AuthorityIndex::new_for_test(0))
+        );
         assert_eq!(
             leader_schedule.elect_leader(4, 0),
             AuthorityIndex::new_for_test(2)

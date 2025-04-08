@@ -2,23 +2,23 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::base_types::{FullObjectID, SequenceNumber, VersionDigest};
-use crate::effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents};
-use crate::error::IotaResult;
-use crate::execution::DynamicallyLoadedObjectMetadata;
-use crate::storage::PackageObject;
-use crate::storage::{BackingPackageStore, InputKey};
-use crate::{
-    base_types::ObjectID,
-    object::{Object, Owner},
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::Arc,
 };
-use move_binary_format::binary_config::BinaryConfig;
-use move_binary_format::CompiledModule;
+
+use move_binary_format::{CompiledModule, binary_config::BinaryConfig};
 use move_bytecode_utils::module_cache::GetModule;
 use move_core_types::language_storage::ModuleId;
-use std::collections::BTreeMap;
-use std::collections::HashMap;
-use std::sync::Arc;
+
+use crate::{
+    base_types::{FullObjectID, ObjectID, SequenceNumber, VersionDigest},
+    effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents},
+    error::IotaResult,
+    execution::DynamicallyLoadedObjectMetadata,
+    object::{Object, Owner},
+    storage::{BackingPackageStore, InputKey, PackageObject},
+};
 
 pub type WrittenObjects = BTreeMap<ObjectID, Object>;
 pub type ObjectMap = BTreeMap<ObjectID, Object>;

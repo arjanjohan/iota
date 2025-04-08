@@ -2,8 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use miette::{miette, LabeledSpan, Severity};
 use std::fmt;
+
+use miette::{LabeledSpan, Severity, miette};
 use thiserror::Error;
 
 pub type PTBResult<T> = Result<T, PTBError>;

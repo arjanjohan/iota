@@ -4,26 +4,26 @@
 
 #![allow(clippy::type_complexity)]
 
-use crate::crypto::{BridgeAuthorityKeyPair, BridgeAuthoritySignInfo};
-use crate::error::{BridgeError, BridgeResult};
-use crate::eth_client::EthClient;
-use crate::metrics::BridgeMetrics;
-use crate::iota_client::{IotaClient, IotaClientInner};
-use crate::types::{BridgeAction, SignedBridgeAction};
+use std::{num::NonZeroUsize, str::FromStr, sync::Arc};
+
 use async_trait::async_trait;
 use axum::Json;
-use ethers::providers::JsonRpcClient;
-use ethers::types::TxHash;
-use lru::LruCache;
-use std::num::NonZeroUsize;
-use std::str::FromStr;
-use std::sync::Arc;
+use ethers::{providers::JsonRpcClient, types::TxHash};
 use iota_types::digests::TransactionDigest;
+use lru::LruCache;
 use tap::TapFallible;
-use tokio::sync::{oneshot, Mutex};
+use tokio::sync::{Mutex, oneshot};
 use tracing::info;
 
 use super::governance_verifier::GovernanceVerifier;
+use crate::{
+    crypto::{BridgeAuthorityKeyPair, BridgeAuthoritySignInfo},
+    error::{BridgeError, BridgeResult},
+    eth_client::EthClient,
+    iota_client::{IotaClient, IotaClientInner},
+    metrics::BridgeMetrics,
+    types::{BridgeAction, SignedBridgeAction},
+};
 
 #[async_trait]
 pub trait BridgeRequestHandlerTrait {
@@ -350,20 +350,24 @@ impl BridgeRequestHandlerTrait for BridgeRequestHandler {
 mod tests {
     use std::collections::HashSet;
 
+    use ethers::types::{Address as EthAddress, TransactionReceipt};
+    use iota_json_rpc_types::{BcsEvent, IotaEvent};
+    use iota_types::{
+        base_types::IotaAddress,
+        bridge::{BridgeChainId, TOKEN_ID_USDC},
+        crypto::get_key_pair,
+    };
+
     use super::*;
     use crate::{
         eth_mock_provider::EthMockProvider,
-        events::{init_all_struct_tags, MoveTokenDepositedEvent, IotaToEthTokenBridgeV1},
+        events::{IotaToEthTokenBridgeV1, MoveTokenDepositedEvent, init_all_struct_tags},
         iota_mock_client::IotaMockClient,
         test_utils::{
-            get_test_log_and_action, get_test_iota_to_eth_bridge_action, mock_last_finalized_block,
+            get_test_iota_to_eth_bridge_action, get_test_log_and_action, mock_last_finalized_block,
         },
         types::{EmergencyAction, EmergencyActionType, LimitUpdateAction},
     };
-    use ethers::types::{Address as EthAddress, TransactionReceipt};
-    use iota_json_rpc_types::{BcsEvent, IotaEvent};
-    use iota_types::bridge::{BridgeChainId, TOKEN_ID_USDC};
-    use iota_types::{base_types::IotaAddress, crypto::get_key_pair};
 
     #[tokio::test]
     async fn test_iota_signer_with_cache() {
@@ -374,15 +378,18 @@ mod tests {
             iota_client: Arc::new(IotaClient::new_for_testing(iota_client_mock.clone())),
         };
         let metrics = Arc::new(BridgeMetrics::new_for_testing());
-        let mut iota_signer_with_cache = SignerWithCache::new(signer.clone(), iota_verifier, metrics);
+        let mut iota_signer_with_cache =
+            SignerWithCache::new(signer.clone(), iota_verifier, metrics);
 
         // Test `get_cache_entry` creates a new entry if not exist
         let iota_tx_digest = TransactionDigest::random();
         let iota_event_idx = 42;
-        assert!(iota_signer_with_cache
-            .get_testing_only((iota_tx_digest, iota_event_idx))
-            .await
-            .is_none());
+        assert!(
+            iota_signer_with_cache
+                .get_testing_only((iota_tx_digest, iota_event_idx))
+                .await
+                .is_none()
+        );
         let entry = iota_signer_with_cache
             .get_cache_entry((iota_tx_digest, iota_event_idx))
             .await;
@@ -518,10 +525,12 @@ mod tests {
         // Test `get_cache_entry` creates a new entry if not exist
         let eth_tx_hash = TxHash::random();
         let eth_event_idx = 42;
-        assert!(eth_signer_with_cache
-            .get_testing_only((eth_tx_hash, eth_event_idx))
-            .await
-            .is_none());
+        assert!(
+            eth_signer_with_cache
+                .get_testing_only((eth_tx_hash, eth_event_idx))
+                .await
+                .is_none()
+        );
         let entry = eth_signer_with_cache
             .get_cache_entry((eth_tx_hash, eth_event_idx))
             .await;

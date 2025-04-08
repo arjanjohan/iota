@@ -2,21 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{path::PathBuf, sync::Arc, time::Duration};
+
 use futures::future::join_all;
-use rand::rngs::StdRng;
-use rand::seq::SliceRandom;
-use rand::{Rng, SeedableRng};
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::Duration;
 use iota_swarm_config::genesis_config::{AccountConfig, DEFAULT_GAS_AMOUNT};
+use rand::{Rng, SeedableRng, rngs::StdRng, seq::SliceRandom};
 use surf_strategy::SurfStrategy;
 use test_cluster::{TestCluster, TestClusterBuilder};
 use tokio::sync::watch;
 use tracing::info;
 
-use crate::surfer_state::SurfStatistics;
-use crate::surfer_task::SurferTask;
+use crate::{surfer_state::SurfStatistics, surfer_task::SurferTask};
 
 pub mod surf_strategy;
 mod surfer_state;

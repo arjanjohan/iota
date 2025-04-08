@@ -2,33 +2,34 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use prometheus::default_registry;
-use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::{
     collections::BTreeMap,
     future::Future,
     path::PathBuf,
-    sync::atomic::Ordering,
-    sync::{atomic::AtomicU32, Arc},
+    sync::{
+        Arc,
+        atomic::{AtomicU32, Ordering},
+    },
     time::{Duration, Instant},
 };
+
 use iota_framework::BuiltInFramework;
 use iota_test_transaction_builder::TestTransactionBuilder;
 use iota_types::{
-    base_types::{random_object_ref, IotaAddress},
-    crypto::{deterministic_random_account_key, get_key_pair_from_rng, AccountKeyPair},
-    object::{MoveObject, Owner, OBJECT_START_VERSION},
-    storage::ChildObjectResolver,
-};
-use iota_types::{
+    base_types::{IotaAddress, random_object_ref},
+    crypto::{AccountKeyPair, deterministic_random_account_key, get_key_pair_from_rng},
     effects::{TestEffectsBuilder, TransactionEffectsAPI},
     event::Event,
+    object::{MoveObject, OBJECT_START_VERSION, Owner},
+    storage::ChildObjectResolver,
 };
+use prometheus::default_registry;
+use rand::{Rng, SeedableRng, rngs::StdRng};
 use tokio::sync::RwLock;
 
 use super::*;
 use crate::{
-    authority::{test_authority_builder::TestAuthorityBuilder, AuthorityState, AuthorityStore},
+    authority::{AuthorityState, AuthorityStore, test_authority_builder::TestAuthorityBuilder},
     execution_cache::ExecutionCacheAPI,
 };
 
@@ -775,10 +776,11 @@ async fn test_lt_or_eq_caching() {
         assert!(!s.cache.cached.object_by_id_cache.contains_key(&s.obj_id(1)));
 
         // version <= 0 does not exist
-        assert!(s
-            .cache()
-            .find_object_lt_or_eq_version(s.obj_id(1), 0.into())
-            .is_none());
+        assert!(
+            s.cache()
+                .find_object_lt_or_eq_version(s.obj_id(1), 0.into())
+                .is_none()
+        );
 
         // query above populates cache
         assert_eq!(
@@ -952,11 +954,12 @@ async fn test_invalidate_package_cache_on_revert() {
         s.cache().revert_state_update(&tx1);
         s.clear_state_end_of_epoch();
 
-        assert!(s
-            .cache()
-            .get_package_object(&s.obj_id(2))
-            .unwrap()
-            .is_none());
+        assert!(
+            s.cache()
+                .get_package_object(&s.obj_id(2))
+                .unwrap()
+                .is_none()
+        );
     })
     .await;
 }

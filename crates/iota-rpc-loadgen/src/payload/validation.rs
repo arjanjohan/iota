@@ -2,18 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{collections::HashSet, fmt::Debug};
+
 use futures::future::join_all;
-use itertools::Itertools;
-use std::collections::HashSet;
-use std::fmt::Debug;
 use iota_json_rpc_types::{
     IotaObjectDataOptions, IotaObjectResponse, IotaTransactionBlockEffectsAPI,
     IotaTransactionBlockResponse, IotaTransactionBlockResponseOptions,
 };
 use iota_sdk::IotaClient;
 use iota_types::base_types::{ObjectID, TransactionDigest};
-use tracing::error;
-use tracing::log::warn;
+use itertools::Itertools;
+use tracing::{error, log::warn};
 
 const LOADGEN_QUERY_MAX_RESULT_LIMIT: usize = 25;
 
@@ -29,7 +28,11 @@ where
     if let Some((vec_index, v)) = entities.iter().enumerate().find(|(_, v)| v.len() != length) {
         error!(
             "Entity: {} lengths do not match at index {}: first vec has length {} vs vec {} has length {}",
-            entity_name, vec_index, length, vec_index, v.len()
+            entity_name,
+            vec_index,
+            length,
+            vec_index,
+            v.len()
         );
         return;
     }

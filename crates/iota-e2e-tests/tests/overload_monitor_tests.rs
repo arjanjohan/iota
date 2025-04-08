@@ -5,11 +5,12 @@
 // Tests that overload monitor only starts on validators.
 #[cfg(msim)]
 mod simtests {
-    use std::sync::atomic::AtomicUsize;
-    use std::sync::atomic::Ordering;
-    use std::sync::Arc;
-    use iota_macros::register_fail_point;
-    use iota_macros::sim_test;
+    use std::sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    };
+
+    use iota_macros::{register_fail_point, sim_test};
     use test_cluster::TestClusterBuilder;
 
     #[sim_test]

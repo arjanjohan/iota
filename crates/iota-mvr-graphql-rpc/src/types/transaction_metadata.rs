@@ -2,10 +2,9 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::object::ObjectRef;
-use super::iota_address::IotaAddress;
-use super::uint53::UInt53;
 use async_graphql::*;
+
+use super::{iota_address::IotaAddress, object::ObjectRef, uint53::UInt53};
 
 /// The optional extra data a user can provide to a transaction dry run.
 /// `sender` defaults to `0x0`. If gasObjects` is not present, or is an empty list,

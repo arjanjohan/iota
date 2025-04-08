@@ -2,18 +2,20 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::programmable_transactions::context::load_type_from_struct;
-use crate::programmable_transactions::linkage_view::LinkageView;
-use move_core_types::account_address::AccountAddress;
-use move_core_types::annotated_value as A;
-use move_core_types::language_storage::StructTag;
-use move_core_types::resolver::ResourceResolver;
+use iota_types::{
+    base_types::ObjectID,
+    error::{IotaError, IotaResult},
+    execution::TypeLayoutStore,
+    layout_resolver::LayoutResolver,
+    storage::{BackingPackageStore, PackageObject},
+};
+use move_core_types::{
+    account_address::AccountAddress, annotated_value as A, language_storage::StructTag,
+    resolver::ResourceResolver,
+};
 use move_vm_runtime::move_vm::MoveVM;
-use iota_types::base_types::ObjectID;
-use iota_types::error::IotaResult;
-use iota_types::execution::TypeLayoutStore;
-use iota_types::storage::{BackingPackageStore, PackageObject};
-use iota_types::{error::IotaError, layout_resolver::LayoutResolver};
+
+use crate::programmable_transactions::{context::load_type_from_struct, linkage_view::LinkageView};
 
 /// Retrieve a `MoveStructLayout` from a `Type`.
 /// Invocation into the `Session` to leverage the `LinkageView` implementation

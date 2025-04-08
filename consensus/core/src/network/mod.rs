@@ -25,11 +25,11 @@ use consensus_config::{AuthorityIndex, NetworkKeyPair};
 use futures::Stream;
 
 use crate::{
+    Round,
     block::{BlockRef, ExtendedBlock, VerifiedBlock},
     commit::{CommitRange, TrustedCommit},
     context::Context,
     error::ConsensusResult,
-    Round,
 };
 
 // Anemo generated RPC stubs.

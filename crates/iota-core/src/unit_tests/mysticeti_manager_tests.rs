@@ -7,20 +7,20 @@ use std::{sync::Arc, time::Duration};
 use fastcrypto::traits::KeyPair;
 use futures::FutureExt;
 use iota_metrics::RegistryService;
-use prometheus::Registry;
 use iota_swarm_config::network_config_builder::ConfigBuilder;
 use iota_types::messages_checkpoint::{
     CertifiedCheckpointSummary, CheckpointContents, CheckpointSummary,
 };
+use prometheus::Registry;
 use tokio::{sync::mpsc, time::sleep};
 
 use crate::{
-    authority::{test_authority_builder::TestAuthorityBuilder, AuthorityState},
+    authority::{AuthorityState, test_authority_builder::TestAuthorityBuilder},
     checkpoints::{CheckpointMetrics, CheckpointService, CheckpointServiceNoop},
     consensus_adapter::NoopConsensusOverloadChecker,
     consensus_handler::ConsensusHandlerInitializer,
     consensus_manager::{
-        mysticeti_manager::MysticetiManager, ConsensusManagerMetrics, ConsensusManagerTrait,
+        ConsensusManagerMetrics, ConsensusManagerTrait, mysticeti_manager::MysticetiManager,
     },
     consensus_validator::{IotaTxValidator, IotaTxValidatorMetrics},
     mysticeti_adapter::LazyMysticetiClient,

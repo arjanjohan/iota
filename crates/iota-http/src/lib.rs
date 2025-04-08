@@ -2,22 +2,19 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{collections::HashMap, sync::Arc, time::Duration};
+
 use connection_handler::OnConnectionClose;
+pub use http;
 use http::{Request, Response};
 use hyper_util::service::TowerToHyperService;
 use io::ServerIo;
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::Duration;
 use tokio::task::JoinSet;
 use tokio_rustls::TlsAcceptor;
 use tower::{Service, ServiceBuilder, ServiceExt};
 use tracing::trace;
 
-use self::body::BoxBody;
-use self::connection_info::ActiveConnections;
-
-pub use http;
+use self::{body::BoxBody, connection_info::ActiveConnections};
 
 pub mod body;
 mod config;
@@ -28,13 +25,8 @@ mod io;
 mod listener;
 
 pub use config::Config;
-pub use listener::Listener;
-pub use listener::ListenerExt;
-
-pub use connection_info::ConnectInfo;
-pub use connection_info::ConnectionId;
-pub use connection_info::ConnectionInfo;
-pub use connection_info::PeerCertificates;
+pub use connection_info::{ConnectInfo, ConnectionId, ConnectionInfo, PeerCertificates};
+pub use listener::{Listener, ListenerExt};
 
 pub(crate) type BoxError = Box<dyn std::error::Error + Send + Sync>;
 /// h2 alpn in plain format for rustls.
@@ -378,8 +370,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use axum::Router;
+
+    use super::*;
 
     #[tokio::test]
     async fn simple() {

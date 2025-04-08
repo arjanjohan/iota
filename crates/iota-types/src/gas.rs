@@ -8,22 +8,25 @@ pub use checked::*;
 #[iota_macros::with_checked_arithmetic]
 pub mod checked {
 
-    use crate::gas_model::gas_predicates::gas_price_too_high;
-    use crate::{
-        effects::{TransactionEffects, TransactionEffectsAPI},
-        error::{ExecutionError, IotaResult, UserInputError, UserInputResult},
-        gas_model::{gas_v2::IotaGasStatus as IotaGasStatusV2, tables::GasStatus},
-        object::Object,
-        iota_serde::{BigInt, Readable},
-        transaction::ObjectReadResult,
-        ObjectID,
-    };
     use enum_dispatch::enum_dispatch;
+    use iota_protocol_config::ProtocolConfig;
     use itertools::MultiUnzip;
     use schemars::JsonSchema;
     use serde::{Deserialize, Serialize};
     use serde_with::serde_as;
-    use iota_protocol_config::ProtocolConfig;
+
+    use crate::{
+        ObjectID,
+        effects::{TransactionEffects, TransactionEffectsAPI},
+        error::{ExecutionError, IotaResult, UserInputError, UserInputResult},
+        gas_model::{
+            gas_predicates::gas_price_too_high, gas_v2::IotaGasStatus as IotaGasStatusV2,
+            tables::GasStatus,
+        },
+        iota_serde::{BigInt, Readable},
+        object::Object,
+        transaction::ObjectReadResult,
+    };
 
     #[enum_dispatch]
     pub trait IotaGasStatusAPI {
@@ -225,7 +228,10 @@ pub mod checked {
             write!(
                 f,
                 "computation_cost: {}, storage_cost: {},  storage_rebate: {}, non_refundable_storage_fee: {}",
-                self.computation_cost, self.storage_cost, self.storage_rebate, self.non_refundable_storage_fee,
+                self.computation_cost,
+                self.storage_cost,
+                self.storage_rebate,
+                self.non_refundable_storage_fee,
             )
         }
     }
@@ -245,7 +251,6 @@ pub mod checked {
         }
     }
 
-    //
     // Helper functions to deal with gas coins operations.
     //
 

@@ -2,11 +2,14 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::execution_value::{RawValueType, Value};
-use crate::type_resolver::TypeTagResolver;
-use move_core_types::language_storage::TypeTag;
 use iota_types::{
     error::ExecutionError, execution::ExecutionResult, transaction::Argument, transfer::Receiving,
+};
+use move_core_types::language_storage::TypeTag;
+
+use crate::{
+    execution_value::{RawValueType, Value},
+    type_resolver::TypeTagResolver,
 };
 
 pub type TransactionIndex = usize;

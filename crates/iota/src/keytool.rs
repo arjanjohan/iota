@@ -1,63 +1,74 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::key_identity::{get_identity_address_from_keystore, KeyIdentity};
-use crate::zklogin_commands_util::{perform_zk_login_test_tx, read_cli_line};
+use std::{
+    fmt::{Debug, Display, Formatter},
+    fs,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
+
 use anyhow::anyhow;
 use bip32::DerivationPath;
 use clap::*;
-use fastcrypto::ed25519::Ed25519KeyPair;
-use fastcrypto::encoding::{Base64, Encoding, Hex};
-use fastcrypto::hash::HashFunction;
-use fastcrypto::jwt_utils::parse_and_validate_jwt;
-use fastcrypto::secp256k1::recoverable::Secp256k1Sig;
-use fastcrypto::traits::{KeyPair, ToFromBytes};
-use fastcrypto_zkp::bn254::utils::{
-    gen_address_seed, get_nonce, get_oidc_url, get_proof, get_test_issuer_jwt_token,
-    get_token_exchange_url,
+use fastcrypto::{
+    ed25519::Ed25519KeyPair,
+    encoding::{Base64, Encoding, Hex},
+    hash::HashFunction,
+    jwt_utils::parse_and_validate_jwt,
+    secp256k1::recoverable::Secp256k1Sig,
+    traits::{KeyPair, ToFromBytes},
 };
-use fastcrypto_zkp::bn254::zk_login::{fetch_jwks, OIDCProvider, ZkLoginInputs};
-use fastcrypto_zkp::bn254::zk_login::{JwkId, JWK};
-use fastcrypto_zkp::bn254::zk_login_api::ZkLoginEnv;
+use fastcrypto_zkp::bn254::{
+    utils::{
+        gen_address_seed, get_nonce, get_oidc_url, get_proof, get_test_issuer_jwt_token,
+        get_token_exchange_url,
+    },
+    zk_login::{JWK, JwkId, OIDCProvider, ZkLoginInputs, fetch_jwks},
+    zk_login_api::ZkLoginEnv,
+};
 use im::hashmap::HashMap as ImHashMap;
-use json_to_table::{json_to_table, Orientation};
+use iota_keys::{
+    key_derive::generate_new_key,
+    keypair_file::{
+        read_authority_keypair_from_file, read_keypair_from_file, write_authority_keypair_to_file,
+        write_keypair_to_file,
+    },
+    keystore::{AccountKeystore, Keystore},
+};
+use iota_types::{
+    base_types::IotaAddress,
+    committee::EpochId,
+    crypto::{
+        DefaultHash, EncodeDecodeBase64, IotaKeyPair, PublicKey, Signature, SignatureScheme,
+        ZkLoginPublicIdentifier, get_authority_key_pair,
+    },
+    error::IotaResult,
+    multisig::{MultiSig, MultiSigPublicKey, ThresholdUnit, WeightUnit},
+    multisig_legacy::{MultiSigLegacy, MultiSigPublicKeyLegacy},
+    signature::{GenericSignature, VerifyParams},
+    signature_verification::VerifiedDigestCache,
+    transaction::{TransactionData, TransactionDataAPI},
+    zk_login_authenticator::ZkLoginAuthenticator,
+};
+use json_to_table::{Orientation, json_to_table};
 use num_bigint::BigUint;
-use rand::rngs::StdRng;
-use rand::Rng;
-use rand::SeedableRng;
+use rand::{Rng, SeedableRng, rngs::StdRng};
 use rusoto_core::Region;
 use rusoto_kms::{Kms, KmsClient, SignRequest};
 use serde::Serialize;
 use serde_json::json;
 use shared_crypto::intent::{Intent, IntentMessage, IntentScope, PersonalMessage};
-use std::fmt::{Debug, Display, Formatter};
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use iota_keys::key_derive::generate_new_key;
-use iota_keys::keypair_file::{
-    read_authority_keypair_from_file, read_keypair_from_file, write_authority_keypair_to_file,
-    write_keypair_to_file,
+use tabled::{
+    builder::Builder,
+    settings::{Modify, Rotate, Width, object::Rows},
 };
-use iota_keys::keystore::{AccountKeystore, Keystore};
-use iota_types::base_types::IotaAddress;
-use iota_types::committee::EpochId;
-use iota_types::crypto::{
-    get_authority_key_pair, EncodeDecodeBase64, Signature, SignatureScheme, IotaKeyPair,
-    ZkLoginPublicIdentifier,
-};
-use iota_types::crypto::{DefaultHash, PublicKey};
-use iota_types::error::IotaResult;
-use iota_types::multisig::{MultiSig, MultiSigPublicKey, ThresholdUnit, WeightUnit};
-use iota_types::multisig_legacy::{MultiSigLegacy, MultiSigPublicKeyLegacy};
-use iota_types::signature::{GenericSignature, VerifyParams};
-use iota_types::signature_verification::VerifiedDigestCache;
-use iota_types::transaction::{TransactionData, TransactionDataAPI};
-use iota_types::zk_login_authenticator::ZkLoginAuthenticator;
-use tabled::builder::Builder;
-use tabled::settings::Rotate;
-use tabled::settings::{object::Rows, Modify, Width};
 use tracing::info;
+
+use crate::{
+    key_identity::{KeyIdentity, get_identity_address_from_keystore},
+    zklogin_commands_util::{perform_zk_login_test_tx, read_cli_line},
+};
 #[cfg(test)]
 #[path = "unit_tests/keytool_tests.rs"]
 mod keytool_tests;
@@ -237,7 +248,7 @@ pub enum KeyToolCommand {
         #[clap(long, default_value = "false")]
         test_multisig: bool, // if true, use a multisig address with zklogin and a traditional kp.
         #[clap(long, default_value = "false")]
-        sign_with_sk: bool, // if true, execute tx with the traditional sig (in the multisig), otherwise with the zklogin sig.
+        sign_with_sk: bool, /* if true, execute tx with the traditional sig (in the multisig), otherwise with the zklogin sig. */
     },
 
     /// A workaround to the above command because sometimes token pasting does not work (for Facebook). All the inputs required here are printed from the command above.
@@ -1166,7 +1177,9 @@ impl KeyToolCommand {
                 println!("Visit URL (Arden): {url_14}");
                 println!("Visit URL (AWS - Trace): {url_15}");
 
-                println!("Finish login and paste the entire URL here (e.g. https://iota.org/#id_token=...):");
+                println!(
+                    "Finish login and paste the entire URL here (e.g. https://iota.org/#id_token=...):"
+                );
 
                 let parsed_token = read_cli_line()?;
                 let tx_digest = perform_zk_login_test_tx(
@@ -1255,7 +1268,10 @@ impl KeyToolCommand {
 
                                 let sig = GenericSignature::ZkLoginAuthenticator(zk.clone());
                                 let res = sig.verify_authenticator(
-                                    &IntentMessage::new(Intent::iota_transaction(), tx_data.clone()),
+                                    &IntentMessage::new(
+                                        Intent::iota_transaction(),
+                                        tx_data.clone(),
+                                    ),
                                     tx_data.execution_parts().1,
                                     cur_epoch.unwrap(),
                                     &verify_params,

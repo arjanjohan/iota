@@ -1,48 +1,48 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use std::collections::HashSet;
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 use anyhow::bail;
 use async_trait::async_trait;
-use futures::{future, Stream, StreamExt};
-use jsonrpsee::{
-    core::{RpcResult, SubscriptionResult},
-    PendingSubscriptionSink, RpcModule,
-};
-use move_bytecode_utils::layout::TypeLayoutBuilder;
-use move_core_types::language_storage::TypeTag;
-use iota_metrics::spawn_monitored_task;
-use serde::Serialize;
+use futures::{Stream, StreamExt, future};
 use iota_core::authority::AuthorityState;
 use iota_json::IotaJsonValue;
 use iota_json_rpc_api::{
-    cap_page_limit, validate_limit, IndexerApiOpenRpc, IndexerApiServer, JsonRpcMetrics,
-    ReadApiServer, QUERY_MAX_RESULT_LIMIT,
+    IndexerApiOpenRpc, IndexerApiServer, JsonRpcMetrics, QUERY_MAX_RESULT_LIMIT, ReadApiServer,
+    cap_page_limit, validate_limit,
 };
 use iota_json_rpc_types::{
-    DynamicFieldPage, EventFilter, EventPage, ObjectsPage, Page, IotaObjectDataOptions,
-    IotaObjectResponse, IotaObjectResponseQuery, IotaTransactionBlockResponse,
-    IotaTransactionBlockResponseQuery, TransactionBlocksPage, TransactionFilter,
+    DynamicFieldPage, EventFilter, EventPage, IotaObjectDataOptions, IotaObjectResponse,
+    IotaObjectResponseQuery, IotaTransactionBlockResponse, IotaTransactionBlockResponseQuery,
+    ObjectsPage, Page, TransactionBlocksPage, TransactionFilter,
 };
+use iota_metrics::spawn_monitored_task;
 use iota_open_rpc::Module;
 use iota_storage::key_value_store::TransactionKeyValueStore;
 use iota_types::{
-    base_types::{ObjectID, IotaAddress},
+    base_types::{IotaAddress, ObjectID},
     digests::TransactionDigest,
     dynamic_field::{DynamicFieldName, Field},
     error::IotaObjectResponseError,
     event::EventID,
 };
+use jsonrpsee::{
+    PendingSubscriptionSink, RpcModule,
+    core::{RpcResult, SubscriptionResult},
+};
+use move_bytecode_utils::layout::TypeLayoutBuilder;
+use move_core_types::language_storage::TypeTag;
+use serde::Serialize;
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 use tracing::{instrument, warn};
 
 use crate::{
+    IotaRpcModule,
     authority_state::{StateRead, StateReadResult},
     error::{Error, IotaRpcInputError},
     name_service::{Domain, NameRecord, NameServiceConfig, NameServiceError},
-    with_tracing, IotaRpcModule,
+    with_tracing,
 };
 
 pub fn spawn_subscription<S, T>(

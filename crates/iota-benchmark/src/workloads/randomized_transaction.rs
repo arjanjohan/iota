@@ -2,30 +2,37 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::drivers::Interval;
-use crate::system_state_observer::SystemStateObserver;
-use crate::util::publish_basics_package;
-use crate::workloads::payload::Payload;
-use crate::workloads::workload::{
-    ExpectedFailureType, Workload, WorkloadBuilder, ESTIMATED_COMPUTATION_COST, MAX_GAS_FOR_TESTING,
-};
-use crate::workloads::{Gas, GasCoinConfig, WorkloadBuilderInfo, WorkloadParams};
-use crate::{ExecutionEffects, ValidatorProxy};
+use std::{sync::Arc, time::Duration};
+
 use async_trait::async_trait;
 use futures::future::join_all;
-use rand::Rng;
-use std::sync::Arc;
-use std::time::Duration;
 use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::base_types::{ObjectID, ObjectRef, SequenceNumber, IotaAddress};
-use iota_types::crypto::{get_key_pair, AccountKeyPair};
-use iota_types::object::Owner;
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::transaction::{CallArg, ObjectArg, Transaction};
-use iota_types::{Identifier, IOTA_RANDOMNESS_STATE_OBJECT_ID};
+use iota_types::{
+    IOTA_RANDOMNESS_STATE_OBJECT_ID, Identifier,
+    base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber},
+    crypto::{AccountKeyPair, get_key_pair},
+    object::Owner,
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    transaction::{CallArg, ObjectArg, Transaction},
+};
+use rand::Rng;
 use tracing::{error, info};
 
 use super::STORAGE_COST_PER_COUNTER;
+use crate::{
+    ExecutionEffects, ValidatorProxy,
+    drivers::Interval,
+    system_state_observer::SystemStateObserver,
+    util::publish_basics_package,
+    workloads::{
+        Gas, GasCoinConfig, WorkloadBuilderInfo, WorkloadParams,
+        payload::Payload,
+        workload::{
+            ESTIMATED_COMPUTATION_COST, ExpectedFailureType, MAX_GAS_FOR_TESTING, Workload,
+            WorkloadBuilder,
+        },
+    },
+};
 
 pub const MAX_GAS_IN_UNIT: u64 = 1_000_000_000;
 

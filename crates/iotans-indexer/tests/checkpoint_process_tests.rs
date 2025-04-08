@@ -20,7 +20,6 @@ const TEST_SUBDOMAIN_REGISTRATION_TYPE: &str = "0x22fa05f21b1ad71442491220bb9338
 /// Checkpoint 22279944: Adds `remove.test.iota`.
 /// Checkpoint 22280030: Adds `remove.test.iota` as a replacement (the previous one expired!).
 ///                      [This was only simulated using a dummy contract and cannot happen in realistic scenarios.]
-///
 #[test]
 fn process_22279187_checkpoint() {
     let checkpoint = read_checkpoint_from_file(include_bytes!("data/22279187.chk"));

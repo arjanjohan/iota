@@ -3,12 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_macros::sim_test;
-use iota_rpc_api::client::Client as CoreClient;
-use iota_rpc_api::proto::node::v2::node_service_client::NodeServiceClient;
-use iota_rpc_api::proto::node::v2::{
-    FullCheckpointObject, FullCheckpointTransaction, GetCheckpointOptions, GetCheckpointRequest,
-    GetCheckpointResponse, GetFullCheckpointOptions, GetFullCheckpointRequest,
-    GetFullCheckpointResponse,
+use iota_rpc_api::{
+    client::Client as CoreClient,
+    proto::node::v2::{
+        FullCheckpointObject, FullCheckpointTransaction, GetCheckpointOptions,
+        GetCheckpointRequest, GetCheckpointResponse, GetFullCheckpointOptions,
+        GetFullCheckpointRequest, GetFullCheckpointResponse,
+        node_service_client::NodeServiceClient,
+    },
 };
 use test_cluster::TestClusterBuilder;
 
@@ -411,8 +413,9 @@ async fn get_full_checkpoint() {
 
 #[sim_test]
 async fn subscribe_checkpoint() {
-    use iota_rpc_api::proto::node::v2alpha::subscription_service_client::SubscriptionServiceClient;
-    use iota_rpc_api::proto::node::v2alpha::SubscribeCheckpointsRequest;
+    use iota_rpc_api::proto::node::v2alpha::{
+        SubscribeCheckpointsRequest, subscription_service_client::SubscriptionServiceClient,
+    };
     use tokio_stream::StreamExt;
 
     let test_cluster = TestClusterBuilder::new().build().await;

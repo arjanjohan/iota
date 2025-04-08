@@ -2,30 +2,32 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::balance::{self, Balance};
-use super::base64::Base64;
-use super::big_int::BigInt;
-use super::coin::Coin;
-use super::display::DisplayEntry;
-use super::dynamic_field::{DynamicField, DynamicFieldName};
-use super::move_object::{MoveObject, MoveObjectImpl};
-use super::move_value::MoveValue;
-use super::object::{self, Object, ObjectFilter, ObjectImpl, ObjectOwner, ObjectStatus};
-use super::owner::OwnerImpl;
-use super::stake::StakedIota;
-use super::iota_address::IotaAddress;
-use super::iotans_registration::{DomainFormat, IotaNSRegistration};
-use super::transaction_block::{self, TransactionBlock, TransactionBlockFilter};
-use super::type_filter::ExactTypeFilter;
-use super::uint53::UInt53;
-use crate::connection::ScanConnection;
-use crate::data::Db;
-use crate::error::Error;
-use async_graphql::connection::Connection;
-use async_graphql::*;
-use iota_types::coin::{CoinMetadata as NativeCoinMetadata, TreasuryCap};
-use iota_types::gas_coin::{GAS, TOTAL_SUPPLY_IOTA};
-use iota_types::TypeTag;
+use async_graphql::{connection::Connection, *};
+use iota_types::{
+    TypeTag,
+    coin::{CoinMetadata as NativeCoinMetadata, TreasuryCap},
+    gas_coin::{GAS, TOTAL_SUPPLY_IOTA},
+};
+
+use super::{
+    balance::{self, Balance},
+    base64::Base64,
+    big_int::BigInt,
+    coin::Coin,
+    display::DisplayEntry,
+    dynamic_field::{DynamicField, DynamicFieldName},
+    iota_address::IotaAddress,
+    iotans_registration::{DomainFormat, IotaNSRegistration},
+    move_object::{MoveObject, MoveObjectImpl},
+    move_value::MoveValue,
+    object::{self, Object, ObjectFilter, ObjectImpl, ObjectOwner, ObjectStatus},
+    owner::OwnerImpl,
+    stake::StakedIota,
+    transaction_block::{self, TransactionBlock, TransactionBlockFilter},
+    type_filter::ExactTypeFilter,
+    uint53::UInt53,
+};
+use crate::{connection::ScanConnection, data::Db, error::Error};
 
 pub(crate) struct CoinMetadata {
     pub super_: MoveObject,
@@ -87,7 +89,7 @@ impl CoinMetadata {
 
     /// The coin objects for this object.
     ///
-    ///`type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
+    /// `type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
     pub(crate) async fn coins(
         &self,
         ctx: &Context<'_>,

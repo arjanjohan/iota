@@ -4,9 +4,10 @@
 
 use std::time::Duration;
 
-use crate::authority::test_authority_builder::TestAuthorityBuilder;
 use iota_types::base_types::TransactionDigest;
 use tokio::time::timeout;
+
+use crate::authority::test_authority_builder::TestAuthorityBuilder;
 
 #[tokio::test]
 async fn test_notify_read_executed_transactions_to_checkpoint() {

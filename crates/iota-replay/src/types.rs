@@ -2,22 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use jsonrpsee::core::ClientError as JsonRpseeError;
-use move_binary_format::CompiledModule;
-use move_core_types::account_address::AccountAddress;
-use move_core_types::language_storage::{ModuleId, StructTag};
-use serde::Deserialize;
-use serde::Serialize;
 use std::fmt::Debug;
-use iota_json_rpc_types::IotaEvent;
-use iota_json_rpc_types::IotaTransactionBlockEffects;
+
+use iota_json_rpc_types::{IotaEvent, IotaTransactionBlockEffects};
 use iota_protocol_config::{Chain, ProtocolVersion};
 use iota_sdk::error::Error as IotaRpcError;
-use iota_types::base_types::{ObjectID, ObjectRef, SequenceNumber, IotaAddress, VersionNumber};
-use iota_types::digests::{ObjectDigest, TransactionDigest};
-use iota_types::error::{IotaError, IotaObjectResponseError, IotaResult, UserInputError};
-use iota_types::object::Object;
-use iota_types::transaction::{InputObjectKind, SenderSignedData, TransactionKind};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber, VersionNumber},
+    digests::{ObjectDigest, TransactionDigest},
+    error::{IotaError, IotaObjectResponseError, IotaResult, UserInputError},
+    object::Object,
+    transaction::{InputObjectKind, SenderSignedData, TransactionKind},
+};
+use jsonrpsee::core::ClientError as JsonRpseeError;
+use move_binary_format::CompiledModule;
+use move_core_types::{
+    account_address::AccountAddress,
+    language_storage::{ModuleId, StructTag},
+};
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tokio::time::Duration;
 use tracing::{error, warn};

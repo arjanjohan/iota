@@ -2,11 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    get_nth_struct_field, legacy_test_cost,
-    object_runtime::{ObjectRuntime, RuntimeResults},
+use std::{
+    borrow::Borrow,
+    collections::{BTreeMap, BTreeSet, VecDeque},
 };
+
 use indexmap::{IndexMap, IndexSet};
+use iota_types::{
+    base_types::{IotaAddress, ObjectID, SequenceNumber},
+    id::UID,
+    object::Owner,
+};
 use move_binary_format::errors::{PartialVMError, PartialVMResult};
 use move_core_types::{
     account_address::AccountAddress,
@@ -22,14 +28,10 @@ use move_vm_types::{
     values::{self, StructRef, Value},
 };
 use smallvec::smallvec;
-use std::{
-    borrow::Borrow,
-    collections::{BTreeMap, BTreeSet, VecDeque},
-};
-use iota_types::{
-    base_types::{ObjectID, SequenceNumber, IotaAddress},
-    id::UID,
-    object::Owner,
+
+use crate::{
+    get_nth_struct_field, legacy_test_cost,
+    object_runtime::{ObjectRuntime, RuntimeResults},
 };
 
 const E_COULD_NOT_GENERATE_EFFECTS: u64 = 0;
@@ -558,7 +560,7 @@ fn pop_id(args: &mut VecDeque<Value>) -> PartialVMResult<ObjectID> {
         None => {
             return Err(PartialVMError::new(
                 StatusCode::UNKNOWN_INVARIANT_VIOLATION_ERROR,
-            ))
+            ));
         }
         Some(v) => v,
     };

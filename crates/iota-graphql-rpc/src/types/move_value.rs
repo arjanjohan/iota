@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use async_graphql::*;
+use iota_types::object::bounded_visitor::BoundedVisitor;
 use move_core_types::{
     account_address::AccountAddress,
     annotated_value as A, ident_str,
@@ -10,12 +11,13 @@ use move_core_types::{
     language_storage::{StructTag, TypeTag},
 };
 use serde::{Deserialize, Serialize};
-use iota_types::object::bounded_visitor::BoundedVisitor;
 
-use crate::data::package_resolver::PackageResolver;
-use crate::{error::Error, types::json::Json, types::move_type::unexpected_signer_error};
-
-use super::{base64::Base64, big_int::BigInt, move_type::MoveType, iota_address::IotaAddress};
+use super::{base64::Base64, big_int::BigInt, iota_address::IotaAddress, move_type::MoveType};
+use crate::{
+    data::package_resolver::PackageResolver,
+    error::Error,
+    types::{json::Json, move_type::unexpected_signer_error},
+};
 
 const STD: AccountAddress = AccountAddress::ONE;
 const IOTA: AccountAddress = AccountAddress::TWO;
@@ -706,7 +708,9 @@ mod tests {
     #[test]
     fn address_data() {
         let v = data(L::Address, address("0x42"));
-        let expect = expect!["Ok(Address(IotaAddress([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 66])))"];
+        let expect = expect![
+            "Ok(Address(IotaAddress([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 66])))"
+        ];
         expect.assert_eq(&format!("{v:?}"));
     }
 
@@ -727,7 +731,9 @@ mod tests {
         });
 
         let v = data(l, address("0x42"));
-        let expect = expect!["Ok(Uid(IotaAddress([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 66])))"];
+        let expect = expect![
+            "Ok(Uid(IotaAddress([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 66])))"
+        ];
         expect.assert_eq(&format!("{v:?}"));
     }
 

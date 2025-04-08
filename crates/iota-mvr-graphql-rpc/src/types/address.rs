@@ -2,22 +2,22 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::connection::ScanConnection;
+use async_graphql::{connection::Connection, *};
 
 use super::{
     balance::{self, Balance},
     coin::Coin,
     cursor::Page,
+    iota_address::IotaAddress,
+    iotans_registration::{DomainFormat, IotaNSRegistration},
     move_object::MoveObject,
     object::{self, ObjectFilter},
     owner::OwnerImpl,
     stake::StakedIota,
-    iota_address::IotaAddress,
-    iotans_registration::{DomainFormat, IotaNSRegistration},
     transaction_block::{self, TransactionBlock, TransactionBlockFilter},
     type_filter::ExactTypeFilter,
 };
-use async_graphql::{connection::Connection, *};
+use crate::connection::ScanConnection;
 
 #[derive(Clone, Debug, PartialEq, Eq, Copy)]
 pub(crate) struct Address {
@@ -84,7 +84,7 @@ impl Address {
 
     /// The coin objects for this address.
     ///
-    ///`type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
+    /// `type` is a filter on the coin's type parameter, defaulting to `0x2::iota::IOTA`.
     pub(crate) async fn coins(
         &self,
         ctx: &Context<'_>,

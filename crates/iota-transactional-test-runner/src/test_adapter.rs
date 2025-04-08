@@ -4,54 +4,24 @@
 
 //! This module contains the transactional test runner instantiation for the IOTA adapter
 
-use crate::offchain_state::OffchainStateReader;
-use crate::simulator_persisted_store::PersistedStore;
-use crate::{args::*, programmable_transaction_test_parser::parser::ParsedCommand};
-use crate::{TransactionalAdapter, ValidatorWithFullnode};
-use anyhow::{anyhow, bail, Context};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fmt::{self, Write},
+    path::{Path, PathBuf},
+    sync::Arc,
+    time::Duration,
+};
+
+use anyhow::{Context, anyhow, bail};
 use async_trait::async_trait;
 use bimap::btree::BiBTreeMap;
 use criterion::Criterion;
-use fastcrypto::ed25519::Ed25519KeyPair;
-use fastcrypto::encoding::{Base64, Encoding};
-use fastcrypto::traits::ToFromBytes;
-use move_binary_format::CompiledModule;
-use move_bytecode_utils::module_cache::GetModule;
-use move_command_line_common::files::verify_and_create_named_address_mapping;
-use move_compiler::{
-    editions::{Edition, Flavor},
-    shared::{NumberFormat, NumericalAddress, PackageConfig, PackagePaths},
-    Flags, FullyCompiledProgram,
+use fastcrypto::{
+    ed25519::Ed25519KeyPair,
+    encoding::{Base64, Encoding},
+    traits::ToFromBytes,
 };
-use move_core_types::ident_str;
-use move_core_types::parsing::address::ParsedAddress;
-use move_core_types::{
-    account_address::AccountAddress,
-    identifier::IdentStr,
-    language_storage::{ModuleId, TypeTag},
-};
-use move_symbol_pool::Symbol;
-use move_transactional_test_runner::framework::MaybeNamedCompiledModule;
-use move_transactional_test_runner::tasks::TaskCommand;
-use move_transactional_test_runner::{
-    framework::{compile_any, store_modules, CompiledState, MoveTestAdapter},
-    tasks::{InitCommand, RunCommand, SyntaxChoice, TaskInput},
-};
-use move_vm_runtime::session::SerializedReturnValues;
-use once_cell::sync::Lazy;
-use rand::{rngs::StdRng, Rng, SeedableRng};
-use serde::Deserialize;
-use serde_json::Value;
-use std::fmt::{self, Write};
-use std::path::PathBuf;
-use std::time::Duration;
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    path::Path,
-    sync::Arc,
-};
-use iota_core::authority::test_authority_builder::TestAuthorityBuilder;
-use iota_core::authority::AuthorityState;
+use iota_core::authority::{AuthorityState, test_authority_builder::TestAuthorityBuilder};
 use iota_framework::DEFAULT_FRAMEWORK_PATH;
 use iota_graphql_rpc::test_infra::cluster::{RetentionConfig, SnapshotLagConfig};
 use iota_json_rpc_api::QUERY_MAX_RESULT_LIMIT;
@@ -64,44 +34,69 @@ use iota_storage::{
     key_value_store::TransactionKeyValueStore, key_value_store_metrics::KeyValueStoreMetrics,
 };
 use iota_swarm_config::genesis_config::AccountConfig;
-use iota_types::base_types::{SequenceNumber, VersionNumber};
-use iota_types::committee::EpochId;
-use iota_types::crypto::{get_authority_key_pair, RandomnessRound};
-use iota_types::digests::{ConsensusCommitDigest, TransactionDigest, TransactionEventsDigest};
-use iota_types::effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents};
-use iota_types::messages_checkpoint::{
-    CheckpointContents, CheckpointContentsDigest, CheckpointSequenceNumber, VerifiedCheckpoint,
-};
-use iota_types::messages_consensus::ConsensusDeterminedVersionAssignments;
-use iota_types::object::bounded_visitor::BoundedVisitor;
-use iota_types::storage::ReadStore;
-use iota_types::storage::{ObjectStore, RpcStateReader};
-use iota_types::transaction::Command;
-use iota_types::transaction::ProgrammableTransaction;
-use iota_types::utils::to_sender_signed_transaction_with_multi_signers;
-use iota_types::IOTA_SYSTEM_ADDRESS;
 use iota_types::{
-    base_types::{ObjectID, ObjectRef, IotaAddress, IOTA_ADDRESS_LENGTH},
-    crypto::{get_key_pair_from_rng, AccountKeyPair},
+    BRIDGE_ADDRESS, DEEPBOOK_ADDRESS, DEEPBOOK_PACKAGE_ID, IOTA_CLOCK_OBJECT_ID,
+    IOTA_DENY_LIST_OBJECT_ID, IOTA_FRAMEWORK_ADDRESS, IOTA_FRAMEWORK_PACKAGE_ID,
+    IOTA_RANDOMNESS_STATE_OBJECT_ID, IOTA_SYSTEM_ADDRESS, IOTA_SYSTEM_PACKAGE_ID,
+    IOTA_SYSTEM_STATE_OBJECT_ID, MOVE_STDLIB_ADDRESS, MOVE_STDLIB_PACKAGE_ID,
+    base_types::{
+        IOTA_ADDRESS_LENGTH, IotaAddress, ObjectID, ObjectRef, SequenceNumber, VersionNumber,
+    },
+    committee::EpochId,
+    crypto::{AccountKeyPair, RandomnessRound, get_authority_key_pair, get_key_pair_from_rng},
+    digests::{ConsensusCommitDigest, TransactionDigest, TransactionEventsDigest},
+    effects::{TransactionEffects, TransactionEffectsAPI, TransactionEvents},
     event::Event,
-    object::{self, Object},
-    transaction::{Transaction, TransactionData, TransactionDataAPI, VerifiedTransaction},
-    MOVE_STDLIB_ADDRESS, IOTA_CLOCK_OBJECT_ID, IOTA_FRAMEWORK_ADDRESS, IOTA_SYSTEM_STATE_OBJECT_ID,
-};
-use iota_types::{execution_status::ExecutionStatus, transaction::TransactionKind};
-use iota_types::{gas::GasCostSummary, object::GAS_VALUE_FOR_TESTING};
-use iota_types::{
+    execution_status::ExecutionStatus,
+    gas::GasCostSummary,
+    messages_checkpoint::{
+        CheckpointContents, CheckpointContentsDigest, CheckpointSequenceNumber, VerifiedCheckpoint,
+    },
+    messages_consensus::ConsensusDeterminedVersionAssignments,
     move_package::MovePackage,
-    transaction::{Argument, CallArg},
+    object::{self, GAS_VALUE_FOR_TESTING, Object, bounded_visitor::BoundedVisitor},
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    storage::{ObjectStore, ReadStore, RpcStateReader},
+    transaction::{
+        Argument, CallArg, Command, ProgrammableTransaction, Transaction, TransactionData,
+        TransactionDataAPI, TransactionKind, VerifiedTransaction,
+    },
+    utils::{to_sender_signed_transaction, to_sender_signed_transaction_with_multi_signers},
 };
-use iota_types::{
-    programmable_transaction_builder::ProgrammableTransactionBuilder, IOTA_FRAMEWORK_PACKAGE_ID,
+use move_binary_format::CompiledModule;
+use move_bytecode_utils::module_cache::GetModule;
+use move_command_line_common::files::verify_and_create_named_address_mapping;
+use move_compiler::{
+    Flags, FullyCompiledProgram,
+    editions::{Edition, Flavor},
+    shared::{NumberFormat, NumericalAddress, PackageConfig, PackagePaths},
 };
-use iota_types::{utils::to_sender_signed_transaction, IOTA_SYSTEM_PACKAGE_ID};
-use iota_types::{BRIDGE_ADDRESS, MOVE_STDLIB_PACKAGE_ID};
-use iota_types::{DEEPBOOK_ADDRESS, IOTA_DENY_LIST_OBJECT_ID};
-use iota_types::{DEEPBOOK_PACKAGE_ID, IOTA_RANDOMNESS_STATE_OBJECT_ID};
-use tempfile::{tempdir, NamedTempFile};
+use move_core_types::{
+    account_address::AccountAddress,
+    ident_str,
+    identifier::IdentStr,
+    language_storage::{ModuleId, TypeTag},
+    parsing::address::ParsedAddress,
+};
+use move_symbol_pool::Symbol;
+use move_transactional_test_runner::{
+    framework::{
+        CompiledState, MaybeNamedCompiledModule, MoveTestAdapter, compile_any, store_modules,
+    },
+    tasks::{InitCommand, RunCommand, SyntaxChoice, TaskCommand, TaskInput},
+};
+use move_vm_runtime::session::SerializedReturnValues;
+use once_cell::sync::Lazy;
+use rand::{Rng, SeedableRng, rngs::StdRng};
+use serde::Deserialize;
+use serde_json::Value;
+use tempfile::{NamedTempFile, tempdir};
+
+use crate::{
+    TransactionalAdapter, ValidatorWithFullnode, args::*, offchain_state::OffchainStateReader,
+    programmable_transaction_test_parser::parser::ParsedCommand,
+    simulator_persisted_store::PersistedStore,
+};
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum FakeID {
@@ -608,9 +603,7 @@ impl<'a> MoveTestAdapter<'a> for IotaTestAdapter {
                     Ok(obj) => obj,
                 }
             }};
-            ($fake_id:ident) => {{
-                get_obj!($fake_id, None)
-            }};
+            ($fake_id:ident) => {{ get_obj!($fake_id, None) }};
         }
         match command {
             IotaSubcommand::RunGraphql(RunGraphqlCommand {
@@ -1096,7 +1089,8 @@ impl<'a> MoveTestAdapter<'a> for IotaTestAdapter {
                 let digest = MovePackage::compute_digest_for_modules_and_deps(
                     module_bytes.iter(),
                     &dependencies,
-                    /* hash_modules */ true,
+                    // hash_modules
+                    true,
                 )
                 .to_vec();
                 let staged = StagedPackage {
@@ -1429,7 +1423,8 @@ impl IotaTestAdapter {
         let digest: Vec<u8> = MovePackage::compute_digest_for_modules_and_deps(
             &modules_bytes,
             &dependencies,
-            /* hash_modules */ true,
+            // hash_modules
+            true,
         )
         .into();
         let digest_arg = builder.pure(digest).unwrap();
@@ -1493,7 +1488,12 @@ impl IotaTestAdapter {
     fn sign_txn(
         &self,
         sender: Option<String>,
-        txn_data: impl FnOnce(/* sender */ IotaAddress, /* gas */ ObjectRef) -> TransactionData,
+        txn_data: impl FnOnce(
+            // sender
+            IotaAddress,
+            // gas
+            ObjectRef,
+        ) -> TransactionData,
     ) -> Transaction {
         self.sign_sponsor_txn(sender, None, None, move |sender, _, gas| {
             txn_data(sender, gas)
@@ -1519,9 +1519,12 @@ impl IotaTestAdapter {
         sponsor: Option<String>,
         payment: Option<FakeID>,
         txn_data: impl FnOnce(
-            /* sender */ IotaAddress,
-            /* sponsor */ IotaAddress,
-            /* gas */ ObjectRef,
+            // sender
+            IotaAddress,
+            // sponsor
+            IotaAddress,
+            // gas
+            ObjectRef,
         ) -> TransactionData,
     ) -> Transaction {
         let sender = self.get_sender(sender);
@@ -1910,11 +1913,7 @@ impl IotaTestAdapter {
         out.push('\n');
         write!(out, "gas summary: {}", gas_summary).unwrap();
 
-        if out.is_empty() {
-            None
-        } else {
-            Some(out)
-        }
+        if out.is_empty() { None } else { Some(out) }
     }
 
     fn list_events(&self, events: &[Event], summarize: bool) -> String {

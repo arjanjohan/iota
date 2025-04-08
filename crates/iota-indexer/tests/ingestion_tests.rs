@@ -1,38 +1,34 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use std::sync::Arc;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
-use diesel::dsl::count_star;
-use diesel::ExpressionMethods;
-use diesel::QueryDsl;
+use diesel::{ExpressionMethods, QueryDsl, dsl::count_star};
 use diesel_async::RunQueryDsl;
+use iota_indexer::{
+    errors::IndexerError,
+    handlers::TransactionObjectChangesToCommit,
+    models::{
+        checkpoints::StoredCheckpoint,
+        objects::{StoredObject, StoredObjectSnapshot},
+        transactions::StoredTransaction,
+    },
+    schema::{
+        checkpoints, epochs, events, full_objects_history, objects, objects_history,
+        objects_snapshot, transactions,
+    },
+    store::indexer_store::IndexerStore,
+    test_utils::{
+        set_up, set_up_on_mvr_mode, set_up_with_start_and_end_checkpoints, wait_for_checkpoint,
+        wait_for_objects_snapshot,
+    },
+    types::{EventIndex, IndexedDeletedObject, IndexedObject, TxIndex},
+};
+use iota_types::{
+    IOTA_FRAMEWORK_PACKAGE_ID, base_types::IotaAddress, effects::TransactionEffectsAPI,
+    gas_coin::GasCoin,
+};
 use simulacrum::Simulacrum;
-use iota_indexer::errors::IndexerError;
-use iota_indexer::handlers::TransactionObjectChangesToCommit;
-use iota_indexer::models::{
-    checkpoints::StoredCheckpoint, objects::StoredObject, objects::StoredObjectSnapshot,
-    transactions::StoredTransaction,
-};
-use iota_indexer::schema::epochs;
-use iota_indexer::schema::events;
-use iota_indexer::schema::full_objects_history;
-use iota_indexer::schema::objects_history;
-use iota_indexer::schema::{checkpoints, objects, objects_snapshot, transactions};
-use iota_indexer::store::indexer_store::IndexerStore;
-use iota_indexer::test_utils::set_up_on_mvr_mode;
-use iota_indexer::test_utils::{
-    set_up, set_up_with_start_and_end_checkpoints, wait_for_checkpoint, wait_for_objects_snapshot,
-};
-use iota_indexer::types::EventIndex;
-use iota_indexer::types::IndexedDeletedObject;
-use iota_indexer::types::IndexedObject;
-use iota_indexer::types::TxIndex;
-use iota_types::base_types::IotaAddress;
-use iota_types::effects::TransactionEffectsAPI;
-use iota_types::gas_coin::GasCoin;
-use iota_types::IOTA_FRAMEWORK_PACKAGE_ID;
 use tempfile::tempdir;
 
 #[tokio::test]

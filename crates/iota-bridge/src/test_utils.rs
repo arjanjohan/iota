@@ -2,52 +2,52 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::abi::EthToIotaTokenBridgeV1;
-use crate::eth_mock_provider::EthMockProvider;
-use crate::events::IotaBridgeEvent;
-use crate::server::mock_handler::run_mock_server;
-use crate::iota_transaction_builder::build_iota_transaction;
-use crate::types::{
-    BridgeCommittee, BridgeCommitteeValiditySignInfo, CertifiedBridgeAction,
-    VerifiedCertifiedBridgeAction,
+use std::{
+    collections::{BTreeMap, HashMap},
+    net::{IpAddr, Ipv4Addr, SocketAddr},
 };
-use crate::{
-    crypto::{BridgeAuthorityKeyPair, BridgeAuthorityPublicKey, BridgeAuthoritySignInfo},
-    events::EmittedIotaToEthTokenBridgeV1,
-    server::mock_handler::BridgeRequestMockHandler,
+
+use ethers::{
+    abi::{ParamType, long_signature},
     types::{
-        BridgeAction, BridgeAuthority, EthToIotaBridgeAction, SignedBridgeAction,
-        IotaToEthBridgeAction,
+        Address as EthAddress, Block, BlockNumber, Filter, FilterBlockOption, Log,
+        TransactionReceipt, TxHash, U64, ValueOrArray,
     },
 };
-use ethers::abi::{long_signature, ParamType};
-use ethers::types::Address as EthAddress;
-use ethers::types::{
-    Block, BlockNumber, Filter, FilterBlockOption, Log, TransactionReceipt, TxHash, ValueOrArray,
-    U64,
+use fastcrypto::{
+    encoding::{Encoding, Hex},
+    traits::KeyPair,
 };
-use fastcrypto::encoding::{Encoding, Hex};
-use fastcrypto::traits::KeyPair;
 use hex_literal::hex;
-use move_core_types::language_storage::TypeTag;
-use std::collections::{BTreeMap, HashMap};
-use std::net::IpAddr;
-use std::net::Ipv4Addr;
-use std::net::SocketAddr;
 use iota_config::local_ip_utils;
 use iota_json_rpc_types::IotaTransactionBlockEffectsAPI;
 use iota_sdk::wallet_context::WalletContext;
 use iota_test_transaction_builder::TestTransactionBuilder;
-use iota_types::base_types::ObjectRef;
-use iota_types::base_types::SequenceNumber;
-use iota_types::bridge::MoveTypeCommitteeMember;
-use iota_types::bridge::{BridgeChainId, BridgeCommitteeSummary, TOKEN_ID_USDC};
-use iota_types::crypto::ToFromBytes;
-use iota_types::object::Owner;
-use iota_types::transaction::{CallArg, ObjectArg};
-use iota_types::{base_types::IotaAddress, crypto::get_key_pair, digests::TransactionDigest};
-use iota_types::{BRIDGE_PACKAGE_ID, IOTA_BRIDGE_OBJECT_ID};
+use iota_types::{
+    BRIDGE_PACKAGE_ID, IOTA_BRIDGE_OBJECT_ID,
+    base_types::{IotaAddress, ObjectRef, SequenceNumber},
+    bridge::{BridgeChainId, BridgeCommitteeSummary, MoveTypeCommitteeMember, TOKEN_ID_USDC},
+    crypto::{ToFromBytes, get_key_pair},
+    digests::TransactionDigest,
+    object::Owner,
+    transaction::{CallArg, ObjectArg},
+};
+use move_core_types::language_storage::TypeTag;
 use tokio::task::JoinHandle;
+
+use crate::{
+    abi::EthToIotaTokenBridgeV1,
+    crypto::{BridgeAuthorityKeyPair, BridgeAuthorityPublicKey, BridgeAuthoritySignInfo},
+    eth_mock_provider::EthMockProvider,
+    events::{EmittedIotaToEthTokenBridgeV1, IotaBridgeEvent},
+    iota_transaction_builder::build_iota_transaction,
+    server::mock_handler::{BridgeRequestMockHandler, run_mock_server},
+    types::{
+        BridgeAction, BridgeAuthority, BridgeCommittee, BridgeCommitteeValiditySignInfo,
+        CertifiedBridgeAction, EthToIotaBridgeAction, IotaToEthBridgeAction, SignedBridgeAction,
+        VerifiedCertifiedBridgeAction,
+    },
+};
 
 pub const DUMMY_MUTALBE_BRIDGE_OBJECT_ARG: ObjectArg = ObjectArg::SharedObject {
     id: IOTA_BRIDGE_OBJECT_ID,
@@ -254,9 +254,9 @@ pub fn get_test_log_and_action(
                     ParamType::Bytes,
                 ],
             ),
-            hex!("0000000000000000000000000000000000000000000000000000000000000001").into(), // chain id: iota testnet
-            hex!("0000000000000000000000000000000000000000000000000000000000000010").into(), // nonce: 16
-            hex!("000000000000000000000000000000000000000000000000000000000000000b").into(), // chain id: sepolia
+            hex!("0000000000000000000000000000000000000000000000000000000000000001").into(), /* chain id: iota testnet */
+            hex!("0000000000000000000000000000000000000000000000000000000000000010").into(), /* nonce: 16 */
+            hex!("000000000000000000000000000000000000000000000000000000000000000b").into(), /* chain id: sepolia */
         ],
         data: encoded.into(),
         block_hash: Some(TxHash::random()),

@@ -2,31 +2,35 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use move_core_types::ident_str;
-use shared_crypto::intent::{Intent, IntentMessage};
 use std::path::PathBuf;
+
 use iota_genesis_builder::validator_info::GenesisValidatorMetadata;
 use iota_move_build::{BuildConfig, CompiledPackage};
-use iota_sdk::rpc_types::{
-    get_new_package_obj_from_response, IotaObjectDataOptions, IotaTransactionBlockEffectsAPI,
-    IotaTransactionBlockResponse,
+use iota_sdk::{
+    rpc_types::{
+        IotaObjectDataOptions, IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse,
+        get_new_package_obj_from_response,
+    },
+    wallet_context::WalletContext,
 };
-use iota_sdk::wallet_context::WalletContext;
-use iota_types::base_types::{ObjectID, ObjectRef, SequenceNumber, IotaAddress};
-use iota_types::crypto::{get_key_pair, AccountKeyPair, Signature, Signer};
-use iota_types::digests::TransactionDigest;
-use iota_types::multisig::{BitmapUnit, MultiSig, MultiSigPublicKey};
-use iota_types::multisig_legacy::{MultiSigLegacy, MultiSigPublicKeyLegacy};
-use iota_types::object::Owner;
-use iota_types::signature::GenericSignature;
-use iota_types::iota_system_state::IOTA_SYSTEM_MODULE_NAME;
-use iota_types::transaction::{
-    CallArg, ObjectArg, ProgrammableTransaction, Transaction, TransactionData,
-    DEFAULT_VALIDATOR_GAS_PRICE, TEST_ONLY_GAS_UNIT_FOR_HEAVY_COMPUTATION_STORAGE,
-    TEST_ONLY_GAS_UNIT_FOR_TRANSFER,
+use iota_types::{
+    IOTA_RANDOMNESS_STATE_OBJECT_ID, IOTA_SYSTEM_PACKAGE_ID, TypeTag,
+    base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber},
+    crypto::{AccountKeyPair, Signature, Signer, get_key_pair},
+    digests::TransactionDigest,
+    iota_system_state::IOTA_SYSTEM_MODULE_NAME,
+    multisig::{BitmapUnit, MultiSig, MultiSigPublicKey},
+    multisig_legacy::{MultiSigLegacy, MultiSigPublicKeyLegacy},
+    object::Owner,
+    signature::GenericSignature,
+    transaction::{
+        CallArg, DEFAULT_VALIDATOR_GAS_PRICE, ObjectArg, ProgrammableTransaction,
+        TEST_ONLY_GAS_UNIT_FOR_HEAVY_COMPUTATION_STORAGE, TEST_ONLY_GAS_UNIT_FOR_TRANSFER,
+        Transaction, TransactionData,
+    },
 };
-use iota_types::IOTA_RANDOMNESS_STATE_OBJECT_ID;
-use iota_types::{TypeTag, IOTA_SYSTEM_PACKAGE_ID};
+use move_core_types::ident_str;
+use shared_crypto::intent::{Intent, IntentMessage};
 
 pub struct TestTransactionBuilder {
     test_data: TestTransactionData,

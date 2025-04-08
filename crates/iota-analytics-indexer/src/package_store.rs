@@ -2,24 +2,25 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{collections::HashMap, path::Path, sync::Arc};
+
 use async_trait::async_trait;
-use move_core_types::account_address::AccountAddress;
-use std::collections::HashMap;
-use std::path::Path;
-use std::sync::Arc;
 use iota_package_resolver::{
-    error::Error as PackageResolverError, Package, PackageStore, PackageStoreWithLruCache, Result,
+    Package, PackageStore, PackageStoreWithLruCache, Result, error::Error as PackageResolverError,
 };
 use iota_rpc_api::Client;
-use iota_types::base_types::ObjectID;
-use iota_types::object::{Data, Object};
+use iota_types::{
+    base_types::ObjectID,
+    object::{Data, Object},
+};
+use move_core_types::account_address::AccountAddress;
 use thiserror::Error;
 use tokio::sync::RwLock;
-use typed_store::rocks::{DBMap, MetricConf};
-use typed_store::traits::TableSummary;
-use typed_store::traits::TypedStoreDebug;
-use typed_store::DBMapUtils;
-use typed_store::{Map, TypedStoreError};
+use typed_store::{
+    DBMapUtils, Map, TypedStoreError,
+    rocks::{DBMap, MetricConf},
+    traits::{TableSummary, TypedStoreDebug},
+};
 
 const STORE: &str = "RocksDB";
 

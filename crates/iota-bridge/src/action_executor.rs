@@ -5,43 +5,40 @@
 //! BridgeActionExecutor receives BridgeActions (from BridgeOrchestrator),
 //! collects bridge authority signatures and submit signatures on chain.
 
-use crate::retry_with_max_elapsed_time;
-use crate::types::IsBridgePaused;
+use std::{collections::HashMap, sync::Arc};
+
 use arc_swap::ArcSwap;
-use iota_metrics::spawn_logged_monitored_task;
-use shared_crypto::intent::{Intent, IntentMessage};
 use iota_json_rpc_types::{
     IotaExecutionStatus, IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse,
 };
-use iota_types::transaction::ObjectArg;
-use iota_types::TypeTag;
+use iota_metrics::spawn_logged_monitored_task;
 use iota_types::{
-    base_types::{ObjectID, ObjectRef, IotaAddress},
-    crypto::{Signature, IotaKeyPair},
+    TypeTag,
+    base_types::{IotaAddress, ObjectID, ObjectRef},
+    crypto::{IotaKeyPair, Signature},
     digests::TransactionDigest,
     gas_coin::GasCoin,
     object::Owner,
-    transaction::Transaction,
+    transaction::{ObjectArg, Transaction},
 };
+use shared_crypto::intent::{Intent, IntentMessage};
+use tokio::{sync::Semaphore, time::Duration};
+use tracing::{Instrument, error, info, instrument, warn};
 
-use crate::events::{
-    TokenTransferAlreadyApproved, TokenTransferAlreadyClaimed, TokenTransferApproved,
-    TokenTransferClaimed,
-};
-use crate::metrics::BridgeMetrics;
 use crate::{
     client::bridge_authority_aggregator::BridgeAuthorityAggregator,
     error::BridgeError,
-    storage::BridgeOrchestratorTables,
+    events::{
+        TokenTransferAlreadyApproved, TokenTransferAlreadyClaimed, TokenTransferApproved,
+        TokenTransferClaimed,
+    },
     iota_client::{IotaClient, IotaClientInner},
     iota_transaction_builder::build_iota_transaction,
-    types::{BridgeAction, BridgeActionStatus, VerifiedCertifiedBridgeAction},
+    metrics::BridgeMetrics,
+    retry_with_max_elapsed_time,
+    storage::BridgeOrchestratorTables,
+    types::{BridgeAction, BridgeActionStatus, IsBridgePaused, VerifiedCertifiedBridgeAction},
 };
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::Semaphore;
-use tokio::time::Duration;
-use tracing::{error, info, instrument, warn, Instrument};
 
 pub const CHANNEL_SIZE: usize = 1000;
 pub const SIGNING_CONCURRENCY: usize = 10;
@@ -237,9 +234,7 @@ where
     async fn handle_signing_task(
         semaphore: &Arc<Semaphore>,
         auth_agg: &Arc<ArcSwap<BridgeAuthorityAggregator>>,
-        signing_queue_sender: &iota_metrics::metered_channel::Sender<
-            BridgeActionExecutionWrapper,
-        >,
+        signing_queue_sender: &iota_metrics::metered_channel::Sender<BridgeActionExecutionWrapper>,
         execution_queue_sender: &iota_metrics::metered_channel::Sender<
             CertifiedBridgeActionExecutionWrapper,
         >,
@@ -380,7 +375,10 @@ where
                 // TODO: spawn a task for this
                 if attempt_times >= MAX_SIGNING_ATTEMPTS {
                     metrics.err_signature_aggregation_too_many_failures.inc();
-                    error!("Manual intervention is required. Failed to collect sigs for bridge action after {MAX_SIGNING_ATTEMPTS} attempts: {:?}", e);
+                    error!(
+                        "Manual intervention is required. Failed to collect sigs for bridge action after {MAX_SIGNING_ATTEMPTS} attempts: {:?}",
+                        e
+                    );
                     return;
                 }
                 delay(attempt_times).await;
@@ -475,7 +473,10 @@ where
 
         // Check once: if the action is already processed, skip it.
         if Self::handle_already_processed_token_transfer_action_maybe(
-            iota_client, action, store, metrics,
+            iota_client,
+            action,
+            store,
+            metrics,
         )
         .await
         {
@@ -514,7 +515,10 @@ where
 
         // Check twice: If the action is already processed, skip it.
         if Self::handle_already_processed_token_transfer_action_maybe(
-            iota_client, action, store, metrics,
+            iota_client,
+            action,
+            store,
+            metrics,
         )
         .await
         {
@@ -638,7 +642,10 @@ where
                 // After human examination, the node should be restarted and fetch them from WAL.
 
                 metrics.err_iota_transaction_execution.inc();
-                error!(?tx_digest, "Manual intervention is needed. IOTA transaction executed and failed with error: {error:?}");
+                error!(
+                    ?tx_digest,
+                    "Manual intervention is needed. IOTA transaction executed and failed with error: {error:?}"
+                );
             }
         }
     }
@@ -677,36 +684,40 @@ pub async fn submit_to_executor(
 
 #[cfg(test)]
 mod tests {
-    use crate::events::init_all_struct_tags;
-    use crate::test_utils::DUMMY_MUTALBE_BRIDGE_OBJECT_ARG;
-    use crate::types::BRIDGE_PAUSED;
-    use fastcrypto::traits::KeyPair;
-    use prometheus::Registry;
-    use std::collections::{BTreeMap, HashMap};
-    use std::str::FromStr;
-    use iota_json_rpc_types::IotaTransactionBlockEffects;
-    use iota_json_rpc_types::IotaTransactionBlockEvents;
-    use iota_json_rpc_types::{IotaEvent, IotaTransactionBlockResponse};
-    use iota_types::crypto::get_key_pair;
-    use iota_types::gas_coin::GasCoin;
-    use iota_types::TypeTag;
-    use iota_types::{base_types::random_object_ref, transaction::TransactionData};
+    use std::{
+        collections::{BTreeMap, HashMap},
+        str::FromStr,
+    };
 
+    use fastcrypto::traits::KeyPair;
+    use iota_json_rpc_types::{
+        IotaEvent, IotaTransactionBlockEffects, IotaTransactionBlockEvents,
+        IotaTransactionBlockResponse,
+    };
+    use iota_types::{
+        TypeTag, base_types::random_object_ref, crypto::get_key_pair, gas_coin::GasCoin,
+        transaction::TransactionData,
+    };
+    use prometheus::Registry;
+
+    use super::*;
     use crate::{
         crypto::{
             BridgeAuthorityKeyPair, BridgeAuthorityPublicKeyBytes,
             BridgeAuthorityRecoverableSignature,
         },
-        server::mock_handler::BridgeRequestMockHandler,
+        events::init_all_struct_tags,
         iota_mock_client::IotaMockClient,
+        server::mock_handler::BridgeRequestMockHandler,
         test_utils::{
-            get_test_authorities_and_run_mock_bridge_server, get_test_eth_to_iota_bridge_action,
-            get_test_iota_to_eth_bridge_action, sign_action_with_key,
+            DUMMY_MUTALBE_BRIDGE_OBJECT_ARG, get_test_authorities_and_run_mock_bridge_server,
+            get_test_eth_to_iota_bridge_action, get_test_iota_to_eth_bridge_action,
+            sign_action_with_key,
         },
-        types::{BridgeCommittee, BridgeCommitteeValiditySignInfo, CertifiedBridgeAction},
+        types::{
+            BRIDGE_PAUSED, BridgeCommittee, BridgeCommitteeValiditySignInfo, CertifiedBridgeAction,
+        },
     };
-
-    use super::*;
 
     #[tokio::test]
     async fn test_onchain_execution_loop() {
@@ -784,7 +795,7 @@ mod tests {
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////// Test execution failure ///////////////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////// ///////////////////////////////////////////////////////////
 
         let (action_certificate, _, _) = get_bridge_authority_approved_action(
             vec![&mock0, &mock1, &mock2, &mock3],
@@ -838,7 +849,7 @@ mod tests {
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////// Test transaction failed at signing stage ///////////////////////////
-        /////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////// /////////////////////////////////////////////////////////////////////
 
         let (action_certificate, _, _) = get_bridge_authority_approved_action(
             vec![&mock0, &mock1, &mock2, &mock3],
@@ -882,9 +893,11 @@ mod tests {
         assert_eq!(tx_subscription.recv().await.unwrap(), tx_digest);
 
         // The retry is still going on, action still in WAL
-        assert!(store
-            .get_all_pending_actions()
-            .contains_key(&action.digest()));
+        assert!(
+            store
+                .get_all_pending_actions()
+                .contains_key(&action.digest())
+        );
 
         // Now let it succeed
         let mut event = IotaEvent::random_for_testing();
@@ -901,9 +914,11 @@ mod tests {
         // Give it 1 second to retry and succeed
         tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         // The action is successful and should be removed from WAL now
-        assert!(!store
-            .get_all_pending_actions()
-            .contains_key(&action.digest()));
+        assert!(
+            !store
+                .get_all_pending_actions()
+                .contains_key(&action.digest())
+        );
     }
 
     #[tokio::test]
@@ -1024,9 +1039,11 @@ mod tests {
         // Expect to see the transaction to be requested and succeed
         assert_eq!(tx_subscription.recv().await.unwrap(), tx_digest);
         // The action is removed from WAL
-        assert!(!store
-            .get_all_pending_actions()
-            .contains_key(&action.digest()));
+        assert!(
+            !store
+                .get_all_pending_actions()
+                .contains_key(&action.digest())
+        );
     }
 
     #[tokio::test]
@@ -1308,7 +1325,7 @@ mod tests {
             vec![&mock0, &mock1, &mock2, &mock3],
             vec![&secrets[0], &secrets[1], &secrets[2], &secrets[3]],
             Some(new_token_id),
-            false, // we need an eth -> iota action that entails the new token type tag in transaction building
+            false, /* we need an eth -> iota action that entails the new token type tag in transaction building */
         );
 
         let action = action_certificate.data().clone();
@@ -1434,8 +1451,13 @@ mod tests {
             get_test_eth_to_iota_bridge_action(None, None, None, token_id)
         };
 
-        let sigs =
-            mock_bridge_authority_sigs(mocks, &action, secrets, iota_tx_digest, iota_tx_event_index);
+        let sigs = mock_bridge_authority_sigs(
+            mocks,
+            &action,
+            secrets,
+            iota_tx_digest,
+            iota_tx_event_index,
+        );
         let certified_action = CertifiedBridgeAction::new_from_data_and_sig(
             action,
             BridgeCommitteeValiditySignInfo { signatures: sigs },

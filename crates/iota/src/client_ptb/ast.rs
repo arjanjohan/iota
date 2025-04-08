@@ -4,19 +4,20 @@
 
 use std::fmt;
 
-use move_core_types::parsing::{
-    address::{NumericalAddress, ParsedAddress},
-    types::{ParsedFqName, ParsedModuleId, ParsedStructType, ParsedType},
-};
-use move_core_types::runtime_value::MoveValue;
 use iota_types::{
-    base_types::{ObjectID, RESOLVED_ASCII_STR, RESOLVED_STD_OPTION, RESOLVED_UTF8_STR},
     Identifier, TypeTag,
+    base_types::{ObjectID, RESOLVED_ASCII_STR, RESOLVED_STD_OPTION, RESOLVED_UTF8_STR},
 };
-
-use crate::{err, error, sp};
+use move_core_types::{
+    parsing::{
+        address::{NumericalAddress, ParsedAddress},
+        types::{ParsedFqName, ParsedModuleId, ParsedStructType, ParsedType},
+    },
+    runtime_value::MoveValue,
+};
 
 use super::error::{PTBResult, Span, Spanned};
+use crate::{err, error, sp};
 
 pub type ParsedProgram = (Program, ProgramMetadata);
 

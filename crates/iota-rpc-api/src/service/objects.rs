@@ -2,23 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::proto::node::v2alpha::DynamicField;
-use crate::proto::node::v2alpha::ListDynamicFieldsRequest;
-use crate::proto::node::v2alpha::ListDynamicFieldsResponse;
-use crate::types::GetObjectOptions;
-use crate::types::ObjectResponse;
-use crate::Result;
-use crate::RpcError;
-use crate::RpcService;
-use iota_sdk_types::ObjectId;
-use iota_sdk_types::TypeTag;
-use iota_sdk_types::Version;
-use iota_types::iota_sdk_types_conversions::type_tag_core_to_sdk;
+use iota_sdk_types::{ObjectId, TypeTag, Version};
 use iota_types::{
+    iota_sdk_types_conversions::{SdkTypeConversionError, type_tag_core_to_sdk},
     storage::{DynamicFieldIndexInfo, DynamicFieldKey},
-    iota_sdk_types_conversions::SdkTypeConversionError,
 };
 use tap::Pipe;
+
+use crate::{
+    Result, RpcError, RpcService,
+    proto::node::v2alpha::{DynamicField, ListDynamicFieldsRequest, ListDynamicFieldsResponse},
+    types::{GetObjectOptions, ObjectResponse},
+};
 
 impl RpcService {
     pub fn get_object(
@@ -155,16 +150,14 @@ impl RpcService {
 }
 
 fn decode_page_token(page_token: &str) -> Result<ObjectId> {
-    use base64::prelude::BASE64_STANDARD;
-    use base64::Engine;
+    use base64::{Engine, prelude::BASE64_STANDARD};
 
     let bytes = BASE64_STANDARD.decode(page_token).unwrap();
     Ok(ObjectId::new(bytes.try_into().unwrap()))
 }
 
 fn encode_page_token(page_token: ObjectId) -> String {
-    use base64::prelude::BASE64_STANDARD;
-    use base64::Engine;
+    use base64::{Engine, prelude::BASE64_STANDARD};
 
     BASE64_STANDARD.encode(page_token.as_bytes())
 }

@@ -2,23 +2,27 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::monitored_scope;
+use std::{
+    collections::{HashMap, HashSet, hash_map::DefaultHasher},
+    hash::{Hash, Hasher},
+    sync::Arc,
+    time::Duration,
+};
+
 use futures::FutureExt;
 use parking_lot::Mutex;
 use prometheus::{
-    register_int_counter_vec_with_registry, register_int_gauge_vec_with_registry, IntCounterVec,
-    IntGaugeVec, Registry,
+    IntCounterVec, IntGaugeVec, Registry, register_int_counter_vec_with_registry,
+    register_int_gauge_vec_with_registry,
 };
-use std::collections::hash_map::DefaultHasher;
-use std::collections::{HashMap, HashSet};
-use std::hash::{Hash, Hasher};
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::runtime::Handle;
-use tokio::sync::mpsc;
-use tokio::sync::mpsc::error::TrySendError;
-use tokio::time::Instant;
+use tokio::{
+    runtime::Handle,
+    sync::{mpsc, mpsc::error::TrySendError},
+    time::Instant,
+};
 use tracing::{debug, error};
+
+use crate::monitored_scope;
 
 type Point = u64;
 type HistogramMessage = (HistogramLabels, Point);
@@ -249,7 +253,10 @@ impl HistogramCollector {
         }
         if Arc::strong_count(&self.reporter) != 1 {
             #[cfg(not(debug_assertions))]
-            error!("Histogram data overflow - we receive histogram data for {} faster then can process. Some histogram data is dropped", self._name);
+            error!(
+                "Histogram data overflow - we receive histogram data for {} faster then can process. Some histogram data is dropped",
+                self._name
+            );
         } else {
             let reporter = self.reporter.clone();
             Handle::current().spawn_blocking(move || reporter.lock().report(labeled_data));
@@ -319,8 +326,9 @@ impl<'a> Drop for HistogramTimerGuard<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use prometheus::proto::MetricFamily;
+
+    use super::*;
 
     #[test]
     fn pct_index_test() {

@@ -1,17 +1,19 @@
 // Copyright (c) Mysten Labs, Inc.
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::metrics::{DefaultMetricsCallbackProvider, MetricsCallbackProvider};
-use crate::{
-    client::{connect_lazy_with_config, connect_with_config},
-    server::ServerBuilder,
-    Multiaddr,
-};
+use std::time::Duration;
+
 use eyre::Result;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 use tokio_rustls::rustls::ClientConfig;
 use tonic::transport::Channel;
+
+use crate::{
+    Multiaddr,
+    client::{connect_lazy_with_config, connect_with_config},
+    metrics::{DefaultMetricsCallbackProvider, MetricsCallbackProvider},
+    server::ServerBuilder,
+};
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Config {

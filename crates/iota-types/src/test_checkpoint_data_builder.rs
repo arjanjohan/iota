@@ -4,17 +4,18 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
+use iota_protocol_config::ProtocolConfig;
 use move_core_types::{
     ident_str,
     language_storage::{StructTag, TypeTag},
 };
-use iota_protocol_config::ProtocolConfig;
 use tap::Pipe;
 
 use crate::{
+    IOTA_SYSTEM_ADDRESS,
     base_types::{
-        dbg_addr, random_object_ref, ExecutionDigests, ObjectID, ObjectRef, SequenceNumber,
-        IotaAddress,
+        ExecutionDigests, IotaAddress, ObjectID, ObjectRef, SequenceNumber, dbg_addr,
+        random_object_ref,
     },
     coin::Coin,
     committee::Committee,
@@ -27,12 +28,11 @@ use crate::{
     messages_checkpoint::{
         CertifiedCheckpointSummary, CheckpointContents, CheckpointSummary, EndOfEpochData,
     },
-    object::{MoveObject, Object, Owner, GAS_VALUE_FOR_TESTING},
+    object::{GAS_VALUE_FOR_TESTING, MoveObject, Object, Owner},
     programmable_transaction_builder::ProgrammableTransactionBuilder,
     transaction::{
         EndOfEpochTransactionKind, SenderSignedData, Transaction, TransactionData, TransactionKind,
     },
-    IOTA_SYSTEM_ADDRESS,
 };
 
 /// A builder for creating test checkpoint data.
@@ -604,9 +604,8 @@ mod tests {
 
     use move_core_types::ident_str;
 
-    use crate::transaction::{Command, ProgrammableMoveCall, TransactionDataAPI};
-
     use super::*;
+    use crate::transaction::{Command, ProgrammableMoveCall, TransactionDataAPI};
     #[test]
     fn test_basic_checkpoint_builder() {
         // Create a checkpoint with a single transaction that does nothing.
@@ -672,19 +671,21 @@ mod tests {
         let created_obj_id = TestCheckpointDataBuilder::derive_object_id(0);
 
         // Verify the newly created object appears in output objects
-        assert!(tx
-            .output_objects
-            .iter()
-            .any(|obj| obj.id() == created_obj_id));
+        assert!(
+            tx.output_objects
+                .iter()
+                .any(|obj| obj.id() == created_obj_id)
+        );
 
         // Verify effects show object creation
-        assert!(tx
-            .effects
-            .created()
-            .iter()
-            .any(|((id, ..), owner)| *id == created_obj_id
-                && owner.get_owner_address().unwrap()
-                    == TestCheckpointDataBuilder::derive_address(0)));
+        assert!(
+            tx.effects
+                .created()
+                .iter()
+                .any(|((id, ..), owner)| *id == created_obj_id
+                    && owner.get_owner_address().unwrap()
+                        == TestCheckpointDataBuilder::derive_address(0))
+        );
     }
 
     #[test]
@@ -706,11 +707,12 @@ mod tests {
         assert!(tx.output_objects.iter().any(|obj| obj.id() == obj_id));
 
         // Verify effects show object mutation
-        assert!(tx
-            .effects
-            .mutated()
-            .iter()
-            .any(|((id, ..), _)| *id == obj_id));
+        assert!(
+            tx.effects
+                .mutated()
+                .iter()
+                .any(|((id, ..), _)| *id == obj_id)
+        );
     }
 
     #[test]
@@ -766,11 +768,12 @@ mod tests {
         assert!(tx.output_objects.iter().any(|obj| obj.id() == obj_id));
 
         // Verify effects show object unwrapping
-        assert!(tx
-            .effects
-            .unwrapped()
-            .iter()
-            .any(|((id, ..), _)| *id == obj_id));
+        assert!(
+            tx.effects
+                .unwrapped()
+                .iter()
+                .any(|((id, ..), _)| *id == obj_id)
+        );
     }
 
     #[test]
@@ -792,13 +795,14 @@ mod tests {
         assert!(tx.output_objects.iter().any(|obj| obj.id() == obj_id));
 
         // Verify effects show object transfer
-        assert!(tx
-            .effects
-            .mutated()
-            .iter()
-            .any(|((id, ..), owner)| *id == obj_id
-                && owner.get_owner_address().unwrap()
-                    == TestCheckpointDataBuilder::derive_address(1)));
+        assert!(
+            tx.effects
+                .mutated()
+                .iter()
+                .any(|((id, ..), owner)| *id == obj_id
+                    && owner.get_owner_address().unwrap()
+                        == TestCheckpointDataBuilder::derive_address(1))
+        );
     }
 
     #[test]
@@ -813,10 +817,11 @@ mod tests {
         let obj_id = TestCheckpointDataBuilder::derive_object_id(0);
 
         // Verify object appears in output objects and is shared
-        assert!(tx
-            .output_objects
-            .iter()
-            .any(|obj| obj.id() == obj_id && obj.owner().is_shared()));
+        assert!(
+            tx.output_objects
+                .iter()
+                .any(|obj| obj.id() == obj_id && obj.owner().is_shared())
+        );
     }
 
     #[test]
@@ -834,10 +839,11 @@ mod tests {
         let obj_id = TestCheckpointDataBuilder::derive_object_id(0);
 
         // Verify object appears in output objects and is immutable
-        assert!(tx
-            .output_objects
-            .iter()
-            .any(|obj| obj.id() == obj_id && obj.owner().is_immutable()));
+        assert!(
+            tx.output_objects
+                .iter()
+                .any(|obj| obj.id() == obj_id && obj.owner().is_immutable())
+        );
     }
 
     #[test]
@@ -932,20 +938,21 @@ mod tests {
         let tx = &checkpoint.transactions[0];
 
         // Verify the transaction has a move call matching the arguments provided.
-        assert!(tx
-            .transaction
-            .transaction_data()
-            .kind()
-            .iter_commands()
-            .any(|cmd| {
-                cmd == &Command::MoveCall(Box::new(ProgrammableMoveCall {
-                    package: ObjectID::ZERO,
-                    module: "test".to_string(),
-                    function: "test".to_string(),
-                    type_arguments: vec![],
-                    arguments: vec![],
-                }))
-            }));
+        assert!(
+            tx.transaction
+                .transaction_data()
+                .kind()
+                .iter_commands()
+                .any(|cmd| {
+                    cmd == &Command::MoveCall(Box::new(ProgrammableMoveCall {
+                        package: ObjectID::ZERO,
+                        module: "test".to_string(),
+                        function: "test".to_string(),
+                        type_arguments: vec![],
+                        arguments: vec![],
+                    }))
+                })
+        );
     }
 
     #[test]

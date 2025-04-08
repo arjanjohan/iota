@@ -2,33 +2,33 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::fmt::Debug;
-use std::str::FromStr;
+use std::{fmt::Debug, str::FromStr};
 
-use axum::response::{IntoResponse, Response};
-use axum::Json;
+use axum::{
+    Json,
+    response::{IntoResponse, Response},
+};
 use fastcrypto::encoding::Hex;
-use serde::de::Error as DeError;
-use serde::{Deserialize, Serializer};
-use serde::{Deserializer, Serialize};
-use serde_json::Value;
-use strum_macros::EnumIter;
-use strum_macros::EnumString;
-
 use iota_sdk::rpc_types::{IotaExecutionStatus, IotaTransactionBlockKind};
-use iota_types::base_types::{ObjectID, ObjectRef, SequenceNumber, IotaAddress, TransactionDigest};
-use iota_types::crypto::PublicKey as IotaPublicKey;
-use iota_types::crypto::SignatureScheme;
-use iota_types::governance::{ADD_STAKE_FUN_NAME, WITHDRAW_STAKE_FUN_NAME};
-use iota_types::messages_checkpoint::CheckpointDigest;
-use iota_types::programmable_transaction_builder::ProgrammableTransactionBuilder;
-use iota_types::iota_system_state::IOTA_SYSTEM_MODULE_NAME;
-use iota_types::transaction::{Argument, CallArg, Command, ObjectArg, TransactionData};
-use iota_types::IOTA_SYSTEM_PACKAGE_ID;
+use iota_types::{
+    IOTA_SYSTEM_PACKAGE_ID,
+    base_types::{IotaAddress, ObjectID, ObjectRef, SequenceNumber, TransactionDigest},
+    crypto::{PublicKey as IotaPublicKey, SignatureScheme},
+    governance::{ADD_STAKE_FUN_NAME, WITHDRAW_STAKE_FUN_NAME},
+    iota_system_state::IOTA_SYSTEM_MODULE_NAME,
+    messages_checkpoint::CheckpointDigest,
+    programmable_transaction_builder::ProgrammableTransactionBuilder,
+    transaction::{Argument, CallArg, Command, ObjectArg, TransactionData},
+};
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Error as DeError};
+use serde_json::Value;
+use strum_macros::{EnumIter, EnumString};
 
-use crate::errors::{Error, ErrorType};
-use crate::operations::Operations;
-use crate::IOTA;
+use crate::{
+    IOTA,
+    errors::{Error, ErrorType},
+    operations::Operations,
+};
 
 #[cfg(test)]
 #[path = "unit_tests/types_tests.rs"]
@@ -222,8 +222,7 @@ impl Amount {
 mod str_format {
     use std::str::FromStr;
 
-    use serde::de::Error;
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Error};
 
     pub fn serialize<S>(value: &i128, serializer: S) -> Result<S::Ok, S::Error>
     where

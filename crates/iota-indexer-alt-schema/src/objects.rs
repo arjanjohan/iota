@@ -4,10 +4,9 @@
 
 use anyhow::Context;
 use diesel::{
-    backend::Backend, deserialize, expression::AsExpression, prelude::*, serialize,
-    sql_types::SmallInt, FromSqlRow,
+    FromSqlRow, backend::Backend, deserialize, expression::AsExpression, prelude::*, serialize,
+    sql_types::SmallInt,
 };
-
 use iota_field_count::FieldCount;
 use iota_types::object::{Object, Owner};
 

@@ -5,17 +5,18 @@
 use std::sync::Arc;
 
 use async_graphql::dataloader::DataLoader;
-use diesel::deserialize::FromSqlRow;
-use diesel::expression::QueryMetadata;
-use diesel::pg::Pg;
-use diesel::query_builder::{Query, QueryFragment, QueryId};
-use diesel::query_dsl::methods::LimitDsl;
-use diesel::query_dsl::CompatibleType;
-use diesel::result::Error as DieselError;
+use diesel::{
+    deserialize::FromSqlRow,
+    expression::QueryMetadata,
+    pg::Pg,
+    query_builder::{Query, QueryFragment, QueryId},
+    query_dsl::{CompatibleType, methods::LimitDsl},
+    result::Error as DieselError,
+};
 use diesel_async::RunQueryDsl;
-use prometheus::Registry;
 use iota_indexer_alt_metrics::db::DbConnectionStatsCollector;
 use iota_pg_db as db;
+use prometheus::Registry;
 use tracing::debug;
 
 use crate::metrics::RpcMetrics;

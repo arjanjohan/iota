@@ -2,6 +2,30 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::collections::{BTreeMap, HashMap};
+
+use async_graphql::{connection::CursorType, dataloader::Loader, *};
+use connection::Edge;
+use cursor::TxLookup;
+use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper};
+use diesel_async::scoped_futures::ScopedFutureExt;
+use fastcrypto::encoding::{Base58, Encoding};
+use iota_indexer::{
+    models::transactions::StoredTransaction,
+    schema::{transactions, tx_digests},
+};
+use iota_types::{
+    base_types::IotaAddress as NativeIotaAddress,
+    effects::TransactionEffects as NativeTransactionEffects,
+    event::Event as NativeEvent,
+    message_envelope::Message,
+    transaction::{
+        SenderSignedData as NativeSenderSignedData, TransactionData as NativeTransactionData,
+        TransactionDataAPI, TransactionExpiration,
+    },
+};
+use serde::{Deserialize, Serialize};
+
 use super::{
     address::Address,
     base64::Base64,
@@ -20,28 +44,6 @@ use crate::{
     error::Error,
     server::watermark_task::Watermark,
 };
-use async_graphql::{connection::CursorType, dataloader::Loader, *};
-use connection::Edge;
-use cursor::TxLookup;
-use diesel::{ExpressionMethods, JoinOnDsl, QueryDsl, SelectableHelper};
-use diesel_async::scoped_futures::ScopedFutureExt;
-use fastcrypto::encoding::{Base58, Encoding};
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap};
-use iota_indexer::{
-    models::transactions::StoredTransaction,
-    schema::{transactions, tx_digests},
-};
-use iota_types::{
-    base_types::IotaAddress as NativeIotaAddress,
-    effects::TransactionEffects as NativeTransactionEffects,
-    event::Event as NativeEvent,
-    message_envelope::Message,
-    transaction::{
-        SenderSignedData as NativeSenderSignedData, TransactionData as NativeTransactionData,
-        TransactionDataAPI, TransactionExpiration,
-    },
-};
 
 mod cursor;
 mod filter;
@@ -49,7 +51,7 @@ mod tx_lookups;
 
 pub(crate) use cursor::Cursor;
 pub(crate) use filter::TransactionBlockFilter;
-pub(crate) use tx_lookups::{subqueries, TxBounds};
+pub(crate) use tx_lookups::{TxBounds, subqueries};
 
 /// Wraps the actual transaction block data with the checkpoint sequence number at which the data
 /// was viewed, for consistent results on paginating through and resolving nested types.

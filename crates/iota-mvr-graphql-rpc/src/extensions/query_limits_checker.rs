@@ -2,30 +2,36 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::{Limits, ServiceConfig};
-use crate::error::{code, graphql_error, graphql_error_at_pos};
-use crate::metrics::Metrics;
-use async_graphql::extensions::NextParseQuery;
-use async_graphql::extensions::NextRequest;
-use async_graphql::extensions::{Extension, ExtensionContext, ExtensionFactory};
-use async_graphql::parser::types::{
-    DocumentOperations, ExecutableDocument, Field, FragmentDefinition, OperationDefinition,
-    Selection,
+use std::{
+    collections::{HashMap, HashSet},
+    mem,
+    net::SocketAddr,
+    sync::{Arc, Mutex},
+    time::Instant,
 };
-use async_graphql::{value, Name, Pos, Positioned, Response, ServerError, ServerResult, Variables};
-use async_graphql_value::Value as GqlValue;
-use async_graphql_value::{ConstValue, Value};
+
+use async_graphql::{
+    Name, Pos, Positioned, Response, ServerError, ServerResult, Variables,
+    extensions::{Extension, ExtensionContext, ExtensionFactory, NextParseQuery, NextRequest},
+    parser::types::{
+        DocumentOperations, ExecutableDocument, Field, FragmentDefinition, OperationDefinition,
+        Selection,
+    },
+    value,
+};
+use async_graphql_value::{ConstValue, Value as GqlValue, Value};
 use async_trait::async_trait;
 use axum::http::HeaderName;
-use serde::Serialize;
-use std::collections::{HashMap, HashSet};
-use std::mem;
-use std::net::SocketAddr;
-use std::sync::{Arc, Mutex};
-use std::time::Instant;
 use iota_graphql_rpc_headers::LIMITS_HEADER;
+use serde::Serialize;
 use tracing::{error, info};
 use uuid::Uuid;
+
+use crate::{
+    config::{Limits, ServiceConfig},
+    error::{code, graphql_error, graphql_error_at_pos},
+    metrics::Metrics,
+};
 
 pub(crate) const CONNECTION_FIELDS: [&str; 2] = ["edges", "nodes"];
 const DRY_RUN_TX_BLOCK: &str = "dryRunTransactionBlock";

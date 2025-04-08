@@ -6,11 +6,13 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::executor::{ExecutionResult, Executor};
+use std::{fmt, sync::Arc};
+
+use iota_types::{storage::ObjectStore, transaction::Transaction};
 use once_cell::sync::Lazy;
 use proptest::{prelude::*, strategy::Union};
-use std::{fmt, sync::Arc};
-use iota_types::{storage::ObjectStore, transaction::Transaction};
+
+use crate::executor::{ExecutionResult, Executor};
 
 mod account;
 mod helpers;

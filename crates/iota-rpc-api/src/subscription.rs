@@ -2,17 +2,17 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::metrics::SubscriptionMetrics;
-use crate::proto::node::v2::GetFullCheckpointOptions;
-use crate::proto::node::v2::GetFullCheckpointResponse;
 use std::sync::Arc;
+
 use iota_types::full_checkpoint_content::CheckpointData;
 use tap::Pipe;
-use tokio::sync::mpsc;
-use tokio::sync::oneshot;
-use tracing::error;
-use tracing::info;
-use tracing::trace;
+use tokio::sync::{mpsc, oneshot};
+use tracing::{error, info, trace};
+
+use crate::{
+    metrics::SubscriptionMetrics,
+    proto::node::v2::{GetFullCheckpointOptions, GetFullCheckpointResponse},
+};
 
 const CHECKPOINT_MAILBOX_SIZE: usize = 1024;
 const MAILBOX_SIZE: usize = 128;

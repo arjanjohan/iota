@@ -2,20 +2,18 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::fs;
-use std::str::FromStr;
+use std::{fs, str::FromStr};
 
-use fastcrypto::hash::HashFunction;
-use fastcrypto::traits::EncodeDecodeBase64;
-use iota_keys::key_derive::generate_new_key;
-use tempfile::TempDir;
-
-use iota_keys::keystore::{AccountKeystore, FileBasedKeystore, InMemKeystore, Keystore};
-use iota_types::crypto::{DefaultHash, SignatureScheme, IotaSignatureInner};
-use iota_types::{
-    base_types::{IotaAddress, IOTA_ADDRESS_LENGTH},
-    crypto::Ed25519IotaSignature,
+use fastcrypto::{hash::HashFunction, traits::EncodeDecodeBase64};
+use iota_keys::{
+    key_derive::generate_new_key,
+    keystore::{AccountKeystore, FileBasedKeystore, InMemKeystore, Keystore},
 };
+use iota_types::{
+    base_types::{IOTA_ADDRESS_LENGTH, IotaAddress},
+    crypto::{DefaultHash, Ed25519IotaSignature, IotaSignatureInner, SignatureScheme},
+};
+use tempfile::TempDir;
 
 #[test]
 fn alias_exists_test() {
@@ -174,9 +172,11 @@ fn update_alias_test() {
             None,
         )
         .unwrap();
-    assert!(keystore
-        .update_alias("my_alias_test", Some(&update))
-        .is_err());
+    assert!(
+        keystore
+            .update_alias("my_alias_test", Some(&update))
+            .is_err()
+    );
 }
 
 #[test]
@@ -228,8 +228,9 @@ fn mnemonic_test() {
 #[test]
 fn iota_wallet_address_mnemonic_test() -> Result<(), anyhow::Error> {
     let phrase = "result crisp session latin must fruit genuine question prevent start coconut brave speak student dismiss";
-    let expected_address =
-        IotaAddress::from_str("0x936accb491f0facaac668baaedcf4d0cfc6da1120b66f77fa6a43af718669973")?;
+    let expected_address = IotaAddress::from_str(
+        "0x936accb491f0facaac668baaedcf4d0cfc6da1120b66f77fa6a43af718669973",
+    )?;
 
     let temp_dir = TempDir::new().unwrap();
     let keystore_path = temp_dir.path().join("iota.keystore");

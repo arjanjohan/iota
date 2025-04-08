@@ -2,39 +2,39 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    check_completed_snapshot,
-    db_tool::{execute_db_tool_command, print_db_all_tables, DbToolCommand},
-    download_db_snapshot, download_formal_snapshot, dump_checkpoints_from_archive,
-    get_latest_available_epoch, get_object, get_transaction_block, make_clients,
-    restore_from_db_checkpoint, verify_archive, verify_archive_by_checksum, ConciseObjectOutput,
-    GroupedObjectOutput, SnapshotVerifyMode, VerboseObjectOutput,
-};
+use std::{collections::BTreeMap, env, path::PathBuf, sync::Arc};
+
 use anyhow::Result;
-use futures::{future::join_all, StreamExt};
-use std::path::PathBuf;
-use std::{collections::BTreeMap, env, sync::Arc};
-use iota_config::genesis::Genesis;
-use iota_core::authority_client::AuthorityAPI;
-use iota_protocol_config::Chain;
-use iota_replay::{execute_replay_command, ReplayToolCommand};
-use iota_sdk::{rpc_types::IotaTransactionBlockResponseOptions, IotaClient, IotaClientBuilder};
-use telemetry_subscribers::TracingHandle;
-
-use iota_types::{
-    base_types::*, crypto::AuthorityPublicKeyBytes, messages_grpc::TransactionInfoRequest,
-};
-
 use clap::*;
 use fastcrypto::encoding::Encoding;
+use futures::{StreamExt, future::join_all};
 use iota_archival::{read_manifest_as_json, write_manifest_from_json};
-use iota_config::object_storage_config::{ObjectStoreConfig, ObjectStoreType};
-use iota_config::Config;
-use iota_core::authority_aggregator::AuthorityAggregatorBuilder;
-use iota_types::messages_checkpoint::{
-    CheckpointRequest, CheckpointResponse, CheckpointSequenceNumber,
+use iota_config::{
+    Config,
+    genesis::Genesis,
+    object_storage_config::{ObjectStoreConfig, ObjectStoreType},
 };
-use iota_types::transaction::{SenderSignedData, Transaction};
+use iota_core::{authority_aggregator::AuthorityAggregatorBuilder, authority_client::AuthorityAPI};
+use iota_protocol_config::Chain;
+use iota_replay::{ReplayToolCommand, execute_replay_command};
+use iota_sdk::{IotaClient, IotaClientBuilder, rpc_types::IotaTransactionBlockResponseOptions};
+use iota_types::{
+    base_types::*,
+    crypto::AuthorityPublicKeyBytes,
+    messages_checkpoint::{CheckpointRequest, CheckpointResponse, CheckpointSequenceNumber},
+    messages_grpc::TransactionInfoRequest,
+    transaction::{SenderSignedData, Transaction},
+};
+use telemetry_subscribers::TracingHandle;
+
+use crate::{
+    ConciseObjectOutput, GroupedObjectOutput, SnapshotVerifyMode, VerboseObjectOutput,
+    check_completed_snapshot,
+    db_tool::{DbToolCommand, execute_db_tool_command, print_db_all_tables},
+    download_db_snapshot, download_formal_snapshot, dump_checkpoints_from_archive,
+    get_latest_available_epoch, get_object, get_transaction_block, make_clients,
+    restore_from_db_checkpoint, verify_archive, verify_archive_by_checksum,
+};
 
 #[derive(Parser, Clone, ValueEnum)]
 pub enum Verbosity {
@@ -793,8 +793,7 @@ impl ToolCommand {
                     );
 
                     let archive_bucket_type = env::var("FORMAL_SNAPSHOT_ARCHIVE_BUCKET_TYPE").expect("If setting `CUSTOM_ARCHIVE_BUCKET=true` Must set FORMAL_SNAPSHOT_ARCHIVE_BUCKET_TYPE, and credentials");
-                    match archive_bucket_type.to_ascii_lowercase().as_str()
-                    {
+                    match archive_bucket_type.to_ascii_lowercase().as_str() {
                         "s3" => ObjectStoreConfig {
                             object_store: Some(ObjectStoreType::S3),
                             bucket: archive_bucket.filter(|s| !s.is_empty()),
@@ -833,7 +832,9 @@ impl ToolCommand {
                             no_sign_request: false,
                             ..Default::default()
                         },
-                        _ => panic!("If setting `CUSTOM_ARCHIVE_BUCKET=true` must set FORMAL_SNAPSHOT_ARCHIVE_BUCKET_TYPE to one of 'gcs', 'azure', or 's3' "),
+                        _ => panic!(
+                            "If setting `CUSTOM_ARCHIVE_BUCKET=true` must set FORMAL_SNAPSHOT_ARCHIVE_BUCKET_TYPE to one of 'gcs', 'azure', or 's3' "
+                        ),
                     }
                 } else {
                     // if not explicitly overridden, just default to the permissionless archive store
@@ -1003,8 +1004,8 @@ impl ToolCommand {
                                 }
                             } else {
                                 panic!(
-                                "--snapshot-path must be specified for --snapshot-bucket-type=file"
-                            );
+                                    "--snapshot-path must be specified for --snapshot-bucket-type=file"
+                                );
                             }
                         }
                     }

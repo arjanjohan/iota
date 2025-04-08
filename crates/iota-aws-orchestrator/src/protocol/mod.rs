@@ -9,8 +9,8 @@ use crate::{
     client::Instance,
 };
 
-pub mod narwhal;
 pub mod iota;
+pub mod narwhal;
 
 /// The minimum interface that the protocol should implement to allow benchmarks from
 /// the orchestrator.
@@ -101,9 +101,8 @@ pub trait ProtocolMetrics {
 
 #[cfg(test)]
 pub mod test_protocol_metrics {
-    use crate::client::Instance;
-
     use super::ProtocolMetrics;
+    use crate::client::Instance;
 
     pub struct TestProtocolMetrics;
 
