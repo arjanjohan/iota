@@ -5,5 +5,5 @@ group_imports = "StdExternalCrate"
 imports_granularity = "Crate"
 normalize_comments = true
 normalize_doc_attributes = true
-wrap_comments = true
+wrap_comments = false
 ignore = ["external-crates"]
