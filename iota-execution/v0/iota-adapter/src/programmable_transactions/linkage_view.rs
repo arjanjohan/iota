@@ -334,9 +334,9 @@ impl<'state> ResourceResolver for LinkageView<'state> {
     fn get_resource(
         &self,
         address: &AccountAddress,
-        typ: &StructTag,
+        typo: &StructTag,
     ) -> Result<Option<Vec<u8>>, Self::Error> {
-        self.resolver.get_resource(address, typ)
+        self.resolver.get_resource(address, typo)
     }
 }
 

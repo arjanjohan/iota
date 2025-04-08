@@ -416,7 +416,7 @@ impl VersionedDkgConfirmation {
     pub fn sender(&self) -> u16 {
         match self {
             VersionedDkgConfirmation::V0() => {
-                panic!("BUG: invalid VersionedDkgConfimation version")
+                panic!("BUG: invalid VersionedDkgConfirmation version")
             }
             VersionedDkgConfirmation::V1(msg) => msg.sender,
         }
@@ -425,7 +425,7 @@ impl VersionedDkgConfirmation {
     pub fn num_of_complaints(&self) -> usize {
         match self {
             VersionedDkgConfirmation::V0() => {
-                panic!("BUG: invalid VersionedDkgConfimation version")
+                panic!("BUG: invalid VersionedDkgConfirmation version")
             }
             VersionedDkgConfirmation::V1(msg) => msg.complaints.len(),
         }

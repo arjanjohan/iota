@@ -518,11 +518,11 @@ pub struct ExecuteTransactionRequest {
     /// Optional. The transaction to execute, encoded as BCS bytes.
     #[prost(message, optional, tag = "2")]
     pub transaction_bcs: ::core::option::Option<super::super::types::Bcs>,
-    /// Optional. Set of `UserSiganture`s authorizing the execution of the provided
+    /// Optional. Set of `UserSignature`s authorizing the execution of the provided
     /// transaction.
     #[prost(message, repeated, tag = "3")]
     pub signatures: ::prost::alloc::vec::Vec<super::super::types::UserSignature>,
-    /// Optional. Set of `UserSiganture`s authorizing the execution of the provided
+    /// Optional. Set of `UserSignature`s authorizing the execution of the provided
     /// transaction, encoded as bytes.
     #[prost(bytes = "bytes", repeated, tag = "4")]
     pub signatures_bytes: ::prost::alloc::vec::Vec<::prost::bytes::Bytes>,

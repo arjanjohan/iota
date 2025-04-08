@@ -67,7 +67,7 @@ impl<'state> ResourceResolver for NullIotaResolver<'state> {
     fn get_resource(
         &self,
         _address: &AccountAddress,
-        _typ: &StructTag,
+        _typo: &StructTag,
     ) -> Result<Option<Vec<u8>>, Self::Error> {
         Ok(None)
     }

@@ -278,7 +278,7 @@ pub enum ExecutionStoreEvent {
     },
     ResourceResolverGetResource {
         address: AccountAddress,
-        typ: StructTag,
+        typo: StructTag,
         result: IotaResult<Option<Vec<u8>>>,
     },
     ModuleResolverGetModule {

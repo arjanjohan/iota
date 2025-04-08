@@ -65,7 +65,7 @@ module deepbook::order_query_tests {
     }
 
     #[test]
-    fun test_order_query_pagination_decending() {
+    fun test_order_query_pagination_descending() {
         let mut scenario = prepare_scenario();
         add_orders(200, TIMESTAMP_INF, none(), &mut scenario);
         let pool = test_scenario::take_shared<Pool<IOTA, USD>>(&scenario);

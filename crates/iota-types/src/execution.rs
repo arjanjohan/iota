@@ -175,7 +175,7 @@ impl ExecutionResultsV2 {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
 pub enum ExecutionTimeObservationKey {
-    // Containts all the fields from `ProgrammableMoveCall` besides `arguments`.
+    // Contains all the fields from `ProgrammableMoveCall` besides `arguments`.
     MoveEntryPoint {
         /// The package containing the module and function.
         package: ObjectID,

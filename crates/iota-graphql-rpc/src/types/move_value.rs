@@ -25,10 +25,10 @@ const MOD_OBJECT: &IdentStr = ident_str!("object");
 const MOD_OPTION: &IdentStr = ident_str!("option");
 const MOD_STRING: &IdentStr = ident_str!("string");
 
-const TYP_ID: &IdentStr = ident_str!("ID");
-const TYP_OPTION: &IdentStr = ident_str!("Option");
-const TYP_STRING: &IdentStr = ident_str!("String");
-const TYP_UID: &IdentStr = ident_str!("UID");
+const TYPO_ID: &IdentStr = ident_str!("ID");
+const TYPO_OPTION: &IdentStr = ident_str!("Option");
+const TYPO_STRING: &IdentStr = ident_str!("String");
+const TYPO_UID: &IdentStr = ident_str!("UID");
 
 #[derive(SimpleObject)]
 #[graphql(complex)]
@@ -191,21 +191,21 @@ impl TryFrom<A::MoveValue> for MoveData {
 
             V::Struct(s) => {
                 let A::MoveStruct { type_, fields } = s;
-                if is_type(&type_, &STD, MOD_OPTION, TYP_OPTION) {
+                if is_type(&type_, &STD, MOD_OPTION, TYPO_OPTION) {
                     // 0x1::option::Option
                     Self::Option(match extract_option(&type_, fields)? {
                         Some(value) => Some(Box::new(MoveData::try_from(value)?)),
                         None => None,
                     })
-                } else if is_type(&type_, &STD, MOD_ASCII, TYP_STRING)
-                    || is_type(&type_, &STD, MOD_STRING, TYP_STRING)
+                } else if is_type(&type_, &STD, MOD_ASCII, TYPO_STRING)
+                    || is_type(&type_, &STD, MOD_STRING, TYPO_STRING)
                 {
                     // 0x1::ascii::String, 0x1::string::String
                     Self::String(extract_string(&type_, fields)?)
-                } else if is_type(&type_, &IOTA, MOD_OBJECT, TYP_UID) {
+                } else if is_type(&type_, &IOTA, MOD_OBJECT, TYPO_UID) {
                     // 0x2::object::UID
                     Self::Uid(extract_uid(&type_, fields)?.into())
-                } else if is_type(&type_, &IOTA, MOD_OBJECT, TYP_ID) {
+                } else if is_type(&type_, &IOTA, MOD_OBJECT, TYPO_ID) {
                     // 0x2::object::ID
                     Self::Id(extract_id(&type_, fields)?.into())
                 } else {
@@ -270,23 +270,23 @@ fn try_to_json_value(value: A::MoveValue) -> Result<Value, Error> {
 
         V::Struct(s) => {
             let A::MoveStruct { type_, fields } = s;
-            if is_type(&type_, &STD, MOD_OPTION, TYP_OPTION) {
+            if is_type(&type_, &STD, MOD_OPTION, TYPO_OPTION) {
                 // 0x1::option::Option
                 match extract_option(&type_, fields)? {
                     Some(value) => try_to_json_value(value)?,
                     None => Value::Null,
                 }
-            } else if is_type(&type_, &STD, MOD_ASCII, TYP_STRING)
-                || is_type(&type_, &STD, MOD_STRING, TYP_STRING)
+            } else if is_type(&type_, &STD, MOD_ASCII, TYPO_STRING)
+                || is_type(&type_, &STD, MOD_STRING, TYPO_STRING)
             {
                 // 0x1::ascii::String, 0x1::string::String
                 Value::String(extract_string(&type_, fields)?)
-            } else if is_type(&type_, &IOTA, MOD_OBJECT, TYP_UID) {
+            } else if is_type(&type_, &IOTA, MOD_OBJECT, TYPO_UID) {
                 // 0x2::object::UID
                 Value::String(
                     extract_uid(&type_, fields)?.to_canonical_string(/* with_prefix */ true),
                 )
-            } else if is_type(&type_, &IOTA, MOD_OBJECT, TYP_ID) {
+            } else if is_type(&type_, &IOTA, MOD_OBJECT, TYPO_ID) {
                 // 0x2::object::ID
                 Value::String(
                     extract_id(&type_, fields)?.to_canonical_string(/* with_prefix */ true),
@@ -437,7 +437,7 @@ fn extract_uid(
     };
 
     let A::MoveStruct { type_, fields } = s;
-    if !is_type(&type_, &IOTA, MOD_OBJECT, TYP_ID) {
+    if !is_type(&type_, &IOTA, MOD_OBJECT, TYPO_ID) {
         return Err(Error::Internal(
             "Expected UID.id to have type ID.".to_string(),
         ));

@@ -1988,12 +1988,12 @@ impl ResourceResolver for LocalExec {
     fn get_resource(
         &self,
         address: &AccountAddress,
-        typ: &StructTag,
+        typo: &StructTag,
     ) -> IotaResult<Option<Vec<u8>>> {
         fn inner(
             self_: &LocalExec,
             address: &AccountAddress,
-            typ: &StructTag,
+            typo: &StructTag,
         ) -> IotaResult<Option<Vec<u8>>> {
             // If package not present fetch it from the network or some remote location
             let Some(object) = self_.get_or_download_object(
@@ -2007,7 +2007,7 @@ impl ResourceResolver for LocalExec {
             match &object.data {
                 Data::Move(m) => {
                     assert!(
-                        m.is_type(typ),
+                        m.is_type(typo),
                         "Invariant violation: ill-typed object in storage \
                         or bad object request from caller"
                     );
@@ -2020,13 +2020,13 @@ impl ResourceResolver for LocalExec {
             }
         }
 
-        let res = inner(self, address, typ);
+        let res = inner(self, address, typo);
         self.exec_store_events
             .lock()
             .expect("Unable to lock events list")
             .push(ExecutionStoreEvent::ResourceResolverGetResource {
                 address: *address,
-                typ: typ.clone(),
+                typo: typo.clone(),
                 result: res.clone(),
             });
         res

@@ -569,11 +569,11 @@ message ExecuteTransactionRequest {
   // Optional. The transaction to execute, encoded as BCS bytes.
   optional iota.types.Bcs transaction_bcs = 2;
 
-  // Optional. Set of `UserSiganture`s authorizing the execution of the provided
+  // Optional. Set of `UserSignature`s authorizing the execution of the provided
   // transaction.
   repeated iota.types.UserSignature signatures = 3;
 
-  // Optional. Set of `UserSiganture`s authorizing the execution of the provided
+  // Optional. Set of `UserSignature`s authorizing the execution of the provided
   // transaction, encoded as bytes.
   repeated bytes signatures_bytes = 4;
 

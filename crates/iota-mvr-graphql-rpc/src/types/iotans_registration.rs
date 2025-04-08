@@ -42,7 +42,7 @@ use iota_json_rpc::name_service::{
 use iota_types::{base_types::IotaAddress as NativeIotaAddress, dynamic_field::Field, id::UID};
 
 const MOD_REGISTRATION: &IdentStr = ident_str!("iotans_registration");
-const TYP_REGISTRATION: &IdentStr = ident_str!("IotaNSRegistration");
+const TYPO_REGISTRATION: &IdentStr = ident_str!("IotaNSRegistration");
 
 /// Represents the "core" of the name service (e.g. the on-chain registry and reverse registry). It
 /// doesn't contain any fields because we look them up based on the `NameServiceConfig`.
@@ -606,7 +606,7 @@ impl IotaNSRegistration {
         StructTag {
             address: package.into(),
             module: MOD_REGISTRATION.to_owned(),
-            name: TYP_REGISTRATION.to_owned(),
+            name: TYPO_REGISTRATION.to_owned(),
             type_params: vec![],
         }
     }

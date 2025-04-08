@@ -533,8 +533,8 @@ impl CompiledPackage {
             }
         }
         let mut layout_builder = SerdeLayoutBuilder::new(self);
-        for typ in &package_types {
-            layout_builder.build_data_layout(typ).unwrap();
+        for typo in &package_types {
+            layout_builder.build_data_layout(typo).unwrap();
         }
         layout_builder.into_registry()
     }

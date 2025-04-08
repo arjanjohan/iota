@@ -21,7 +21,7 @@
 // `optional`, and wrapping `repeated` fields in a message as needed.
 //
 // Even if a field is marked as `optional`, it might not actually be optional from
-// the perspective of the IOTA protocol. Such fields are explicitly labled
+// the perspective of the IOTA protocol. Such fields are explicitly labeled
 // as `Required` or `Optional` in their documentation.
 syntax = "proto3";
 

@@ -259,8 +259,8 @@ Note: You must provide only one of `transaction` or `transaction_bcs`.
 | ----- | ---- | ----- | ----------- |
 | transaction | [iota.types.Transaction](#iota-types-Transaction) | optional | Optional. The transaction to execute. |
 | transaction_bcs | [iota.types.Bcs](#iota-types-Bcs) | optional | Optional. The transaction to execute, encoded as BCS bytes. |
-| signatures | [UserSignatures](#iota-node-v2-UserSignatures) | optional | Optional. Set of `UserSiganture`s authorizing the execution of the provided transaction. |
-| signatures_bytes | [UserSignaturesBytes](#iota-node-v2-UserSignaturesBytes) | optional | Optional. Set of `UserSiganture`s authorizing the execution of the provided transaction, encoded as bytes. |
+| signatures | [UserSignatures](#iota-node-v2-UserSignatures) | optional | Optional. Set of `UserSignature`s authorizing the execution of the provided transaction. |
+| signatures_bytes | [UserSignaturesBytes](#iota-node-v2-UserSignaturesBytes) | optional | Optional. Set of `UserSignature`s authorizing the execution of the provided transaction, encoded as bytes. |
 | options | [ExecuteTransactionOptions](#iota-node-v2-ExecuteTransactionOptions) | optional | Optional. Options for specifying which parts of the `ExecuteTransactionResponse` should be returned. |
 
 
@@ -823,7 +823,7 @@ these definitions follow the convention of having all fields marked
 `optional`, and wrapping `repeated` fields in a message as needed.
 
 Even if a field is marked as `optional`, it might not actually be optional from
-the perspective of the IOTA protocol. Such fields are explicitly labled
+the perspective of the IOTA protocol. Such fields are explicitly labeled
 as `Required` or `Optional` in their documentation.
 
 

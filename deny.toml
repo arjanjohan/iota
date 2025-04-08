@@ -26,7 +26,7 @@ ignore = [
     "RUSTSEC-2020-0095",
     # rusoto is unmaintained, use aws crates
     "RUSTSEC-2022-0071",
-    # `tui` is unmaintained; use `ratatui` instead
+    # `tui` is unmaintained; use `ratatouille` instead
     "RUSTSEC-2023-0049",
     # we don't do RSA signing on Sui (only verifying for zklogin)
     "RUSTSEC-2023-0071",
