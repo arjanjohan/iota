@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::VecDeque, sync::Arc};
@@ -8,7 +9,7 @@ use parking_lot::RwLock;
 
 use crate::{
     base_committer::BaseCommitter,
-    block::{Round, Slot, GENESIS_ROUND},
+    block::{GENESIS_ROUND, Round, Slot},
     commit::{DecidedLeader, Decision},
     context::Context,
     dag_state::DagState,

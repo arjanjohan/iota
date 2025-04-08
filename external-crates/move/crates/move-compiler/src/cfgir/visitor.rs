@@ -1,4 +1,5 @@
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::BTreeMap, fmt::Debug};
@@ -398,7 +399,7 @@ pub enum LocalState<V: Clone + Debug + Default> {
     },
 }
 
-/// A trait for a the context when visiting a `Command` in a block. At a minimum it must hold the diagnostics
+/// A trait for the context when visiting a `Command` in a block. At a minimum it must hold the diagnostics
 /// and the abstract state
 pub trait SimpleExecutionContext {
     /// Add a diagnostic

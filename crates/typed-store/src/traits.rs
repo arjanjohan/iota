@@ -1,10 +1,12 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use crate::TypedStoreError;
+use std::{borrow::Borrow, collections::BTreeMap, error::Error, ops::RangeBounds};
+
 use async_trait::async_trait;
-use serde::{de::DeserializeOwned, Serialize};
-use std::ops::RangeBounds;
-use std::{borrow::Borrow, collections::BTreeMap, error::Error};
+use serde::{Serialize, de::DeserializeOwned};
+
+use crate::TypedStoreError;
 
 pub trait Map<'a, K, V>
 where
@@ -63,7 +65,7 @@ where
 
     /// Returns an iterator visiting each key-value pair within the specified bounds in the map.
     fn iter_with_bounds(&'a self, lower_bound: Option<K>, upper_bound: Option<K>)
-        -> Self::Iterator;
+    -> Self::Iterator;
 
     /// Similar to `iter_with_bounds` but allows specifying inclusivity/exclusivity of ranges explicitly.
     /// TODO: find better name

@@ -1,14 +1,15 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::sync::Arc;
 
 use consensus_config::AuthorityIndex;
 use parking_lot::RwLock;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{Rng, SeedableRng, rngs::StdRng};
 
 use crate::{
-    block::{genesis_blocks, BlockRef, BlockTimestampMs, Round, TestBlock, VerifiedBlock},
+    block::{BlockRef, BlockTimestampMs, Round, TestBlock, VerifiedBlock, genesis_blocks},
     context::Context,
     dag_state::DagState,
     test_dag_builder::DagBuilder,

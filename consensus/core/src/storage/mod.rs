@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 pub(crate) mod mem_store;
@@ -10,10 +11,10 @@ mod store_tests;
 use consensus_config::AuthorityIndex;
 
 use crate::{
+    CommitIndex,
     block::{BlockRef, Round, Slot, VerifiedBlock},
     commit::{CommitInfo, CommitRange, CommitRef, TrustedCommit},
     error::ConsensusResult,
-    CommitIndex,
 };
 
 /// A common interface for consensus storage.

@@ -1,4 +1,5 @@
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use ethnum::U256 as EthnumU256;
@@ -395,7 +396,7 @@ impl U256 {
         Some(Self(self.0.shr(rhs)))
     }
 
-    /// Downcast to a an unsigned value of type T
+    /// Downcast to an unsigned value of type T
     /// T must be at most u128
     pub fn down_cast_lossy<T: std::convert::TryFrom<u128>>(self) -> T {
         // Size of this type

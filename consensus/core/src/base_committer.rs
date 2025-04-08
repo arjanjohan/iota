@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::HashMap, fmt::Display, sync::Arc};
@@ -8,7 +9,7 @@ use parking_lot::RwLock;
 
 use crate::{
     block::{BlockAPI, BlockRef, Round, Slot, VerifiedBlock},
-    commit::{LeaderStatus, WaveNumber, DEFAULT_WAVE_LENGTH, MINIMUM_WAVE_LENGTH},
+    commit::{DEFAULT_WAVE_LENGTH, LeaderStatus, MINIMUM_WAVE_LENGTH, WaveNumber},
     context::Context,
     dag_state::DagState,
     leader_schedule::LeaderSchedule,
@@ -18,6 +19,10 @@ use crate::{
 #[cfg(test)]
 #[path = "tests/base_committer_tests.rs"]
 mod base_committer_tests;
+
+#[cfg(test)]
+#[path = "tests/base_committer_declarative_tests.rs"]
+mod base_committer_declarative_tests;
 
 pub(crate) struct BaseCommitterOptions {
     /// TODO: Re-evaluate if we want this to be configurable after running experiments.
@@ -243,7 +248,11 @@ impl BaseCommitter {
                     if let Some(potential_vote) = potential_vote {
                         self.is_vote(&potential_vote, leader_block)
                     } else {
-                        assert!(reference.round <= gc_round, "Block not found in storage: {:?} , and is not below gc_round: {gc_round}", reference);
+                        assert!(
+                            reference.round <= gc_round,
+                            "Block not found in storage: {:?} , and is not below gc_round: {gc_round}",
+                            reference
+                        );
                         false
                     }
                 } else {

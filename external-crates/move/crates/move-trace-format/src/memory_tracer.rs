@@ -1,4 +1,5 @@
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! This module contains the implementation of the memory tracer. The memory tracer is a tracer
@@ -135,6 +136,12 @@ impl TraceState {
             Location::Indexed(loc, _offset) => self.get_mut_location(loc),
             Location::Global(id) => self.loaded_state.get_mut(id).unwrap(),
         }
+    }
+}
+
+impl Default for TraceState {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

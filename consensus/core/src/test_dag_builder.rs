@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -9,19 +10,19 @@ use std::{
 
 use consensus_config::AuthorityIndex;
 use parking_lot::RwLock;
-use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
+use rand::{SeedableRng, rngs::StdRng, seq::SliceRandom};
 
 use crate::{
+    CommittedSubDag,
     block::{
-        genesis_blocks, BlockAPI, BlockDigest, BlockRef, BlockTimestampMs, Round, Slot, TestBlock,
-        VerifiedBlock,
+        BlockAPI, BlockDigest, BlockRef, BlockTimestampMs, Round, Slot, TestBlock, VerifiedBlock,
+        genesis_blocks,
     },
-    commit::{CommitDigest, TrustedCommit, DEFAULT_WAVE_LENGTH},
+    commit::{CommitDigest, DEFAULT_WAVE_LENGTH, TrustedCommit},
     context::Context,
     dag_state::DagState,
     leader_schedule::{LeaderSchedule, LeaderSwapTable},
     linearizer::{BlockStoreAPI, Linearizer},
-    CommittedSubDag,
 };
 
 /// DagBuilder API
@@ -45,19 +46,22 @@ use crate::{
 /// Persisting to DagState by Layer
 /// ```
 /// let dag_state = Arc::new(RwLock::new(DagState::new(
-///    dag_builder.context.clone(),
-///    Arc::new(MemStore::new()),
+///     dag_builder.context.clone(),
+///     Arc::new(MemStore::new()),
 /// )));
 /// let context = Arc::new(Context::new_for_test(4).0);
 /// let dag_builder = DagBuilder::new(context);
-/// dag_builder.layer(1).build().persist_layers(dag_state.clone()); // persist the layer
+/// dag_builder
+///     .layer(1)
+///     .build()
+///     .persist_layers(dag_state.clone()); // persist the layer
 /// ```
 ///
 /// Persisting entire DAG to DagState
 /// ```
 /// let dag_state = Arc::new(RwLock::new(DagState::new(
-///    dag_builder.context.clone(),
-///    Arc::new(MemStore::new()),
+///     dag_builder.context.clone(),
+///     Arc::new(MemStore::new()),
 /// )));
 /// let context = Arc::new(Context::new_for_test(4).0);
 /// let dag_builder = DagBuilder::new(context);
@@ -155,7 +159,7 @@ impl DagBuilder {
         struct BlockStorage {
             gc_round: Round,
             context: Arc<Context>,
-            blocks: BTreeMap<BlockRef, (VerifiedBlock, bool)>, // the tuple represends the block and whether it is committed
+            blocks: BTreeMap<BlockRef, (VerifiedBlock, bool)>, /* the tuple represents the block and whether it is committed */
         }
         impl BlockStoreAPI for BlockStorage {
             fn get_blocks(&self, refs: &[BlockRef]) -> Vec<Option<VerifiedBlock>> {
@@ -599,7 +603,10 @@ impl<'a> LayerBuilder<'a> {
     }
 
     pub fn persist_layers(&self, dag_state: Arc<RwLock<DagState>>) {
-        assert!(!self.blocks.is_empty(), "Called to persist layers although no blocks have been created. Make sure you have called build before.");
+        assert!(
+            !self.blocks.is_empty(),
+            "Called to persist layers although no blocks have been created. Make sure you have called build before."
+        );
         dag_state.write().accept_blocks(self.blocks.clone());
     }
 
@@ -639,7 +646,7 @@ impl<'a> LayerBuilder<'a> {
             .map(|authority| {
                 authorities_to_shuffle.shuffle(&mut rng);
 
-                // TODO: handle quroum threshold properly with stake
+                // TODO: handle quorum threshold properly with stake
                 let min_ancestors: HashSet<AuthorityIndex> = authorities_to_shuffle
                     .iter()
                     .take(quorum_threshold)
@@ -766,7 +773,7 @@ impl<'a> LayerBuilder<'a> {
     }
 
     fn should_skip_block(&self, round: Round, authority: AuthorityIndex) -> bool {
-        // Safe to unwrap as specified authorites has to be set before skip
+        // Safe to unwrap as specified authorities has to be set before skip
         // is specified.
         if self.skip_block
             && self

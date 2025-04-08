@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 // Copyright 2014 The Prometheus Authors
@@ -10,10 +11,8 @@
 // TODO: add example usage once constructor macros are implemented.
 // (For now, look at tests for an example.)
 
-use anyhow::anyhow;
-use anyhow::Result;
-use prometheus::core;
-use prometheus::proto;
+use anyhow::{Result, anyhow};
+use prometheus::{core, proto};
 
 /// A Prometheus metric whose value is computed at collection time by the provided closure.
 ///

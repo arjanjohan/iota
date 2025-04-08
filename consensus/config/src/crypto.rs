@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! Here we select the cryptographic types that are used by default in the code base.
@@ -36,7 +37,7 @@ impl NetworkPublicKey {
     }
 
     pub fn to_bytes(&self) -> [u8; 32] {
-        self.0 .0.to_bytes()
+        self.0.0.to_bytes()
     }
 }
 

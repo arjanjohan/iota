@@ -1,5 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::convert::TryInto;
@@ -101,6 +102,7 @@ fn run(
             vec![],
             serialize_values(&vec![arg_val0]),
             &mut UnmeteredGasMeter,
+            None,
         )
         .and_then(|ret_values| {
             let change_set = session.finish().0?;

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -12,11 +13,11 @@ use consensus_config::AuthorityIndex;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    Round, VerifiedBlock,
     block::{BlockAPI, BlockDigest, BlockRef, Slot},
     commit::{CommitRange, CommittedSubDag},
     context::Context,
     stake_aggregator::{QuorumThreshold, StakeAggregator},
-    Round, VerifiedBlock,
 };
 
 pub(crate) struct ReputationScoreCalculator {
@@ -80,7 +81,10 @@ impl ReputationScoreCalculator {
         let leader_blocks = subdag.get_blocks_at_slot(leader_slot);
 
         if leader_blocks.is_empty() {
-            tracing::trace!("[{}] No block for leader slot {leader_slot} in this set of unscored committed subdags, skip scoring", subdag.context.own_index);
+            tracing::trace!(
+                "[{}] No block for leader slot {leader_slot} in this set of unscored committed subdags, skip scoring",
+                subdag.context.own_index
+            );
             return scores_per_authority;
         }
 
@@ -241,10 +245,12 @@ impl ScoringSubdag {
                             block.reference(),
                             block.author()
                         );
-                        assert!(self
-                            .votes
-                            .insert(block.reference(), StakeAggregator::new())
-                            .is_none(), "Vote {block} already exists. Duplicate vote found for leader {ancestor}");
+                        assert!(
+                            self.votes
+                                .insert(block.reference(), StakeAggregator::new())
+                                .is_none(),
+                            "Vote {block} already exists. Duplicate vote found for leader {ancestor}"
+                        );
                     }
 
                     if let Some(stake) = self.votes.get_mut(ancestor) {
@@ -457,7 +463,7 @@ impl UnscoredSubdag {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{test_dag_builder::DagBuilder, CommitDigest, CommitRef};
+    use crate::{CommitDigest, CommitRef, test_dag_builder::DagBuilder};
 
     #[tokio::test]
     async fn test_reputation_scores_authorities_by_score() {

@@ -1,5 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::compiler::{as_module, compile_units, serialize_module_at_max_version};
@@ -49,6 +50,7 @@ fn test_malformed_module() {
             vec![],
             Vec::<Vec<u8>>::new(),
             &mut UnmeteredGasMeter,
+            None,
         )
         .unwrap();
     }
@@ -75,6 +77,7 @@ fn test_malformed_module() {
                 vec![],
                 Vec::<Vec<u8>>::new(),
                 &mut UnmeteredGasMeter,
+                None,
             )
             .unwrap_err();
         assert_eq!(err.status_type(), StatusType::InvariantViolation);
@@ -114,6 +117,7 @@ fn test_unverifiable_module() {
             vec![],
             Vec::<Vec<u8>>::new(),
             &mut UnmeteredGasMeter,
+            None,
         )
         .unwrap();
     }
@@ -139,6 +143,7 @@ fn test_unverifiable_module() {
                 vec![],
                 Vec::<Vec<u8>>::new(),
                 &mut UnmeteredGasMeter,
+                None,
             )
             .unwrap_err();
 
@@ -189,6 +194,7 @@ fn test_missing_module_dependency() {
             vec![],
             Vec::<Vec<u8>>::new(),
             &mut UnmeteredGasMeter,
+            None,
         )
         .unwrap();
     }
@@ -209,6 +215,7 @@ fn test_missing_module_dependency() {
                 vec![],
                 Vec::<Vec<u8>>::new(),
                 &mut UnmeteredGasMeter,
+                None,
             )
             .unwrap_err();
 
@@ -259,6 +266,7 @@ fn test_malformed_module_dependency() {
             vec![],
             Vec::<Vec<u8>>::new(),
             &mut UnmeteredGasMeter,
+            None,
         )
         .unwrap();
     }
@@ -285,6 +293,7 @@ fn test_malformed_module_dependency() {
                 vec![],
                 Vec::<Vec<u8>>::new(),
                 &mut UnmeteredGasMeter,
+                None,
             )
             .unwrap_err();
 
@@ -336,6 +345,7 @@ fn test_unverifiable_module_dependency() {
             vec![],
             Vec::<Vec<u8>>::new(),
             &mut UnmeteredGasMeter,
+            None,
         )
         .unwrap();
     }
@@ -362,6 +372,7 @@ fn test_unverifiable_module_dependency() {
                 vec![],
                 Vec::<Vec<u8>>::new(),
                 &mut UnmeteredGasMeter,
+                None,
             )
             .unwrap_err();
 
@@ -431,6 +442,7 @@ fn test_storage_returns_bogus_error_when_loading_module() {
                 vec![],
                 Vec::<Vec<u8>>::new(),
                 &mut UnmeteredGasMeter,
+                None,
             )
             .unwrap_err();
 

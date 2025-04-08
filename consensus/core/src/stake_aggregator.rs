@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::BTreeSet, marker::PhantomData};
@@ -67,7 +68,7 @@ impl<T: CommitteeThreshold> StakeAggregator<T> {
 
 #[cfg(test)]
 mod tests {
-    use consensus_config::{local_committee_and_keys, AuthorityIndex};
+    use consensus_config::{AuthorityIndex, local_committee_and_keys};
 
     use super::*;
 

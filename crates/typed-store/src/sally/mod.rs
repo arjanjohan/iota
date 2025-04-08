@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! Storage Atomicity Layer Library (aka Sally) is a wrapper around pluggable storage backends
@@ -9,14 +10,15 @@
 //! # Examples
 //!
 //! ```
-//! use typed_store::rocks::*;
-//! use typed_store::*;
-//! use typed_store::test_db::*;
-//! use typed_store::sally::SallyDBOptions;
-//! use typed_store::SallyDB;
-//! use typed_store::sally::SallyColumn;
-//! use typed_store::traits::TypedStoreDebug;
-//! use typed_store::traits::TableSummary;
+//! use typed_store::{
+//!     SallyDB,
+//!     rocks::*,
+//!     sally::{SallyColumn, SallyDBOptions},
+//!     test_db::*,
+//!     traits::{TableSummary, TypedStoreDebug},
+//!     *,
+//! };
+//!
 //! use crate::typed_store::Map;
 //!
 //! // `ExampleTable` is a sally db instance where each column is first initialized with TestDB
@@ -24,16 +26,18 @@
 //!
 //! #[derive(SallyDB)]
 //! pub struct ExampleTable {
-//!   col1: SallyColumn<String, String>,
-//!   col2: SallyColumn<i32, String>,
+//!     col1: SallyColumn<String, String>,
+//!     col2: SallyColumn<i32, String>,
 //! }
 //!
 //! async fn insert_key_vals(table: &ExampleTable) {
 //!     // create a write batch and do atomic commit across columns in the table
 //!     let keys_vals = (1..100).map(|i| (i, i.to_string()));
 //!     let mut wb = table.col1.batch();
-//!     wb.insert_batch(&table.col2, keys_vals).expect("Failed to batch insert");
-//!     wb.delete_range(&table.col2, &50, &100).expect("Failed to batch delete");
+//!     wb.insert_batch(&table.col2, keys_vals)
+//!         .expect("Failed to batch insert");
+//!     wb.delete_range(&table.col2, &50, &100)
+//!         .expect("Failed to batch delete");
 //!     wb.write().await.expect("Failed to commit batch");
 //! }
 //!
@@ -43,31 +47,39 @@
 //!     let mut table = ExampleTable::init(SallyDBOptions::TestDB);
 //!     insert_key_vals(&table).await;
 //!     // switch to rocksdb backend
-//!     let primary_path = tempfile::tempdir().expect("Failed to open db path").into_path();
-//!     table = ExampleTable::init(SallyDBOptions::RocksDB((primary_path, MetricConf::default(), RocksDBAccessType::Primary, None, None)));
+//!     let primary_path = tempfile::tempdir()
+//!         .expect("Failed to open db path")
+//!         .into_path();
+//!     table = ExampleTable::init(SallyDBOptions::RocksDB((
+//!         primary_path,
+//!         MetricConf::default(),
+//!         RocksDBAccessType::Primary,
+//!         None,
+//!         None,
+//!     )));
 //!     insert_key_vals(&table).await;
 //!     Ok(())
 //! }
 //! ```
-use crate::{
-    rocks::{
-        default_db_options, keys::Keys, values::Values, DBBatch, DBMap, DBOptions,
-        RocksDBAccessType,
-    },
-    test_db::{TestDB, TestDBKeys, TestDBValues, TestDBWriteBatch},
-    traits::{AsyncMap, Map},
-    TypedStoreError,
-};
+use std::{borrow::Borrow, collections::BTreeMap, path::PathBuf};
 
-use crate::rocks::safe_iter::{SafeIter as RocksDBIter, SafeRevIter};
-use crate::rocks::{DBMapTableConfigMap, MetricConf};
-use crate::test_db::{TestDBIter, TestDBRevIter};
 use async_trait::async_trait;
 use collectable::TryExtend;
 use rocksdb::Options;
-use serde::{de::DeserializeOwned, Serialize};
-use std::borrow::Borrow;
-use std::{collections::BTreeMap, path::PathBuf};
+use serde::{Serialize, de::DeserializeOwned};
+
+use crate::{
+    TypedStoreError,
+    rocks::{
+        DBBatch, DBMap, DBMapTableConfigMap, DBOptions, MetricConf, RocksDBAccessType,
+        default_db_options,
+        keys::Keys,
+        safe_iter::{SafeIter as RocksDBIter, SafeRevIter},
+        values::Values,
+    },
+    test_db::{TestDB, TestDBIter, TestDBKeys, TestDBRevIter, TestDBValues, TestDBWriteBatch},
+    traits::{AsyncMap, Map},
+};
 
 pub enum SallyRunMode {
     // Whether Sally should use its own memtable and wal for read/write or just fallback to

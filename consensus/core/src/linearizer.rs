@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::HashSet, sync::Arc};
@@ -7,12 +8,12 @@ use consensus_config::AuthorityIndex;
 use parking_lot::RwLock;
 
 use crate::{
+    Round, TransactionIndex,
     block::{BlockAPI, BlockRef, VerifiedBlock},
-    commit::{sort_sub_dag_blocks, Commit, CommittedSubDag, TrustedCommit},
+    commit::{Commit, CommittedSubDag, TrustedCommit, sort_sub_dag_blocks},
     context::Context,
     dag_state::DagState,
     leader_schedule::LeaderSchedule,
-    Round, TransactionIndex,
 };
 
 /// The `StorageAPI` trait provides an interface for the block store and has been
@@ -205,7 +206,7 @@ impl Linearizer {
                             .filter(|ancestor| {
                                 // We skip the block if we already committed it or we reached a
                                 // round that we already committed.
-                                // TODO: for Fast Path we need to ammend the recursion rule here and allow us to commit blocks all the way up to the `gc_round`.
+                                // TODO: for Fast Path we need to amend the recursion rule here and allow us to commit blocks all the way up to the `gc_round`.
                                 // Some additional work will be needed to make sure that we keep the uncommitted blocks up to the `gc_round` across commits.
                                 !committed.contains(ancestor)
                                     && last_committed_rounds[ancestor.author] < ancestor.round
@@ -233,7 +234,11 @@ impl Linearizer {
         // The above code should have not yielded any blocks that are <= gc_round, but just to make sure that we'll never
         // commit anything that should be garbage collected we attempt to prune here as well.
         if gc_enabled {
-            assert!(to_commit.iter().all(|block| block.round() > gc_round), "No blocks <= {gc_round} should be committed. Leader round {}, blocks {to_commit:?}.", leader_block_ref);
+            assert!(
+                to_commit.iter().all(|block| block.round() > gc_round),
+                "No blocks <= {gc_round} should be committed. Leader round {}, blocks {to_commit:?}.",
+                leader_block_ref
+            );
         }
 
         // Sort the blocks of the sub-dag blocks
@@ -286,7 +291,7 @@ impl Linearizer {
             committed_sub_dags.push(sub_dag);
         }
 
-        // Committed blocks must be persisted to storage before sending them to Sui and executing
+        // Committed blocks must be persisted to storage before sending them to IOTA and executing
         // their transactions.
         // Commit metadata can be persisted more lazily because they are recoverable. Uncommitted
         // blocks can wait to persist too.
@@ -303,13 +308,13 @@ mod tests {
 
     use super::*;
     use crate::{
+        CommitIndex,
         commit::{CommitAPI as _, CommitDigest, DEFAULT_WAVE_LENGTH},
         context::Context,
         leader_schedule::{LeaderSchedule, LeaderSwapTable},
         storage::mem_store::MemStore,
         test_dag_builder::DagBuilder,
         test_dag_parser::parse_dag,
-        CommitIndex,
     };
 
     #[tokio::test]
@@ -504,7 +509,16 @@ mod tests {
     async fn test_handle_already_committed() {
         telemetry_subscribers::init_for_testing();
         let num_authorities = 4;
-        let context = Arc::new(Context::new_for_test(num_authorities).0);
+        let (mut context, _) = Context::new_for_test(num_authorities);
+        context
+            .protocol_config
+            .set_consensus_gc_depth_for_testing(0);
+        context
+            .protocol_config
+            .set_consensus_linearize_subdag_v2_for_testing(false);
+
+        let context = Arc::new(context);
+
         let dag_state = Arc::new(RwLock::new(DagState::new(
             context.clone(),
             Arc::new(MemStore::new()),
@@ -618,10 +632,10 @@ mod tests {
             .protocol_config
             .set_consensus_gc_depth_for_testing(gc_depth);
 
-        if gc_depth > 0 {
+        if gc_depth == 0 {
             context
                 .protocol_config
-                .set_consensus_linearize_subdag_v2_for_testing(true);
+                .set_consensus_linearize_subdag_v2_for_testing(false);
         }
 
         let context = Arc::new(context);
@@ -751,7 +765,7 @@ mod tests {
 
         // Authority D will create an "orphaned" block on round 1 as it won't reference to it on the block of round 2. Similar, no other authority will reference to it on round 2.
         // Then on round 3 the authorities A, B & C will link to block D1. Once the DAG gets committed we should see the block D1 getting committed as well. Normally ,as block D2 would
-        // have been committed first block D1 should be ommitted. With the new logic this is no longer true.
+        // have been committed first block D1 should be omitted. With the new logic this is no longer true.
         let dag_str = "DAG {
                 Round 0 : { 4 },
                 Round 1 : { * },

@@ -1,33 +1,32 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
+
+use std::{
+    env,
+    io::{Write, stderr},
+    path::PathBuf,
+    str::FromStr,
+    sync::{Arc, Mutex, atomic::Ordering},
+    time::Duration,
+};
 
 use atomic_float::AtomicF64;
 use crossterm::tty::IsTty;
 use once_cell::sync::Lazy;
 use opentelemetry::{
-    trace::{Link, SamplingResult, SpanKind, TraceId, TracerProvider as _},
     Context, KeyValue,
+    trace::{Link, SamplingResult, SpanKind, TraceId, TracerProvider as _},
 };
 use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::trace::Sampler;
 use opentelemetry_sdk::{
-    self, runtime,
-    trace::{BatchSpanProcessor, ShouldSample, TracerProvider},
-    Resource,
+    self, Resource, runtime,
+    trace::{BatchSpanProcessor, Sampler, ShouldSample, TracerProvider},
 };
 use span_latency_prom::PrometheusSpanLatencyLayer;
-use std::path::PathBuf;
-use std::time::Duration;
-use std::{
-    env,
-    io::{stderr, Write},
-    str::FromStr,
-    sync::{atomic::Ordering, Arc, Mutex},
-};
-use tracing::metadata::LevelFilter;
-use tracing::{error, info, Level};
+use tracing::{Level, error, info, metadata::LevelFilter};
 use tracing_appender::non_blocking::{NonBlocking, WorkerGuard};
-use tracing_subscriber::{filter, fmt, layer::SubscriberExt, reload, EnvFilter, Layer, Registry};
+use tracing_subscriber::{EnvFilter, Layer, Registry, filter, fmt, layer::SubscriberExt, reload};
 
 use crate::file_exporter::{CachedOpenFile, FileExporter};
 
@@ -377,17 +376,15 @@ impl TelemetryConfig {
         let mut file_output = CachedOpenFile::new::<&str>(None).unwrap();
         let mut provider = None;
         let sampler = SamplingFilter::new(config.sample_rate);
-        let service_name = env::var("OTEL_SERVICE_NAME").unwrap_or("sui-node".to_owned());
+        let service_name = env::var("OTEL_SERVICE_NAME").unwrap_or("iota-node".to_owned());
 
         if config.enable_otlp_tracing {
             let trace_file = env::var("TRACE_FILE").ok();
-
-            let config = opentelemetry_sdk::trace::Config::default()
-                .with_resource(Resource::new(vec![opentelemetry::KeyValue::new(
-                    "service.name",
-                    service_name.clone(),
-                )]))
-                .with_sampler(Sampler::ParentBased(Box::new(sampler.clone())));
+            let resource = Resource::new(vec![opentelemetry::KeyValue::new(
+                "service.name",
+                service_name.clone(),
+            )]);
+            let sampler = Sampler::ParentBased(Box::new(sampler.clone()));
 
             // We can either do file output or OTLP, but not both. tracing-opentelemetry
             // only supports a single tracer at a time.
@@ -398,7 +395,8 @@ impl TelemetryConfig {
                 let processor = BatchSpanProcessor::builder(exporter, runtime::Tokio).build();
 
                 let p = TracerProvider::builder()
-                    .with_config(config)
+                    .with_resource(resource)
+                    .with_sampler(sampler)
                     .with_span_processor(processor)
                     .build();
 
@@ -409,20 +407,17 @@ impl TelemetryConfig {
             } else {
                 let endpoint = env::var("OTLP_ENDPOINT")
                     .unwrap_or_else(|_| "http://localhost:4317".to_string());
-
-                let p = opentelemetry_otlp::new_pipeline()
-                    .tracing()
-                    .with_exporter(
-                        opentelemetry_otlp::new_exporter()
-                            .tonic()
-                            .with_endpoint(endpoint),
-                    )
-                    .with_trace_config(config)
-                    .install_batch(runtime::Tokio)
-                    .expect("Could not create async Tracer");
-
-                let tracer = p.tracer(service_name);
-
+                let otlp_exporter = opentelemetry_otlp::SpanExporter::builder()
+                    .with_tonic()
+                    .with_endpoint(endpoint)
+                    .build()
+                    .unwrap();
+                let tracer_provider = opentelemetry_sdk::trace::TracerProvider::builder()
+                    .with_resource(resource)
+                    .with_sampler(sampler)
+                    .with_batch_exporter(otlp_exporter, runtime::Tokio)
+                    .build();
+                let tracer = tracer_provider.tracer(service_name);
                 tracing_opentelemetry::layer().with_tracer(tracer)
             };
 
@@ -548,10 +543,12 @@ pub fn init_for_testing() {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use prometheus::proto::MetricType;
     use std::time::Duration;
+
+    use prometheus::proto::MetricType;
     use tracing::{debug, debug_span, info, trace_span, warn};
+
+    use super::*;
 
     #[test]
     #[should_panic]

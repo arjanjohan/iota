@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -8,16 +9,16 @@ use std::{
 };
 
 use consensus_config::AuthorityIndex;
-use futures::{stream::FuturesUnordered, StreamExt as _};
+use futures::{StreamExt as _, stream::FuturesUnordered};
 use tokio::{
     sync::broadcast,
     task::JoinSet,
-    time::{error::Elapsed, sleep_until, timeout, Instant},
+    time::{Instant, error::Elapsed, sleep_until, timeout},
 };
 use tracing::{trace, warn};
 
 use crate::{
-    block::{BlockAPI as _, VerifiedBlock},
+    block::{BlockAPI as _, ExtendedBlock, VerifiedBlock},
     context::Context,
     core::CoreSignalsReceivers,
     error::ConsensusResult,
@@ -67,14 +68,14 @@ impl Broadcaster {
         self.senders.abort_all();
     }
 
-    /// Runs a loop that continously pushes new blocks received from the rx_block_broadcast
+    /// Runs a loop that continuously pushes new blocks received from the rx_block_broadcast
     /// channel to the target peer.
     ///
     /// The loop does not exit until the validator is shutting down.
     async fn push_blocks<C: NetworkClient>(
         context: Arc<Context>,
         network_client: Arc<C>,
-        mut rx_block_broadcast: broadcast::Receiver<VerifiedBlock>,
+        mut rx_block_broadcast: broadcast::Receiver<ExtendedBlock>,
         peer: AuthorityIndex,
     ) {
         let peer_hostname = &context.committee.authority(peer).hostname;
@@ -126,7 +127,8 @@ impl Broadcaster {
             tokio::select! {
                 result = rx_block_broadcast.recv(), if requests.len() < BROADCAST_CONCURRENCY => {
                     let block = match result {
-                        Ok(block) => block,
+                        // Other info from ExtendedBlock are ignored, because Broadcaster is not used in production.
+                        Ok(block) => block.block,
                         Err(broadcast::error::RecvError::Closed) => {
                             trace!("Sender to {peer} is shutting down!");
                             return;
@@ -196,11 +198,11 @@ mod test {
 
     use super::*;
     use crate::{
-        block::{BlockRef, TestBlock},
+        Round,
+        block::{BlockRef, ExtendedBlock, TestBlock},
         commit::CommitRange,
         core::CoreSignals,
         network::BlockStream,
-        Round,
     };
 
     struct FakeNetworkClient {
@@ -295,7 +297,12 @@ mod test {
 
         let block = VerifiedBlock::new_for_test(TestBlock::new(9, 1).build());
         assert!(
-            core_signals.new_block(block.clone()).is_ok(),
+            core_signals
+                .new_block(ExtendedBlock {
+                    block: block.clone(),
+                    excluded_ancestors: vec![],
+                })
+                .is_ok(),
             "No subscriber active to receive the block"
         );
 

@@ -1,18 +1,19 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
     collections::BTreeSet,
     fmt::Debug,
     sync::{
-        atomic::{AtomicU32, Ordering},
         Arc,
+        atomic::{AtomicU32, Ordering},
     },
 };
 
 use async_trait::async_trait;
-use mysten_metrics::{
-    monitored_mpsc::{channel, Receiver, Sender, WeakSender},
+use iota_metrics::{
+    monitored_mpsc::{Receiver, Sender, WeakSender, channel},
     monitored_scope, spawn_logged_monitored_task,
 };
 use parking_lot::RwLock;
@@ -21,6 +22,7 @@ use tokio::sync::{oneshot, watch};
 use tracing::warn;
 
 use crate::{
+    BlockAPI as _,
     block::{BlockRef, Round, VerifiedBlock},
     context::Context,
     core::Core,
@@ -28,7 +30,6 @@ use crate::{
     dag_state::DagState,
     error::{ConsensusError, ConsensusResult},
     round_prober::QuorumRound,
-    BlockAPI as _,
 };
 
 const CORE_THREAD_COMMANDS_CHANNEL_SIZE: usize = 2000;
@@ -36,6 +37,8 @@ const CORE_THREAD_COMMANDS_CHANNEL_SIZE: usize = 2000;
 enum CoreThreadCommand {
     /// Add blocks to be processed and accepted
     AddBlocks(Vec<VerifiedBlock>, oneshot::Sender<BTreeSet<BlockRef>>),
+    /// Checks if block refs exist locally and sync missing ones.
+    CheckBlockRefs(Vec<BlockRef>, oneshot::Sender<BTreeSet<BlockRef>>),
     /// Called when the min round has passed or the leader timeout occurred and a block should be produced.
     /// When the command is called with `force = true`, then the block will be created for `round` skipping
     /// any checks (ex leader existence of previous round). More information can be found on the `Core` component.
@@ -55,7 +58,12 @@ pub enum CoreError {
 #[async_trait]
 pub trait CoreThreadDispatcher: Sync + Send + 'static {
     async fn add_blocks(&self, blocks: Vec<VerifiedBlock>)
-        -> Result<BTreeSet<BlockRef>, CoreError>;
+    -> Result<BTreeSet<BlockRef>, CoreError>;
+
+    async fn check_block_refs(
+        &self,
+        block_refs: Vec<BlockRef>,
+    ) -> Result<BTreeSet<BlockRef>, CoreError>;
 
     async fn new_block(&self, round: Round, force: bool) -> Result<(), CoreError>;
 
@@ -119,6 +127,11 @@ impl CoreThread {
                         CoreThreadCommand::AddBlocks(blocks, sender) => {
                             let _scope = monitored_scope("CoreThread::loop::add_blocks");
                             let missing_block_refs = self.core.add_blocks(blocks)?;
+                            sender.send(missing_block_refs).ok();
+                        }
+                        CoreThreadCommand::CheckBlockRefs(blocks, sender) => {
+                            let _scope = monitored_scope("CoreThread::loop::find_excluded_blocks");
+                            let missing_block_refs = self.core.check_block_refs(blocks)?;
                             sender.send(missing_block_refs).ok();
                         }
                         CoreThreadCommand::NewBlock(round, sender, force) => {
@@ -283,6 +296,21 @@ impl CoreThreadDispatcher for ChannelCoreThreadDispatcher {
         Ok(missing_block_refs)
     }
 
+    async fn check_block_refs(
+        &self,
+        block_refs: Vec<BlockRef>,
+    ) -> Result<BTreeSet<BlockRef>, CoreError> {
+        let (sender, receiver) = oneshot::channel();
+        self.send(CoreThreadCommand::CheckBlockRefs(
+            block_refs.clone(),
+            sender,
+        ))
+        .await;
+        let missing_block_refs = receiver.await.map_err(|e| Shutdown(e.to_string()))?;
+
+        Ok(missing_block_refs)
+    }
+
     async fn new_block(&self, round: Round, force: bool) -> Result<(), CoreError> {
         let (sender, receiver) = oneshot::channel();
         self.send(CoreThreadCommand::NewBlock(round, sender, force))
@@ -380,6 +408,13 @@ impl CoreThreadDispatcher for MockCoreThreadDispatcher {
         Ok(BTreeSet::new())
     }
 
+    async fn check_block_refs(
+        &self,
+        _block_refs: Vec<BlockRef>,
+    ) -> Result<BTreeSet<BlockRef>, CoreError> {
+        Ok(BTreeSet::new())
+    }
+
     async fn new_block(&self, _round: Round, _force: bool) -> Result<(), CoreError> {
         Ok(())
     }
@@ -421,6 +456,7 @@ mod test {
 
     use super::*;
     use crate::{
+        CommitConsumer,
         block_manager::BlockManager,
         block_verifier::NoopBlockVerifier,
         commit_observer::CommitObserver,
@@ -430,7 +466,6 @@ mod test {
         leader_schedule::LeaderSchedule,
         storage::mem_store::MemStore,
         transaction::{TransactionClient, TransactionConsumer},
-        CommitConsumer,
     };
 
     #[tokio::test]

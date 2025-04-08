@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -12,29 +13,30 @@ use std::{
 use async_trait::async_trait;
 use bytes::Bytes;
 use consensus_config::{AuthorityIndex, NetworkKeyPair, NetworkPublicKey};
-use futures::{stream, Stream, StreamExt as _};
-use mysten_network::{
+use futures::{Stream, StreamExt as _, stream};
+use iota_http::ServerHandle;
+use iota_network_stack::{
+    Multiaddr,
     callback::{CallbackLayer, MakeCallbackHandler, ResponseHandler},
     multiaddr::Protocol,
-    Multiaddr,
 };
+use iota_tls::AllowPublicKeys;
 use parking_lot::RwLock;
-use sui_http::ServerHandle;
-use sui_tls::AllowPublicKeys;
-use tokio_stream::{iter, Iter};
-use tonic::{Request, Response, Streaming};
+use tokio_stream::{Iter, iter};
+use tonic::{Request, Response, Streaming, codec::CompressionEncoding};
 use tower_http::trace::{DefaultMakeSpan, DefaultOnFailure, TraceLayer};
 use tracing::{debug, error, info, trace, warn};
 
 use super::{
+    BlockStream, ExtendedSerializedBlock, NetworkClient, NetworkManager, NetworkService,
     metrics_layer::{MetricsCallbackMaker, MetricsResponseCallback, SizedRequest, SizedResponse},
     tonic_gen::{
         consensus_service_client::ConsensusServiceClient,
         consensus_service_server::ConsensusService,
     },
-    BlockStream, NetworkClient, NetworkManager, NetworkService,
 };
 use crate::{
+    CommitIndex, Round,
     block::{BlockRef, VerifiedBlock},
     commit::CommitRange,
     context::Context,
@@ -43,7 +45,6 @@ use crate::{
         tonic_gen::consensus_service_server::ConsensusServiceServer,
         tonic_tls::certificate_server_name,
     },
-    CommitIndex, Round,
 };
 
 // Maximum bytes size in a single fetch_blocks()response.
@@ -79,9 +80,16 @@ impl TonicClient {
             .channel_pool
             .get_channel(self.network_keypair.clone(), peer, timeout)
             .await?;
-        Ok(ConsensusServiceClient::new(channel)
+        let mut client = ConsensusServiceClient::new(channel)
             .max_encoding_message_size(config.message_size_limit)
-            .max_decoding_message_size(config.message_size_limit))
+            .max_decoding_message_size(config.message_size_limit);
+
+        if self.context.protocol_config.consensus_zstd_compression() {
+            client = client
+                .send_compressed(CompressionEncoding::Zstd)
+                .accept_compressed(CompressionEncoding::Zstd);
+        }
+        Ok(client)
     }
 }
 
@@ -129,7 +137,10 @@ impl NetworkClient for TonicClient {
             .take_while(|b| futures::future::ready(b.is_ok()))
             .filter_map(move |b| async move {
                 match b {
-                    Ok(response) => Some(response.block),
+                    Ok(response) => Some(ExtendedSerializedBlock {
+                        block: response.block,
+                        excluded_ancestors: response.excluded_ancestors,
+                    }),
                     Err(e) => {
                         debug!("Network error received from {}: {e:?}", peer);
                         None
@@ -317,7 +328,7 @@ impl NetworkClient for TonicClient {
 }
 
 // Tonic channel wrapped with layers.
-type Channel = mysten_network::callback::Callback<
+type Channel = iota_network_stack::callback::Callback<
     tower_http::trace::Trace<
         tonic_rustls::Channel,
         tower_http::classify::SharedClassifier<tower_http::classify::GrpcErrorsAsFailures>,
@@ -361,7 +372,7 @@ impl ChannelPool {
         let address = format!("https://{address}");
         let config = &self.context.parameters.tonic;
         let buffer_size = config.connection_buffer_size;
-        let client_tls_config = sui_tls::create_rustls_client_config(
+        let client_tls_config = iota_tls::create_rustls_client_config(
             self.context
                 .committee
                 .authority(peer)
@@ -448,6 +459,10 @@ impl<S: NetworkService> ConsensusService for TonicServiceProxy<S> {
             return Err(tonic::Status::internal("PeerInfo not found"));
         };
         let block = request.into_inner().block;
+        let block = ExtendedSerializedBlock {
+            block,
+            excluded_ancestors: vec![],
+        };
         self.service
             .handle_send_block(peer_index, block)
             .await
@@ -488,7 +503,12 @@ impl<S: NetworkService> ConsensusService for TonicServiceProxy<S> {
             .handle_subscribe_blocks(peer_index, first_request.last_received_round)
             .await
             .map_err(|e| tonic::Status::internal(format!("{e:?}")))?
-            .map(|block| Ok(SubscribeBlocksResponse { block }));
+            .map(|block| {
+                Ok(SubscribeBlocksResponse {
+                    block: block.block,
+                    excluded_ancestors: block.excluded_ancestors,
+                })
+            });
         let rate_limited_stream =
             tokio_stream::StreamExt::throttle(stream, self.context.parameters.min_round_delay / 2)
                 .boxed();
@@ -698,7 +718,7 @@ impl<S: NetworkService> NetworkManager<S> for TonicManager {
             // Add a layer to extract a peer's PeerInfo from their TLS certs
             .map_request(move |mut request: http::Request<_>| {
                 if let Some(peer_certificates) =
-                    request.extensions().get::<sui_http::PeerCertificates>()
+                    request.extensions().get::<iota_http::PeerCertificates>()
                 {
                     if let Some(peer_info) =
                         peer_info_from_certs(&connections_info, peer_certificates)
@@ -717,17 +737,23 @@ impl<S: NetworkService> NetworkManager<S> for TonicManager {
                     .make_span_with(DefaultMakeSpan::new().level(tracing::Level::TRACE))
                     .on_failure(DefaultOnFailure::new().level(tracing::Level::DEBUG)),
             )
-            .layer_fn(|service| mysten_network::grpc_timeout::GrpcTimeout::new(service, None));
+            .layer_fn(|service| iota_network_stack::grpc_timeout::GrpcTimeout::new(service, None));
 
-        let consensus_service = tonic::service::Routes::new(
-            ConsensusServiceServer::new(service)
-                .max_encoding_message_size(config.message_size_limit)
-                .max_decoding_message_size(config.message_size_limit),
-        )
-        .into_axum_router()
-        .route_layer(layers);
+        let mut consensus_service_server = ConsensusServiceServer::new(service)
+            .max_encoding_message_size(config.message_size_limit)
+            .max_decoding_message_size(config.message_size_limit);
 
-        let tls_server_config = sui_tls::create_rustls_server_config_with_client_verifier(
+        if self.context.protocol_config.consensus_zstd_compression() {
+            consensus_service_server = consensus_service_server
+                .send_compressed(CompressionEncoding::Zstd)
+                .accept_compressed(CompressionEncoding::Zstd);
+        }
+
+        let consensus_service = tonic::service::Routes::new(consensus_service_server)
+            .into_axum_router()
+            .route_layer(layers);
+
+        let tls_server_config = iota_tls::create_rustls_server_config_with_client_verifier(
             self.network_keypair.clone().private_key().into_inner(),
             certificate_server_name(&self.context),
             AllowPublicKeys::new(
@@ -775,7 +801,7 @@ impl<S: NetworkService> NetworkManager<S> for TonicManager {
             }
         }
 
-        let http_config = sui_http::Config::default()
+        let http_config = iota_http::Config::default()
             .tcp_nodelay(true)
             .initial_connection_window_size(64 << 20)
             .initial_stream_window_size(32 << 20)
@@ -791,7 +817,7 @@ impl<S: NetworkService> NetworkManager<S> for TonicManager {
         // for a short/reasonable period of time before giving up.
         let deadline = Instant::now() + Duration::from_secs(20);
         let server = loop {
-            match sui_http::Builder::new()
+            match iota_http::Builder::new()
                 .config(http_config.clone())
                 .tls_config(tls_server_config.clone())
                 .serve(own_address, consensus_service.clone())
@@ -835,11 +861,11 @@ impl Drop for TonicManager {
     }
 }
 
-// TODO: improve sui-http to allow for providing a MakeService so that this can be done once per
+// TODO: improve iota-http to allow for providing a MakeService so that this can be done once per
 // connection
 fn peer_info_from_certs(
     connections_info: &ConnectionsInfo,
-    peer_certificates: &sui_http::PeerCertificates,
+    peer_certificates: &iota_http::PeerCertificates,
 ) -> Option<PeerInfo> {
     let certs = peer_certificates.peer_certs();
 
@@ -851,7 +877,7 @@ fn peer_info_from_certs(
         return None;
     }
     trace!("Received {} certificates", certs.len());
-    let public_key = sui_tls::public_key_from_certificate(&certs[0])
+    let public_key = iota_tls::public_key_from_certificate(&certs[0])
         .map_err(|e| {
             trace!("Failed to extract public key from certificate: {e:?}");
             e
@@ -890,7 +916,7 @@ fn to_host_port_str(addr: &Multiaddr) -> Result<String, &'static str> {
 
 /// Attempts to convert a multiaddr of the form `/[ip4,ip6]/{}/[udp,tcp]/{port}` into
 /// a SocketAddr value.
-fn to_socket_addr(addr: &Multiaddr) -> Result<SocketAddr, &'static str> {
+pub fn to_socket_addr(addr: &Multiaddr) -> Result<SocketAddr, &'static str> {
     let mut iter = addr.iter();
 
     match (iter.next(), iter.next()) {
@@ -1032,6 +1058,9 @@ pub(crate) struct SubscribeBlocksRequest {
 pub(crate) struct SubscribeBlocksResponse {
     #[prost(bytes = "bytes", tag = "1")]
     block: Bytes,
+    // Serialized BlockRefs that are excluded from the blocks ancestors.
+    #[prost(bytes = "vec", repeated, tag = "2")]
+    excluded_ancestors: Vec<Vec<u8>>,
 }
 
 #[derive(Clone, prost::Message)]

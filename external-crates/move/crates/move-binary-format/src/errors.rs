@@ -1,5 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -294,7 +295,7 @@ impl PartialVMError {
         self
     }
 
-    /// Append the message `message` to the message field of the VM status, and insert a seperator
+    /// Append the message `message` to the message field of the VM status, and insert a separator
     /// if the original message is non-empty.
     pub fn append_message_with_separator(
         mut self,

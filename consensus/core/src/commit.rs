@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -10,16 +11,16 @@ use std::{
 };
 
 use bytes::Bytes;
-use consensus_config::{AuthorityIndex, DefaultHashFunction, DIGEST_LENGTH};
+use consensus_config::{AuthorityIndex, DIGEST_LENGTH, DefaultHashFunction};
 use enum_dispatch::enum_dispatch;
 use fastcrypto::hash::{Digest, HashFunction as _};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    TransactionIndex,
     block::{BlockAPI, BlockRef, BlockTimestampMs, Round, Slot, VerifiedBlock},
     leader_scoring::ReputationScores,
     storage::Store,
-    TransactionIndex,
 };
 
 /// Index of a commit among all consensus commits.
@@ -31,7 +32,7 @@ pub(crate) const GENESIS_COMMIT_INDEX: CommitIndex = 0;
 /// chance of committing the leader under asynchrony at the cost of latency in
 /// the common case.
 // TODO: merge DEFAULT_WAVE_LENGTH and MINIMUM_WAVE_LENGTH into a single constant,
-// because we are unlikely to change them via config in the forseeable future.
+// because we are unlikely to change them via config in the foreseeable future.
 pub(crate) const DEFAULT_WAVE_LENGTH: Round = MINIMUM_WAVE_LENGTH;
 
 /// We need at least one leader round, one voting round, and one decision round.
@@ -303,8 +304,8 @@ pub struct CommittedSubDag {
     /// First commit after genesis has a index of 1, then every next commit has a
     /// index incremented by 1.
     pub commit_ref: CommitRef,
-    /// Optional scores that are provided as part of the consensus output to Sui
-    /// that can then be used by Sui for future submission to consensus.
+    /// Optional scores that are provided as part of the consensus output to IOTA
+    /// that can then be used by IOTA for future submission to consensus.
     pub reputation_scores_desc: Vec<(AuthorityIndex, u64)>,
 }
 
@@ -602,7 +603,7 @@ mod tests {
     use crate::{
         block::TestBlock,
         context::Context,
-        storage::{mem_store::MemStore, WriteBatch},
+        storage::{WriteBatch, mem_store::MemStore},
     };
 
     #[tokio::test]

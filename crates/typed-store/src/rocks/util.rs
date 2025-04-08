@@ -1,8 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use rocksdb::{CompactionDecision, MergeOperands};
 use std::cmp::Ordering;
+
+use rocksdb::{CompactionDecision, MergeOperands};
 
 /// custom rocksdb merge operator used for storing objects with reference counts
 /// important: reference count field must be 64-bit integer and must be last in struct declaration

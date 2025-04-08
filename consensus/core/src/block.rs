@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
@@ -10,8 +11,8 @@ use std::{
 
 use bytes::Bytes;
 use consensus_config::{
-    AuthorityIndex, DefaultHashFunction, Epoch, ProtocolKeyPair, ProtocolKeySignature,
-    ProtocolPublicKey, DIGEST_LENGTH,
+    AuthorityIndex, DIGEST_LENGTH, DefaultHashFunction, Epoch, ProtocolKeyPair,
+    ProtocolKeySignature, ProtocolPublicKey,
 };
 use enum_dispatch::enum_dispatch;
 use fastcrypto::hash::{Digest, HashFunction};
@@ -19,7 +20,10 @@ use serde::{Deserialize, Serialize};
 use shared_crypto::intent::{Intent, IntentMessage, IntentScope};
 
 use crate::{
-    commit::CommitVote, context::Context, ensure, error::ConsensusError, error::ConsensusResult,
+    commit::CommitVote,
+    context::Context,
+    ensure,
+    error::{ConsensusError, ConsensusResult},
 };
 
 /// Round number of a block.
@@ -30,7 +34,7 @@ pub(crate) const GENESIS_ROUND: Round = 0;
 /// Block proposal timestamp in milliseconds.
 pub type BlockTimestampMs = u64;
 
-/// Sui transaction in serialised bytes
+/// IOTA transaction in serialised bytes
 #[derive(Clone, Eq, PartialEq, Serialize, Deserialize, Default, Debug)]
 pub struct Transaction {
     data: Bytes,
@@ -636,6 +640,15 @@ impl fmt::Debug for VerifiedBlock {
             self.commit_votes().len(),
         )
     }
+}
+
+/// Block with extended additional information, such as
+/// local blocks that are excluded from the block's ancestors.
+/// The extended information do not need to be certified or forwarded to other authorities.
+#[derive(Clone, Debug)]
+pub(crate) struct ExtendedBlock {
+    pub block: VerifiedBlock,
+    pub excluded_ancestors: Vec<BlockRef>,
 }
 
 /// Generates the genesis blocks for the current Committee.

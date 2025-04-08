@@ -1,16 +1,17 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{collections::VecDeque, ops::Bound::Included, time::Duration};
 
 use bytes::Bytes;
 use consensus_config::AuthorityIndex;
-use sui_macros::fail_point;
+use iota_macros::fail_point;
 use typed_store::{
+    Map as _,
     metrics::SamplingInterval,
     reopen,
-    rocks::{default_db_options, open_cf_opts, DBMap, MetricConf, ReadWriteOptions},
-    Map as _,
+    rocks::{DBMap, MetricConf, ReadWriteOptions, default_db_options, open_cf_opts},
 };
 
 use super::{CommitInfo, Store, WriteBatch};

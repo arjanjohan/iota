@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{sync::Arc, time::Duration};
@@ -11,13 +12,13 @@ use rstest::rstest;
 use tokio::time::sleep;
 
 use super::{
-    anemo_network::AnemoManager, test_network::TestService, tonic_network::TonicManager,
-    NetworkClient, NetworkManager,
+    ExtendedSerializedBlock, NetworkClient, NetworkManager, anemo_network::AnemoManager,
+    test_network::TestService, tonic_network::TonicManager,
 };
 use crate::{
+    Round,
     block::{TestBlock, VerifiedBlock},
     context::Context,
-    Round,
 };
 
 trait ManagerBuilder {
@@ -52,8 +53,11 @@ impl ManagerBuilder for TonicManagerBuilder {
     }
 }
 
-fn block_for_round(round: Round) -> Bytes {
-    Bytes::from(vec![round as u8; 16])
+fn block_for_round(round: Round) -> ExtendedSerializedBlock {
+    ExtendedSerializedBlock {
+        block: Bytes::from(vec![round as u8; 16]),
+        excluded_ancestors: vec![],
+    }
 }
 
 fn service_with_own_blocks() -> Arc<Mutex<TestService>> {
@@ -125,13 +129,19 @@ async fn send_and_receive_blocks_with_auth(
     assert_eq!(service_0.lock().handle_send_block[0].0.value(), 1);
     assert_eq!(
         service_0.lock().handle_send_block[0].1,
-        test_block_1.serialized(),
+        ExtendedSerializedBlock {
+            block: test_block_1.serialized().clone(),
+            excluded_ancestors: vec![],
+        },
     );
     assert_eq!(service_1.lock().handle_send_block.len(), 1);
     assert_eq!(service_1.lock().handle_send_block[0].0.value(), 0);
     assert_eq!(
         service_1.lock().handle_send_block[0].1,
-        test_block_0.serialized(),
+        ExtendedSerializedBlock {
+            block: test_block_0.serialized().clone(),
+            excluded_ancestors: vec![],
+        },
     );
 
     // `Committee` is generated with the same random seed in Context::new_for_test(),
@@ -150,23 +160,27 @@ async fn send_and_receive_blocks_with_auth(
     // client_4 should not be able to reach service_0 or service_1, because of the
     // AllowedPeers filter.
     let test_block_2 = VerifiedBlock::new_for_test(TestBlock::new(9, 2).build());
-    assert!(client_4
-        .send_block(
-            context.committee.to_authority_index(0).unwrap(),
-            &test_block_2,
-            Duration::from_secs(5),
-        )
-        .await
-        .is_err());
+    assert!(
+        client_4
+            .send_block(
+                context.committee.to_authority_index(0).unwrap(),
+                &test_block_2,
+                Duration::from_secs(5),
+            )
+            .await
+            .is_err()
+    );
     let test_block_3 = VerifiedBlock::new_for_test(TestBlock::new(9, 3).build());
-    assert!(client_4
-        .send_block(
-            context.committee.to_authority_index(1).unwrap(),
-            &test_block_3,
-            Duration::from_secs(5),
-        )
-        .await
-        .is_err());
+    assert!(
+        client_4
+            .send_block(
+                context.committee.to_authority_index(1).unwrap(),
+                &test_block_3,
+                Duration::from_secs(5),
+            )
+            .await
+            .is_err()
+    );
 }
 
 #[rstest]

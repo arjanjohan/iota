@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! This is a module that records Tokio-tracing [span](https://docs.rs/tracing/latest/tracing/span/index.html)
@@ -19,8 +20,8 @@
 
 use std::time::Instant;
 
-use prometheus::{exponential_buckets, register_histogram_vec_with_registry, Registry};
-use tracing::{span, Subscriber};
+use prometheus::{Registry, exponential_buckets, register_histogram_vec_with_registry};
+use tracing::{Subscriber, span};
 
 /// A tokio_tracing Layer that records span latencies into Prometheus histograms
 pub struct PrometheusSpanLatencyLayer {

@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{path::PathBuf, time::Duration};
@@ -8,7 +9,7 @@ use serde::{Deserialize, Serialize};
 /// Operational configurations of a consensus authority.
 ///
 /// All fields should tolerate inconsistencies among authorities, without affecting safety of the
-/// protocol. Otherwise, they need to be part of Sui protocol config or epoch state on-chain.
+/// protocol. Otherwise, they need to be part of IOTA protocol config or epoch state on-chain.
 ///
 /// NOTE: fields with default values are specified in the serde default functions. Most operators
 /// should not need to specify any field, except db_path.
@@ -135,28 +136,16 @@ impl Parameters {
     }
 
     pub(crate) fn default_round_prober_interval_ms() -> u64 {
-        if cfg!(msim) {
-            1000
-        } else {
-            5000
-        }
+        if cfg!(msim) { 1000 } else { 5000 }
     }
 
     pub(crate) fn default_round_prober_request_timeout_ms() -> u64 {
-        if cfg!(msim) {
-            800
-        } else {
-            4000
-        }
+        if cfg!(msim) { 800 } else { 4000 }
     }
 
     pub(crate) fn default_propagation_delay_stop_proposal_threshold() -> u32 {
         // Propagation delay is usually 0 round in production.
-        if cfg!(msim) {
-            2
-        } else {
-            5
-        }
+        if cfg!(msim) { 2 } else { 5 }
     }
 
     pub(crate) fn default_dag_state_cached_rounds() -> u32 {

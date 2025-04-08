@@ -1,4 +1,5 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! RoundProber periodically checks each peer for the latest rounds they received and accepted
@@ -20,14 +21,14 @@ use std::{sync::Arc, time::Duration};
 
 use consensus_config::{AuthorityIndex, Committee};
 use futures::stream::{FuturesUnordered, StreamExt as _};
-use mysten_common::sync::notify_once::NotifyOnce;
-use mysten_metrics::monitored_scope;
+use iota_common::sync::notify_once::NotifyOnce;
+use iota_metrics::monitored_scope;
 use parking_lot::RwLock;
 use tokio::{task::JoinHandle, time::MissedTickBehavior};
 
 use crate::{
-    context::Context, core_thread::CoreThreadDispatcher, dag_state::DagState,
-    network::NetworkClient, BlockAPI as _, Round,
+    BlockAPI as _, Round, context::Context, core_thread::CoreThreadDispatcher, dag_state::DagState,
+    network::NetworkClient,
 };
 
 /// A [`QuorumRound`] is a round range [low, high]. It is computed from
@@ -155,7 +156,7 @@ impl<C: NetworkClient> RoundProber<C> {
             .get_last_cached_block_per_authority(Round::MAX);
         let local_highest_accepted_rounds = blocks
             .into_iter()
-            .map(|block| block.round())
+            .map(|(block, _)| block.round())
             .collect::<Vec<_>>();
         let last_proposed_round = local_highest_accepted_rounds[own_index];
 
@@ -360,6 +361,7 @@ mod test {
 
     use super::QuorumRound;
     use crate::{
+        Round, TestBlock, VerifiedBlock,
         block::BlockRef,
         commit::CommitRange,
         context::Context,
@@ -367,9 +369,8 @@ mod test {
         dag_state::DagState,
         error::{ConsensusError, ConsensusResult},
         network::{BlockStream, NetworkClient},
-        round_prober::{compute_quorum_round, RoundProber},
+        round_prober::{RoundProber, compute_quorum_round},
         storage::mem_store::MemStore,
-        Round, TestBlock, VerifiedBlock,
     };
 
     struct FakeThreadDispatcher {
@@ -407,6 +408,13 @@ mod test {
         async fn add_blocks(
             &self,
             _blocks: Vec<VerifiedBlock>,
+        ) -> Result<BTreeSet<BlockRef>, CoreError> {
+            unimplemented!()
+        }
+
+        async fn check_block_refs(
+            &self,
+            _block_refs: Vec<BlockRef>,
         ) -> Result<BTreeSet<BlockRef>, CoreError> {
             unimplemented!()
         }

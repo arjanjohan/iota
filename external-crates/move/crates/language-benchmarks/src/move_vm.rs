@@ -1,5 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use criterion::{measurement::Measurement, Criterion};
@@ -121,6 +122,7 @@ fn execute<M: Measurement + 'static>(
                     vec![],
                     Vec::<Vec<u8>>::new(),
                     &mut UnmeteredGasMeter,
+                    None,
                 )
                 .unwrap_or_else(|err| {
                     panic!("{:?}::bench in {file} failed with {:?}", &module_id, err)

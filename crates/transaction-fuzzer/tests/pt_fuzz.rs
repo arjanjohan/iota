@@ -1,22 +1,24 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use proptest::prelude::*;
-use proptest::strategy::ValueTree;
-use transaction_fuzzer::account_universe::AccountCurrent;
-use transaction_fuzzer::account_universe::AccountData;
-use transaction_fuzzer::executor::Executor;
-use transaction_fuzzer::programmable_transaction_gen::{
-    gen_many_input_match, gen_programmable_transaction, MAX_ITERATIONS_INPUT_MATCH,
+use iota_types::{
+    IOTA_FRAMEWORK_PACKAGE_ID, MOVE_STDLIB_PACKAGE_ID,
+    base_types::ObjectRef,
+    effects::TransactionEffectsAPI,
+    execution_status::{ExecutionFailureStatus, ExecutionStatus},
+    object::Owner,
+    transaction::{CallArg, ObjectArg, ProgrammableTransaction},
 };
-use transaction_fuzzer::type_arg_fuzzer::{run_pt, run_pt_effects};
-
-use sui_types::base_types::ObjectRef;
-use sui_types::effects::TransactionEffectsAPI;
-use sui_types::execution_status::{ExecutionFailureStatus, ExecutionStatus};
-use sui_types::object::Owner;
-use sui_types::transaction::{CallArg, ObjectArg, ProgrammableTransaction};
-use sui_types::{MOVE_STDLIB_PACKAGE_ID, SUI_FRAMEWORK_PACKAGE_ID};
+use proptest::{prelude::*, strategy::ValueTree};
+use transaction_fuzzer::{
+    account_universe::{AccountCurrent, AccountData},
+    executor::Executor,
+    programmable_transaction_gen::{
+        MAX_ITERATIONS_INPUT_MATCH, gen_many_input_match, gen_programmable_transaction,
+    },
+    type_arg_fuzzer::{run_pt, run_pt_effects},
+};
 
 #[test]
 #[cfg_attr(msim, ignore)]
@@ -37,7 +39,7 @@ fn publish_coin_factory(
 ) -> (ObjectRef, ObjectRef) {
     let effects = exec.publish(
         "coin_factory",
-        vec![MOVE_STDLIB_PACKAGE_ID, SUI_FRAMEWORK_PACKAGE_ID],
+        vec![MOVE_STDLIB_PACKAGE_ID, IOTA_FRAMEWORK_PACKAGE_ID],
         account,
     );
     let package = effects

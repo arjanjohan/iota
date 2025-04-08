@@ -1,5 +1,6 @@
 // Copyright (c) The Diem Core Contributors
 // Copyright (c) The Move Contributors
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! Binary format for transactions and modules.
@@ -565,7 +566,7 @@ impl FunctionDefinition {
         self.code.is_none()
     }
 
-    // Deprecated public bit, deprecated in favor a the Visibility enum
+    // Deprecated public bit, deprecated in favor of the Visibility enum
     pub const DEPRECATED_PUBLIC_BIT: u8 = 0b01;
 
     /// A native function implemented in Rust.

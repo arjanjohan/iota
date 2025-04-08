@@ -1,9 +1,10 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 use std::{collections::BTreeMap, sync::Arc};
 
-use mysten_common::debug_fatal;
-use mysten_metrics::monitored_mpsc::{channel, Receiver, Sender};
+use iota_common::debug_fatal;
+use iota_metrics::monitored_mpsc::{Receiver, Sender, channel};
 use parking_lot::Mutex;
 use tap::tap::TapFallible;
 use thiserror::Error;
@@ -11,9 +12,9 @@ use tokio::sync::oneshot;
 use tracing::{error, warn};
 
 use crate::{
+    Round,
     block::{BlockRef, Transaction, TransactionIndex},
     context::Context,
-    Round,
 };
 
 /// The maximum number of transactions pending to the queue to be pulled for block proposal
@@ -115,7 +116,10 @@ impl TransactionConsumer {
 
         if let Some(t) = self.pending_transactions.take() {
             if let Some(pending_transactions) = handle_txs(t) {
-                debug_fatal!("Previously pending transaction(s) should fit into an empty block! Dropping: {:?}", pending_transactions.transactions);
+                debug_fatal!(
+                    "Previously pending transaction(s) should fit into an empty block! Dropping: {:?}",
+                    pending_transactions.transactions
+                );
             }
         }
 
@@ -325,7 +329,7 @@ impl TransactionClient {
     }
 }
 
-/// `TransactionVerifier` implementation is supplied by Sui to validate transactions in a block,
+/// `TransactionVerifier` implementation is supplied by IOTA to validate transactions in a block,
 /// before acceptance of the block.
 #[async_trait::async_trait]
 pub trait TransactionVerifier: Send + Sync + 'static {
@@ -350,10 +354,10 @@ pub enum ValidationError {
 }
 
 /// `NoopTransactionVerifier` accepts all transactions.
-#[cfg(test)]
-pub(crate) struct NoopTransactionVerifier;
+#[cfg(any(test, msim))]
+pub struct NoopTransactionVerifier;
 
-#[cfg(test)]
+#[cfg(any(test, msim))]
 #[async_trait::async_trait]
 impl TransactionVerifier for NoopTransactionVerifier {
     fn verify_batch(&self, _batch: &[&[u8]]) -> Result<(), ValidationError> {
@@ -373,16 +377,18 @@ mod tests {
     use std::{sync::Arc, time::Duration};
 
     use consensus_config::AuthorityIndex;
-    use futures::{stream::FuturesUnordered, StreamExt};
-    use sui_protocol_config::ProtocolConfig;
+    use futures::{StreamExt, stream::FuturesUnordered};
+    use iota_protocol_config::ProtocolConfig;
     use tokio::time::timeout;
 
-    use crate::transaction::NoopTransactionVerifier;
     use crate::{
         block::{BlockDigest, BlockRef},
         block_verifier::SignedBlockVerifier,
         context::Context,
-        transaction::{BlockStatus, LimitReached, TransactionClient, TransactionConsumer},
+        transaction::{
+            BlockStatus, LimitReached, NoopTransactionVerifier, TransactionClient,
+            TransactionConsumer,
+        },
     };
 
     #[tokio::test(flavor = "current_thread", start_paused = true)]
@@ -512,6 +518,7 @@ mod tests {
         let _guard = ProtocolConfig::apply_overrides_for_testing(|_, mut config| {
             config.set_consensus_max_transaction_size_bytes_for_testing(2_000); // 2KB
             config.set_consensus_max_transactions_in_block_bytes_for_testing(2_000);
+            config.set_consensus_gc_depth_for_testing(0);
             config
         });
 

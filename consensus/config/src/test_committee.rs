@@ -1,10 +1,11 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::net::{TcpListener, TcpStream};
 
-use mysten_network::Multiaddr;
-use rand::{rngs::StdRng, SeedableRng as _};
+use iota_network_stack::Multiaddr;
+use rand::{SeedableRng as _, rngs::StdRng};
 
 use crate::{
     Authority, AuthorityKeyPair, Committee, Epoch, NetworkKeyPair, ProtocolKeyPair, Stake,

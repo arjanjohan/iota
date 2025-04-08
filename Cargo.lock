@@ -185,9 +185,9 @@ dependencies = [
  "serde_json",
  "socket2 0.5.6",
  "tap",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tower 0.4.13",
  "tracing",
  "x509-parser",
@@ -200,7 +200,7 @@ dependencies = [
  "anemo",
  "anemo-build",
  "clap",
- "mysten-network",
+ "iota-network-stack",
  "rand 0.8.5",
  "telemetry-subscribers",
  "tokio",
@@ -776,7 +776,7 @@ dependencies = [
  "nom",
  "num-traits",
  "rusticata-macros",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "time",
 ]
 
@@ -889,7 +889,7 @@ dependencies = [
  "serde_urlencoded",
  "static_assertions_next",
  "tempfile",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tracing",
  "tracing-futures",
 ]
@@ -908,7 +908,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tokio-stream",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tower-service",
 ]
 
@@ -926,7 +926,7 @@ dependencies = [
  "quote 1.0.37",
  "strum 0.25.0",
  "syn 2.0.87",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -993,9 +993,9 @@ source = "git+https://github.com/mystenmark/async-task?rev=4e45b26e11126b191701b
 
 [[package]]
 name = "async-trait"
-version = "0.1.73"
+version = "0.1.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc00ceb34980c03614e35a3a4e218276a0a824e911d07651cd0d858a51e8c0f0"
+checksum = "3f934833b4b7233644e5848f235df3f57ed8c80f1528a26c3dfa13d2147fa056"
 dependencies = [
  "proc-macro2 1.0.87",
  "quote 1.0.37",
@@ -1161,7 +1161,6 @@ dependencies = [
  "aws-http",
  "aws-sigv4",
  "aws-smithy-async",
- "aws-smithy-eventstream",
  "aws-smithy-http",
  "aws-smithy-runtime-api",
  "aws-smithy-types",
@@ -1225,38 +1224,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "aws-sdk-s3"
-version = "0.29.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e30370b61599168d38190ad272bb91842cd81870a6ca035c05dd5726d22832c"
-dependencies = [
- "aws-credential-types",
- "aws-http",
- "aws-runtime",
- "aws-sigv4",
- "aws-smithy-async",
- "aws-smithy-checksums",
- "aws-smithy-client",
- "aws-smithy-eventstream",
- "aws-smithy-http",
- "aws-smithy-json",
- "aws-smithy-runtime",
- "aws-smithy-runtime-api",
- "aws-smithy-types",
- "aws-smithy-xml",
- "aws-types",
- "bytes",
- "http 0.2.9",
- "http-body 0.4.5",
- "once_cell",
- "percent-encoding",
- "regex",
- "tokio-stream",
- "tracing",
- "url",
-]
-
-[[package]]
 name = "aws-sdk-sso"
 version = "0.30.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1310,9 +1277,7 @@ version = "0.56.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7b28f4910bb956b7ab320b62e98096402354eca976c587d1eeccd523d9bac03"
 dependencies = [
- "aws-smithy-eventstream",
  "aws-smithy-http",
- "bytes",
  "form_urlencoded",
  "hex",
  "hmac 0.12.1",
@@ -1335,27 +1300,6 @@ dependencies = [
  "pin-project-lite",
  "tokio",
  "tokio-stream",
-]
-
-[[package]]
-name = "aws-smithy-checksums"
-version = "0.56.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "afb15946af1b8d3beeff53ad991d9bff68ac22426b6d40372b958a75fa61eaed"
-dependencies = [
- "aws-smithy-http",
- "aws-smithy-types",
- "bytes",
- "crc32c",
- "crc32fast",
- "hex",
- "http 0.2.9",
- "http-body 0.4.5",
- "md-5 0.10.6",
- "pin-project-lite",
- "sha1",
- "sha2 0.10.8",
- "tracing",
 ]
 
 [[package]]
@@ -1383,23 +1327,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "aws-smithy-eventstream"
-version = "0.56.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "850233feab37b591b7377fd52063aa37af615687f5896807abe7f49bd4e1d25b"
-dependencies = [
- "aws-smithy-types",
- "bytes",
- "crc32fast",
-]
-
-[[package]]
 name = "aws-smithy-http"
 version = "0.56.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "54cdcf365d8eee60686885f750a34c190e513677db58bbc466c44c588abf4199"
 dependencies = [
- "aws-smithy-eventstream",
  "aws-smithy-types",
  "bytes",
  "bytes-utils",
@@ -1412,7 +1344,7 @@ dependencies = [
  "pin-project-lite",
  "pin-utils",
  "tokio",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing",
 ]
 
@@ -1570,7 +1502,7 @@ dependencies = [
  "http 1.1.0",
  "http-body 1.0.1",
  "http-body-util",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "hyper-util",
  "itoa",
  "matchit 0.7.0",
@@ -1677,7 +1609,7 @@ dependencies = [
  "http 1.1.0",
  "http-body 1.0.1",
  "http-body-util",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "hyper-util",
  "pin-project-lite",
  "rustls 0.23.20",
@@ -1796,7 +1728,7 @@ checksum = "b10cf871f3ff2ce56432fddc2615ac7acc3aa22ca321f8fea800846fbb32f188"
 dependencies = [
  "async-trait",
  "futures-util",
- "parking_lot 0.12.1",
+ "parking_lot 0.12.3",
  "tokio",
 ]
 
@@ -1828,7 +1760,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85b6598a2f5d564fb7855dc6b06fd1c38cff5a72bd8b863a4d021938497b440a"
 dependencies = [
  "serde",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1864,7 +1796,7 @@ dependencies = [
  "byteorder",
  "ff 0.13.0",
  "serde",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1908,7 +1840,7 @@ checksum = "230c5f1ca6a325a32553f8640d31ac9b49f2411e901e427570154868b46da4f7"
 
 [[package]]
 name = "bin-version"
-version = "1.41.0"
+version = "1.43.1"
 dependencies = [
  "const-str",
  "git-version",
@@ -2129,9 +2061,9 @@ dependencies = [
 
 [[package]]
 name = "blst"
-version = "0.3.11"
+version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c94087b935a822949d3291a9989ad2b2051ea141eda0fd4e478a75f6aa3e604b"
+checksum = "4378725facc195f1a538864863f6de233b500a8862747e7f165078a419d5e874"
 dependencies = [
  "cc",
  "glob",
@@ -2327,7 +2259,7 @@ dependencies = [
  "instant",
  "lazy_static",
  "once_cell",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
 ]
 
@@ -2392,7 +2324,7 @@ dependencies = [
  "semver 1.0.23",
  "serde",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -2406,7 +2338,7 @@ dependencies = [
  "semver 1.0.23",
  "serde",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -2631,7 +2563,7 @@ dependencies = [
  "k256 0.13.1",
  "serde",
  "sha2 0.10.8",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -2647,7 +2579,7 @@ dependencies = [
  "pbkdf2 0.12.1",
  "rand 0.8.5",
  "sha2 0.10.8",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -2667,7 +2599,7 @@ dependencies = [
  "serde_derive",
  "sha2 0.10.8",
  "sha3 0.10.6",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -2757,7 +2689,7 @@ version = "0.1.0"
 dependencies = [
  "fastcrypto",
  "insta",
- "mysten-network",
+ "iota-network-stack",
  "rand 0.8.5",
  "serde",
  "shared-crypto",
@@ -2783,13 +2715,17 @@ dependencies = [
  "fastcrypto",
  "futures",
  "http 1.1.0",
+ "iota-common",
+ "iota-http",
+ "iota-macros",
+ "iota-metrics",
+ "iota-network-stack",
+ "iota-protocol-config",
+ "iota-tls",
  "itertools 0.13.0",
  "mockall",
- "mysten-common",
- "mysten-metrics",
- "mysten-network",
  "nom",
- "parking_lot 0.12.1",
+ "parking_lot 0.12.3",
  "prometheus",
  "prost 0.13.3",
  "quinn-proto",
@@ -2799,22 +2735,44 @@ dependencies = [
  "serde",
  "shared-crypto",
  "strum_macros 0.24.3",
- "sui-http",
- "sui-macros",
- "sui-protocol-config",
- "sui-tls",
  "tap",
  "telemetry-subscribers",
  "tempfile",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tokio-stream",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tonic 0.12.3",
  "tonic-build",
  "tonic-rustls",
  "tower 0.4.13",
  "tower-http 0.5.2",
+ "tracing",
+ "typed-store",
+]
+
+[[package]]
+name = "consensus-simtests"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arc-swap",
+ "consensus-config",
+ "consensus-core",
+ "iota-config",
+ "iota-macros",
+ "iota-metrics",
+ "iota-network-stack",
+ "iota-protocol-config",
+ "iota-simulator",
+ "parking_lot 0.12.3",
+ "prometheus",
+ "rand 0.8.5",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tokio-stream",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing",
  "typed-store",
 ]
@@ -2944,7 +2902,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tar",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "url",
 ]
@@ -2969,6 +2927,16 @@ name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "91e195e091a93c46f7102ec7818a2aa394e1e1771c3ab4825963fa03e45afb8f"
+dependencies = [
+ "core-foundation-sys",
+ "libc",
+]
+
+[[package]]
+name = "core-foundation"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b55271e5c8c478ad3f38ad24ef34923091e0548492a266d19b3c0b4d82574c63"
 dependencies = [
  "core-foundation-sys",
  "libc",
@@ -3034,15 +3002,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a17b76ff3a4162b0b27f354a0c87015ddad39d35f9c0c36607a3bdd175dde1f1"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "crc32c"
-version = "0.6.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8f48d60e5b4d2c53d5c2b1d8a58c849a70ae5e5509b08a48d047e3b65714a74"
-dependencies = [
- "rustc_version",
 ]
 
 [[package]]
@@ -3169,8 +3128,8 @@ dependencies = [
  "crossterm_winapi",
  "futures-core",
  "libc",
- "mio",
- "parking_lot 0.12.1",
+ "mio 0.8.11",
+ "parking_lot 0.12.3",
  "signal-hook",
  "signal-hook-mio",
  "winapi",
@@ -3368,11 +3327,11 @@ checksum = "478c02b53607e3f21c374f024c2cfc2154e554905bba478e8e09409f10ce3726"
 dependencies = [
  "cynic-proc-macros",
  "ref-cast",
- "reqwest 0.12.5",
+ "reqwest 0.12.9",
  "serde",
  "serde_json",
  "static_assertions",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -3390,7 +3349,7 @@ dependencies = [
  "quote 1.0.37",
  "strsim 0.10.0",
  "syn 2.0.87",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -3959,7 +3918,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tar",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "url",
 ]
 
@@ -4023,15 +3982,15 @@ dependencies = [
  "nom",
  "rust_decimal",
  "serde",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "time",
 ]
 
 [[package]]
 name = "dyn-clone"
-version = "1.0.16"
+version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "545b22097d44f8a9581187cdf93de7a71e4722bf51200cfaba810865b49a495d"
+checksum = "0d6ef0072f8a535281e4876be788938b528e9a1d43900b82c2569af7da799125"
 
 [[package]]
 name = "ecdsa"
@@ -4091,7 +4050,7 @@ dependencies = [
  "rand_core 0.6.4",
  "serde",
  "sha2 0.9.9",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "zeroize",
 ]
 
@@ -4302,6 +4261,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "erased-discriminant"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "373f74784b51403f16c5fa6dc667488389e629811329c1c6719c25874da2ba4f"
+dependencies = [
+ "typeid",
+]
+
+[[package]]
 name = "errno"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4369,7 +4337,7 @@ dependencies = [
  "serde_json",
  "sha2 0.10.8",
  "sha3 0.10.6",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "uuid 0.8.2",
 ]
 
@@ -4386,7 +4354,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha3 0.10.6",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "uint",
 ]
 
@@ -4465,7 +4433,7 @@ dependencies = [
  "pin-project",
  "serde",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -4533,7 +4501,7 @@ dependencies = [
  "strum 0.26.3",
  "syn 2.0.87",
  "tempfile",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tiny-keccak",
  "unicode-xid 0.2.4",
 ]
@@ -4550,7 +4518,7 @@ dependencies = [
  "semver 1.0.23",
  "serde",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tracing",
 ]
 
@@ -4574,7 +4542,7 @@ dependencies = [
  "reqwest 0.11.20",
  "serde",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-futures",
@@ -4607,7 +4575,7 @@ dependencies = [
  "reqwest 0.11.20",
  "serde",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tokio-tungstenite 0.20.1",
  "tracing",
@@ -4634,7 +4602,7 @@ dependencies = [
  "ethers-core",
  "rand 0.8.5",
  "sha2 0.10.8",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tracing",
 ]
 
@@ -4662,7 +4630,7 @@ dependencies = [
  "serde_json",
  "solang-parser",
  "svm-rs",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tiny-keccak",
  "tokio",
  "tracing",
@@ -4776,7 +4744,7 @@ dependencies = [
  "sha3 0.10.6",
  "signature 2.2.0",
  "static_assertions",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "typenum",
  "zeroize",
@@ -4851,7 +4819,7 @@ dependencies = [
  "num-bigint 0.4.4",
  "once_cell",
  "regex",
- "reqwest 0.12.5",
+ "reqwest 0.12.9",
  "schemars",
  "serde",
  "serde_json",
@@ -5061,7 +5029,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8835f84f38484cc86f110a805655697908257fb9a7af005234060891557198e9"
 dependencies = [
  "nonempty 0.7.0",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -5242,23 +5210,28 @@ dependencies = [
 
 [[package]]
 name = "gcp-bigquery-client"
-version = "0.18.0"
+version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0ce6fcbdaca0a4521a734f2bc7f2f6bd872fe40576e24f8bd0b05732c19a74f"
+checksum = "053b7811ffbabe1ba64bd885db309864d5015028cf9ed76bb4ccb1a7aefd05be"
 dependencies = [
  "async-stream",
  "async-trait",
  "dyn-clone",
- "hyper 0.14.26",
- "hyper-rustls 0.24.0",
+ "flate2",
+ "hyper 1.5.2",
+ "hyper-util",
  "log",
- "reqwest 0.11.20",
+ "prost 0.13.3",
+ "prost-types 0.13.3",
+ "reqwest 0.12.9",
  "serde",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "time",
  "tokio",
  "tokio-stream",
+ "tonic 0.12.3",
+ "tonic-build",
  "url",
  "yup-oauth2",
 ]
@@ -5276,14 +5249,14 @@ dependencies = [
  "home",
  "http 1.1.0",
  "http-body-util",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "hyper-rustls 0.27.2",
  "hyper-util",
  "ring 0.17.8",
  "rustls-pemfile 2.1.2",
  "serde",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-futures",
@@ -5407,7 +5380,7 @@ dependencies = [
  "futures-timer",
  "no-std-compat",
  "nonzero_ext",
- "parking_lot 0.12.1",
+ "parking_lot 0.12.3",
  "quanta",
  "rand 0.8.5",
  "smallvec",
@@ -5503,7 +5476,7 @@ dependencies = [
  "indexmap 2.7.0",
  "slab",
  "tokio",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing",
 ]
 
@@ -5522,7 +5495,7 @@ dependencies = [
  "indexmap 2.7.0",
  "slab",
  "tokio",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing",
 ]
 
@@ -5583,7 +5556,7 @@ dependencies = [
  "pest_derive",
  "serde",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -5876,9 +5849,9 @@ dependencies = [
 
 [[package]]
 name = "hyper"
-version = "1.4.1"
+version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50dfd22e0e76d0f662d429a5f80fcaf3855009297eab6a0a9f8543834744ba05"
+checksum = "256fb8d4bd6413123cc9d91832d78325c48ff41677595be797d90f42969beae0"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -5905,7 +5878,7 @@ dependencies = [
  "futures-util",
  "headers",
  "http 1.1.0",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "hyper-rustls 0.27.2",
  "hyper-util",
  "pin-project-lite",
@@ -5953,7 +5926,7 @@ checksum = "5ee4be2c948921a1a5320b629c4193916ed787a7f7f293fd3f7f5a6c9de74155"
 dependencies = [
  "futures-util",
  "http 1.1.0",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "hyper-util",
  "log",
  "rustls 0.23.20",
@@ -5983,7 +5956,7 @@ version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3203a961e5c83b6f5498933e78b6b263e208c197b63e9c6c53cc82ffd3f63793"
 dependencies = [
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "hyper-util",
  "pin-project-lite",
  "tokio",
@@ -6001,7 +5974,7 @@ dependencies = [
  "futures-util",
  "http 1.1.0",
  "http-body 1.0.1",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "pin-project-lite",
  "socket2 0.5.6",
  "tokio",
@@ -6390,25 +6363,35 @@ dependencies = [
  "dyn-clone",
  "lazy_static",
  "newline-converter",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "unicode-segmentation",
  "unicode-width",
 ]
 
 [[package]]
 name = "insta"
-version = "1.26.0"
+version = "1.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6f0f08b46e4379744de2ab67aa8f7de3ffd1da3e275adc41fcc82053ede46ff"
+checksum = "6513e4067e16e69ed1db5ab56048ed65db32d10ba5fc1217f5393f8f17d8b5a5"
 dependencies = [
  "console",
- "lazy_static",
  "linked-hash-map",
+ "once_cell",
  "pest",
  "pest_derive",
  "serde",
  "similar",
- "yaml-rust",
+]
+
+[[package]]
+name = "insta-cmd"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffeeefa927925cced49ccb01bf3e57c9d4cd132df21e576eb9415baeab2d3de6"
+dependencies = [
+ "insta",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -6437,6 +6420,3497 @@ checksum = "46112a93252b123d31a119a8d1a1ac19deac4fac6e0e8b0df58f0d4e5870e63c"
 dependencies = [
  "libc",
  "windows-sys 0.42.0",
+]
+
+[[package]]
+name = "iota"
+version = "1.43.1"
+dependencies = [
+ "anemo",
+ "anyhow",
+ "assert_cmd",
+ "async-recursion",
+ "async-trait",
+ "axum 0.7.5",
+ "bcs",
+ "bin-version",
+ "bip32",
+ "camino",
+ "clap",
+ "codespan-reporting",
+ "colored",
+ "csv",
+ "datatest-stable",
+ "expect-test",
+ "fastcrypto",
+ "fastcrypto-zkp",
+ "fs_extra",
+ "futures",
+ "http 1.1.0",
+ "im",
+ "inquire",
+ "insta",
+ "insta-cmd",
+ "iota-bridge",
+ "iota-cluster-test",
+ "iota-config",
+ "iota-execution",
+ "iota-faucet",
+ "iota-framework-snapshot",
+ "iota-genesis-builder",
+ "iota-graphql-rpc",
+ "iota-indexer",
+ "iota-json",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-macros",
+ "iota-move",
+ "iota-move-build",
+ "iota-package-management",
+ "iota-protocol-config",
+ "iota-replay",
+ "iota-sdk",
+ "iota-simulator",
+ "iota-source-validation",
+ "iota-swarm",
+ "iota-swarm-config",
+ "iota-test-transaction-builder",
+ "iota-transaction-builder 0.0.0",
+ "iota-types",
+ "jemalloc-ctl",
+ "json_to_table",
+ "miette",
+ "move-analyzer",
+ "move-binary-format",
+ "move-bytecode-source-map",
+ "move-bytecode-verifier-meter",
+ "move-command-line-common",
+ "move-compiler",
+ "move-core-types",
+ "move-ir-types",
+ "move-package",
+ "move-vm-config",
+ "move-vm-profiler",
+ "msim",
+ "num-bigint 0.4.4",
+ "prometheus",
+ "rand 0.8.5",
+ "regex",
+ "reqwest 0.12.9",
+ "rusoto_core",
+ "rusoto_kms",
+ "rustyline",
+ "rustyline-derive",
+ "serde",
+ "serde_json",
+ "serde_yaml 0.8.26",
+ "shared-crypto",
+ "shell-words",
+ "shlex",
+ "signature 1.6.4",
+ "tabled",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "test-cluster",
+ "thiserror 1.0.69",
+ "tokio",
+ "toml 0.7.4",
+ "tower 0.4.13",
+ "tower-http 0.5.2",
+ "tracing",
+ "unescape",
+ "url",
+ "uuid 1.2.2",
+]
+
+[[package]]
+name = "iota-adapter-latest"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "iota-macros",
+ "iota-metrics",
+ "iota-move-natives-latest",
+ "iota-protocol-config",
+ "iota-types",
+ "iota-verifier-latest",
+ "leb128",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-bytecode-verifier",
+ "move-bytecode-verifier-meter",
+ "move-core-types",
+ "move-package",
+ "move-trace-format",
+ "move-vm-config",
+ "move-vm-profiler",
+ "move-vm-runtime",
+ "move-vm-types",
+ "parking_lot 0.12.3",
+ "serde",
+ "tracing",
+]
+
+[[package]]
+name = "iota-adapter-transactional-tests"
+version = "0.1.0"
+dependencies = [
+ "datatest-stable",
+ "iota-transactional-test-runner",
+]
+
+[[package]]
+name = "iota-adapter-v0"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "iota-macros",
+ "iota-move-natives-v0",
+ "iota-protocol-config",
+ "iota-types",
+ "iota-verifier-v0",
+ "leb128",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-bytecode-verifier-meter",
+ "move-bytecode-verifier-v0",
+ "move-core-types",
+ "move-package",
+ "move-vm-config",
+ "move-vm-profiler",
+ "move-vm-runtime-v0",
+ "move-vm-types",
+ "once_cell",
+ "parking_lot 0.12.3",
+ "serde",
+ "tracing",
+]
+
+[[package]]
+name = "iota-adapter-v1"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "iota-macros",
+ "iota-move-natives-v1",
+ "iota-protocol-config",
+ "iota-types",
+ "iota-verifier-v1",
+ "leb128",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-bytecode-verifier-meter",
+ "move-bytecode-verifier-v1",
+ "move-core-types",
+ "move-package",
+ "move-vm-config",
+ "move-vm-profiler",
+ "move-vm-runtime-v1",
+ "move-vm-types",
+ "parking_lot 0.12.3",
+ "serde",
+ "tracing",
+]
+
+[[package]]
+name = "iota-adapter-v2"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "iota-macros",
+ "iota-move-natives-v2",
+ "iota-protocol-config",
+ "iota-types",
+ "iota-verifier-v2",
+ "leb128",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-bytecode-verifier-meter",
+ "move-bytecode-verifier-v2",
+ "move-core-types",
+ "move-package",
+ "move-vm-config",
+ "move-vm-profiler",
+ "move-vm-runtime-v2",
+ "move-vm-types",
+ "parking_lot 0.12.3",
+ "serde",
+ "tracing",
+]
+
+[[package]]
+name = "iota-analytics-indexer"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "arrow",
+ "arrow-array",
+ "async-trait",
+ "axum 0.7.5",
+ "bcs",
+ "byteorder",
+ "bytes",
+ "chrono",
+ "clap",
+ "csv",
+ "eyre",
+ "fastcrypto",
+ "gcp-bigquery-client",
+ "iota-analytics-indexer-derive",
+ "iota-config",
+ "iota-data-ingestion-core",
+ "iota-indexer",
+ "iota-json-rpc-types",
+ "iota-metrics",
+ "iota-package-resolver",
+ "iota-rpc-api",
+ "iota-storage",
+ "iota-types",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-core-types",
+ "num_enum 0.6.1",
+ "object_store",
+ "parquet",
+ "prometheus",
+ "serde",
+ "serde_json",
+ "simulacrum",
+ "snowflake-api",
+ "strum 0.24.1",
+ "strum_macros 0.24.3",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "typed-store",
+ "url",
+]
+
+[[package]]
+name = "iota-analytics-indexer-derive"
+version = "1.43.1"
+dependencies = [
+ "proc-macro2 1.0.87",
+ "quote 1.0.37",
+ "syn 1.0.107",
+]
+
+[[package]]
+name = "iota-archival"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "byteorder",
+ "bytes",
+ "ed25519-consensus",
+ "fastcrypto",
+ "futures",
+ "indicatif",
+ "iota-config",
+ "iota-macros",
+ "iota-simulator",
+ "iota-storage",
+ "iota-swarm-config",
+ "iota-types",
+ "more-asserts",
+ "move-binary-format",
+ "move-core-types",
+ "move-package",
+ "num_enum 0.6.1",
+ "object_store",
+ "prometheus",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-authority-aggregation"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "iota-metrics",
+ "iota-types",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-aws-orchestrator"
+version = "0.0.1"
+dependencies = [
+ "async-trait",
+ "aws-config",
+ "aws-sdk-ec2",
+ "aws-smithy-http",
+ "aws-smithy-runtime-api",
+ "clap",
+ "color-eyre",
+ "crossterm",
+ "eyre",
+ "futures",
+ "iota-config",
+ "iota-metrics",
+ "iota-swarm-config",
+ "iota-types",
+ "prettytable-rs",
+ "prometheus-parse",
+ "reqwest 0.12.9",
+ "russh",
+ "russh-keys",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+]
+
+[[package]]
+name = "iota-benchmark"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bcs",
+ "clap",
+ "comfy-table",
+ "duration-str",
+ "fastcrypto-zkp",
+ "futures",
+ "hdrhistogram",
+ "indicatif",
+ "iota-config",
+ "iota-core",
+ "iota-framework",
+ "iota-framework-snapshot",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-macros",
+ "iota-metrics",
+ "iota-network",
+ "iota-protocol-config",
+ "iota-sdk",
+ "iota-simulator",
+ "iota-storage",
+ "iota-surfer",
+ "iota-swarm-config",
+ "iota-test-transaction-builder",
+ "iota-types",
+ "itertools 0.13.0",
+ "move-core-types",
+ "prometheus",
+ "rand 0.8.5",
+ "regex",
+ "roaring",
+ "serde",
+ "serde_json",
+ "strum 0.24.1",
+ "strum_macros 0.24.3",
+ "sysinfo",
+ "telemetry-subscribers",
+ "test-cluster",
+ "tokio",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tracing",
+ "typed-store",
+]
+
+[[package]]
+name = "iota-bridge"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "arc-swap",
+ "async-trait",
+ "axum 0.7.5",
+ "backoff",
+ "bcs",
+ "bin-version",
+ "clap",
+ "enum_dispatch",
+ "ethers",
+ "eyre",
+ "fastcrypto",
+ "futures",
+ "hex-literal 0.3.4",
+ "iota-authority-aggregation",
+ "iota-common",
+ "iota-config",
+ "iota-json-rpc-api",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-metrics",
+ "iota-sdk",
+ "iota-test-transaction-builder",
+ "iota-types",
+ "lru 0.10.0",
+ "maplit",
+ "move-core-types",
+ "num_enum 0.6.1",
+ "once_cell",
+ "prometheus",
+ "rand 0.8.5",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "shared-crypto",
+ "strum_macros 0.24.3",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "test-cluster",
+ "tokio",
+ "tracing",
+ "typed-store",
+ "url",
+]
+
+[[package]]
+name = "iota-bridge-cli"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "clap",
+ "ethers",
+ "fastcrypto",
+ "futures",
+ "iota-bridge",
+ "iota-config",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-sdk",
+ "iota-types",
+ "move-core-types",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "shared-crypto",
+ "telemetry-subscribers",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-bridge-indexer"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "backoff",
+ "bcs",
+ "bin-version",
+ "clap",
+ "diesel",
+ "diesel-async",
+ "diesel_migrations",
+ "ethers",
+ "futures",
+ "hex-literal 0.3.4",
+ "iota-bridge",
+ "iota-config",
+ "iota-data-ingestion-core",
+ "iota-indexer",
+ "iota-indexer-builder",
+ "iota-json-rpc-types",
+ "iota-metrics",
+ "iota-pg-db",
+ "iota-sdk",
+ "iota-test-transaction-builder",
+ "iota-types",
+ "prometheus",
+ "rayon",
+ "serde",
+ "serde_json",
+ "serde_yaml 0.8.26",
+ "strum_macros 0.24.3",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "test-cluster",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-cluster-test"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "clap",
+ "derive_more 1.0.0",
+ "fastcrypto",
+ "futures",
+ "iota-config",
+ "iota-core",
+ "iota-faucet",
+ "iota-graphql-rpc",
+ "iota-indexer",
+ "iota-json",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-move-build",
+ "iota-pg-db",
+ "iota-sdk",
+ "iota-swarm",
+ "iota-swarm-config",
+ "iota-test-transaction-builder",
+ "iota-types",
+ "jsonrpsee",
+ "move-core-types",
+ "prometheus",
+ "regex",
+ "reqwest 0.12.9",
+ "serde_json",
+ "shared-crypto",
+ "telemetry-subscribers",
+ "tempfile",
+ "test-cluster",
+ "tokio",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tracing",
+ "uuid 1.2.2",
+]
+
+[[package]]
+name = "iota-common"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "fastcrypto",
+ "futures",
+ "iota-metrics",
+ "iota-tls",
+ "iota-types",
+ "parking_lot 0.12.3",
+ "prometheus",
+ "reqwest 0.12.9",
+ "snap",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-config"
+version = "0.0.0"
+dependencies = [
+ "anemo",
+ "anyhow",
+ "bcs",
+ "clap",
+ "consensus-config",
+ "csv",
+ "dirs 4.0.0",
+ "fastcrypto",
+ "insta",
+ "iota-common",
+ "iota-keys",
+ "iota-protocol-config",
+ "iota-rpc-api",
+ "iota-types",
+ "move-vm-config",
+ "object_store",
+ "once_cell",
+ "prometheus",
+ "rand 0.8.5",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_with 3.9.0",
+ "serde_yaml 0.8.26",
+ "tempfile",
+ "tracing",
+]
+
+[[package]]
+name = "iota-core"
+version = "0.1.0"
+dependencies = [
+ "anemo",
+ "anyhow",
+ "arc-swap",
+ "async-trait",
+ "axum 0.7.5",
+ "bcs",
+ "bincode",
+ "bytes",
+ "clap",
+ "consensus-config",
+ "consensus-core",
+ "count-min-sketch",
+ "criterion",
+ "dashmap",
+ "diffy",
+ "either",
+ "enum_dispatch",
+ "expect-test",
+ "eyre",
+ "fastcrypto",
+ "fastcrypto-tbls",
+ "fastcrypto-zkp",
+ "fs_extra",
+ "futures",
+ "im",
+ "iota-archival",
+ "iota-authority-aggregation",
+ "iota-common",
+ "iota-config",
+ "iota-execution",
+ "iota-framework",
+ "iota-genesis-builder",
+ "iota-json-rpc-types",
+ "iota-macros",
+ "iota-metrics",
+ "iota-move",
+ "iota-move-build",
+ "iota-network",
+ "iota-network-stack",
+ "iota-protocol-config",
+ "iota-simulator",
+ "iota-storage",
+ "iota-swarm-config",
+ "iota-test-transaction-builder",
+ "iota-tls",
+ "iota-transaction-checks",
+ "iota-types",
+ "itertools 0.13.0",
+ "lru 0.10.0",
+ "mockall",
+ "moka",
+ "more-asserts",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-core-types",
+ "move-package",
+ "move-symbol-pool",
+ "nonempty 0.9.0",
+ "num-bigint 0.4.4",
+ "num_cpus",
+ "object_store",
+ "once_cell",
+ "parking_lot 0.12.3",
+ "pprof",
+ "pretty_assertions",
+ "prometheus",
+ "rand 0.8.5",
+ "rayon",
+ "reqwest 0.12.9",
+ "roaring",
+ "rstest",
+ "scopeguard",
+ "serde",
+ "serde-reflection",
+ "serde_json",
+ "serde_with 3.9.0",
+ "serde_yaml 0.8.26",
+ "shared-crypto",
+ "simple_moving_average",
+ "static_assertions",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "test-fuzz",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "twox-hash",
+ "typed-store",
+]
+
+[[package]]
+name = "iota-cost"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "insta",
+ "iota-config",
+ "iota-json-rpc-types",
+ "iota-move-build",
+ "iota-swarm-config",
+ "iota-test-transaction-builder",
+ "iota-types",
+ "move-cli",
+ "move-disassembler",
+ "serde",
+ "strum 0.24.1",
+ "strum_macros 0.24.3",
+ "test-cluster",
+ "tokio",
+]
+
+[[package]]
+name = "iota-data-ingestion"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "backoff",
+ "base64-url",
+ "bcs",
+ "byteorder",
+ "bytes",
+ "futures",
+ "iota-archival",
+ "iota-data-ingestion-core",
+ "iota-kvstore",
+ "iota-metrics",
+ "iota-storage",
+ "iota-types",
+ "notify",
+ "object_store",
+ "prometheus",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "serde_yaml 0.8.26",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "iota-data-ingestion-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "backoff",
+ "bcs",
+ "futures",
+ "iota-metrics",
+ "iota-protocol-config",
+ "iota-rpc-api",
+ "iota-storage",
+ "iota-types",
+ "notify",
+ "object_store",
+ "prometheus",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "iota-deepbook-indexer"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum 0.7.5",
+ "backoff",
+ "bcs",
+ "bigdecimal",
+ "bin-version",
+ "clap",
+ "diesel",
+ "diesel-async",
+ "futures",
+ "hex-literal 0.3.4",
+ "iota-config",
+ "iota-data-ingestion-core",
+ "iota-indexer-builder",
+ "iota-json-rpc-types",
+ "iota-metrics",
+ "iota-sdk",
+ "iota-types",
+ "prometheus",
+ "serde",
+ "serde_json",
+ "serde_yaml 0.8.26",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tower-http 0.5.2",
+ "tracing",
+]
+
+[[package]]
+name = "iota-default-config"
+version = "1.43.1"
+dependencies = [
+ "quote 1.0.37",
+ "syn 1.0.107",
+]
+
+[[package]]
+name = "iota-e2e-tests"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "assert_cmd",
+ "async-trait",
+ "bcs",
+ "clap",
+ "coset",
+ "expect-test",
+ "fastcrypto",
+ "fastcrypto-zkp",
+ "fs_extra",
+ "futures",
+ "indexmap 2.7.0",
+ "insta",
+ "iota",
+ "iota-config",
+ "iota-core",
+ "iota-framework",
+ "iota-json-rpc",
+ "iota-json-rpc-api",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-macros",
+ "iota-metrics",
+ "iota-move-build",
+ "iota-network",
+ "iota-node",
+ "iota-protocol-config",
+ "iota-rpc-api",
+ "iota-sdk",
+ "iota-sdk-types",
+ "iota-simulator",
+ "iota-storage",
+ "iota-swarm",
+ "iota-swarm-config",
+ "iota-test-transaction-builder",
+ "iota-tool",
+ "iota-transaction-builder 0.1.0",
+ "iota-types",
+ "jsonrpsee",
+ "move-binary-format",
+ "move-core-types",
+ "move-package",
+ "p256",
+ "passkey-authenticator",
+ "passkey-client",
+ "passkey-types",
+ "prometheus",
+ "prost 0.13.3",
+ "prost-types 0.13.3",
+ "rand 0.8.5",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "shared-crypto",
+ "telemetry-subscribers",
+ "tempfile",
+ "test-cluster",
+ "tokio",
+ "tokio-stream",
+ "tonic 0.12.3",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "iota-edge-proxy"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum 0.7.5",
+ "axum-extra",
+ "axum-server",
+ "bin-version",
+ "bytes",
+ "clap",
+ "futures",
+ "iota-metrics",
+ "prometheus",
+ "rand 0.8.5",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "serde_yaml 0.8.26",
+ "telemetry-subscribers",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "iota-enum-compat-util"
+version = "0.1.0"
+dependencies = [
+ "serde_yaml 0.8.26",
+]
+
+[[package]]
+name = "iota-execution"
+version = "0.1.0"
+dependencies = [
+ "cargo_metadata 0.15.4",
+ "iota-adapter-latest",
+ "iota-adapter-v0",
+ "iota-adapter-v1",
+ "iota-adapter-v2",
+ "iota-move-natives-latest",
+ "iota-move-natives-v0",
+ "iota-move-natives-v1",
+ "iota-move-natives-v2",
+ "iota-protocol-config",
+ "iota-types",
+ "iota-verifier-latest",
+ "iota-verifier-v0",
+ "iota-verifier-v1",
+ "iota-verifier-v2",
+ "move-abstract-interpreter",
+ "move-abstract-interpreter-v2",
+ "move-binary-format",
+ "move-bytecode-verifier",
+ "move-bytecode-verifier-meter",
+ "move-bytecode-verifier-v0",
+ "move-bytecode-verifier-v1",
+ "move-bytecode-verifier-v2",
+ "move-trace-format",
+ "move-vm-config",
+ "move-vm-runtime",
+ "move-vm-runtime-v0",
+ "move-vm-runtime-v1",
+ "move-vm-runtime-v2",
+ "petgraph 0.5.1",
+]
+
+[[package]]
+name = "iota-execution-cut"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "expect-test",
+ "tempfile",
+ "thiserror 1.0.69",
+ "toml 0.7.4",
+ "toml_edit 0.19.10",
+]
+
+[[package]]
+name = "iota-faucet"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-recursion",
+ "async-trait",
+ "axum 0.7.5",
+ "bin-version",
+ "clap",
+ "dashmap",
+ "eyre",
+ "futures",
+ "http 1.1.0",
+ "iota-config",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-metrics",
+ "iota-network-stack",
+ "iota-sdk",
+ "iota-types",
+ "once_cell",
+ "parking_lot 0.12.3",
+ "prometheus",
+ "reqwest 0.12.9",
+ "scopeguard",
+ "serde",
+ "serde_json",
+ "shared-crypto",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "test-cluster",
+ "thiserror 1.0.69",
+ "tokio",
+ "tonic 0.12.3",
+ "tower 0.4.13",
+ "tower-http 0.5.2",
+ "tower_governor",
+ "tracing",
+ "ttl_cache",
+ "typed-store",
+ "uuid 1.2.2",
+ "wiremock",
+]
+
+[[package]]
+name = "iota-field-count"
+version = "1.43.1"
+dependencies = [
+ "iota-field-count-derive",
+]
+
+[[package]]
+name = "iota-field-count-derive"
+version = "1.43.1"
+dependencies = [
+ "quote 1.0.37",
+ "syn 1.0.107",
+]
+
+[[package]]
+name = "iota-framework"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "iota-config",
+ "iota-move-build",
+ "iota-types",
+ "move-binary-format",
+ "move-compiler",
+ "move-core-types",
+ "move-package",
+ "once_cell",
+ "regex",
+ "serde",
+ "tempfile",
+ "tracing",
+]
+
+[[package]]
+name = "iota-framework-snapshot"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "bin-version",
+ "iota-framework",
+ "iota-move-build",
+ "iota-protocol-config",
+ "iota-types",
+ "move-package",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "iota-framework-tests"
+version = "0.1.0"
+dependencies = [
+ "datatest-stable",
+ "iota-adapter-latest",
+ "iota-config",
+ "iota-framework",
+ "iota-move",
+ "iota-move-build",
+ "iota-protocol-config",
+ "iota-types",
+ "iota-verifier-latest",
+ "move-bytecode-verifier",
+ "move-bytecode-verifier-meter",
+ "move-cli",
+ "move-package",
+ "move-unit-test",
+ "prometheus",
+]
+
+[[package]]
+name = "iota-genesis-builder"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "camino",
+ "fastcrypto",
+ "insta",
+ "iota-config",
+ "iota-execution",
+ "iota-framework",
+ "iota-framework-snapshot",
+ "iota-protocol-config",
+ "iota-simulator",
+ "iota-types",
+ "move-binary-format",
+ "move-core-types",
+ "prometheus",
+ "rand 0.8.5",
+ "serde",
+ "serde_with 3.9.0",
+ "serde_yaml 0.8.26",
+ "shared-crypto",
+ "tempfile",
+ "tracing",
+]
+
+[[package]]
+name = "iota-graphql-e2e-tests"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "datatest-stable",
+ "iota-graphql-rpc",
+ "iota-transactional-test-runner",
+ "msim",
+ "serde_json",
+ "telemetry-subscribers",
+ "tokio",
+]
+
+[[package]]
+name = "iota-graphql-rpc"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-graphql",
+ "async-graphql-axum",
+ "async-graphql-value",
+ "async-trait",
+ "axum 0.7.5",
+ "axum-extra",
+ "bcs",
+ "bin-version",
+ "chrono",
+ "clap",
+ "const-str",
+ "diesel",
+ "diesel-async",
+ "downcast",
+ "either",
+ "expect-test",
+ "fastcrypto",
+ "fastcrypto-zkp",
+ "futures",
+ "hex",
+ "http 1.1.0",
+ "hyper 1.5.2",
+ "im",
+ "insta",
+ "iota-default-config",
+ "iota-framework",
+ "iota-graphql-rpc-client",
+ "iota-graphql-rpc-headers",
+ "iota-indexer",
+ "iota-json-rpc",
+ "iota-json-rpc-types",
+ "iota-metrics",
+ "iota-move-build",
+ "iota-network-stack",
+ "iota-package-resolver",
+ "iota-pg-db",
+ "iota-protocol-config",
+ "iota-rpc-api",
+ "iota-sdk",
+ "iota-swarm-config",
+ "iota-test-transaction-builder",
+ "iota-types",
+ "itertools 0.13.0",
+ "lru 0.10.0",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-core-types",
+ "move-disassembler",
+ "move-ir-types",
+ "once_cell",
+ "prometheus",
+ "rand 0.8.5",
+ "regex",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "serde_yaml 0.8.26",
+ "shared-crypto",
+ "similar",
+ "simulacrum",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "test-cluster",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "toml 0.7.4",
+ "tower 0.4.13",
+ "tower-http 0.5.2",
+ "tracing",
+ "uuid 1.2.2",
+]
+
+[[package]]
+name = "iota-graphql-rpc-client"
+version = "0.1.0"
+dependencies = [
+ "async-graphql",
+ "axum 0.7.5",
+ "hyper 1.5.2",
+ "iota-graphql-rpc-headers",
+ "reqwest 0.12.9",
+ "serde_json",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "iota-graphql-rpc-headers"
+version = "0.1.0"
+dependencies = [
+ "axum 0.7.5",
+]
+
+[[package]]
+name = "iota-http"
+version = "0.0.0"
+dependencies = [
+ "axum 0.7.5",
+ "bytes",
+ "http 1.1.0",
+ "http-body 1.0.1",
+ "http-body-util",
+ "hyper 1.5.2",
+ "hyper-util",
+ "pin-project-lite",
+ "reqwest 0.12.9",
+ "socket2 0.5.6",
+ "tokio",
+ "tokio-rustls 0.26.0",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tower 0.4.13",
+ "tracing",
+]
+
+[[package]]
+name = "iota-indexer"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum 0.7.5",
+ "backoff",
+ "bb8",
+ "bcs",
+ "bytes",
+ "cached",
+ "chrono",
+ "clap",
+ "criterion",
+ "csv",
+ "dashmap",
+ "diesel",
+ "diesel-async",
+ "diesel_migrations",
+ "fastcrypto",
+ "futures",
+ "hex",
+ "indicatif",
+ "iota-archival",
+ "iota-config",
+ "iota-core",
+ "iota-data-ingestion-core",
+ "iota-json",
+ "iota-json-rpc",
+ "iota-json-rpc-api",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-metrics",
+ "iota-move-build",
+ "iota-open-rpc",
+ "iota-package-resolver",
+ "iota-pg-db",
+ "iota-protocol-config",
+ "iota-rpc-api",
+ "iota-sdk",
+ "iota-snapshot",
+ "iota-storage",
+ "iota-swarm-config",
+ "iota-synthetic-ingestion",
+ "iota-test-transaction-builder",
+ "iota-transaction-builder 0.0.0",
+ "iota-types",
+ "itertools 0.13.0",
+ "jsonrpsee",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-core-types",
+ "ntest",
+ "object_store",
+ "prometheus",
+ "rand 0.8.5",
+ "rayon",
+ "regex",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "simulacrum",
+ "strum 0.24.1",
+ "strum_macros 0.24.3",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "test-cluster",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-stream",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "toml 0.7.4",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "iota-indexer-alt"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bcs",
+ "clap",
+ "dashmap",
+ "diesel",
+ "diesel-async",
+ "diesel_migrations",
+ "futures",
+ "hex",
+ "iota-default-config",
+ "iota-field-count",
+ "iota-indexer-alt-framework",
+ "iota-indexer-alt-metrics",
+ "iota-indexer-alt-schema",
+ "iota-pg-db",
+ "iota-protocol-config",
+ "iota-synthetic-ingestion",
+ "iota-types",
+ "itertools 0.13.0",
+ "prometheus",
+ "rand 0.8.5",
+ "serde",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "toml 0.7.4",
+ "tracing",
+ "wiremock",
+]
+
+[[package]]
+name = "iota-indexer-alt-e2e-tests"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "datatest-stable",
+ "diesel",
+ "diesel-async",
+ "iota-indexer-alt",
+ "iota-indexer-alt-framework",
+ "iota-indexer-alt-jsonrpc",
+ "iota-pg-db",
+ "iota-transactional-test-runner",
+ "msim",
+ "prometheus",
+ "reqwest 0.12.9",
+ "serde_json",
+ "telemetry-subscribers",
+ "tokio",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url",
+]
+
+[[package]]
+name = "iota-indexer-alt-framework"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum 0.7.5",
+ "backoff",
+ "bb8",
+ "chrono",
+ "clap",
+ "diesel",
+ "diesel-async",
+ "diesel_migrations",
+ "futures",
+ "iota-field-count",
+ "iota-indexer-alt-metrics",
+ "iota-pg-db",
+ "iota-storage",
+ "iota-types",
+ "prometheus",
+ "rand 0.8.5",
+ "reqwest 0.12.9",
+ "serde",
+ "telemetry-subscribers",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-stream",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tracing",
+ "url",
+ "wiremock",
+]
+
+[[package]]
+name = "iota-indexer-alt-jsonrpc"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-graphql",
+ "async-trait",
+ "axum 0.7.5",
+ "bcs",
+ "clap",
+ "diesel",
+ "diesel-async",
+ "fastcrypto",
+ "futures",
+ "iota-default-config",
+ "iota-indexer-alt-metrics",
+ "iota-indexer-alt-schema",
+ "iota-json",
+ "iota-json-rpc-types",
+ "iota-open-rpc",
+ "iota-open-rpc-macros",
+ "iota-package-resolver",
+ "iota-pg-db",
+ "iota-types",
+ "jsonrpsee",
+ "move-core-types",
+ "pin-project-lite",
+ "prometheus",
+ "reqwest 0.12.9",
+ "schemars",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "telemetry-subscribers",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "toml 0.7.4",
+ "tower-layer",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "iota-indexer-alt-metrics"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "axum 0.7.5",
+ "clap",
+ "iota-pg-db",
+ "prometheus",
+ "tokio",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tracing",
+]
+
+[[package]]
+name = "iota-indexer-alt-restorer"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "clap",
+ "diesel",
+ "diesel-async",
+ "futures",
+ "indicatif",
+ "iota-archival",
+ "iota-config",
+ "iota-core",
+ "iota-field-count",
+ "iota-indexer-alt-framework",
+ "iota-indexer-alt-schema",
+ "iota-pg-db",
+ "iota-snapshot",
+ "iota-storage",
+ "iota-types",
+ "object_store",
+ "prometheus",
+ "telemetry-subscribers",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-indexer-alt-schema"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "diesel",
+ "diesel_migrations",
+ "iota-field-count",
+ "iota-protocol-config",
+ "iota-types",
+ "serde",
+]
+
+[[package]]
+name = "iota-indexer-builder"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "futures",
+ "iota-data-ingestion-core",
+ "iota-indexer-builder",
+ "iota-metrics",
+ "iota-sdk",
+ "iota-types",
+ "prometheus",
+ "tap",
+ "telemetry-subscribers",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-json"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "fastcrypto",
+ "iota-framework",
+ "iota-move-build",
+ "iota-types",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-core-types",
+ "schemars",
+ "serde",
+ "serde_json",
+ "test-fuzz",
+]
+
+[[package]]
+name = "iota-json-rpc"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "arc-swap",
+ "async-trait",
+ "axum 0.7.5",
+ "backoff",
+ "base64 0.21.7",
+ "bcs",
+ "cached",
+ "chrono",
+ "expect-test",
+ "eyre",
+ "fastcrypto",
+ "fastcrypto-zkp",
+ "futures",
+ "http-body 0.4.5",
+ "hyper 1.5.2",
+ "im",
+ "indexmap 2.7.0",
+ "iota-config",
+ "iota-core",
+ "iota-json",
+ "iota-json-rpc-api",
+ "iota-json-rpc-types",
+ "iota-macros",
+ "iota-metrics",
+ "iota-open-rpc",
+ "iota-open-rpc-macros",
+ "iota-protocol-config",
+ "iota-service",
+ "iota-storage",
+ "iota-transaction-builder 0.0.0",
+ "iota-types",
+ "itertools 0.13.0",
+ "jsonrpsee",
+ "mockall",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-core-types",
+ "move-package",
+ "once_cell",
+ "prometheus",
+ "serde",
+ "serde_json",
+ "shared-crypto",
+ "signature 1.6.4",
+ "tap",
+ "telemetry-subscribers",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tower 0.4.13",
+ "tower-http 0.5.2",
+ "tracing",
+ "typed-store-error",
+]
+
+[[package]]
+name = "iota-json-rpc-api"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "fastcrypto",
+ "iota-json",
+ "iota-json-rpc-types",
+ "iota-metrics",
+ "iota-open-rpc",
+ "iota-open-rpc-macros",
+ "iota-types",
+ "jsonrpsee",
+ "once_cell",
+ "prometheus",
+ "tap",
+ "tracing",
+]
+
+[[package]]
+name = "iota-json-rpc-tests"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bcs",
+ "hyper 1.5.2",
+ "iota-config",
+ "iota-core",
+ "iota-json",
+ "iota-json-rpc",
+ "iota-json-rpc-api",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-macros",
+ "iota-move-build",
+ "iota-open-rpc",
+ "iota-open-rpc-macros",
+ "iota-protocol-config",
+ "iota-sdk",
+ "iota-simulator",
+ "iota-swarm-config",
+ "iota-test-transaction-builder",
+ "iota-types",
+ "jsonrpsee",
+ "move-core-types",
+ "move-package",
+ "prometheus",
+ "rand 0.8.5",
+ "reqwest 0.12.9",
+ "shared-crypto",
+ "telemetry-subscribers",
+ "test-cluster",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-json-rpc-types"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "colored",
+ "enum_dispatch",
+ "fastcrypto",
+ "iota-enum-compat-util",
+ "iota-json",
+ "iota-macros",
+ "iota-metrics",
+ "iota-package-resolver",
+ "iota-protocol-config",
+ "iota-types",
+ "itertools 0.13.0",
+ "json_to_table",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-core-types",
+ "move-disassembler",
+ "move-ir-types",
+ "schemars",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "tabled",
+ "tracing",
+]
+
+[[package]]
+name = "iota-keys"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bip32",
+ "fastcrypto",
+ "iota-types",
+ "rand 0.8.5",
+ "regex",
+ "serde",
+ "serde_json",
+ "shared-crypto",
+ "signature 1.6.4",
+ "slip10_ed25519",
+ "tempfile",
+ "tiny-bip39",
+]
+
+[[package]]
+name = "iota-kvstore"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "base64 0.21.7",
+ "bcs",
+ "gcp_auth",
+ "http 1.1.0",
+ "iota-data-ingestion-core",
+ "iota-types",
+ "prometheus",
+ "prost 0.13.3",
+ "prost-types 0.13.3",
+ "serde",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tonic 0.12.3",
+ "tracing",
+]
+
+[[package]]
+name = "iota-light-client"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bcs",
+ "bytes",
+ "clap",
+ "env_logger",
+ "iota-config",
+ "iota-json-rpc-types",
+ "iota-package-resolver",
+ "iota-rpc-api",
+ "iota-sdk",
+ "iota-types",
+ "log",
+ "move-binary-format",
+ "move-core-types",
+ "object_store",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "serde_yaml 0.8.26",
+ "tokio",
+ "url",
+]
+
+[[package]]
+name = "iota-macros"
+version = "0.7.0"
+dependencies = [
+ "futures",
+ "iota-proc-macros",
+ "once_cell",
+ "tracing",
+]
+
+[[package]]
+name = "iota-metric-checker"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "backoff",
+ "base64 0.21.7",
+ "chrono",
+ "clap",
+ "humantime",
+ "once_cell",
+ "prometheus-http-query",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_yaml 0.9.21",
+ "strum_macros 0.24.3",
+ "telemetry-subscribers",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-metrics"
+version = "0.7.0"
+dependencies = [
+ "async-trait",
+ "axum 0.7.5",
+ "dashmap",
+ "futures",
+ "once_cell",
+ "parking_lot 0.12.3",
+ "prometheus",
+ "prometheus-closure-metric",
+ "scopeguard",
+ "simple-server-timing-header",
+ "tap",
+ "tokio",
+ "tracing",
+ "uuid 1.2.2",
+]
+
+[[package]]
+name = "iota-move"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "assert_cmd",
+ "better_any",
+ "bin-version",
+ "clap",
+ "colored",
+ "datatest-stable",
+ "fs_extra",
+ "futures",
+ "insta",
+ "insta-cmd",
+ "iota-core",
+ "iota-macros",
+ "iota-metrics",
+ "iota-move-build",
+ "iota-move-natives-latest",
+ "iota-node",
+ "iota-protocol-config",
+ "iota-simulator",
+ "iota-types",
+ "jemalloc-ctl",
+ "jsonrpsee",
+ "move-binary-format",
+ "move-bytecode-source-map",
+ "move-cli",
+ "move-compiler",
+ "move-disassembler",
+ "move-ir-types",
+ "move-package",
+ "move-unit-test",
+ "move-vm-runtime",
+ "once_cell",
+ "prometheus",
+ "rand 0.8.5",
+ "serde_json",
+ "serde_yaml 0.8.26",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "walkdir",
+]
+
+[[package]]
+name = "iota-move-build"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "datatest-stable",
+ "fastcrypto",
+ "iota-package-management",
+ "iota-protocol-config",
+ "iota-types",
+ "iota-verifier-latest",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-bytecode-verifier",
+ "move-command-line-common",
+ "move-compiler",
+ "move-core-types",
+ "move-ir-types",
+ "move-package",
+ "move-symbol-pool",
+ "serde-reflection",
+ "tempfile",
+]
+
+[[package]]
+name = "iota-move-lsp"
+version = "1.43.1"
+dependencies = [
+ "bin-version",
+ "clap",
+ "move-analyzer",
+ "tokio",
+]
+
+[[package]]
+name = "iota-move-natives-latest"
+version = "0.1.0"
+dependencies = [
+ "bcs",
+ "better_any",
+ "fastcrypto",
+ "fastcrypto-vdf",
+ "fastcrypto-zkp",
+ "indexmap 2.7.0",
+ "iota-protocol-config",
+ "iota-types",
+ "move-binary-format",
+ "move-core-types",
+ "move-stdlib-natives",
+ "move-vm-runtime",
+ "move-vm-types",
+ "rand 0.8.5",
+ "smallvec",
+ "tracing",
+]
+
+[[package]]
+name = "iota-move-natives-v0"
+version = "0.1.0"
+dependencies = [
+ "bcs",
+ "better_any",
+ "fastcrypto",
+ "fastcrypto-zkp",
+ "iota-protocol-config",
+ "iota-types",
+ "linked-hash-map",
+ "move-binary-format",
+ "move-core-types",
+ "move-stdlib-natives-v0",
+ "move-vm-runtime-v0",
+ "move-vm-types",
+ "smallvec",
+ "tracing",
+]
+
+[[package]]
+name = "iota-move-natives-v1"
+version = "0.1.0"
+dependencies = [
+ "bcs",
+ "better_any",
+ "fastcrypto",
+ "fastcrypto-zkp",
+ "iota-protocol-config",
+ "iota-types",
+ "linked-hash-map",
+ "move-binary-format",
+ "move-core-types",
+ "move-stdlib-natives-v1",
+ "move-vm-runtime-v1",
+ "move-vm-types",
+ "smallvec",
+ "tracing",
+]
+
+[[package]]
+name = "iota-move-natives-v2"
+version = "0.1.0"
+dependencies = [
+ "bcs",
+ "better_any",
+ "fastcrypto",
+ "fastcrypto-zkp",
+ "indexmap 2.7.0",
+ "iota-protocol-config",
+ "iota-types",
+ "move-binary-format",
+ "move-core-types",
+ "move-stdlib-natives-v2",
+ "move-vm-runtime-v2",
+ "move-vm-types",
+ "smallvec",
+ "tracing",
+]
+
+[[package]]
+name = "iota-mvr-graphql-e2e-tests"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "datatest-stable",
+ "iota-mvr-graphql-rpc",
+ "iota-transactional-test-runner",
+ "msim",
+ "serde_json",
+ "telemetry-subscribers",
+ "tokio",
+]
+
+[[package]]
+name = "iota-mvr-graphql-rpc"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-graphql",
+ "async-graphql-axum",
+ "async-graphql-value",
+ "async-trait",
+ "axum 0.7.5",
+ "axum-extra",
+ "bcs",
+ "bin-version",
+ "chrono",
+ "clap",
+ "const-str",
+ "diesel",
+ "diesel-async",
+ "downcast",
+ "either",
+ "expect-test",
+ "fastcrypto",
+ "fastcrypto-zkp",
+ "futures",
+ "hex",
+ "http 1.1.0",
+ "hyper 1.5.2",
+ "im",
+ "insta",
+ "iota-default-config",
+ "iota-framework",
+ "iota-graphql-rpc-client",
+ "iota-graphql-rpc-headers",
+ "iota-indexer",
+ "iota-json-rpc",
+ "iota-json-rpc-types",
+ "iota-metrics",
+ "iota-move-build",
+ "iota-network-stack",
+ "iota-package-resolver",
+ "iota-pg-db",
+ "iota-protocol-config",
+ "iota-rpc-api",
+ "iota-sdk",
+ "iota-swarm-config",
+ "iota-test-transaction-builder",
+ "iota-types",
+ "itertools 0.13.0",
+ "lru 0.10.0",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-core-types",
+ "move-disassembler",
+ "move-ir-types",
+ "once_cell",
+ "prometheus",
+ "rand 0.8.5",
+ "regex",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "serde_yaml 0.8.26",
+ "shared-crypto",
+ "similar",
+ "simulacrum",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "test-cluster",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "toml 0.7.4",
+ "tower 0.4.13",
+ "tower-http 0.5.2",
+ "tracing",
+ "uuid 1.2.2",
+]
+
+[[package]]
+name = "iota-network"
+version = "0.0.0"
+dependencies = [
+ "anemo",
+ "anemo-build",
+ "anemo-tower",
+ "anyhow",
+ "arc-swap",
+ "bcs",
+ "bytes",
+ "dashmap",
+ "ed25519-consensus",
+ "fastcrypto",
+ "fastcrypto-tbls",
+ "futures",
+ "governor",
+ "iota-archival",
+ "iota-common",
+ "iota-config",
+ "iota-macros",
+ "iota-metrics",
+ "iota-network-stack",
+ "iota-storage",
+ "iota-swarm-config",
+ "iota-types",
+ "prometheus",
+ "rand 0.8.5",
+ "serde",
+ "shared-crypto",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tonic 0.12.3",
+ "tonic-build",
+ "tower 0.4.13",
+ "tracing",
+]
+
+[[package]]
+name = "iota-network-stack"
+version = "0.2.0"
+dependencies = [
+ "anemo",
+ "anemo-tower",
+ "async-stream",
+ "bcs",
+ "bytes",
+ "eyre",
+ "futures",
+ "http 1.1.0",
+ "http-body 1.0.1",
+ "hyper-rustls 0.27.2",
+ "hyper-util",
+ "iota-http",
+ "multiaddr",
+ "once_cell",
+ "pin-project-lite",
+ "prometheus",
+ "serde",
+ "snap",
+ "tokio",
+ "tokio-rustls 0.26.0",
+ "tokio-stream",
+ "tonic 0.12.3",
+ "tonic-health",
+ "tower 0.4.13",
+ "tower-http 0.5.2",
+ "tracing",
+]
+
+[[package]]
+name = "iota-node"
+version = "1.43.1"
+dependencies = [
+ "anemo",
+ "anemo-tower",
+ "anyhow",
+ "arc-swap",
+ "axum 0.7.5",
+ "base64 0.21.7",
+ "bcs",
+ "bin-version",
+ "clap",
+ "consensus-core",
+ "fastcrypto",
+ "fastcrypto-zkp",
+ "futures",
+ "humantime",
+ "iota-archival",
+ "iota-common",
+ "iota-config",
+ "iota-core",
+ "iota-http",
+ "iota-json-rpc",
+ "iota-json-rpc-api",
+ "iota-macros",
+ "iota-metrics",
+ "iota-network",
+ "iota-network-stack",
+ "iota-protocol-config",
+ "iota-rpc-api",
+ "iota-service",
+ "iota-simulator",
+ "iota-snapshot",
+ "iota-storage",
+ "iota-telemetry",
+ "iota-tls",
+ "iota-types",
+ "move-vm-profiler",
+ "parking_lot 0.12.3",
+ "prometheus",
+ "reqwest 0.12.9",
+ "serde",
+ "tap",
+ "telemetry-subscribers",
+ "tokio",
+ "tower 0.4.13",
+ "tracing",
+ "typed-store",
+ "url",
+]
+
+[[package]]
+name = "iota-open-rpc"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "clap",
+ "fastcrypto",
+ "iota-json",
+ "iota-json-rpc",
+ "iota-json-rpc-api",
+ "iota-json-rpc-types",
+ "iota-protocol-config",
+ "iota-types",
+ "move-core-types",
+ "pretty_assertions",
+ "rand 0.8.5",
+ "schemars",
+ "serde",
+ "serde_json",
+ "tokio",
+ "versions",
+]
+
+[[package]]
+name = "iota-open-rpc-macros"
+version = "0.1.0"
+dependencies = [
+ "derive-syn-parse",
+ "itertools 0.13.0",
+ "proc-macro2 1.0.87",
+ "quote 1.0.37",
+ "syn 1.0.107",
+ "unescape",
+]
+
+[[package]]
+name = "iota-oracle"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "chrono",
+ "clap",
+ "dirs 4.0.0",
+ "iota-config",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-metrics",
+ "iota-move-build",
+ "iota-sdk",
+ "iota-types",
+ "jsonpath_lib",
+ "once_cell",
+ "prometheus",
+ "rand 0.8.5",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "shared-crypto",
+ "tap",
+ "telemetry-subscribers",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-package-dump"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "cynic",
+ "cynic-codegen",
+ "fastcrypto",
+ "iota-types",
+ "move-core-types",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
+name = "iota-package-management"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "iota-json-rpc-types",
+ "iota-sdk",
+ "iota-types",
+ "move-core-types",
+ "move-package",
+ "move-symbol-pool",
+ "thiserror 1.0.69",
+ "tracing",
+]
+
+[[package]]
+name = "iota-package-resolver"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bcs",
+ "eyre",
+ "hyper 1.5.2",
+ "insta",
+ "iota-move-build",
+ "iota-rpc-api",
+ "iota-types",
+ "lru 0.10.0",
+ "move-binary-format",
+ "move-command-line-common",
+ "move-compiler",
+ "move-core-types",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tower 0.4.13",
+]
+
+[[package]]
+name = "iota-pg-db"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "bb8",
+ "clap",
+ "diesel",
+ "diesel-async",
+ "diesel_migrations",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "iota-proc-macros"
+version = "0.7.0"
+dependencies = [
+ "iota-enum-compat-util",
+ "msim-macros",
+ "proc-macro2 1.0.87",
+ "quote 1.0.37",
+ "syn 2.0.87",
+]
+
+[[package]]
+name = "iota-protocol-config"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "insta",
+ "iota-protocol-config-macros",
+ "move-vm-config",
+ "schemars",
+ "serde",
+ "serde-env",
+ "serde_with 3.9.0",
+ "tracing",
+]
+
+[[package]]
+name = "iota-protocol-config-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2 1.0.87",
+ "quote 1.0.37",
+ "syn 1.0.107",
+]
+
+[[package]]
+name = "iota-proxy"
+version = "0.0.2"
+dependencies = [
+ "anyhow",
+ "axum 0.7.5",
+ "axum-extra",
+ "axum-server",
+ "bin-version",
+ "bytes",
+ "clap",
+ "const-str",
+ "fastcrypto",
+ "futures",
+ "hex",
+ "hyper 1.5.2",
+ "iota-metrics",
+ "iota-tls",
+ "iota-types",
+ "ipnetwork",
+ "itertools 0.13.0",
+ "mime",
+ "multiaddr",
+ "once_cell",
+ "prometheus",
+ "prost 0.13.3",
+ "prost-build",
+ "protobuf",
+ "rand 0.8.5",
+ "reqwest 0.12.9",
+ "rustls 0.23.20",
+ "rustls-pemfile 2.1.2",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "serde_yaml 0.8.26",
+ "snap",
+ "telemetry-subscribers",
+ "tokio",
+ "tower 0.4.13",
+ "tower-http 0.5.2",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "iota-replay"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-recursion",
+ "async-trait",
+ "bcs",
+ "clap",
+ "futures",
+ "http 1.1.0",
+ "iota-config",
+ "iota-core",
+ "iota-execution",
+ "iota-framework",
+ "iota-json-rpc",
+ "iota-json-rpc-api",
+ "iota-json-rpc-types",
+ "iota-protocol-config",
+ "iota-sdk",
+ "iota-storage",
+ "iota-transaction-checks",
+ "iota-types",
+ "jsonrpsee",
+ "lru 0.10.0",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-core-types",
+ "move-vm-config",
+ "parking_lot 0.12.3",
+ "prometheus",
+ "rand 0.8.5",
+ "regex",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "serde_yaml 0.8.26",
+ "shared-crypto",
+ "shellexpand",
+ "similar",
+ "tabled",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tracing",
+]
+
+[[package]]
+name = "iota-rosetta"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum 0.7.5",
+ "axum-extra",
+ "bcs",
+ "clap",
+ "eyre",
+ "fastcrypto",
+ "futures",
+ "hyper 1.5.2",
+ "iota-config",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-metrics",
+ "iota-move-build",
+ "iota-node",
+ "iota-sdk",
+ "iota-swarm-config",
+ "iota-types",
+ "lru 0.10.0",
+ "move-cli",
+ "move-core-types",
+ "once_cell",
+ "quick-js",
+ "rand 0.8.5",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "shared-crypto",
+ "signature 1.6.4",
+ "strum 0.24.1",
+ "strum_macros 0.24.3",
+ "telemetry-subscribers",
+ "tempfile",
+ "test-cluster",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "typed-store",
+]
+
+[[package]]
+name = "iota-rpc-api"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-stream",
+ "async-trait",
+ "axum 0.7.5",
+ "base64 0.21.7",
+ "bcs",
+ "bytes",
+ "diffy",
+ "fastcrypto",
+ "http 1.1.0",
+ "iota-network-stack",
+ "iota-protocol-config",
+ "iota-sdk-types",
+ "iota-transaction-builder 0.1.0",
+ "iota-types",
+ "itertools 0.13.0",
+ "mime",
+ "move-binary-format",
+ "move-core-types",
+ "paste",
+ "prometheus",
+ "proptest",
+ "prost 0.13.3",
+ "prost-types 0.13.3",
+ "protox",
+ "rand 0.8.5",
+ "roaring",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "tap",
+ "test-strategy",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-stream",
+ "tonic 0.12.3",
+ "tonic-build",
+ "tonic-health",
+ "tonic-reflection",
+ "tower 0.4.13",
+ "tracing",
+ "url",
+ "walkdir",
+]
+
+[[package]]
+name = "iota-rpc-loadgen"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "clap",
+ "dashmap",
+ "dirs 4.0.0",
+ "futures",
+ "iota-json-rpc",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-sdk",
+ "iota-types",
+ "itertools 0.13.0",
+ "serde",
+ "serde_json",
+ "shared-crypto",
+ "shellexpand",
+ "strum 0.24.1",
+ "strum_macros 0.24.3",
+ "telemetry-subscribers",
+ "test-cluster",
+ "tokio",
+ "tonic 0.12.3",
+ "tracing",
+]
+
+[[package]]
+name = "iota-sdk"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-recursion",
+ "async-trait",
+ "base64 0.21.7",
+ "bcs",
+ "clap",
+ "colored",
+ "dirs 4.0.0",
+ "fastcrypto",
+ "futures",
+ "futures-core",
+ "iota-config",
+ "iota-json",
+ "iota-json-rpc-api",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-transaction-builder 0.0.0",
+ "iota-types",
+ "jsonrpsee",
+ "move-core-types",
+ "rand 0.8.5",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "shared-crypto",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-sdk-types"
+version = "0.0.1"
+dependencies = [
+ "base64ct",
+ "bcs",
+ "blake2",
+ "bnum",
+ "bs58 0.5.1",
+ "hex",
+ "proptest",
+ "roaring",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "serde_with 3.9.0",
+ "test-strategy",
+ "winnow 0.6.20",
+]
+
+[[package]]
+name = "iota-security-watchdog"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "arrow-array",
+ "async-trait",
+ "chrono",
+ "clap",
+ "env_logger",
+ "iota-metrics",
+ "lexical-util",
+ "prometheus",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "snowflake-api",
+ "telemetry-subscribers",
+ "tokio",
+ "tokio-cron-scheduler",
+ "tracing",
+ "uuid 1.2.2",
+]
+
+[[package]]
+name = "iota-service"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "axum 0.7.5",
+ "iota-metrics",
+ "prometheus",
+ "serde",
+ "serde_json",
+ "simple-server-timing-header",
+ "telemetry-subscribers",
+ "tokio",
+ "tower 0.4.13",
+ "tracing",
+]
+
+[[package]]
+name = "iota-simulator"
+version = "0.7.0"
+dependencies = [
+ "anemo",
+ "anemo-tower",
+ "bcs",
+ "fastcrypto",
+ "iota-framework",
+ "iota-move-build",
+ "iota-network-stack",
+ "iota-types",
+ "lru 0.10.0",
+ "move-package",
+ "msim",
+ "rand 0.8.5",
+ "serde",
+ "telemetry-subscribers",
+ "tempfile",
+ "tower 0.4.13",
+ "tracing",
+]
+
+[[package]]
+name = "iota-single-node-benchmark"
+version = "1.43.1"
+dependencies = [
+ "async-trait",
+ "bcs",
+ "clap",
+ "fs_extra",
+ "futures",
+ "iota-config",
+ "iota-core",
+ "iota-macros",
+ "iota-move-build",
+ "iota-protocol-config",
+ "iota-simulator",
+ "iota-storage",
+ "iota-test-transaction-builder",
+ "iota-transaction-checks",
+ "iota-types",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-core-types",
+ "move-package",
+ "move-symbol-pool",
+ "once_cell",
+ "prometheus",
+ "serde",
+ "serde_json",
+ "strum 0.24.1",
+ "strum_macros 0.24.3",
+ "telemetry-subscribers",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-snapshot"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bcs",
+ "byteorder",
+ "bytes",
+ "fastcrypto",
+ "futures",
+ "indicatif",
+ "integer-encoding",
+ "iota-config",
+ "iota-core",
+ "iota-indexer-alt-framework",
+ "iota-protocol-config",
+ "iota-storage",
+ "iota-types",
+ "num_enum 0.6.1",
+ "object_store",
+ "prometheus",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+]
+
+[[package]]
+name = "iota-source-validation"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "colored",
+ "expect-test",
+ "flate2",
+ "futures",
+ "iota-json-rpc-types",
+ "iota-move-build",
+ "iota-package-management",
+ "iota-sdk",
+ "iota-test-transaction-builder",
+ "iota-types",
+ "move-binary-format",
+ "move-bytecode-source-map",
+ "move-command-line-common",
+ "move-compiler",
+ "move-core-types",
+ "move-package",
+ "move-symbol-pool",
+ "rand 0.8.5",
+ "tar",
+ "tempfile",
+ "test-cluster",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "ureq",
+]
+
+[[package]]
+name = "iota-source-validation-service"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum 0.7.5",
+ "bin-version",
+ "clap",
+ "expect-test",
+ "fs_extra",
+ "hyper 1.5.2",
+ "iota",
+ "iota-json-rpc-types",
+ "iota-metrics",
+ "iota-move",
+ "iota-move-build",
+ "iota-sdk",
+ "iota-source-validation",
+ "jsonrpsee",
+ "move-compiler",
+ "move-core-types",
+ "move-package",
+ "move-symbol-pool",
+ "prometheus",
+ "reqwest 0.12.9",
+ "serde",
+ "telemetry-subscribers",
+ "tempfile",
+ "test-cluster",
+ "tokio",
+ "toml 0.7.4",
+ "tower 0.4.13",
+ "tower-http 0.5.2",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "iota-storage"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum 0.7.5",
+ "backoff",
+ "base64-url",
+ "bcs",
+ "byteorder",
+ "bytes",
+ "chrono",
+ "clap",
+ "criterion",
+ "eyre",
+ "fastcrypto",
+ "futures",
+ "hyper 1.5.2",
+ "hyper-rustls 0.27.2",
+ "indicatif",
+ "integer-encoding",
+ "iota-config",
+ "iota-json-rpc-types",
+ "iota-macros",
+ "iota-metrics",
+ "iota-protocol-config",
+ "iota-simulator",
+ "iota-test-transaction-builder",
+ "iota-types",
+ "itertools 0.13.0",
+ "lru 0.10.0",
+ "moka",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-core-types",
+ "num_cpus",
+ "num_enum 0.6.1",
+ "object_store",
+ "once_cell",
+ "parking_lot 0.12.3",
+ "percent-encoding",
+ "pretty_assertions",
+ "prometheus",
+ "reqwest 0.12.9",
+ "serde",
+ "serde_json",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "typed-store",
+ "url",
+ "zstd 0.12.3+zstd.1.5.2",
+]
+
+[[package]]
+name = "iota-surfer"
+version = "1.43.1"
+dependencies = [
+ "async-trait",
+ "bcs",
+ "clap",
+ "futures",
+ "indexmap 2.7.0",
+ "iota-core",
+ "iota-json-rpc-types",
+ "iota-macros",
+ "iota-move-build",
+ "iota-protocol-config",
+ "iota-simulator",
+ "iota-swarm-config",
+ "iota-types",
+ "move-binary-format",
+ "move-core-types",
+ "move-package",
+ "prometheus",
+ "rand 0.8.5",
+ "telemetry-subscribers",
+ "test-cluster",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-swarm"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "futures",
+ "iota-config",
+ "iota-macros",
+ "iota-metrics",
+ "iota-network-stack",
+ "iota-node",
+ "iota-protocol-config",
+ "iota-simulator",
+ "iota-swarm-config",
+ "iota-tls",
+ "iota-types",
+ "prometheus",
+ "rand 0.8.5",
+ "tap",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tonic-health",
+ "tracing",
+]
+
+[[package]]
+name = "iota-swarm-config"
+version = "0.0.0"
+dependencies = [
+ "anemo",
+ "anyhow",
+ "bcs",
+ "fastcrypto",
+ "insta",
+ "iota-config",
+ "iota-execution",
+ "iota-genesis-builder",
+ "iota-macros",
+ "iota-protocol-config",
+ "iota-rpc-api",
+ "iota-simulator",
+ "iota-types",
+ "move-bytecode-utils",
+ "prometheus",
+ "rand 0.8.5",
+ "serde",
+ "serde_with 3.9.0",
+ "serde_yaml 0.8.26",
+ "shared-crypto",
+ "tempfile",
+ "tracing",
+]
+
+[[package]]
+name = "iota-synthetic-ingestion"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "clap",
+ "iota-storage",
+ "iota-test-transaction-builder",
+ "iota-types",
+ "simulacrum",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "iota-telemetry"
+version = "0.1.0"
+dependencies = [
+ "iota-core",
+ "reqwest 0.12.9",
+ "serde",
+ "tracing",
+]
+
+[[package]]
+name = "iota-test-transaction-builder"
+version = "0.1.0"
+dependencies = [
+ "bcs",
+ "iota-genesis-builder",
+ "iota-move-build",
+ "iota-sdk",
+ "iota-types",
+ "move-core-types",
+ "shared-crypto",
+]
+
+[[package]]
+name = "iota-test-validator"
+version = "1.43.1"
+
+[[package]]
+name = "iota-tls"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "arc-swap",
+ "axum 0.7.5",
+ "axum-server",
+ "ed25519 1.5.3",
+ "fastcrypto",
+ "pkcs8 0.9.0",
+ "rand 0.8.5",
+ "rcgen",
+ "reqwest 0.12.9",
+ "rustls 0.23.20",
+ "rustls-webpki 0.102.8",
+ "tokio",
+ "tokio-rustls 0.26.0",
+ "tower-layer",
+ "x509-parser",
+]
+
+[[package]]
+name = "iota-tool"
+version = "1.43.1"
+dependencies = [
+ "anemo",
+ "anemo-cli",
+ "anyhow",
+ "bcs",
+ "bin-version",
+ "clap",
+ "colored",
+ "comfy-table",
+ "eyre",
+ "fastcrypto",
+ "futures",
+ "hex",
+ "indicatif",
+ "iota-archival",
+ "iota-config",
+ "iota-core",
+ "iota-network",
+ "iota-package-dump",
+ "iota-protocol-config",
+ "iota-replay",
+ "iota-sdk",
+ "iota-snapshot",
+ "iota-storage",
+ "iota-tls",
+ "iota-types",
+ "itertools 0.13.0",
+ "move-core-types",
+ "num_cpus",
+ "object_store",
+ "prometheus",
+ "ron",
+ "serde",
+ "serde_json",
+ "strum 0.24.1",
+ "strum_macros 0.24.3",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "typed-store",
+]
+
+[[package]]
+name = "iota-transaction-builder"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bcs",
+ "futures",
+ "iota-json",
+ "iota-json-rpc-types",
+ "iota-protocol-config",
+ "iota-types",
+ "move-binary-format",
+ "move-core-types",
+]
+
+[[package]]
+name = "iota-transaction-builder"
+version = "0.1.0"
+dependencies = [
+ "base64ct",
+ "bcs",
+ "iota-sdk-types",
+ "serde",
+ "serde_json",
+ "serde_with 3.9.0",
+ "thiserror 2.0.9",
+]
+
+[[package]]
+name = "iota-transaction-checks"
+version = "0.1.0"
+dependencies = [
+ "fastcrypto-zkp",
+ "iota-config",
+ "iota-execution",
+ "iota-macros",
+ "iota-protocol-config",
+ "iota-types",
+ "once_cell",
+ "tracing",
+]
+
+[[package]]
+name = "iota-transactional-test-runner"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "bcs",
+ "bimap",
+ "clap",
+ "criterion",
+ "eyre",
+ "fastcrypto",
+ "futures",
+ "http 1.1.0",
+ "iota-config",
+ "iota-core",
+ "iota-framework",
+ "iota-framework-snapshot",
+ "iota-graphql-rpc",
+ "iota-json-rpc",
+ "iota-json-rpc-api",
+ "iota-json-rpc-types",
+ "iota-protocol-config",
+ "iota-rpc-api",
+ "iota-storage",
+ "iota-swarm-config",
+ "iota-types",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-command-line-common",
+ "move-compiler",
+ "move-core-types",
+ "move-stdlib",
+ "move-symbol-pool",
+ "move-transactional-test-runner",
+ "move-vm-runtime",
+ "msim",
+ "once_cell",
+ "rand 0.8.5",
+ "regex",
+ "serde",
+ "serde_json",
+ "simulacrum",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "typed-store",
+]
+
+[[package]]
+name = "iota-types"
+version = "0.1.0"
+dependencies = [
+ "anemo",
+ "anyhow",
+ "async-trait",
+ "bcs",
+ "better_any",
+ "bincode",
+ "byteorder",
+ "chrono",
+ "ciborium",
+ "consensus-config",
+ "coset",
+ "criterion",
+ "derive_more 1.0.0",
+ "enum_dispatch",
+ "expect-test",
+ "eyre",
+ "fastcrypto",
+ "fastcrypto-tbls",
+ "fastcrypto-zkp",
+ "im",
+ "indexmap 2.7.0",
+ "iota-enum-compat-util",
+ "iota-macros",
+ "iota-metrics",
+ "iota-network-stack",
+ "iota-protocol-config",
+ "iota-sdk-types",
+ "itertools 0.13.0",
+ "lru 0.10.0",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-command-line-common",
+ "move-core-types",
+ "move-vm-profiler",
+ "move-vm-test-utils",
+ "move-vm-types",
+ "nonempty 0.9.0",
+ "num-bigint 0.4.4",
+ "num-traits",
+ "num_enum 0.6.1",
+ "once_cell",
+ "p256",
+ "p384",
+ "parking_lot 0.12.3",
+ "passkey-authenticator",
+ "passkey-client",
+ "passkey-types",
+ "prometheus",
+ "proptest",
+ "proptest-derive 0.5.1",
+ "rand 0.8.5",
+ "roaring",
+ "rustls-pemfile 2.1.2",
+ "schemars",
+ "serde",
+ "serde-name",
+ "serde_json",
+ "serde_with 3.9.0",
+ "serde_yaml 0.8.26",
+ "shared-crypto",
+ "signature 1.6.4",
+ "static_assertions",
+ "strum 0.24.1",
+ "strum_macros 0.24.3",
+ "tap",
+ "thiserror 1.0.69",
+ "tokio",
+ "tonic 0.12.3",
+ "tracing",
+ "typed-store-error",
+ "url",
+ "x509-parser",
+]
+
+[[package]]
+name = "iota-upgrade-compatibility-transactional-tests"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "datatest-stable",
+ "insta",
+ "iota-move-build",
+ "move-binary-format",
+ "move-command-line-common",
+ "move-compiler",
+ "move-package",
+]
+
+[[package]]
+name = "iota-util-mem"
+version = "0.11.0"
+dependencies = [
+ "cfg-if",
+ "ed25519-consensus",
+ "fastcrypto",
+ "fastcrypto-tbls",
+ "hashbrown 0.12.3",
+ "impl-trait-for-tuples",
+ "indexmap 2.7.0",
+ "iota-util-mem-derive",
+ "once_cell",
+ "parking_lot 0.12.3",
+ "roaring",
+ "smallvec",
+]
+
+[[package]]
+name = "iota-util-mem-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2 1.0.87",
+ "syn 1.0.107",
+ "synstructure 0.12.6",
+]
+
+[[package]]
+name = "iota-verifier-latest"
+version = "0.1.0"
+dependencies = [
+ "iota-protocol-config",
+ "iota-types",
+ "move-abstract-interpreter",
+ "move-abstract-stack",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-bytecode-verifier",
+ "move-bytecode-verifier-meter",
+ "move-core-types",
+ "move-vm-config",
+]
+
+[[package]]
+name = "iota-verifier-transactional-tests"
+version = "0.1.0"
+dependencies = [
+ "datatest-stable",
+ "iota-transactional-test-runner",
+]
+
+[[package]]
+name = "iota-verifier-v0"
+version = "0.1.0"
+dependencies = [
+ "iota-protocol-config",
+ "iota-types",
+ "move-abstract-stack",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-bytecode-verifier-meter",
+ "move-bytecode-verifier-v0",
+ "move-core-types",
+ "move-vm-config",
+]
+
+[[package]]
+name = "iota-verifier-v1"
+version = "0.1.0"
+dependencies = [
+ "iota-types",
+ "move-abstract-stack",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-bytecode-verifier-meter",
+ "move-bytecode-verifier-v1",
+ "move-core-types",
+ "move-vm-config",
+]
+
+[[package]]
+name = "iota-verifier-v2"
+version = "0.1.0"
+dependencies = [
+ "iota-protocol-config",
+ "iota-types",
+ "move-abstract-stack",
+ "move-binary-format",
+ "move-bytecode-utils",
+ "move-bytecode-verifier-meter",
+ "move-bytecode-verifier-v2",
+ "move-core-types",
+ "move-vm-config",
+]
+
+[[package]]
+name = "iotans-indexer"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "backoff",
+ "base64-url",
+ "bcs",
+ "bytes",
+ "diesel",
+ "diesel-async",
+ "dotenvy",
+ "futures",
+ "futures-util",
+ "iota-data-ingestion-core",
+ "iota-json-rpc",
+ "iota-metrics",
+ "iota-service",
+ "iota-storage",
+ "iota-types",
+ "move-core-types",
+ "notify",
+ "object_store",
+ "prometheus",
+ "rand 0.8.5",
+ "rustls 0.23.20",
+ "serde",
+ "serde_json",
+ "serde_yaml 0.8.26",
+ "telemetry-subscribers",
+ "tempfile",
+ "tokio",
+ "tokio-postgres",
+ "tokio-postgres-rustls",
+ "tracing",
+ "url",
+ "webpki-roots 0.26.3",
+]
+
+[[package]]
+name = "iotaop-cli"
+version = "1.43.1"
+dependencies = [
+ "anyhow",
+ "axum 0.7.5",
+ "base64 0.21.7",
+ "chrono",
+ "clap",
+ "colored",
+ "crossterm",
+ "dirs 4.0.0",
+ "docker-api",
+ "field_names",
+ "futures",
+ "futures-timer",
+ "include_dir",
+ "inquire",
+ "itertools 0.13.0",
+ "k8s-openapi",
+ "kube",
+ "once_cell",
+ "open",
+ "prettytable-rs",
+ "query-shell",
+ "rand 0.8.5",
+ "regex",
+ "reqwest 0.12.9",
+ "semver 1.0.23",
+ "serde",
+ "serde_json",
+ "serde_yaml 0.8.26",
+ "sha2 0.10.8",
+ "spinners",
+ "strsim 0.11.1",
+ "strum 0.24.1",
+ "tabled",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "toml_edit 0.19.10",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -6575,7 +10049,7 @@ dependencies = [
  "combine",
  "jni-sys",
  "log",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "walkdir",
 ]
 
@@ -6673,10 +10147,10 @@ dependencies = [
  "rustls-pki-types",
  "rustls-platform-verifier",
  "soketto",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tokio-rustls 0.26.0",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing",
  "url",
 ]
@@ -6695,13 +10169,13 @@ dependencies = [
  "http-body 1.0.1",
  "http-body-util",
  "jsonrpsee-types",
- "parking_lot 0.12.1",
+ "parking_lot 0.12.3",
  "pin-project",
  "rand 0.8.5",
  "rustc-hash 2.0.0",
  "serde",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -6716,7 +10190,7 @@ dependencies = [
  "async-trait",
  "base64 0.22.1",
  "http-body 1.0.1",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "hyper-rustls 0.27.2",
  "hyper-util",
  "jsonrpsee-core",
@@ -6725,7 +10199,7 @@ dependencies = [
  "rustls-platform-verifier",
  "serde",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tower 0.4.13",
  "tracing",
@@ -6755,7 +10229,7 @@ dependencies = [
  "http 1.1.0",
  "http-body 1.0.1",
  "http-body-util",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "hyper-util",
  "jsonrpsee-core",
  "jsonrpsee-types",
@@ -6764,10 +10238,10 @@ dependencies = [
  "serde",
  "serde_json",
  "soketto",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tokio-stream",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tower 0.4.13",
  "tracing",
 ]
@@ -6781,7 +10255,7 @@ dependencies = [
  "http 1.1.0",
  "serde",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -6906,7 +10380,7 @@ dependencies = [
  "http 1.1.0",
  "http-body 1.0.1",
  "http-body-util",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "hyper-http-proxy",
  "hyper-rustls 0.27.2",
  "hyper-timeout 0.5.1",
@@ -6923,9 +10397,9 @@ dependencies = [
  "serde_yaml 0.9.21",
  "thiserror 2.0.9",
  "tokio",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tower 0.5.1",
- "tower-http 0.6.1",
+ "tower-http 0.6.2",
  "tracing",
 ]
 
@@ -7395,7 +10869,7 @@ dependencies = [
  "supports-unicode",
  "terminal_size",
  "textwrap",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "unicode-width",
 ]
 
@@ -7475,6 +10949,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "mio"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2886843bf800fba2e3377cff24abf6379b4c4d5c6681eaf9ea5b0d15090450bd"
+dependencies = [
+ "libc",
+ "wasi 0.11.0+wasi-snapshot-preview1",
+ "windows-sys 0.52.0",
+]
+
+[[package]]
 name = "mockall"
 version = "0.11.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7511,12 +10996,12 @@ dependencies = [
  "crossbeam-epoch",
  "crossbeam-utils",
  "once_cell",
- "parking_lot 0.12.1",
+ "parking_lot 0.12.3",
  "rustc_version",
  "skeptic",
  "smallvec",
  "tagptr",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "triomphe",
  "uuid 1.2.2",
 ]
@@ -7746,6 +11231,7 @@ dependencies = [
  "difference",
  "dirs-next",
  "hex",
+ "insta",
  "move-binary-format",
  "move-core-types",
  "once_cell",
@@ -7765,6 +11251,7 @@ dependencies = [
  "codespan-reporting",
  "dunce",
  "hex",
+ "insta",
  "lsp-types",
  "move-binary-format",
  "move-borrow-graph",
@@ -7810,7 +11297,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_with 3.9.0",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "uint",
 ]
 
@@ -8108,15 +11595,10 @@ dependencies = [
 name = "move-trace-format"
 version = "0.0.1"
 dependencies = [
- "anyhow",
- "enum-compat-util",
  "move-binary-format",
  "move-core-types",
- "move-proc-macros",
- "ref-cast",
  "serde",
  "serde_json",
- "variant_count",
 ]
 
 [[package]]
@@ -8301,7 +11783,7 @@ dependencies = [
 [[package]]
 name = "msim"
 version = "0.1.0"
-source = "git+https://github.com/MystenLabs/mysten-sim.git?rev=2a170f4cd81c5cd10f5e4a5e810068f3045f41b6#2a170f4cd81c5cd10f5e4a5e810068f3045f41b6"
+source = "git+https://github.com/MystenLabs/mysten-sim.git?rev=e06fc6fa9aeb978ffc621f8b27c06a404042279f#e06fc6fa9aeb978ffc621f8b27c06a404042279f"
 dependencies = [
  "ahash 0.7.8",
  "async-task",
@@ -8321,7 +11803,7 @@ dependencies = [
  "serde",
  "socket2 0.4.9",
  "tap",
- "tokio-util 0.7.11",
+ "tokio-util 0.7.13 (git+https://github.com/MystenLabs/tokio-msim-fork.git?rev=7329bff6ee996d8df6cf810a9c2e59631ad5a2fb)",
  "toml 0.5.11",
  "tracing",
  "tracing-subscriber",
@@ -8330,7 +11812,7 @@ dependencies = [
 [[package]]
 name = "msim-macros"
 version = "0.1.0"
-source = "git+https://github.com/MystenLabs/mysten-sim.git?rev=2a170f4cd81c5cd10f5e4a5e810068f3045f41b6#2a170f4cd81c5cd10f5e4a5e810068f3045f41b6"
+source = "git+https://github.com/MystenLabs/mysten-sim.git?rev=e06fc6fa9aeb978ffc621f8b27c06a404042279f#e06fc6fa9aeb978ffc621f8b27c06a404042279f"
 dependencies = [
  "darling 0.14.2",
  "proc-macro2 1.0.87",
@@ -8416,120 +11898,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
 
 [[package]]
-name = "mysten-common"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "fastcrypto",
- "futures",
- "mysten-metrics",
- "parking_lot 0.12.1",
- "prometheus",
- "reqwest 0.12.5",
- "snap",
- "sui-tls",
- "sui-types",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "mysten-metrics"
-version = "0.7.0"
-dependencies = [
- "async-trait",
- "axum 0.7.5",
- "dashmap",
- "futures",
- "once_cell",
- "parking_lot 0.12.1",
- "prometheus",
- "prometheus-closure-metric",
- "scopeguard",
- "simple-server-timing-header",
- "tap",
- "tokio",
- "tracing",
- "uuid 1.2.2",
-]
-
-[[package]]
-name = "mysten-network"
-version = "0.2.0"
-dependencies = [
- "anemo",
- "anemo-tower",
- "async-stream",
- "bcs",
- "bytes",
- "eyre",
- "futures",
- "http 1.1.0",
- "http-body 1.0.1",
- "hyper-rustls 0.27.2",
- "hyper-util",
- "multiaddr",
- "once_cell",
- "pin-project-lite",
- "prometheus",
- "serde",
- "snap",
- "sui-http",
- "tokio",
- "tokio-rustls 0.26.0",
- "tokio-stream",
- "tonic 0.12.3",
- "tonic-health",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "tracing",
-]
-
-[[package]]
-name = "mysten-service"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "axum 0.7.5",
- "mysten-metrics",
- "prometheus",
- "serde",
- "serde_json",
- "simple-server-timing-header",
- "telemetry-subscribers",
- "tokio",
- "tower 0.4.13",
- "tracing",
-]
-
-[[package]]
-name = "mysten-util-mem"
-version = "0.11.0"
-dependencies = [
- "cfg-if",
- "ed25519-consensus",
- "fastcrypto",
- "fastcrypto-tbls",
- "hashbrown 0.12.3",
- "impl-trait-for-tuples",
- "indexmap 2.7.0",
- "mysten-util-mem-derive",
- "once_cell",
- "parking_lot 0.12.1",
- "roaring",
- "smallvec",
-]
-
-[[package]]
-name = "mysten-util-mem-derive"
-version = "0.1.0"
-dependencies = [
- "proc-macro2 1.0.87",
- "syn 1.0.107",
- "synstructure 0.12.6",
-]
-
-[[package]]
 name = "naive-timer"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8543,8 +11911,8 @@ checksum = "40a3eb6b7c682b65d1f631ec3176829d72ab450b3aacdd3f719bf220822e59ac"
 dependencies = [
  "libc",
  "once_cell",
- "parking_lot 0.12.1",
- "thiserror 1.0.64",
+ "parking_lot 0.12.3",
+ "thiserror 1.0.69",
  "widestring",
  "winapi",
 ]
@@ -8716,7 +12084,7 @@ dependencies = [
  "kqueue",
  "libc",
  "log",
- "mio",
+ "mio 0.8.11",
  "walkdir",
  "windows-sys 0.48.0",
 ]
@@ -9012,14 +12380,14 @@ dependencies = [
  "chrono",
  "futures",
  "humantime",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "itertools 0.13.0",
  "md-5 0.10.6",
- "parking_lot 0.12.1",
+ "parking_lot 0.12.3",
  "percent-encoding",
  "quick-xml",
  "rand 0.8.5",
- "reqwest 0.12.5",
+ "reqwest 0.12.9",
  "ring 0.17.8",
  "rustls-pemfile 2.1.2",
  "serde",
@@ -9042,9 +12410,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.19.0"
+version = "1.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
+checksum = "1261fe7e33c73b354eab43b1273a57c8f967d0391e80353e51f764ac02cf6775"
 
 [[package]]
 name = "oorandom"
@@ -9112,50 +12480,51 @@ dependencies = [
  "js-sys",
  "once_cell",
  "pin-project-lite",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "urlencoding",
 ]
 
 [[package]]
 name = "opentelemetry"
-version = "0.25.0"
+version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "803801d3d3b71cd026851a53f974ea03df3d179cb758b260136a6c9e22e196af"
+checksum = "ab70038c28ed37b97d8ed414b6429d343a8bbf44c9f79ec854f3a643029ba6d7"
 dependencies = [
  "futures-core",
  "futures-sink",
  "js-sys",
- "once_cell",
  "pin-project-lite",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
+ "tracing",
 ]
 
 [[package]]
 name = "opentelemetry-otlp"
-version = "0.25.0"
+version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "596b1719b3cab83addb20bcbffdf21575279d9436d9ccccfe651a3bf0ab5ab06"
+checksum = "91cf61a1868dacc576bf2b2a1c3e9ab150af7272909e80085c3173384fe11f76"
 dependencies = [
  "async-trait",
  "futures-core",
  "http 1.1.0",
- "opentelemetry 0.25.0",
+ "opentelemetry 0.27.1",
  "opentelemetry-proto",
  "opentelemetry_sdk",
  "prost 0.13.3",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tonic 0.12.3",
+ "tracing",
 ]
 
 [[package]]
 name = "opentelemetry-proto"
-version = "0.25.0"
+version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c43620e8f93359eb7e627a3b16ee92d8585774986f24f2ab010817426c5ce61"
+checksum = "a6e05acbfada5ec79023c85368af14abd0b307c015e9064d249b2a950ef459a6"
 dependencies = [
  "hex",
- "opentelemetry 0.25.0",
+ "opentelemetry 0.27.1",
  "opentelemetry_sdk",
  "prost 0.13.3",
  "serde",
@@ -9164,23 +12533,23 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry_sdk"
-version = "0.25.0"
+version = "0.27.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0da0d6b47a3dbc6e9c9e36a0520e25cf943e046843818faaa3f87365a548c82"
+checksum = "231e9d6ceef9b0b2546ddf52335785ce41252bc7474ee8ba05bfad277be13ab8"
 dependencies = [
  "async-trait",
  "futures-channel",
  "futures-executor",
  "futures-util",
  "glob",
- "once_cell",
- "opentelemetry 0.25.0",
+ "opentelemetry 0.27.1",
  "percent-encoding",
  "rand 0.8.5",
  "serde_json",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tokio-stream",
+ "tracing",
 ]
 
 [[package]]
@@ -9395,9 +12764,9 @@ dependencies = [
 
 [[package]]
 name = "parking_lot"
-version = "0.12.1"
+version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3742b2c103b9f06bc9fff0a37ff4912935851bee6d36f3c02bcc755bcfec228f"
+checksum = "f1bf18183cf54e8d6059647fc3063646a1801cf30896933ec2311622cc4b9a27"
 dependencies = [
  "lock_api",
  "parking_lot_core 0.9.9",
@@ -9641,7 +13010,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd53dff83f26735fdc1ca837098ccf133605d794cdae66acfc2bfac3ec809d95"
 dependencies = [
  "memchr",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "ucd-trie",
 ]
 
@@ -9947,11 +13316,11 @@ dependencies = [
  "log",
  "nix 0.26.4",
  "once_cell",
- "parking_lot 0.12.1",
+ "parking_lot 0.12.3",
  "smallvec",
  "symbolic-demangle",
  "tempfile",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -10073,7 +13442,7 @@ version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e17d47ce914bf4de440332250b0edd23ce48c005f59fab39d3335866b114f11a"
 dependencies = [
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "toml 0.5.11",
 ]
 
@@ -10157,9 +13526,9 @@ dependencies = [
  "fnv",
  "lazy_static",
  "memchr",
- "parking_lot 0.12.1",
+ "parking_lot 0.12.3",
  "protobuf",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -10179,7 +13548,7 @@ checksum = "0fcebfa99f03ae51220778316b37d24981e36322c82c24848f48c5bd0f64cbdb"
 dependencies = [
  "enum-as-inner",
  "mime",
- "reqwest 0.12.5",
+ "reqwest 0.12.9",
  "serde",
  "time",
  "url",
@@ -10274,6 +13643,8 @@ dependencies = [
  "prettyplease",
  "prost 0.13.3",
  "prost-types 0.13.3",
+ "pulldown-cmark 0.12.2",
+ "pulldown-cmark-to-cmark",
  "regex",
  "syn 2.0.87",
  "tempfile",
@@ -10357,7 +13728,7 @@ dependencies = [
  "prost-reflect",
  "prost-types 0.13.3",
  "protox-parse",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -10369,7 +13740,7 @@ dependencies = [
  "logos",
  "miette",
  "prost-types 0.13.3",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -10399,6 +13770,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "pulldown-cmark"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f86ba2052aebccc42cbbb3ed234b8b13ce76f75c3551a303cb2bcffcff12bb14"
+dependencies = [
+ "bitflags 2.6.0",
+ "memchr",
+ "unicase",
+]
+
+[[package]]
+name = "pulldown-cmark-to-cmark"
+version = "17.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41b27c0d365d60ff3e085007911d73419e5664de48155d558ebfa84d117a5109"
+dependencies = [
+ "pulldown-cmark 0.12.2",
+]
+
+[[package]]
 name = "quanta"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10412,6 +13803,16 @@ dependencies = [
  "wasi 0.11.0+wasi-snapshot-preview1",
  "web-sys",
  "winapi",
+]
+
+[[package]]
+name = "query-shell"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "300d1c86e9638eceb24568649d5ad0f31b949ff11ff1ffbacbe3e382a4dfee25"
+dependencies = [
+ "sysinfo",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -10453,7 +13854,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash 1.1.0",
  "rustls 0.23.20",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tracing",
 ]
@@ -10470,7 +13871,7 @@ dependencies = [
  "rustc-hash 2.0.0",
  "rustls 0.23.20",
  "slab",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tinyvec",
  "tracing",
 ]
@@ -10671,20 +14072,19 @@ dependencies = [
 
 [[package]]
 name = "real_tokio"
-version = "1.38.1"
-source = "git+https://github.com/mystenmark/tokio-madsim-fork.git?rev=d46208cb11118c0e6ab5dfea1a2265add36fbc15#d46208cb11118c0e6ab5dfea1a2265add36fbc15"
+version = "1.43.0"
+source = "git+https://github.com/MystenLabs/tokio-msim-fork.git?rev=7329bff6ee996d8df6cf810a9c2e59631ad5a2fb#7329bff6ee996d8df6cf810a9c2e59631ad5a2fb"
 dependencies = [
  "backtrace",
  "bytes",
  "libc",
- "mio",
- "num_cpus",
- "parking_lot 0.12.1",
+ "mio 1.0.3",
+ "parking_lot 0.12.3",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.5.6",
- "tokio-macros 2.3.0 (git+https://github.com/mystenmark/tokio-madsim-fork.git?rev=d46208cb11118c0e6ab5dfea1a2265add36fbc15)",
- "windows-sys 0.48.0",
+ "tokio-macros 2.5.0 (git+https://github.com/MystenLabs/tokio-msim-fork.git?rev=7329bff6ee996d8df6cf810a9c2e59631ad5a2fb)",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -10722,7 +14122,7 @@ checksum = "b033d837a7cf162d7993aded9304e30a83213c648b6e389db233191f891e5c2b"
 dependencies = [
  "getrandom 0.2.15",
  "redox_syscall 0.2.16",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -10831,14 +14231,14 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "webpki-roots 0.25.2",
- "winreg 0.50.0",
+ "winreg",
 ]
 
 [[package]]
 name = "reqwest"
-version = "0.12.5"
+version = "0.12.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7d6d2a27d57148378eb5e111173f4276ad26340ecc5c49a4a2152167a2d6a37"
+checksum = "a77c62af46e79de0a562e1a9849205ffcb7fc1238876e9bd743357570e04046f"
 dependencies = [
  "async-compression",
  "base64 0.22.1",
@@ -10850,7 +14250,7 @@ dependencies = [
  "http 1.1.0",
  "http-body 1.0.1",
  "http-body-util",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "hyper-rustls 0.27.2",
  "hyper-util",
  "ipnet",
@@ -10862,7 +14262,7 @@ dependencies = [
  "pin-project-lite",
  "quinn",
  "rustls 0.23.20",
- "rustls-native-certs 0.7.1",
+ "rustls-native-certs 0.8.1",
  "rustls-pemfile 2.1.2",
  "rustls-pki-types",
  "serde",
@@ -10871,7 +14271,7 @@ dependencies = [
  "sync_wrapper 1.0.1",
  "tokio",
  "tokio-rustls 0.26.0",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tower-service",
  "url",
  "wasm-bindgen",
@@ -10879,7 +14279,7 @@ dependencies = [
  "wasm-streams",
  "web-sys",
  "webpki-roots 0.26.3",
- "winreg 0.52.0",
+ "windows-registry",
 ]
 
 [[package]]
@@ -10891,9 +14291,9 @@ dependencies = [
  "anyhow",
  "async-trait",
  "http 1.1.0",
- "reqwest 0.12.5",
+ "reqwest 0.12.9",
  "serde",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tower-service",
 ]
 
@@ -10909,9 +14309,9 @@ dependencies = [
  "futures",
  "getrandom 0.2.15",
  "http 1.1.0",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "parking_lot 0.11.2",
- "reqwest 0.12.5",
+ "reqwest 0.12.9",
  "reqwest-middleware",
  "retry-policies",
  "tokio",
@@ -11236,9 +14636,9 @@ dependencies = [
  "sha1",
  "sha2 0.10.8",
  "subtle",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -11281,7 +14681,7 @@ dependencies = [
  "russh-cryptovec",
  "serde",
  "sha2 0.10.8",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tokio-stream",
  "yasna",
@@ -11428,7 +14828,7 @@ dependencies = [
  "openssl-probe",
  "rustls-pemfile 1.0.2",
  "schannel",
- "security-framework",
+ "security-framework 2.11.0",
 ]
 
 [[package]]
@@ -11441,7 +14841,19 @@ dependencies = [
  "rustls-pemfile 2.1.2",
  "rustls-pki-types",
  "schannel",
- "security-framework",
+ "security-framework 2.11.0",
+]
+
+[[package]]
+name = "rustls-native-certs"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fcff2dd52b58a8d98a70243663a0d234c4e2b79235637849d15913394a247d3"
+dependencies = [
+ "openssl-probe",
+ "rustls-pki-types",
+ "schannel",
+ "security-framework 3.2.0",
 ]
 
 [[package]]
@@ -11475,7 +14887,7 @@ version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "afbb878bdfdf63a336a5e63561b1835e7a8c91524f51621db870169eac84b490"
 dependencies = [
- "core-foundation",
+ "core-foundation 0.9.4",
  "core-foundation-sys",
  "jni",
  "log",
@@ -11484,7 +14896,7 @@ dependencies = [
  "rustls-native-certs 0.7.1",
  "rustls-platform-verifier-android",
  "rustls-webpki 0.102.8",
- "security-framework",
+ "security-framework 2.11.0",
  "security-framework-sys",
  "webpki-roots 0.26.3",
  "winapi",
@@ -11766,7 +15178,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c627723fd09706bacdb5cf41499e95098555af3c3c29d014dc3c458ef6be11c0"
 dependencies = [
  "bitflags 2.6.0",
- "core-foundation",
+ "core-foundation 0.9.4",
  "core-foundation-sys",
  "libc",
  "num-bigint 0.4.4",
@@ -11774,10 +15186,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "security-framework-sys"
-version = "2.13.0"
+name = "security-framework"
+version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1863fd3768cd83c56a7f60faa4dc0d403f1b6df0a38c3c25f44b7894e45370d5"
+checksum = "271720403f46ca04f7ba6f55d438f8bd878d6b8ca0a1046e8228c4145bcbb316"
+dependencies = [
+ "bitflags 2.6.0",
+ "core-foundation 0.10.0",
+ "core-foundation-sys",
+ "libc",
+ "security-framework-sys",
+]
+
+[[package]]
+name = "security-framework-sys"
+version = "2.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "49db231d56a190491cb4aeda9527f1ad45345af50b0851622a7adb8c03b01c32"
 dependencies = [
  "core-foundation-sys",
  "libc",
@@ -11830,9 +15255,9 @@ checksum = "a3f0bf26fd526d2a95683cd0f87bf103b8539e2ca1ef48ce002d67aad59aa0b4"
 
 [[package]]
 name = "serde"
-version = "1.0.210"
+version = "1.0.217"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8e3592472072e6e22e0a54d5904d9febf8508f65fb8552499a1abc7d1078c3a"
+checksum = "02fc4265df13d6fa1d00ecff087228cc0a2b5f3c0e87e258d8b94a156e984c70"
 dependencies = [
  "serde_derive",
 ]
@@ -11854,18 +15279,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b5b14ebbcc4e4f2b3642fa99c388649da58d1dc3308c7d109f39f565d1710f0"
 dependencies = [
  "serde",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "serde-reflection"
-version = "0.3.6"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f05a5f801ac62a51a49d378fdb3884480041b99aced450b28990673e8ff99895"
+checksum = "e5bef77b40d103fda6c10d29c21f5c78c980e8570e1a290a648a9ff5011f96e1"
 dependencies = [
+ "erased-discriminant",
  "once_cell",
  "serde",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
+ "typeid",
 ]
 
 [[package]]
@@ -11889,9 +15316,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.210"
+version = "1.0.217"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "243902eda00fad750862fc144cea25caca5e20d615af0a81bee94ca738f1df1f"
+checksum = "5a9bf7cf98d04a2b28aead066b7496853d4779c9cc183c440dbac457641e19a0"
 dependencies = [
  "proc-macro2 1.0.87",
  "quote 1.0.37",
@@ -11911,9 +15338,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.128"
+version = "1.0.135"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ff5456707a1de34e7e37f2a6fd3d3f808c318259cbd01ab6377795054b483d8"
+checksum = "2b0d7ba2887406110130a978386c4e1befb98c674b4fba677954e4db976630d9"
 dependencies = [
  "indexmap 2.7.0",
  "itoa",
@@ -11939,7 +15366,7 @@ checksum = "c7715380eec75f029a4ef7de39a9200e0a63823176b759d055b613f5a87df6a6"
 dependencies = [
  "percent-encoding",
  "serde",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -12193,7 +15620,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29ad2e15f37ec9a6cc544097b78a1ec90001e9f71b81338ca39f430adaca99af"
 dependencies = [
  "libc",
- "mio",
+ "mio 0.8.11",
  "signal-hook",
 ]
 
@@ -12246,8 +15673,17 @@ checksum = "adc4e5204eb1910f40f9cfa375f6f05b68c3abac4b6fd879c8ff5e7ae8a0a085"
 dependencies = [
  "num-bigint 0.4.4",
  "num-traits",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "time",
+]
+
+[[package]]
+name = "simple_moving_average"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a4b144ad185430cd033299e2c93e465d5a7e65fbb858593dc57181fa13cd310"
+dependencies = [
+ "num-traits",
 ]
 
 [[package]]
@@ -12259,6 +15695,16 @@ dependencies = [
  "bcs",
  "fastcrypto",
  "futures",
+ "iota-config",
+ "iota-execution",
+ "iota-framework",
+ "iota-genesis-builder",
+ "iota-keys",
+ "iota-protocol-config",
+ "iota-storage",
+ "iota-swarm-config",
+ "iota-transaction-checks",
+ "iota-types",
  "move-binary-format",
  "move-bytecode-utils",
  "move-core-types",
@@ -12267,16 +15713,6 @@ dependencies = [
  "rand 0.8.5",
  "serde",
  "shared-crypto",
- "sui-config",
- "sui-execution",
- "sui-framework",
- "sui-genesis-builder",
- "sui-keys",
- "sui-protocol-config",
- "sui-storage",
- "sui-swarm-config",
- "sui-transaction-checks",
- "sui-types",
  "tracing",
 ]
 
@@ -12306,7 +15742,7 @@ dependencies = [
  "cargo_metadata 0.14.2",
  "error-chain",
  "glob",
- "pulldown-cmark",
+ "pulldown-cmark 0.9.6",
  "tempfile",
  "walkdir",
 ]
@@ -12384,13 +15820,13 @@ dependencies = [
  "log",
  "object_store",
  "regex",
- "reqwest 0.12.5",
+ "reqwest 0.12.9",
  "reqwest-middleware",
  "reqwest-retry",
  "serde",
  "serde_json",
  "snowflake-jwt",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "url",
  "uuid 1.2.2",
@@ -12407,7 +15843,7 @@ dependencies = [
  "rsa 0.9.1",
  "serde",
  "sha2 0.10.8",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "time",
 ]
 
@@ -12457,7 +15893,7 @@ dependencies = [
  "lalrpop",
  "lalrpop-util",
  "phf",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "unicode-xid 0.2.4",
 ]
 
@@ -12549,7 +15985,7 @@ checksum = "f91138e76242f575eb1d3b38b4f1362f10d3a43f47d182a5b359af488a02293b"
 dependencies = [
  "new_debug_unreachable",
  "once_cell",
- "parking_lot 0.12.1",
+ "parking_lot 0.12.3",
  "phf_shared 0.10.0",
  "precomputed-hash",
 ]
@@ -12698,3280 +16134,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "734676eb262c623cec13c3155096e08d1f8f29adce39ba17948b18dad1e54142"
 
 [[package]]
-name = "sui"
-version = "1.41.0"
-dependencies = [
- "anemo",
- "anyhow",
- "assert_cmd",
- "async-recursion",
- "async-trait",
- "axum 0.7.5",
- "bcs",
- "bin-version",
- "bip32",
- "camino",
- "clap",
- "codespan-reporting",
- "colored",
- "csv",
- "datatest-stable",
- "expect-test",
- "fastcrypto",
- "fastcrypto-zkp",
- "fs_extra",
- "futures",
- "http 1.1.0",
- "im",
- "inquire",
- "insta",
- "jemalloc-ctl",
- "json_to_table",
- "miette",
- "move-analyzer",
- "move-binary-format",
- "move-bytecode-source-map",
- "move-bytecode-verifier-meter",
- "move-command-line-common",
- "move-compiler",
- "move-core-types",
- "move-ir-types",
- "move-package",
- "move-vm-config",
- "move-vm-profiler",
- "msim",
- "num-bigint 0.4.4",
- "prometheus",
- "rand 0.8.5",
- "regex",
- "reqwest 0.12.5",
- "rusoto_core",
- "rusoto_kms",
- "rustyline",
- "rustyline-derive",
- "serde",
- "serde_json",
- "serde_yaml 0.8.26",
- "shared-crypto",
- "shell-words",
- "shlex",
- "signature 1.6.4",
- "sui-bridge",
- "sui-cluster-test",
- "sui-config",
- "sui-execution",
- "sui-faucet",
- "sui-genesis-builder",
- "sui-graphql-rpc",
- "sui-indexer",
- "sui-json",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-macros",
- "sui-move",
- "sui-move-build",
- "sui-package-management",
- "sui-protocol-config",
- "sui-replay",
- "sui-sdk",
- "sui-simulator",
- "sui-source-validation",
- "sui-swarm",
- "sui-swarm-config",
- "sui-test-transaction-builder",
- "sui-transaction-builder 0.0.0",
- "sui-types",
- "tabled",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "test-cluster",
- "thiserror 1.0.64",
- "tokio",
- "toml 0.7.4",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "tracing",
- "unescape",
- "url",
- "uuid 1.2.2",
-]
-
-[[package]]
-name = "sui-adapter-latest"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bcs",
- "leb128",
- "move-binary-format",
- "move-bytecode-utils",
- "move-bytecode-verifier",
- "move-bytecode-verifier-meter",
- "move-core-types",
- "move-package",
- "move-vm-config",
- "move-vm-profiler",
- "move-vm-runtime",
- "move-vm-types",
- "mysten-metrics",
- "parking_lot 0.12.1",
- "serde",
- "sui-macros",
- "sui-move-natives-latest",
- "sui-protocol-config",
- "sui-types",
- "sui-verifier-latest",
- "tracing",
-]
-
-[[package]]
-name = "sui-adapter-transactional-tests"
-version = "0.1.0"
-dependencies = [
- "datatest-stable",
- "sui-transactional-test-runner",
-]
-
-[[package]]
-name = "sui-adapter-v0"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bcs",
- "leb128",
- "move-binary-format",
- "move-bytecode-utils",
- "move-bytecode-verifier-meter",
- "move-bytecode-verifier-v0",
- "move-core-types",
- "move-package",
- "move-vm-config",
- "move-vm-profiler",
- "move-vm-runtime-v0",
- "move-vm-types",
- "once_cell",
- "parking_lot 0.12.1",
- "serde",
- "sui-macros",
- "sui-move-natives-v0",
- "sui-protocol-config",
- "sui-types",
- "sui-verifier-v0",
- "tracing",
-]
-
-[[package]]
-name = "sui-adapter-v1"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bcs",
- "leb128",
- "move-binary-format",
- "move-bytecode-utils",
- "move-bytecode-verifier-meter",
- "move-bytecode-verifier-v1",
- "move-core-types",
- "move-package",
- "move-vm-config",
- "move-vm-profiler",
- "move-vm-runtime-v1",
- "move-vm-types",
- "parking_lot 0.12.1",
- "serde",
- "sui-macros",
- "sui-move-natives-v1",
- "sui-protocol-config",
- "sui-types",
- "sui-verifier-v1",
- "tracing",
-]
-
-[[package]]
-name = "sui-adapter-v2"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bcs",
- "leb128",
- "move-binary-format",
- "move-bytecode-utils",
- "move-bytecode-verifier-meter",
- "move-bytecode-verifier-v2",
- "move-core-types",
- "move-package",
- "move-vm-config",
- "move-vm-profiler",
- "move-vm-runtime-v2",
- "move-vm-types",
- "parking_lot 0.12.1",
- "serde",
- "sui-macros",
- "sui-move-natives-v2",
- "sui-protocol-config",
- "sui-types",
- "sui-verifier-v2",
- "tracing",
-]
-
-[[package]]
-name = "sui-analytics-indexer"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "arrow",
- "arrow-array",
- "async-trait",
- "axum 0.7.5",
- "bcs",
- "byteorder",
- "bytes",
- "chrono",
- "clap",
- "csv",
- "eyre",
- "fastcrypto",
- "gcp-bigquery-client",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "mysten-metrics",
- "num_enum 0.6.1",
- "object_store",
- "parquet",
- "prometheus",
- "serde",
- "serde_json",
- "simulacrum",
- "snowflake-api",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-analytics-indexer-derive",
- "sui-config",
- "sui-data-ingestion-core",
- "sui-indexer",
- "sui-json-rpc-types",
- "sui-package-resolver",
- "sui-rpc-api",
- "sui-storage",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "thiserror 1.0.64",
- "tokio",
- "tokio-stream",
- "tracing",
- "typed-store",
- "url",
-]
-
-[[package]]
-name = "sui-analytics-indexer-derive"
-version = "1.41.0"
-dependencies = [
- "proc-macro2 1.0.87",
- "quote 1.0.37",
- "syn 1.0.107",
-]
-
-[[package]]
-name = "sui-archival"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "byteorder",
- "bytes",
- "ed25519-consensus",
- "fastcrypto",
- "futures",
- "indicatif",
- "more-asserts",
- "move-binary-format",
- "move-core-types",
- "move-package",
- "num_enum 0.6.1",
- "object_store",
- "prometheus",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "sui-config",
- "sui-macros",
- "sui-simulator",
- "sui-storage",
- "sui-swarm-config",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-authority-aggregation"
-version = "0.1.0"
-dependencies = [
- "futures",
- "mysten-metrics",
- "sui-types",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-aws-orchestrator"
-version = "0.0.1"
-dependencies = [
- "async-trait",
- "aws-config",
- "aws-sdk-ec2",
- "aws-smithy-http",
- "aws-smithy-runtime-api",
- "clap",
- "color-eyre",
- "crossterm",
- "eyre",
- "futures",
- "mysten-metrics",
- "prettytable-rs",
- "prometheus-parse",
- "reqwest 0.12.5",
- "russh",
- "russh-keys",
- "serde",
- "serde_json",
- "sui-config",
- "sui-swarm-config",
- "sui-types",
- "tempfile",
- "thiserror 1.0.64",
- "tokio",
-]
-
-[[package]]
-name = "sui-benchmark"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "bcs",
- "clap",
- "comfy-table",
- "duration-str",
- "fastcrypto-zkp",
- "futures",
- "hdrhistogram",
- "indicatif",
- "itertools 0.13.0",
- "move-core-types",
- "mysten-metrics",
- "prometheus",
- "rand 0.8.5",
- "regex",
- "roaring",
- "serde",
- "serde_json",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-config",
- "sui-core",
- "sui-framework",
- "sui-framework-snapshot",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-macros",
- "sui-network",
- "sui-protocol-config",
- "sui-sdk",
- "sui-simulator",
- "sui-storage",
- "sui-surfer",
- "sui-swarm-config",
- "sui-test-transaction-builder",
- "sui-types",
- "sysinfo",
- "telemetry-subscribers",
- "test-cluster",
- "tokio",
- "tokio-util 0.7.10",
- "tracing",
- "typed-store",
-]
-
-[[package]]
-name = "sui-bridge"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "arc-swap",
- "async-trait",
- "axum 0.7.5",
- "backoff",
- "bcs",
- "bin-version",
- "clap",
- "enum_dispatch",
- "ethers",
- "eyre",
- "fastcrypto",
- "futures",
- "hex-literal 0.3.4",
- "lru 0.10.0",
- "maplit",
- "move-core-types",
- "mysten-common",
- "mysten-metrics",
- "num_enum 0.6.1",
- "once_cell",
- "prometheus",
- "rand 0.8.5",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "serde_with 3.9.0",
- "shared-crypto",
- "strum_macros 0.24.3",
- "sui-authority-aggregation",
- "sui-config",
- "sui-json-rpc-api",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-sdk",
- "sui-test-transaction-builder",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "test-cluster",
- "tokio",
- "tracing",
- "typed-store",
- "url",
-]
-
-[[package]]
-name = "sui-bridge-cli"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "clap",
- "ethers",
- "fastcrypto",
- "futures",
- "move-core-types",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "serde_with 3.9.0",
- "shared-crypto",
- "sui-bridge",
- "sui-config",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-sdk",
- "sui-types",
- "telemetry-subscribers",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-bridge-indexer"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "backoff",
- "bcs",
- "bin-version",
- "clap",
- "diesel",
- "diesel-async",
- "diesel_migrations",
- "ethers",
- "futures",
- "hex-literal 0.3.4",
- "mysten-metrics",
- "prometheus",
- "rayon",
- "serde",
- "serde_json",
- "serde_yaml 0.8.26",
- "strum_macros 0.24.3",
- "sui-bridge",
- "sui-config",
- "sui-data-ingestion-core",
- "sui-indexer",
- "sui-indexer-builder",
- "sui-json-rpc-types",
- "sui-pg-db",
- "sui-sdk",
- "sui-test-transaction-builder",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "test-cluster",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-cluster-test"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "clap",
- "derive_more 1.0.0",
- "fastcrypto",
- "futures",
- "jsonrpsee",
- "move-core-types",
- "prometheus",
- "regex",
- "reqwest 0.12.5",
- "serde_json",
- "shared-crypto",
- "sui-config",
- "sui-core",
- "sui-faucet",
- "sui-graphql-rpc",
- "sui-indexer",
- "sui-json",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-move-build",
- "sui-pg-db",
- "sui-sdk",
- "sui-swarm",
- "sui-swarm-config",
- "sui-test-transaction-builder",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "test-cluster",
- "tokio",
- "tokio-util 0.7.10",
- "tracing",
- "uuid 1.2.2",
-]
-
-[[package]]
-name = "sui-config"
-version = "0.0.0"
-dependencies = [
- "anemo",
- "anyhow",
- "bcs",
- "clap",
- "consensus-config",
- "csv",
- "dirs 4.0.0",
- "fastcrypto",
- "insta",
- "move-vm-config",
- "mysten-common",
- "object_store",
- "once_cell",
- "prometheus",
- "rand 0.8.5",
- "reqwest 0.12.5",
- "serde",
- "serde_with 3.9.0",
- "serde_yaml 0.8.26",
- "sui-keys",
- "sui-protocol-config",
- "sui-rpc-api",
- "sui-types",
- "tempfile",
- "tracing",
-]
-
-[[package]]
-name = "sui-core"
-version = "0.1.0"
-dependencies = [
- "anemo",
- "anyhow",
- "arc-swap",
- "async-trait",
- "axum 0.7.5",
- "bcs",
- "bytes",
- "clap",
- "consensus-config",
- "consensus-core",
- "count-min-sketch",
- "criterion",
- "dashmap",
- "diffy",
- "either",
- "enum_dispatch",
- "expect-test",
- "eyre",
- "fastcrypto",
- "fastcrypto-tbls",
- "fastcrypto-zkp",
- "fs_extra",
- "futures",
- "im",
- "itertools 0.13.0",
- "lru 0.10.0",
- "mockall",
- "moka",
- "more-asserts",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "move-package",
- "move-symbol-pool",
- "mysten-common",
- "mysten-metrics",
- "mysten-network",
- "nonempty 0.9.0",
- "num-bigint 0.4.4",
- "num_cpus",
- "object_store",
- "once_cell",
- "parking_lot 0.12.1",
- "pprof",
- "pretty_assertions",
- "prometheus",
- "rand 0.8.5",
- "rayon",
- "reqwest 0.12.5",
- "roaring",
- "rstest",
- "scopeguard",
- "serde",
- "serde-reflection",
- "serde_json",
- "serde_with 3.9.0",
- "serde_yaml 0.8.26",
- "shared-crypto",
- "static_assertions",
- "sui-archival",
- "sui-authority-aggregation",
- "sui-config",
- "sui-execution",
- "sui-framework",
- "sui-genesis-builder",
- "sui-json-rpc-types",
- "sui-macros",
- "sui-move",
- "sui-move-build",
- "sui-network",
- "sui-protocol-config",
- "sui-simulator",
- "sui-storage",
- "sui-swarm-config",
- "sui-test-transaction-builder",
- "sui-tls",
- "sui-transaction-checks",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "test-fuzz",
- "thiserror 1.0.64",
- "tokio",
- "tokio-stream",
- "tracing",
- "twox-hash",
- "typed-store",
-]
-
-[[package]]
-name = "sui-cost"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bcs",
- "insta",
- "move-cli",
- "move-disassembler",
- "serde",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-config",
- "sui-json-rpc-types",
- "sui-move-build",
- "sui-swarm-config",
- "sui-test-transaction-builder",
- "sui-types",
- "test-cluster",
- "tokio",
-]
-
-[[package]]
-name = "sui-data-ingestion"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "aws-config",
- "aws-sdk-dynamodb",
- "aws-sdk-s3",
- "backoff",
- "base64-url",
- "bcs",
- "byteorder",
- "bytes",
- "futures",
- "mysten-metrics",
- "notify",
- "object_store",
- "prometheus",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "serde_yaml 0.8.26",
- "sui-archival",
- "sui-data-ingestion-core",
- "sui-kvstore",
- "sui-storage",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "sui-data-ingestion-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "backoff",
- "bcs",
- "futures",
- "mysten-metrics",
- "notify",
- "object_store",
- "prometheus",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "sui-protocol-config",
- "sui-rpc-api",
- "sui-storage",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tokio-stream",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "sui-deepbook-indexer"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum 0.7.5",
- "backoff",
- "bcs",
- "bigdecimal",
- "bin-version",
- "clap",
- "diesel",
- "diesel-async",
- "futures",
- "hex-literal 0.3.4",
- "mysten-metrics",
- "prometheus",
- "serde",
- "serde_json",
- "serde_yaml 0.8.26",
- "sui-config",
- "sui-data-ingestion-core",
- "sui-indexer-builder",
- "sui-json-rpc-types",
- "sui-sdk",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-default-config"
-version = "1.41.0"
-dependencies = [
- "quote 1.0.37",
- "syn 1.0.107",
-]
-
-[[package]]
-name = "sui-e2e-tests"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "assert_cmd",
- "async-trait",
- "bcs",
- "clap",
- "coset",
- "expect-test",
- "fastcrypto",
- "fastcrypto-zkp",
- "fs_extra",
- "futures",
- "indexmap 2.7.0",
- "insta",
- "jsonrpsee",
- "move-binary-format",
- "move-core-types",
- "move-package",
- "mysten-metrics",
- "p256",
- "passkey-authenticator",
- "passkey-client",
- "passkey-types",
- "prometheus",
- "prost 0.13.3",
- "rand 0.8.5",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "shared-crypto",
- "sui",
- "sui-config",
- "sui-core",
- "sui-framework",
- "sui-json-rpc",
- "sui-json-rpc-api",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-macros",
- "sui-move-build",
- "sui-network",
- "sui-node",
- "sui-protocol-config",
- "sui-rpc-api",
- "sui-sdk",
- "sui-sdk-types",
- "sui-simulator",
- "sui-storage",
- "sui-swarm",
- "sui-swarm-config",
- "sui-test-transaction-builder",
- "sui-tool",
- "sui-transaction-builder 0.1.0",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "test-cluster",
- "tokio",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "sui-edge-proxy"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum 0.7.5",
- "axum-extra",
- "axum-server",
- "bin-version",
- "bytes",
- "clap",
- "futures",
- "mysten-metrics",
- "prometheus",
- "rand 0.8.5",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "serde_with 3.9.0",
- "serde_yaml 0.8.26",
- "telemetry-subscribers",
- "tokio",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "sui-enum-compat-util"
-version = "0.1.0"
-dependencies = [
- "serde_yaml 0.8.26",
-]
-
-[[package]]
-name = "sui-execution"
-version = "0.1.0"
-dependencies = [
- "cargo_metadata 0.15.4",
- "move-abstract-interpreter",
- "move-abstract-interpreter-v2",
- "move-binary-format",
- "move-bytecode-verifier",
- "move-bytecode-verifier-meter",
- "move-bytecode-verifier-v0",
- "move-bytecode-verifier-v1",
- "move-bytecode-verifier-v2",
- "move-vm-config",
- "move-vm-runtime",
- "move-vm-runtime-v0",
- "move-vm-runtime-v1",
- "move-vm-runtime-v2",
- "petgraph 0.5.1",
- "sui-adapter-latest",
- "sui-adapter-v0",
- "sui-adapter-v1",
- "sui-adapter-v2",
- "sui-move-natives-latest",
- "sui-move-natives-v0",
- "sui-move-natives-v1",
- "sui-move-natives-v2",
- "sui-protocol-config",
- "sui-types",
- "sui-verifier-latest",
- "sui-verifier-v0",
- "sui-verifier-v1",
- "sui-verifier-v2",
-]
-
-[[package]]
-name = "sui-execution-cut"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "expect-test",
- "tempfile",
- "thiserror 1.0.64",
- "toml 0.7.4",
- "toml_edit 0.19.10",
-]
-
-[[package]]
-name = "sui-faucet"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-recursion",
- "async-trait",
- "axum 0.7.5",
- "bin-version",
- "clap",
- "dashmap",
- "eyre",
- "futures",
- "http 1.1.0",
- "mysten-metrics",
- "mysten-network",
- "once_cell",
- "parking_lot 0.12.1",
- "prometheus",
- "reqwest 0.12.5",
- "scopeguard",
- "serde",
- "serde_json",
- "shared-crypto",
- "sui-config",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-sdk",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "test-cluster",
- "thiserror 1.0.64",
- "tokio",
- "tonic 0.12.3",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "tower_governor",
- "tracing",
- "ttl_cache",
- "typed-store",
- "uuid 1.2.2",
- "wiremock",
-]
-
-[[package]]
-name = "sui-field-count"
-version = "1.41.0"
-dependencies = [
- "sui-field-count-derive",
-]
-
-[[package]]
-name = "sui-field-count-derive"
-version = "1.41.0"
-dependencies = [
- "quote 1.0.37",
- "syn 1.0.107",
-]
-
-[[package]]
-name = "sui-framework"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bcs",
- "move-binary-format",
- "move-compiler",
- "move-core-types",
- "move-package",
- "once_cell",
- "regex",
- "serde",
- "sui-config",
- "sui-move-build",
- "sui-types",
- "tempfile",
- "tracing",
-]
-
-[[package]]
-name = "sui-framework-snapshot"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "bcs",
- "bin-version",
- "serde",
- "serde_json",
- "sui-framework",
- "sui-protocol-config",
- "sui-types",
- "tokio",
-]
-
-[[package]]
-name = "sui-framework-tests"
-version = "0.1.0"
-dependencies = [
- "datatest-stable",
- "move-bytecode-verifier",
- "move-bytecode-verifier-meter",
- "move-cli",
- "move-package",
- "move-unit-test",
- "prometheus",
- "sui-adapter-latest",
- "sui-config",
- "sui-framework",
- "sui-move",
- "sui-move-build",
- "sui-protocol-config",
- "sui-types",
- "sui-verifier-latest",
-]
-
-[[package]]
-name = "sui-genesis-builder"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "bcs",
- "camino",
- "fastcrypto",
- "insta",
- "move-binary-format",
- "move-core-types",
- "prometheus",
- "rand 0.8.5",
- "serde",
- "serde_with 3.9.0",
- "serde_yaml 0.8.26",
- "shared-crypto",
- "sui-config",
- "sui-execution",
- "sui-framework",
- "sui-framework-snapshot",
- "sui-protocol-config",
- "sui-simulator",
- "sui-types",
- "tempfile",
- "tracing",
-]
-
-[[package]]
-name = "sui-graphql-e2e-tests"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "datatest-stable",
- "msim",
- "sui-graphql-rpc",
- "sui-transactional-test-runner",
- "telemetry-subscribers",
- "tokio",
-]
-
-[[package]]
-name = "sui-graphql-rpc"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-graphql",
- "async-graphql-axum",
- "async-graphql-value",
- "async-trait",
- "axum 0.7.5",
- "axum-extra",
- "bcs",
- "bin-version",
- "chrono",
- "clap",
- "const-str",
- "diesel",
- "diesel-async",
- "downcast",
- "either",
- "expect-test",
- "fastcrypto",
- "fastcrypto-zkp",
- "futures",
- "hex",
- "http 1.1.0",
- "hyper 1.4.1",
- "im",
- "insta",
- "itertools 0.13.0",
- "lru 0.10.0",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "move-disassembler",
- "move-ir-types",
- "mysten-metrics",
- "mysten-network",
- "once_cell",
- "prometheus",
- "rand 0.8.5",
- "regex",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "serde_with 3.9.0",
- "serde_yaml 0.8.26",
- "shared-crypto",
- "similar",
- "simulacrum",
- "sui-default-config",
- "sui-framework",
- "sui-graphql-rpc-client",
- "sui-graphql-rpc-headers",
- "sui-indexer",
- "sui-json-rpc",
- "sui-json-rpc-types",
- "sui-move-build",
- "sui-package-resolver",
- "sui-pg-db",
- "sui-protocol-config",
- "sui-rpc-api",
- "sui-sdk",
- "sui-swarm-config",
- "sui-test-transaction-builder",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "test-cluster",
- "thiserror 1.0.64",
- "tokio",
- "tokio-util 0.7.10",
- "toml 0.7.4",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "tracing",
- "uuid 1.2.2",
-]
-
-[[package]]
-name = "sui-graphql-rpc-client"
-version = "0.1.0"
-dependencies = [
- "async-graphql",
- "axum 0.7.5",
- "hyper 1.4.1",
- "reqwest 0.12.5",
- "serde_json",
- "sui-graphql-rpc-headers",
- "thiserror 1.0.64",
-]
-
-[[package]]
-name = "sui-graphql-rpc-headers"
-version = "0.1.0"
-dependencies = [
- "axum 0.7.5",
-]
-
-[[package]]
-name = "sui-http"
-version = "0.0.0"
-dependencies = [
- "axum 0.7.5",
- "bytes",
- "http 1.1.0",
- "http-body 1.0.1",
- "http-body-util",
- "hyper 1.4.1",
- "hyper-util",
- "pin-project-lite",
- "reqwest 0.12.5",
- "socket2 0.5.6",
- "tokio",
- "tokio-rustls 0.26.0",
- "tokio-util 0.7.10",
- "tower 0.4.13",
- "tracing",
-]
-
-[[package]]
-name = "sui-indexer"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum 0.7.5",
- "backoff",
- "bb8",
- "bcs",
- "bytes",
- "cached",
- "chrono",
- "clap",
- "criterion",
- "csv",
- "dashmap",
- "diesel",
- "diesel-async",
- "diesel_migrations",
- "fastcrypto",
- "futures",
- "hex",
- "indicatif",
- "itertools 0.13.0",
- "jsonrpsee",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "mysten-metrics",
- "ntest",
- "object_store",
- "prometheus",
- "rand 0.8.5",
- "rayon",
- "regex",
- "serde",
- "serde_json",
- "serde_with 3.9.0",
- "simulacrum",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-archival",
- "sui-config",
- "sui-core",
- "sui-data-ingestion-core",
- "sui-json",
- "sui-json-rpc",
- "sui-json-rpc-api",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-move-build",
- "sui-open-rpc",
- "sui-package-resolver",
- "sui-pg-db",
- "sui-protocol-config",
- "sui-rpc-api",
- "sui-sdk",
- "sui-snapshot",
- "sui-storage",
- "sui-swarm-config",
- "sui-synthetic-ingestion",
- "sui-test-transaction-builder",
- "sui-transaction-builder 0.0.0",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "test-cluster",
- "thiserror 1.0.64",
- "tokio",
- "tokio-stream",
- "tokio-util 0.7.10",
- "toml 0.7.4",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "sui-indexer-alt"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "bcs",
- "clap",
- "dashmap",
- "diesel",
- "diesel-async",
- "diesel_migrations",
- "futures",
- "hex",
- "itertools 0.13.0",
- "rand 0.8.5",
- "serde",
- "sui-default-config",
- "sui-field-count",
- "sui-indexer-alt-framework",
- "sui-indexer-alt-schema",
- "sui-pg-db",
- "sui-protocol-config",
- "sui-synthetic-ingestion",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tokio-util 0.7.10",
- "toml 0.7.4",
- "tracing",
- "wiremock",
-]
-
-[[package]]
-name = "sui-indexer-alt-framework"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum 0.7.5",
- "backoff",
- "bb8",
- "chrono",
- "clap",
- "diesel",
- "diesel-async",
- "diesel_migrations",
- "futures",
- "prometheus",
- "rand 0.8.5",
- "reqwest 0.12.5",
- "serde",
- "sui-field-count",
- "sui-pg-db",
- "sui-storage",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "thiserror 1.0.64",
- "tokio",
- "tokio-stream",
- "tokio-util 0.7.10",
- "tracing",
- "url",
- "wiremock",
-]
-
-[[package]]
-name = "sui-indexer-alt-jsonrpc"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum 0.7.5",
- "clap",
- "diesel",
- "diesel-async",
- "jsonrpsee",
- "sui-indexer-alt-schema",
- "sui-pg-db",
- "sui-types",
- "telemetry-subscribers",
- "thiserror 1.0.64",
- "tokio",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "sui-indexer-alt-restorer"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "clap",
- "diesel",
- "diesel-async",
- "futures",
- "indicatif",
- "object_store",
- "prometheus",
- "sui-archival",
- "sui-config",
- "sui-core",
- "sui-field-count",
- "sui-indexer-alt-framework",
- "sui-indexer-alt-schema",
- "sui-pg-db",
- "sui-snapshot",
- "sui-storage",
- "sui-types",
- "telemetry-subscribers",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-indexer-alt-schema"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "bcs",
- "diesel",
- "diesel_migrations",
- "serde",
- "sui-field-count",
- "sui-protocol-config",
- "sui-types",
-]
-
-[[package]]
-name = "sui-indexer-builder"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "futures",
- "mysten-metrics",
- "prometheus",
- "sui-data-ingestion-core",
- "sui-indexer-builder",
- "sui-sdk",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-json"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "bcs",
- "fastcrypto",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "schemars",
- "serde",
- "serde_json",
- "sui-framework",
- "sui-move-build",
- "sui-types",
- "test-fuzz",
-]
-
-[[package]]
-name = "sui-json-rpc"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "arc-swap",
- "async-trait",
- "axum 0.7.5",
- "backoff",
- "bcs",
- "cached",
- "chrono",
- "expect-test",
- "eyre",
- "fastcrypto",
- "futures",
- "http-body 0.4.5",
- "hyper 1.4.1",
- "indexmap 2.7.0",
- "itertools 0.13.0",
- "jsonrpsee",
- "mockall",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "move-package",
- "mysten-metrics",
- "mysten-service",
- "once_cell",
- "prometheus",
- "serde",
- "serde_json",
- "shared-crypto",
- "signature 1.6.4",
- "sui-config",
- "sui-core",
- "sui-json",
- "sui-json-rpc-api",
- "sui-json-rpc-types",
- "sui-macros",
- "sui-open-rpc",
- "sui-open-rpc-macros",
- "sui-protocol-config",
- "sui-storage",
- "sui-transaction-builder 0.0.0",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "thiserror 1.0.64",
- "tokio",
- "tokio-util 0.7.10",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "tracing",
- "typed-store-error",
-]
-
-[[package]]
-name = "sui-json-rpc-api"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "fastcrypto",
- "jsonrpsee",
- "mysten-metrics",
- "once_cell",
- "prometheus",
- "sui-json",
- "sui-json-rpc-types",
- "sui-open-rpc",
- "sui-open-rpc-macros",
- "sui-types",
- "tap",
- "tracing",
-]
-
-[[package]]
-name = "sui-json-rpc-tests"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "bcs",
- "hyper 1.4.1",
- "jsonrpsee",
- "move-core-types",
- "move-package",
- "prometheus",
- "rand 0.8.5",
- "reqwest 0.12.5",
- "sui-config",
- "sui-core",
- "sui-json",
- "sui-json-rpc",
- "sui-json-rpc-api",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-macros",
- "sui-move-build",
- "sui-open-rpc",
- "sui-open-rpc-macros",
- "sui-protocol-config",
- "sui-sdk",
- "sui-simulator",
- "sui-swarm-config",
- "sui-test-transaction-builder",
- "sui-types",
- "telemetry-subscribers",
- "test-cluster",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-json-rpc-types"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "bcs",
- "colored",
- "enum_dispatch",
- "fastcrypto",
- "itertools 0.13.0",
- "json_to_table",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "move-disassembler",
- "move-ir-types",
- "mysten-metrics",
- "schemars",
- "serde",
- "serde_json",
- "serde_with 3.9.0",
- "sui-enum-compat-util",
- "sui-json",
- "sui-macros",
- "sui-package-resolver",
- "sui-protocol-config",
- "sui-types",
- "tabled",
- "tracing",
-]
-
-[[package]]
-name = "sui-keys"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "bip32",
- "fastcrypto",
- "rand 0.8.5",
- "regex",
- "serde",
- "serde_json",
- "shared-crypto",
- "signature 1.6.4",
- "slip10_ed25519",
- "sui-types",
- "tempfile",
- "tiny-bip39",
-]
-
-[[package]]
-name = "sui-kvstore"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "base64 0.21.7",
- "bcs",
- "gcp_auth",
- "http 1.1.0",
- "prometheus",
- "prost 0.13.3",
- "prost-types 0.13.3",
- "serde",
- "sui-data-ingestion-core",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tonic 0.12.3",
- "tracing",
-]
-
-[[package]]
-name = "sui-light-client"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "bcs",
- "bytes",
- "clap",
- "env_logger",
- "log",
- "move-binary-format",
- "move-core-types",
- "object_store",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "serde_yaml 0.8.26",
- "sui-config",
- "sui-json-rpc-types",
- "sui-package-resolver",
- "sui-rpc-api",
- "sui-sdk",
- "sui-types",
- "tokio",
- "url",
-]
-
-[[package]]
-name = "sui-macros"
-version = "0.7.0"
-dependencies = [
- "futures",
- "once_cell",
- "sui-proc-macros",
- "tracing",
-]
-
-[[package]]
-name = "sui-metric-checker"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "backoff",
- "base64 0.21.7",
- "chrono",
- "clap",
- "humantime",
- "once_cell",
- "prometheus-http-query",
- "reqwest 0.12.5",
- "serde",
- "serde_yaml 0.9.21",
- "strum_macros 0.24.3",
- "telemetry-subscribers",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-move"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "assert_cmd",
- "better_any",
- "bin-version",
- "clap",
- "colored",
- "futures",
- "jemalloc-ctl",
- "jsonrpsee",
- "move-binary-format",
- "move-bytecode-source-map",
- "move-cli",
- "move-compiler",
- "move-disassembler",
- "move-ir-types",
- "move-package",
- "move-unit-test",
- "move-vm-runtime",
- "mysten-metrics",
- "once_cell",
- "prometheus",
- "rand 0.8.5",
- "serde_json",
- "serde_yaml 0.8.26",
- "sui-core",
- "sui-macros",
- "sui-move-build",
- "sui-move-natives-latest",
- "sui-node",
- "sui-protocol-config",
- "sui-simulator",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-move-build"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "datatest-stable",
- "fastcrypto",
- "move-binary-format",
- "move-bytecode-utils",
- "move-bytecode-verifier",
- "move-command-line-common",
- "move-compiler",
- "move-core-types",
- "move-ir-types",
- "move-package",
- "move-symbol-pool",
- "serde-reflection",
- "sui-package-management",
- "sui-protocol-config",
- "sui-types",
- "sui-verifier-latest",
- "tempfile",
-]
-
-[[package]]
-name = "sui-move-lsp"
-version = "1.41.0"
-dependencies = [
- "bin-version",
- "clap",
- "move-analyzer",
- "tokio",
-]
-
-[[package]]
-name = "sui-move-natives-latest"
-version = "0.1.0"
-dependencies = [
- "bcs",
- "better_any",
- "fastcrypto",
- "fastcrypto-vdf",
- "fastcrypto-zkp",
- "indexmap 2.7.0",
- "move-binary-format",
- "move-core-types",
- "move-stdlib-natives",
- "move-vm-runtime",
- "move-vm-types",
- "rand 0.8.5",
- "smallvec",
- "sui-protocol-config",
- "sui-types",
- "tracing",
-]
-
-[[package]]
-name = "sui-move-natives-v0"
-version = "0.1.0"
-dependencies = [
- "bcs",
- "better_any",
- "fastcrypto",
- "fastcrypto-zkp",
- "linked-hash-map",
- "move-binary-format",
- "move-core-types",
- "move-stdlib-natives-v0",
- "move-vm-runtime-v0",
- "move-vm-types",
- "smallvec",
- "sui-protocol-config",
- "sui-types",
- "tracing",
-]
-
-[[package]]
-name = "sui-move-natives-v1"
-version = "0.1.0"
-dependencies = [
- "bcs",
- "better_any",
- "fastcrypto",
- "fastcrypto-zkp",
- "linked-hash-map",
- "move-binary-format",
- "move-core-types",
- "move-stdlib-natives-v1",
- "move-vm-runtime-v1",
- "move-vm-types",
- "smallvec",
- "sui-protocol-config",
- "sui-types",
- "tracing",
-]
-
-[[package]]
-name = "sui-move-natives-v2"
-version = "0.1.0"
-dependencies = [
- "bcs",
- "better_any",
- "fastcrypto",
- "fastcrypto-zkp",
- "indexmap 2.7.0",
- "move-binary-format",
- "move-core-types",
- "move-stdlib-natives-v2",
- "move-vm-runtime-v2",
- "move-vm-types",
- "smallvec",
- "sui-protocol-config",
- "sui-types",
- "tracing",
-]
-
-[[package]]
-name = "sui-mvr-graphql-rpc"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-graphql",
- "async-graphql-axum",
- "async-graphql-value",
- "async-trait",
- "axum 0.7.5",
- "axum-extra",
- "bcs",
- "bin-version",
- "chrono",
- "clap",
- "const-str",
- "diesel",
- "diesel-async",
- "downcast",
- "either",
- "expect-test",
- "fastcrypto",
- "fastcrypto-zkp",
- "futures",
- "hex",
- "http 1.1.0",
- "hyper 1.4.1",
- "im",
- "insta",
- "itertools 0.13.0",
- "lru 0.10.0",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "move-disassembler",
- "move-ir-types",
- "mysten-metrics",
- "mysten-network",
- "once_cell",
- "prometheus",
- "rand 0.8.5",
- "regex",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "serde_with 3.9.0",
- "serde_yaml 0.8.26",
- "shared-crypto",
- "similar",
- "simulacrum",
- "sui-default-config",
- "sui-framework",
- "sui-graphql-rpc-client",
- "sui-graphql-rpc-headers",
- "sui-indexer",
- "sui-json-rpc",
- "sui-json-rpc-types",
- "sui-move-build",
- "sui-package-resolver",
- "sui-pg-db",
- "sui-protocol-config",
- "sui-rpc-api",
- "sui-sdk",
- "sui-swarm-config",
- "sui-test-transaction-builder",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "test-cluster",
- "thiserror 1.0.64",
- "tokio",
- "tokio-util 0.7.10",
- "toml 0.7.4",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "tracing",
- "uuid 1.2.2",
-]
-
-[[package]]
-name = "sui-network"
-version = "0.0.0"
-dependencies = [
- "anemo",
- "anemo-build",
- "anemo-tower",
- "anyhow",
- "arc-swap",
- "bcs",
- "bytes",
- "dashmap",
- "ed25519-consensus",
- "fastcrypto",
- "fastcrypto-tbls",
- "futures",
- "governor",
- "mysten-common",
- "mysten-metrics",
- "mysten-network",
- "prometheus",
- "rand 0.8.5",
- "serde",
- "shared-crypto",
- "sui-archival",
- "sui-config",
- "sui-macros",
- "sui-storage",
- "sui-swarm-config",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tonic 0.12.3",
- "tonic-build",
- "tower 0.4.13",
- "tracing",
-]
-
-[[package]]
-name = "sui-node"
-version = "1.41.0"
-dependencies = [
- "anemo",
- "anemo-tower",
- "anyhow",
- "arc-swap",
- "axum 0.7.5",
- "base64 0.21.7",
- "bcs",
- "bin-version",
- "clap",
- "consensus-core",
- "fastcrypto",
- "fastcrypto-zkp",
- "futures",
- "humantime",
- "move-vm-profiler",
- "mysten-common",
- "mysten-metrics",
- "mysten-network",
- "mysten-service",
- "parking_lot 0.12.1",
- "prometheus",
- "reqwest 0.12.5",
- "serde",
- "sui-archival",
- "sui-config",
- "sui-core",
- "sui-http",
- "sui-json-rpc",
- "sui-json-rpc-api",
- "sui-macros",
- "sui-network",
- "sui-protocol-config",
- "sui-rpc-api",
- "sui-simulator",
- "sui-snapshot",
- "sui-storage",
- "sui-telemetry",
- "sui-tls",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tokio",
- "tower 0.4.13",
- "tracing",
- "typed-store",
- "url",
-]
-
-[[package]]
-name = "sui-open-rpc"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "bcs",
- "clap",
- "fastcrypto",
- "move-core-types",
- "pretty_assertions",
- "rand 0.8.5",
- "schemars",
- "serde",
- "serde_json",
- "sui-json",
- "sui-json-rpc",
- "sui-json-rpc-api",
- "sui-json-rpc-types",
- "sui-protocol-config",
- "sui-types",
- "tokio",
- "versions",
-]
-
-[[package]]
-name = "sui-open-rpc-macros"
-version = "0.1.0"
-dependencies = [
- "derive-syn-parse",
- "itertools 0.13.0",
- "proc-macro2 1.0.87",
- "quote 1.0.37",
- "syn 1.0.107",
- "unescape",
-]
-
-[[package]]
-name = "sui-oracle"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "bcs",
- "chrono",
- "clap",
- "dirs 4.0.0",
- "jsonpath_lib",
- "mysten-metrics",
- "once_cell",
- "prometheus",
- "rand 0.8.5",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "shared-crypto",
- "sui-config",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-move-build",
- "sui-sdk",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-package-dump"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "bcs",
- "cynic",
- "cynic-codegen",
- "fastcrypto",
- "move-core-types",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "sui-types",
- "tracing",
-]
-
-[[package]]
-name = "sui-package-management"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "move-core-types",
- "move-package",
- "move-symbol-pool",
- "sui-json-rpc-types",
- "sui-sdk",
- "sui-types",
- "thiserror 1.0.64",
- "tracing",
-]
-
-[[package]]
-name = "sui-package-resolver"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "bcs",
- "eyre",
- "hyper 1.4.1",
- "insta",
- "lru 0.10.0",
- "move-binary-format",
- "move-command-line-common",
- "move-compiler",
- "move-core-types",
- "serde",
- "serde_json",
- "sui-move-build",
- "sui-rpc-api",
- "sui-types",
- "thiserror 1.0.64",
- "tokio",
- "tower 0.4.13",
-]
-
-[[package]]
-name = "sui-pg-db"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "bb8",
- "clap",
- "diesel",
- "diesel-async",
- "diesel_migrations",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "sui-proc-macros"
-version = "0.7.0"
-dependencies = [
- "msim-macros",
- "proc-macro2 1.0.87",
- "quote 1.0.37",
- "sui-enum-compat-util",
- "syn 2.0.87",
-]
-
-[[package]]
-name = "sui-protocol-config"
-version = "0.1.0"
-dependencies = [
- "clap",
- "insta",
- "move-vm-config",
- "schemars",
- "serde",
- "serde-env",
- "serde_with 3.9.0",
- "sui-protocol-config-macros",
- "tracing",
-]
-
-[[package]]
-name = "sui-protocol-config-macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2 1.0.87",
- "quote 1.0.37",
- "syn 1.0.107",
-]
-
-[[package]]
-name = "sui-proxy"
-version = "0.0.2"
-dependencies = [
- "anyhow",
- "axum 0.7.5",
- "axum-extra",
- "axum-server",
- "bin-version",
- "bytes",
- "clap",
- "const-str",
- "fastcrypto",
- "futures",
- "hex",
- "hyper 1.4.1",
- "ipnetwork",
- "itertools 0.13.0",
- "mime",
- "multiaddr",
- "mysten-metrics",
- "once_cell",
- "prometheus",
- "prost 0.13.3",
- "prost-build",
- "protobuf",
- "rand 0.8.5",
- "reqwest 0.12.5",
- "rustls 0.23.20",
- "rustls-pemfile 2.1.2",
- "serde",
- "serde_json",
- "serde_with 3.9.0",
- "serde_yaml 0.8.26",
- "snap",
- "sui-tls",
- "sui-types",
- "telemetry-subscribers",
- "tokio",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "sui-replay"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-recursion",
- "async-trait",
- "bcs",
- "clap",
- "futures",
- "http 1.1.0",
- "jsonrpsee",
- "lru 0.10.0",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "move-vm-config",
- "parking_lot 0.12.1",
- "prometheus",
- "rand 0.8.5",
- "regex",
- "serde",
- "serde_json",
- "serde_with 3.9.0",
- "serde_yaml 0.8.26",
- "shared-crypto",
- "shellexpand",
- "similar",
- "sui-config",
- "sui-core",
- "sui-execution",
- "sui-framework",
- "sui-json-rpc",
- "sui-json-rpc-api",
- "sui-json-rpc-types",
- "sui-protocol-config",
- "sui-sdk",
- "sui-storage",
- "sui-transaction-checks",
- "sui-types",
- "tabled",
- "tempfile",
- "thiserror 1.0.64",
- "tokio",
- "tokio-util 0.7.10",
- "tracing",
-]
-
-[[package]]
-name = "sui-rosetta"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum 0.7.5",
- "axum-extra",
- "bcs",
- "clap",
- "eyre",
- "fastcrypto",
- "futures",
- "hyper 1.4.1",
- "lru 0.10.0",
- "move-cli",
- "move-core-types",
- "mysten-metrics",
- "once_cell",
- "quick-js",
- "rand 0.8.5",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "shared-crypto",
- "signature 1.6.4",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-config",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-move-build",
- "sui-node",
- "sui-sdk",
- "sui-swarm-config",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "test-cluster",
- "thiserror 1.0.64",
- "tokio",
- "tracing",
- "typed-store",
-]
-
-[[package]]
-name = "sui-rpc-api"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum 0.7.5",
- "bcs",
- "bytes",
- "diffy",
- "fastcrypto",
- "http 1.1.0",
- "itertools 0.13.0",
- "mime",
- "move-binary-format",
- "move-core-types",
- "mysten-network",
- "paste",
- "prometheus",
- "proptest",
- "prost 0.13.3",
- "prost-types 0.13.3",
- "protox",
- "rand 0.8.5",
- "reqwest 0.12.5",
- "roaring",
- "serde",
- "serde_json",
- "serde_with 3.9.0",
- "sui-protocol-config",
- "sui-sdk-types",
- "sui-transaction-builder 0.1.0",
- "sui-types",
- "tap",
- "test-strategy",
- "thiserror 1.0.64",
- "tokio",
- "tonic 0.12.3",
- "tonic-build",
- "tonic-health",
- "tonic-reflection",
- "tower 0.4.13",
- "url",
-]
-
-[[package]]
-name = "sui-rpc-loadgen"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "clap",
- "dashmap",
- "dirs 4.0.0",
- "futures",
- "itertools 0.13.0",
- "serde",
- "serde_json",
- "shared-crypto",
- "shellexpand",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-json-rpc",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-sdk",
- "sui-types",
- "telemetry-subscribers",
- "test-cluster",
- "tokio",
- "tonic 0.12.3",
- "tracing",
-]
-
-[[package]]
-name = "sui-sdk"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-recursion",
- "async-trait",
- "base64 0.21.7",
- "bcs",
- "clap",
- "colored",
- "dirs 4.0.0",
- "fastcrypto",
- "futures",
- "futures-core",
- "jsonrpsee",
- "move-core-types",
- "rand 0.8.5",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "serde_with 3.9.0",
- "shared-crypto",
- "sui-config",
- "sui-json",
- "sui-json-rpc-api",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-transaction-builder 0.0.0",
- "sui-types",
- "tempfile",
- "thiserror 1.0.64",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-sdk-types"
-version = "0.0.1"
-source = "git+https://github.com/MystenLabs/sui-rust-sdk.git?rev=cb174b66714ea643e4b78bbfadb3f9c17e635460#cb174b66714ea643e4b78bbfadb3f9c17e635460"
-dependencies = [
- "base64ct",
- "bcs",
- "blake2",
- "bnum",
- "bs58 0.5.1",
- "hex",
- "proptest",
- "roaring",
- "serde",
- "serde_derive",
- "serde_json",
- "serde_with 3.9.0",
- "test-strategy",
- "winnow 0.6.20",
-]
-
-[[package]]
-name = "sui-security-watchdog"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "arrow-array",
- "async-trait",
- "chrono",
- "clap",
- "env_logger",
- "lexical-util",
- "mysten-metrics",
- "prometheus",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "snowflake-api",
- "telemetry-subscribers",
- "tokio",
- "tokio-cron-scheduler",
- "tracing",
- "uuid 1.2.2",
-]
-
-[[package]]
-name = "sui-simulator"
-version = "0.7.0"
-dependencies = [
- "anemo",
- "anemo-tower",
- "bcs",
- "fastcrypto",
- "lru 0.10.0",
- "move-package",
- "msim",
- "mysten-network",
- "rand 0.8.5",
- "serde",
- "sui-framework",
- "sui-move-build",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tower 0.4.13",
- "tracing",
-]
-
-[[package]]
-name = "sui-single-node-benchmark"
-version = "1.41.0"
-dependencies = [
- "async-trait",
- "bcs",
- "clap",
- "fs_extra",
- "futures",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "move-package",
- "move-symbol-pool",
- "once_cell",
- "prometheus",
- "serde",
- "serde_json",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-config",
- "sui-core",
- "sui-macros",
- "sui-move-build",
- "sui-protocol-config",
- "sui-simulator",
- "sui-storage",
- "sui-test-transaction-builder",
- "sui-transaction-checks",
- "sui-types",
- "telemetry-subscribers",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-snapshot"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bcs",
- "byteorder",
- "bytes",
- "fastcrypto",
- "futures",
- "indicatif",
- "integer-encoding",
- "num_enum 0.6.1",
- "object_store",
- "prometheus",
- "serde",
- "serde_json",
- "sui-config",
- "sui-core",
- "sui-indexer-alt-framework",
- "sui-protocol-config",
- "sui-storage",
- "sui-types",
- "tempfile",
- "tokio",
- "tokio-stream",
- "tracing",
-]
-
-[[package]]
-name = "sui-source-validation"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "colored",
- "expect-test",
- "flate2",
- "futures",
- "move-binary-format",
- "move-bytecode-source-map",
- "move-command-line-common",
- "move-compiler",
- "move-core-types",
- "move-package",
- "move-symbol-pool",
- "rand 0.8.5",
- "sui-json-rpc-types",
- "sui-move-build",
- "sui-package-management",
- "sui-sdk",
- "sui-test-transaction-builder",
- "sui-types",
- "tar",
- "tempfile",
- "test-cluster",
- "thiserror 1.0.64",
- "tokio",
- "tracing",
- "ureq",
-]
-
-[[package]]
-name = "sui-source-validation-service"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum 0.7.5",
- "bin-version",
- "clap",
- "expect-test",
- "fs_extra",
- "hyper 1.4.1",
- "jsonrpsee",
- "move-compiler",
- "move-core-types",
- "move-package",
- "move-symbol-pool",
- "mysten-metrics",
- "prometheus",
- "reqwest 0.12.5",
- "serde",
- "sui",
- "sui-json-rpc-types",
- "sui-move",
- "sui-move-build",
- "sui-sdk",
- "sui-source-validation",
- "telemetry-subscribers",
- "tempfile",
- "test-cluster",
- "tokio",
- "toml 0.7.4",
- "tower 0.4.13",
- "tower-http 0.5.2",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "sui-storage"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum 0.7.5",
- "backoff",
- "base64-url",
- "bcs",
- "byteorder",
- "bytes",
- "chrono",
- "clap",
- "criterion",
- "eyre",
- "fastcrypto",
- "futures",
- "hyper 1.4.1",
- "hyper-rustls 0.27.2",
- "indicatif",
- "integer-encoding",
- "itertools 0.13.0",
- "lru 0.10.0",
- "moka",
- "move-binary-format",
- "move-bytecode-utils",
- "move-core-types",
- "mysten-metrics",
- "num_cpus",
- "num_enum 0.6.1",
- "object_store",
- "once_cell",
- "parking_lot 0.12.1",
- "percent-encoding",
- "pretty_assertions",
- "prometheus",
- "reqwest 0.12.5",
- "serde",
- "serde_json",
- "sui-config",
- "sui-json-rpc-types",
- "sui-macros",
- "sui-protocol-config",
- "sui-simulator",
- "sui-test-transaction-builder",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
- "typed-store",
- "url",
- "zstd 0.12.3+zstd.1.5.2",
-]
-
-[[package]]
-name = "sui-surfer"
-version = "1.41.0"
-dependencies = [
- "async-trait",
- "bcs",
- "clap",
- "futures",
- "indexmap 2.7.0",
- "move-binary-format",
- "move-core-types",
- "move-package",
- "prometheus",
- "rand 0.8.5",
- "sui-core",
- "sui-json-rpc-types",
- "sui-macros",
- "sui-move-build",
- "sui-protocol-config",
- "sui-simulator",
- "sui-swarm-config",
- "sui-types",
- "telemetry-subscribers",
- "test-cluster",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-swarm"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "futures",
- "mysten-metrics",
- "mysten-network",
- "prometheus",
- "rand 0.8.5",
- "sui-config",
- "sui-macros",
- "sui-node",
- "sui-protocol-config",
- "sui-simulator",
- "sui-swarm-config",
- "sui-tls",
- "sui-types",
- "tap",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tonic-health",
- "tracing",
-]
-
-[[package]]
-name = "sui-swarm-config"
-version = "0.0.0"
-dependencies = [
- "anemo",
- "anyhow",
- "bcs",
- "fastcrypto",
- "insta",
- "move-bytecode-utils",
- "prometheus",
- "rand 0.8.5",
- "serde",
- "serde_with 3.9.0",
- "serde_yaml 0.8.26",
- "shared-crypto",
- "sui-config",
- "sui-execution",
- "sui-genesis-builder",
- "sui-macros",
- "sui-protocol-config",
- "sui-rpc-api",
- "sui-simulator",
- "sui-types",
- "tempfile",
- "tracing",
-]
-
-[[package]]
-name = "sui-synthetic-ingestion"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "clap",
- "simulacrum",
- "sui-storage",
- "sui-test-transaction-builder",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "sui-telemetry"
-version = "0.1.0"
-dependencies = [
- "reqwest 0.12.5",
- "serde",
- "sui-core",
- "tracing",
-]
-
-[[package]]
-name = "sui-test-transaction-builder"
-version = "0.1.0"
-dependencies = [
- "bcs",
- "move-core-types",
- "shared-crypto",
- "sui-genesis-builder",
- "sui-move-build",
- "sui-sdk",
- "sui-types",
-]
-
-[[package]]
-name = "sui-test-validator"
-version = "1.41.0"
-
-[[package]]
-name = "sui-tls"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "arc-swap",
- "axum 0.7.5",
- "axum-server",
- "ed25519 1.5.3",
- "fastcrypto",
- "pkcs8 0.9.0",
- "rand 0.8.5",
- "rcgen",
- "reqwest 0.12.5",
- "rustls 0.23.20",
- "rustls-webpki 0.102.8",
- "tokio",
- "tokio-rustls 0.26.0",
- "tower-layer",
- "x509-parser",
-]
-
-[[package]]
-name = "sui-tool"
-version = "1.41.0"
-dependencies = [
- "anemo",
- "anemo-cli",
- "anyhow",
- "bcs",
- "bin-version",
- "clap",
- "colored",
- "comfy-table",
- "eyre",
- "fastcrypto",
- "futures",
- "hex",
- "indicatif",
- "itertools 0.13.0",
- "move-core-types",
- "num_cpus",
- "object_store",
- "prometheus",
- "ron",
- "serde",
- "serde_json",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-archival",
- "sui-config",
- "sui-core",
- "sui-network",
- "sui-package-dump",
- "sui-protocol-config",
- "sui-replay",
- "sui-sdk",
- "sui-snapshot",
- "sui-storage",
- "sui-tls",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
- "typed-store",
-]
-
-[[package]]
-name = "sui-transaction-builder"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "bcs",
- "futures",
- "move-binary-format",
- "move-core-types",
- "sui-json",
- "sui-json-rpc-types",
- "sui-protocol-config",
- "sui-types",
-]
-
-[[package]]
-name = "sui-transaction-builder"
-version = "0.1.0"
-source = "git+https://github.com/MystenLabs/sui-rust-sdk.git?rev=cb174b66714ea643e4b78bbfadb3f9c17e635460#cb174b66714ea643e4b78bbfadb3f9c17e635460"
-dependencies = [
- "base64ct",
- "bcs",
- "serde",
- "serde_json",
- "serde_with 3.9.0",
- "sui-sdk-types",
- "thiserror 2.0.9",
-]
-
-[[package]]
-name = "sui-transaction-checks"
-version = "0.1.0"
-dependencies = [
- "fastcrypto-zkp",
- "once_cell",
- "sui-config",
- "sui-execution",
- "sui-macros",
- "sui-protocol-config",
- "sui-types",
- "tracing",
-]
-
-[[package]]
-name = "sui-transactional-test-runner"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "bcs",
- "bimap",
- "clap",
- "criterion",
- "eyre",
- "fastcrypto",
- "futures",
- "http 1.1.0",
- "move-binary-format",
- "move-bytecode-utils",
- "move-command-line-common",
- "move-compiler",
- "move-core-types",
- "move-stdlib",
- "move-symbol-pool",
- "move-transactional-test-runner",
- "move-vm-runtime",
- "msim",
- "once_cell",
- "rand 0.8.5",
- "regex",
- "serde_json",
- "simulacrum",
- "sui-config",
- "sui-core",
- "sui-framework",
- "sui-framework-snapshot",
- "sui-graphql-rpc",
- "sui-json-rpc",
- "sui-json-rpc-api",
- "sui-json-rpc-types",
- "sui-protocol-config",
- "sui-rpc-api",
- "sui-storage",
- "sui-swarm-config",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tracing",
- "typed-store",
-]
-
-[[package]]
-name = "sui-types"
-version = "0.1.0"
-dependencies = [
- "anemo",
- "anyhow",
- "async-trait",
- "bcs",
- "better_any",
- "bincode",
- "byteorder",
- "chrono",
- "ciborium",
- "consensus-config",
- "coset",
- "criterion",
- "derive_more 1.0.0",
- "enum_dispatch",
- "expect-test",
- "eyre",
- "fastcrypto",
- "fastcrypto-tbls",
- "fastcrypto-zkp",
- "im",
- "indexmap 2.7.0",
- "itertools 0.13.0",
- "lru 0.10.0",
- "move-binary-format",
- "move-bytecode-utils",
- "move-command-line-common",
- "move-core-types",
- "move-vm-profiler",
- "move-vm-test-utils",
- "move-vm-types",
- "mysten-metrics",
- "mysten-network",
- "nonempty 0.9.0",
- "num-bigint 0.4.4",
- "num-traits",
- "num_enum 0.6.1",
- "once_cell",
- "p256",
- "p384",
- "parking_lot 0.12.1",
- "passkey-authenticator",
- "passkey-client",
- "passkey-types",
- "prometheus",
- "proptest",
- "proptest-derive 0.5.1",
- "rand 0.8.5",
- "roaring",
- "rustls-pemfile 2.1.2",
- "schemars",
- "serde",
- "serde-name",
- "serde_json",
- "serde_with 3.9.0",
- "serde_yaml 0.8.26",
- "shared-crypto",
- "signature 1.6.4",
- "static_assertions",
- "strum 0.24.1",
- "strum_macros 0.24.3",
- "sui-enum-compat-util",
- "sui-macros",
- "sui-protocol-config",
- "sui-sdk-types",
- "tap",
- "thiserror 1.0.64",
- "tokio",
- "tonic 0.12.3",
- "tracing",
- "typed-store-error",
- "url",
- "x509-parser",
-]
-
-[[package]]
-name = "sui-upgrade-compatibility-transactional-tests"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "datatest-stable",
- "insta",
- "move-binary-format",
- "move-command-line-common",
- "move-compiler",
- "move-package",
- "sui-move-build",
-]
-
-[[package]]
-name = "sui-verifier-latest"
-version = "0.1.0"
-dependencies = [
- "move-abstract-interpreter",
- "move-abstract-stack",
- "move-binary-format",
- "move-bytecode-utils",
- "move-bytecode-verifier",
- "move-bytecode-verifier-meter",
- "move-core-types",
- "move-vm-config",
- "sui-protocol-config",
- "sui-types",
-]
-
-[[package]]
-name = "sui-verifier-transactional-tests"
-version = "0.1.0"
-dependencies = [
- "datatest-stable",
- "sui-transactional-test-runner",
-]
-
-[[package]]
-name = "sui-verifier-v0"
-version = "0.1.0"
-dependencies = [
- "move-abstract-stack",
- "move-binary-format",
- "move-bytecode-utils",
- "move-bytecode-verifier-meter",
- "move-bytecode-verifier-v0",
- "move-core-types",
- "move-vm-config",
- "sui-protocol-config",
- "sui-types",
-]
-
-[[package]]
-name = "sui-verifier-v1"
-version = "0.1.0"
-dependencies = [
- "move-abstract-stack",
- "move-binary-format",
- "move-bytecode-utils",
- "move-bytecode-verifier-meter",
- "move-bytecode-verifier-v1",
- "move-core-types",
- "move-vm-config",
- "sui-types",
-]
-
-[[package]]
-name = "sui-verifier-v2"
-version = "0.1.0"
-dependencies = [
- "move-abstract-stack",
- "move-binary-format",
- "move-bytecode-utils",
- "move-bytecode-verifier-meter",
- "move-bytecode-verifier-v2",
- "move-core-types",
- "move-vm-config",
- "sui-protocol-config",
- "sui-types",
-]
-
-[[package]]
-name = "suins-indexer"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "backoff",
- "base64-url",
- "bcs",
- "bytes",
- "diesel",
- "diesel-async",
- "dotenvy",
- "futures",
- "futures-util",
- "move-core-types",
- "mysten-metrics",
- "mysten-service",
- "notify",
- "object_store",
- "prometheus",
- "rand 0.8.5",
- "rustls 0.23.20",
- "serde",
- "serde_json",
- "serde_yaml 0.8.26",
- "sui-data-ingestion-core",
- "sui-json-rpc",
- "sui-storage",
- "sui-types",
- "telemetry-subscribers",
- "tempfile",
- "tokio",
- "tokio-postgres",
- "tokio-postgres-rustls",
- "tracing",
- "url",
- "webpki-roots 0.26.3",
-]
-
-[[package]]
-name = "suiop-cli"
-version = "1.41.0"
-dependencies = [
- "anyhow",
- "axum 0.7.5",
- "base64 0.21.7",
- "chrono",
- "clap",
- "colored",
- "crossterm",
- "dirs 4.0.0",
- "docker-api",
- "field_names",
- "futures",
- "futures-timer",
- "include_dir",
- "inquire",
- "itertools 0.13.0",
- "k8s-openapi",
- "kube",
- "once_cell",
- "open",
- "prettytable-rs",
- "rand 0.8.5",
- "regex",
- "reqwest 0.12.5",
- "semver 1.0.23",
- "serde",
- "serde_json",
- "serde_yaml 0.8.26",
- "sha2 0.10.8",
- "spinners",
- "strsim 0.11.1",
- "strum 0.24.1",
- "tabled",
- "tempfile",
- "thiserror 1.0.64",
- "tokio",
- "toml_edit 0.19.10",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "supports-color"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -16007,7 +16169,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.8",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "url",
  "zip",
 ]
@@ -16079,6 +16241,9 @@ name = "sync_wrapper"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a7065abeca94b6a8a577f9bd45aa0867a2238b74e8eb67cf10d492bc39351394"
+dependencies = [
+ "futures-core",
+]
 
 [[package]]
 name = "synstructure"
@@ -16207,7 +16372,7 @@ dependencies = [
  "crossterm",
  "futures",
  "once_cell",
- "opentelemetry 0.25.0",
+ "opentelemetry 0.27.1",
  "opentelemetry-otlp",
  "opentelemetry-proto",
  "opentelemetry_sdk",
@@ -16279,31 +16444,31 @@ dependencies = [
  "fastcrypto",
  "fastcrypto-zkp",
  "futures",
+ "iota-config",
+ "iota-core",
+ "iota-framework",
+ "iota-indexer",
+ "iota-json-rpc",
+ "iota-json-rpc-api",
+ "iota-json-rpc-types",
+ "iota-keys",
+ "iota-macros",
+ "iota-node",
+ "iota-pg-db",
+ "iota-protocol-config",
+ "iota-sdk",
+ "iota-simulator",
+ "iota-swarm",
+ "iota-swarm-config",
+ "iota-test-transaction-builder",
+ "iota-types",
  "jsonrpsee",
  "move-binary-format",
  "prometheus",
  "rand 0.8.5",
- "sui-config",
- "sui-core",
- "sui-framework",
- "sui-indexer",
- "sui-json-rpc",
- "sui-json-rpc-api",
- "sui-json-rpc-types",
- "sui-keys",
- "sui-macros",
- "sui-node",
- "sui-pg-db",
- "sui-protocol-config",
- "sui-sdk",
- "sui-simulator",
- "sui-swarm",
- "sui-swarm-config",
- "sui-test-transaction-builder",
- "sui-types",
  "tempfile",
  "tokio",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing",
 ]
 
@@ -16389,11 +16554,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.64"
+version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d50af8abc119fb8bb6dbabcfa89656f46f84aa0ac7688088608076ad2b459a84"
+checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
 dependencies = [
- "thiserror-impl 1.0.64",
+ "thiserror-impl 1.0.69",
 ]
 
 [[package]]
@@ -16407,9 +16572,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.64"
+version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08904e7672f5eb876eaaf87e0ce17857500934f4981c4a0ab2b4aa98baac7fc3"
+checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
 dependencies = [
  "proc-macro2 1.0.87",
  "quote 1.0.37",
@@ -16502,7 +16667,7 @@ dependencies = [
  "rand 0.8.5",
  "rustc-hash 1.1.0",
  "sha2 0.10.8",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "unicode-normalization",
  "wasm-bindgen",
  "zeroize",
@@ -16554,22 +16719,21 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.38.1"
+version = "1.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb2caba9f80616f438e09748d5acda951967e1ea58508ef53d9c6402485a46df"
+checksum = "3d61fa4ffa3de412bfea335c6ecff681de2b609ba3c77ef3e00e521813a9ed9e"
 dependencies = [
  "backtrace",
  "bytes",
  "libc",
- "mio",
- "num_cpus",
- "parking_lot 0.12.1",
+ "mio 1.0.3",
+ "parking_lot 0.12.3",
  "pin-project-lite",
  "signal-hook-registry",
  "socket2 0.5.6",
- "tokio-macros 2.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio-macros 2.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing",
- "windows-sys 0.48.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -16599,9 +16763,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "2.3.0"
+version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f5ae998a069d4b5aba8ee9dad856af7d520c3699e6159b185c2acd48155d39a"
+checksum = "6e06d43f1345a3bcd39f6a56dbb7dcab2ba47e68e8ac134855e7e2bdbaf8cab8"
 dependencies = [
  "proc-macro2 1.0.87",
  "quote 1.0.37",
@@ -16610,8 +16774,8 @@ dependencies = [
 
 [[package]]
 name = "tokio-macros"
-version = "2.3.0"
-source = "git+https://github.com/mystenmark/tokio-madsim-fork.git?rev=d46208cb11118c0e6ab5dfea1a2265add36fbc15#d46208cb11118c0e6ab5dfea1a2265add36fbc15"
+version = "2.5.0"
+source = "git+https://github.com/MystenLabs/tokio-msim-fork.git?rev=7329bff6ee996d8df6cf810a9c2e59631ad5a2fb#7329bff6ee996d8df6cf810a9c2e59631ad5a2fb"
 dependencies = [
  "proc-macro2 1.0.87",
  "quote 1.0.37",
@@ -16631,7 +16795,7 @@ dependencies = [
  "futures-channel",
  "futures-util",
  "log",
- "parking_lot 0.12.1",
+ "parking_lot 0.12.3",
  "percent-encoding",
  "phf",
  "pin-project-lite",
@@ -16640,7 +16804,7 @@ dependencies = [
  "rand 0.8.5",
  "socket2 0.5.6",
  "tokio",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "whoami",
 ]
 
@@ -16692,14 +16856,14 @@ dependencies = [
 
 [[package]]
 name = "tokio-stream"
-version = "0.1.16"
+version = "0.1.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f4e6ce100d0eb49a2734f8c0812bcd324cf357d21810932c5df6b96ef2b86f1"
+checksum = "eca58d7bba4a75707817a2c44174253f9236b2d5fbd055602e9d5c07c139a047"
 dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -16731,9 +16895,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.10"
+version = "0.7.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5419f34732d9eb6ee4c3578b7989078579b7f039cbbb9ca2c4da015749371e15"
+checksum = "d7fcaa8d55a2bdd6b83ace262b016eca0d79ee02818c5c1bcdf0305114081078"
 dependencies = [
  "bytes",
  "futures-core",
@@ -16743,13 +16907,12 @@ dependencies = [
  "hashbrown 0.14.1",
  "pin-project-lite",
  "tokio",
- "tracing",
 ]
 
 [[package]]
 name = "tokio-util"
-version = "0.7.11"
-source = "git+https://github.com/mystenmark/tokio-madsim-fork.git?rev=d46208cb11118c0e6ab5dfea1a2265add36fbc15#d46208cb11118c0e6ab5dfea1a2265add36fbc15"
+version = "0.7.13"
+source = "git+https://github.com/MystenLabs/tokio-msim-fork.git?rev=7329bff6ee996d8df6cf810a9c2e59631ad5a2fb#7329bff6ee996d8df6cf810a9c2e59631ad5a2fb"
 dependencies = [
  "bytes",
  "futures-core",
@@ -16904,12 +17067,13 @@ dependencies = [
  "http 1.1.0",
  "http-body 1.0.1",
  "http-body-util",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "hyper-timeout 0.5.1",
  "hyper-util",
  "percent-encoding",
  "pin-project",
  "prost 0.13.3",
+ "rustls-native-certs 0.8.1",
  "rustls-pemfile 2.1.2",
  "socket2 0.5.6",
  "tokio",
@@ -16920,6 +17084,7 @@ dependencies = [
  "tower-service",
  "tracing",
  "webpki-roots 0.26.3",
+ "zstd 0.13.2",
 ]
 
 [[package]]
@@ -16974,7 +17139,7 @@ dependencies = [
  "http 1.1.0",
  "http-body 1.0.1",
  "http-body-util",
- "hyper 1.4.1",
+ "hyper 1.5.2",
  "hyper-timeout 0.5.1",
  "hyper-util",
  "pin-project",
@@ -17017,7 +17182,7 @@ dependencies = [
  "rand 0.8.5",
  "slab",
  "tokio",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -17036,7 +17201,7 @@ dependencies = [
  "slab",
  "sync_wrapper 0.1.2",
  "tokio",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -17065,7 +17230,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "tokio",
- "tokio-util 0.7.10",
+ "tokio-util 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "tower 0.4.13",
  "tower-layer",
  "tower-service",
@@ -17075,9 +17240,9 @@ dependencies = [
 
 [[package]]
 name = "tower-http"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8437150ab6bbc8c5f0f519e3d5ed4aa883a83dd4cdd3d1b21f9482936046cb97"
+checksum = "403fa3b783d4b626a8ad51d766ab03cb6d2dbfc46b1c5d4448395e6628dc9697"
 dependencies = [
  "base64 0.22.1",
  "bitflags 2.6.0",
@@ -17114,7 +17279,7 @@ dependencies = [
  "governor",
  "http 1.1.0",
  "pin-project",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tower 0.5.1",
  "tracing",
 ]
@@ -17209,13 +17374,13 @@ dependencies = [
 
 [[package]]
 name = "tracing-opentelemetry"
-version = "0.26.0"
+version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5eabc56d23707ad55ba2a0750fc24767125d5a0f51993ba41ad2c441cc7b8dea"
+checksum = "97a971f6058498b5c0f1affa23e7ea202057a7301dbff68e968b2d578bcbd053"
 dependencies = [
  "js-sys",
  "once_cell",
- "opentelemetry 0.25.0",
+ "opentelemetry 0.27.1",
  "opentelemetry_sdk",
  "smallvec",
  "tracing",
@@ -17272,15 +17437,15 @@ dependencies = [
 name = "transaction-fuzzer"
 version = "0.1.0"
 dependencies = [
+ "iota-core",
+ "iota-move-build",
+ "iota-protocol-config",
+ "iota-types",
  "move-core-types",
  "once_cell",
  "proptest",
  "proptest-derive 0.5.1",
  "rand 0.8.5",
- "sui-core",
- "sui-move-build",
- "sui-protocol-config",
- "sui-types",
  "tokio",
  "tracing",
 ]
@@ -17340,7 +17505,7 @@ dependencies = [
  "rand 0.8.5",
  "rustls 0.21.12",
  "sha1",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "url",
  "utf-8",
 ]
@@ -17359,7 +17524,7 @@ dependencies = [
  "log",
  "rand 0.8.5",
  "sha1",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "url",
  "utf-8",
 ]
@@ -17386,6 +17551,7 @@ dependencies = [
  "eyre",
  "fdlimit",
  "hdrhistogram",
+ "iota-macros",
  "itertools 0.13.0",
  "msim",
  "once_cell",
@@ -17397,11 +17563,10 @@ dependencies = [
  "rocksdb",
  "rstest",
  "serde",
- "sui-macros",
  "syn 1.0.107",
  "tap",
  "tempfile",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "tokio",
  "tracing",
  "typed-store-derive",
@@ -17425,7 +17590,7 @@ name = "typed-store-error"
 version = "0.4.0"
 dependencies = [
  "serde",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -17444,6 +17609,12 @@ dependencies = [
  "syn 2.0.87",
  "zstd-sys",
 ]
+
+[[package]]
+name = "typeid"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e13db2e0ccd5e14a544e8a246ba2312cd25223f616442d7f2cb0e3db614236e"
 
 [[package]]
 name = "typenum"
@@ -18005,6 +18176,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
+name = "windows-registry"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e400001bb720a623c1c69032f8e3e4cf09984deec740f007dd2b03ec864804b0"
+dependencies = [
+ "windows-result",
+ "windows-strings",
+ "windows-targets 0.52.6",
+]
+
+[[package]]
+name = "windows-result"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d1043d8214f791817bab27572aaa8af63732e11bf84aa21a45a78d6c317ae0e"
+dependencies = [
+ "windows-targets 0.52.6",
+]
+
+[[package]]
+name = "windows-strings"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4cd9b125c486025df0eabcb585e62173c6c9eddcec5d117d3b6e8c30e2ee4d10"
+dependencies = [
+ "windows-result",
+ "windows-targets 0.52.6",
+]
+
+[[package]]
 name = "windows-sys"
 version = "0.42.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -18253,16 +18454,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "winreg"
-version = "0.52.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a277a57398d4bfa075df44f501a17cfdf8542d224f0d36095a2adc7aee4ef0a5"
-dependencies = [
- "cfg-if",
- "windows-sys 0.48.0",
-]
-
-[[package]]
 name = "wiremock"
 version = "0.5.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -18309,7 +18500,7 @@ dependencies = [
  "pharos",
  "rustc_version",
  "send_wrapper 0.6.0",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -18332,7 +18523,7 @@ dependencies = [
 
 [[package]]
 name = "x"
-version = "1.41.0"
+version = "1.43.1"
 dependencies = [
  "anyhow",
  "camino",
@@ -18356,7 +18547,7 @@ dependencies = [
  "ring 0.17.8",
  "signature 2.2.0",
  "spki 0.7.3",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "zeroize",
 ]
 
@@ -18375,7 +18566,7 @@ dependencies = [
  "oid-registry",
  "ring 0.16.20",
  "rusticata-macros",
- "thiserror 1.0.64",
+ "thiserror 1.0.69",
  "time",
 ]
 
@@ -18460,28 +18651,28 @@ dependencies = [
 
 [[package]]
 name = "yup-oauth2"
-version = "8.3.1"
+version = "11.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24bea7df5a9a74a9a0de92f22e5ab3fb9505dd960c7f1f00de5b7231d9d97206"
+checksum = "4ed5f19242090128c5809f6535cc7b8d4e2c32433f6c6005800bbc20a644a7f0"
 dependencies = [
  "anyhow",
  "async-trait",
- "base64 0.13.1",
+ "base64 0.22.1",
  "futures",
- "http 0.2.9",
- "hyper 0.14.26",
- "hyper-rustls 0.24.0",
- "itertools 0.10.5",
+ "http 1.1.0",
+ "http-body-util",
+ "hyper 1.5.2",
+ "hyper-rustls 0.27.2",
+ "hyper-util",
  "log",
  "percent-encoding",
- "rustls 0.21.12",
- "rustls-pemfile 1.0.2",
+ "rustls 0.23.20",
+ "rustls-pemfile 2.1.2",
  "seahash",
  "serde",
  "serde_json",
  "time",
  "tokio",
- "tower-service",
  "url",
 ]
 

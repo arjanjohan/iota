@@ -4,7 +4,7 @@ As a syntactic convience, some functions in Move can be called as "methods" on a
 by using the `.` operator to call the function, where the value on the left-hand side of the `.` is
 the first argument to the function (sometimes called the receiver). The type of that value
 statically determines which function is called. This is an important difference from some other
-langauges, where this syntax might indicate a dynamic call, where the function to be called is
+languages, where this syntax might indicate a dynamic call, where the function to be called is
 determined at runtime. In Move, all function calls are statically determined.
 
 In short, this syntax exists to make it easier to call functions without having to create an alias
@@ -145,10 +145,10 @@ Normally, we would be stuck having to call it as `double(&c)` because `b::exampl
 `Cup`, but instead we can use a `use fun` alias
 
 ```move
-    fun double_double(c: Cup<u64>): (Cup<u64>, Cup<u64>) {
-        use fun b::example::double as Cup.dub;
-        (c.dub(), c.dub()) // resolves to b::example::double in both calls
-    }
+fun double_double(c: Cup<u64>): (Cup<u64>, Cup<u64>) {
+    use fun b::example::double as Cup.dub;
+    (c.dub(), c.dub()) // resolves to b::example::double in both calls
+}
 ```
 
 While `use fun` can be made in any scope, the target `<function>` of the `use fun` must have a first

@@ -1,22 +1,23 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{sync::Arc, time::Duration};
 
 use consensus_config::AuthorityIndex;
 use futures::StreamExt;
-use mysten_metrics::spawn_monitored_task;
+use iota_metrics::spawn_monitored_task;
 use parking_lot::{Mutex, RwLock};
 use tokio::{task::JoinHandle, time::sleep};
 use tracing::{debug, error, info};
 
 use crate::{
+    Round,
     block::BlockAPI as _,
     context::Context,
     dag_state::DagState,
     error::ConsensusError,
     network::{NetworkClient, NetworkService},
-    Round,
 };
 
 /// Subscriber manages the block stream subscriptions to other peers, taking care of retrying
@@ -248,10 +249,11 @@ mod test {
 
     use super::*;
     use crate::{
-        block::{BlockRef, VerifiedBlock},
+        VerifiedBlock,
+        block::BlockRef,
         commit::CommitRange,
         error::ConsensusResult,
-        network::{test_network::TestService, BlockStream},
+        network::{BlockStream, ExtendedSerializedBlock, test_network::TestService},
         storage::mem_store::MemStore,
     };
 
@@ -284,7 +286,11 @@ mod test {
         ) -> ConsensusResult<BlockStream> {
             let block_stream = stream::unfold((), |_| async {
                 sleep(Duration::from_millis(1)).await;
-                Some((Bytes::from(vec![1u8; 8]), ()))
+                let block = ExtendedSerializedBlock {
+                    block: Bytes::from(vec![1u8; 8]),
+                    excluded_ancestors: vec![],
+                };
+                Some((block, ()))
             })
             .take(10);
             Ok(Box::pin(block_stream))
@@ -360,7 +366,13 @@ mod test {
         assert!(service.handle_send_block.len() >= 100);
         for (p, block) in service.handle_send_block.iter() {
             assert_eq!(*p, peer);
-            assert_eq!(*block, Bytes::from(vec![1u8; 8]));
+            assert_eq!(
+                *block,
+                ExtendedSerializedBlock {
+                    block: Bytes::from(vec![1u8; 8]),
+                    excluded_ancestors: vec![]
+                }
+            );
         }
     }
 }

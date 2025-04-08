@@ -1,13 +1,14 @@
 // Copyright (c) Mysten Labs, Inc.
+// Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use std::sync::Arc;
 
 use prometheus::{
+    Histogram, HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec, Registry,
     exponential_buckets, register_histogram_vec_with_registry, register_histogram_with_registry,
     register_int_counter_vec_with_registry, register_int_counter_with_registry,
-    register_int_gauge_vec_with_registry, register_int_gauge_with_registry, Histogram,
-    HistogramVec, IntCounter, IntCounterVec, IntGauge, IntGaugeVec, Registry,
+    register_int_gauge_vec_with_registry, register_int_gauge_with_registry,
 };
 
 use crate::network::metrics::NetworkMetrics;
@@ -112,6 +113,7 @@ pub(crate) struct NodeMetrics {
     pub(crate) blocks_per_commit_count: Histogram,
     pub(crate) broadcaster_rtt_estimate_ms: IntGaugeVec,
     pub(crate) core_add_blocks_batch_size: Histogram,
+    pub(crate) core_check_block_refs_batch_size: Histogram,
     pub(crate) core_lock_dequeued: IntCounter,
     pub(crate) core_lock_enqueued: IntCounter,
     pub(crate) core_skipped_proposals: IntCounterVec,
@@ -128,6 +130,9 @@ pub(crate) struct NodeMetrics {
     pub(crate) synchronizer_missing_blocks_by_authority: IntCounterVec,
     pub(crate) synchronizer_current_missing_blocks_by_authority: IntGaugeVec,
     pub(crate) synchronizer_fetched_blocks_by_authority: IntCounterVec,
+    pub(crate) network_received_excluded_ancestors_from_authority: IntCounterVec,
+    pub(crate) network_excluded_ancestors_sent_to_fetch: IntCounterVec,
+    pub(crate) network_excluded_ancestors_count_by_authority: IntCounterVec,
     pub(crate) invalid_blocks: IntCounterVec,
     pub(crate) rejected_blocks: IntCounterVec,
     pub(crate) rejected_future_blocks: IntCounterVec,
@@ -180,6 +185,7 @@ pub(crate) struct NodeMetrics {
     pub(crate) commit_sync_fetch_loop_latency: Histogram,
     pub(crate) commit_sync_fetch_once_latency: Histogram,
     pub(crate) commit_sync_fetch_once_errors: IntCounterVec,
+    pub(crate) commit_sync_fetch_missing_blocks: IntCounterVec,
     pub(crate) round_prober_received_quorum_round_gaps: IntGaugeVec,
     pub(crate) round_prober_accepted_quorum_round_gaps: IntGaugeVec,
     pub(crate) round_prober_low_received_quorum_round: IntGaugeVec,
@@ -286,6 +292,12 @@ impl NodeMetrics {
                 NUM_BUCKETS.to_vec(),
                 registry,
             ).unwrap(),
+            core_check_block_refs_batch_size: register_histogram_with_registry!(
+                "core_check_block_refs_batch_size",
+                "The number of excluded blocks received from Core for search on a single batch",
+                NUM_BUCKETS.to_vec(),
+                registry,
+            ).unwrap(),
             core_lock_dequeued: register_int_counter_with_registry!(
                 "core_lock_dequeued",
                 "Number of dequeued core requests",
@@ -373,6 +385,24 @@ impl NodeMetrics {
                 "synchronizer_fetched_blocks_by_authority",
                 "Number of fetched blocks per block author via the synchronizer",
                 &["authority", "type"],
+                registry,
+            ).unwrap(),
+            network_received_excluded_ancestors_from_authority: register_int_counter_vec_with_registry!(
+                "network_received_excluded_ancestors_from_authority",
+                "Number of excluded ancestors received from each authority.",
+                &["authority"],
+                registry,
+            ).unwrap(),
+            network_excluded_ancestors_count_by_authority: register_int_counter_vec_with_registry!(
+                "network_excluded_ancestors_count_by_authority",
+                "Total number of excluded ancestors per authority.",
+                &["authority"],
+                registry,
+            ).unwrap(),
+            network_excluded_ancestors_sent_to_fetch: register_int_counter_vec_with_registry!(
+                "network_excluded_ancestors_sent_to_fetch",
+                "Number of excluded ancestors sent to fetch.",
+                &["authority"],
                 registry,
             ).unwrap(),
             last_known_own_block_round: register_int_gauge_with_registry!(
@@ -518,7 +548,7 @@ impl NodeMetrics {
             ).unwrap(),
             block_suspensions: register_int_counter_vec_with_registry!(
                 "block_suspensions",
-                "The number block suspensions. The counter is reported uniquely, so if a block is sent for reprocessing while alreadly suspended then is not double counted",
+                "The number block suspensions. The counter is reported uniquely, so if a block is sent for reprocessing while already suspended then is not double counted",
                 &["authority"],
                 registry,
             ).unwrap(),
@@ -662,6 +692,12 @@ impl NodeMetrics {
                 "commit_sync_fetch_once_errors",
                 "Number of errors when attempting to fetch commits and blocks from single authority during commit sync.",
                 &["authority", "error"],
+                registry
+            ).unwrap(),
+            commit_sync_fetch_missing_blocks: register_int_counter_vec_with_registry!(
+                "commit_sync_fetch_missing_blocks",
+                "Number of ancestor blocks that are missing when processing blocks via commit sync.",
+                &["authority"],
                 registry
             ).unwrap(),
             round_prober_received_quorum_round_gaps: register_int_gauge_vec_with_registry!(
