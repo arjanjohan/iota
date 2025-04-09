@@ -279,6 +279,52 @@ enum Value {
     TxToCheckpoint(CheckpointSequenceNumber),
 }
 
+pub fn path_elements_to_key(digest: &str, type_: &str) -> anyhow::Result<Key> {
+    let decoded_digest = base64_url::decode(digest)?;
+
+    match type_ {
+        "tx" => Ok(Key::Tx(TransactionDigest::try_from(decoded_digest)?)),
+        "fx" => Ok(Key::Fx(TransactionDigest::try_from(decoded_digest)?)),
+        "ev" => Ok(Key::Events(TransactionEventsDigest::try_from(
+            decoded_digest,
+        )?)),
+        "cc" => {
+            // first try to decode as digest, otherwise try to decode as tagged key
+            match CheckpointContentsDigest::try_from(decoded_digest.clone()) {
+                Err(_) => {
+                    let tagged_key = bcs::from_bytes(&decoded_digest)?;
+                    match tagged_key {
+                        TaggedKey::CheckpointSequenceNumber(seq) => {
+                            Ok(Key::CheckpointContents(seq))
+                        }
+                    }
+                }
+                Ok(cc_digest) => Ok(Key::CheckpointContentsByDigest(cc_digest)),
+            }
+        }
+        "cs" => {
+            // first try to decode as digest, otherwise try to decode as tagged key
+            match CheckpointDigest::try_from(decoded_digest.clone()) {
+                Err(_) => {
+                    let tagged_key = bcs::from_bytes(&decoded_digest)?;
+                    match tagged_key {
+                        TaggedKey::CheckpointSequenceNumber(seq) => Ok(Key::CheckpointSummary(seq)),
+                    }
+                }
+                Ok(cs_digest) => Ok(Key::CheckpointSummaryByDigest(cs_digest)),
+            }
+        }
+        "tx2c" => Ok(Key::TxToCheckpoint(TransactionDigest::try_from(
+            decoded_digest,
+        )?)),
+        "ob" => {
+            let object_key: ObjectKey = bcs::from_bytes(&decoded_digest)?;
+            Ok(Key::ObjectKey(object_key.0, object_key.1))
+        }
+        _ => Err(anyhow::anyhow!("Invalid type: {}", type_)),
+    }
+}
+
 impl HttpKVStore {
     pub fn new_kv(
         base_url: &str,
