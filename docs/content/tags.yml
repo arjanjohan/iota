@@ -276,7 +276,6 @@ core-protocol:
 tokenomics:
   label: Tokenomics
   description: Token Economics
-
 iota-cli:
   label: IOTA CLI
   description: IOTA Command Line Interface
@@ -296,3 +295,21 @@ node-operation:
 infrastructure:
   label: Infrastructure
   description: Infrastructure
+
+# Hackathon 04/2025 Tracks
+payments-and-consumer-apps:
+  label: Payments & Consumer Applications
+  description: Payments & Consumer Applications
+
+rwa-tokenization:
+  label: Real DeF(A)i  Applications in Tokenization and Global Trade
+  description: Real World Applications in Tokenization and Global Trade
+
+defai:
+  label: DeF(A)i
+  description: DeF(A)i
+
+tooling-and-infra:
+  label: Tooling & Infrastructure (chain abstraction, identity, cross-chain transfers, EVM to Move)
+  description: Tooling & Infrastructure (chain abstraction, identity, cross-chain transfers, EVM to Move)
+# Hackathon 04/2025 Tracks
