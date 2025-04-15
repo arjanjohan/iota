@@ -469,7 +469,7 @@ impl Core {
 
         // Determine the ancestors to be included in proposal.
         let (ancestors, excluded_and_equivocating_ancestors) =
-            self.smart_ancestors_to_propose(clock_round, !force);
+            self.ancestors_to_propose(clock_round, !force);
 
         // If we did not find enough good ancestors to propose, continue to wait before
         // proposing.
@@ -667,13 +667,6 @@ impl Core {
                 {
                     self.leader_schedule
                         .update_leader_schedule_v2(&self.dag_state);
-
-                    let propagation_scores = self
-                        .leader_schedule
-                        .leader_swap_table
-                        .read()
-                        .reputation_scores
-                        .clone();
                 } else {
                     self.leader_schedule
                         .update_leader_schedule_v1(&self.dag_state);
@@ -883,18 +876,19 @@ impl Core {
     }
 
     /// Retrieves the next ancestors to propose to form a block at `clock_round`
-    /// round. If smart selection is enabled then this will try to select
-    /// the best ancestors based on the propagation scores of the
-    /// authorities.
-    fn smart_ancestors_to_propose(
+    /// round. If force=false and the stake of available ancestors is not big
+    /// enough, then this function will wait. It force=true and stake is not
+    /// big enough then the function will panic, because it means that there is
+    /// a bug somewhere
+    fn ancestors_to_propose(
         &mut self,
         clock_round: Round,
-        smart_select: bool,
+        force: bool,
     ) -> (Vec<VerifiedBlock>, BTreeSet<BlockRef>) {
         let node_metrics = &self.context.metrics.node_metrics;
         let _s = node_metrics
             .scope_processing_time
-            .with_label_values(&["Core::smart_ancestors_to_propose"])
+            .with_label_values(&["Core::ancestors_to_propose"])
             .start_timer();
 
         // Now take the ancestors before the clock_round (excluded) for each authority.
@@ -948,10 +942,10 @@ impl Core {
             parent_round_quorum.add(ancestor.author(), &self.context.committee);
         }
 
-        if smart_select && !parent_round_quorum.reached_threshold(&self.context.committee) {
-            node_metrics.smart_selection_wait.inc();
+        if !force && !parent_round_quorum.reached_threshold(&self.context.committee) {
+            node_metrics.selection_wait.inc();
             debug!(
-                "Only found {} stake of good ancestors to include for round {clock_round}, will wait for more.",
+                "Only found {} stake of ancestors to include for round {clock_round}, will wait for more.",
                 parent_round_quorum.stake()
             );
             return (vec![], BTreeSet::new());
@@ -1864,6 +1858,7 @@ mod test {
         }
     }
 
+    #[cfg(feature = "smart_ancestor_selection_tests")]
     #[tokio::test(flavor = "current_thread", start_paused = true)]
     async fn test_core_try_new_block_with_leader_timeout_and_low_scoring_authority() {
         telemetry_subscribers::init_for_testing();

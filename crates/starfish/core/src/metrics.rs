@@ -147,7 +147,7 @@ pub(crate) struct NodeMetrics {
     pub(crate) commit_round_advancement_interval: Histogram,
     pub(crate) last_decided_leader_round: IntGauge,
     pub(crate) leader_timeout_total: IntCounterVec,
-    pub(crate) smart_selection_wait: IntCounter,
+    pub(crate) selection_wait: IntCounter,
     pub(crate) missing_blocks_total: IntCounter,
     pub(crate) missing_blocks_after_fetch_total: IntCounter,
     pub(crate) num_of_bad_nodes: IntGauge,
@@ -481,9 +481,9 @@ impl NodeMetrics {
                 &["timeout_type"],
                 registry,
             ).unwrap(),
-            smart_selection_wait: register_int_counter_with_registry!(
-                "smart_selection_wait",
-                "Number of times we waited for smart ancestor selection.",
+            selection_wait: register_int_counter_with_registry!(
+                "selection_wait",
+                "Number of times we waited for ancestor selection.",
                 registry,
             ).unwrap(),
             missing_blocks_total: register_int_counter_with_registry!(
