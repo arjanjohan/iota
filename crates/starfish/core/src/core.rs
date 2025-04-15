@@ -25,7 +25,6 @@ use crate::{
     storage::mem_store::MemStore,
 };
 use crate::{
-    ancestor::{AncestorState, AncestorStateManager},
     block::{
         Block, BlockAPI, BlockRef, BlockTimestampMs, BlockV1, ExtendedBlock, GENESIS_ROUND, Round,
         SignedBlock, Slot, VerifiedBlock,
@@ -108,11 +107,6 @@ pub(crate) struct Core {
     /// None it means that the last block sync mechanism is enabled, but it
     /// hasn't been initialised yet.
     last_known_proposed_round: Option<Round>,
-    // The ancestor state manager will keep track of the quality of the authorities
-    // based on the distribution of their blocks to the network. It will use this
-    // information to decide whether to include that authority block in the next
-    // proposal or not.
-    ancestor_state_manager: AncestorStateManager,
 }
 
 impl Core {
@@ -168,14 +162,6 @@ impl Core {
             Some(0)
         };
 
-        let propagation_scores = leader_schedule
-            .leader_swap_table
-            .read()
-            .reputation_scores
-            .clone();
-        let mut ancestor_state_manager = AncestorStateManager::new(context.clone());
-        ancestor_state_manager.set_propagation_scores(propagation_scores);
-
         Self {
             context,
             last_signaled_round,
@@ -192,7 +178,6 @@ impl Core {
             block_signer,
             dag_state,
             last_known_proposed_round: min_propose_round,
-            ancestor_state_manager,
         }
         .recover()
     }
@@ -689,8 +674,6 @@ impl Core {
                         .read()
                         .reputation_scores
                         .clone();
-                    self.ancestor_state_manager
-                        .set_propagation_scores(propagation_scores);
                 } else {
                     self.leader_schedule
                         .update_leader_schedule_v1(&self.dag_state);
@@ -826,8 +809,7 @@ impl Core {
                 .map(|((i, _), rounds)| format!("{i}: {rounds:?}"))
                 .join(", ")
         );
-        self.ancestor_state_manager
-            .set_quorum_rounds_per_authority(received_quorum_rounds, accepted_quorum_rounds);
+
         info!("Propagation round delay set to: {delay}");
         self.propagation_delay = delay;
     }
@@ -927,19 +909,12 @@ impl Core {
             "Fatal error, number of returned ancestors don't match committee size."
         );
 
-        // Ensure ancestor state is up to date before selecting for proposal.
-        self.ancestor_state_manager.update_all_ancestors_state();
-        let ancestor_state_map = self.ancestor_state_manager.get_ancestor_states();
-
         let quorum_round = clock_round.saturating_sub(1);
 
-        let mut score_and_pending_excluded_ancestors = Vec::new();
         let mut excluded_and_equivocating_ancestors = BTreeSet::new();
 
         // Propose only ancestors of higher rounds than what has already been proposed.
         // And always include own last proposed block first among ancestors.
-        // Start by only including the high scoring ancestors. Low scoring ancestors
-        // will be included in a second pass below.
         let included_ancestors = iter::once(self.last_proposed_block().clone())
             .chain(
                 all_ancestors
@@ -958,19 +933,6 @@ impl Core {
 
                         // We will never include equivocating ancestors so add them immediately
                         excluded_and_equivocating_ancestors.extend(equivocating_ancestors);
-
-                        let ancestor_state = ancestor_state_map[ancestor.author()];
-                        match ancestor_state {
-                            AncestorState::Include => {
-                                trace!("Found ancestor {ancestor} with INCLUDE state for round {clock_round}");
-                            }
-                            AncestorState::Exclude(score) => {
-                                trace!("Added ancestor {ancestor} with EXCLUDE state with score {score} to temporary excluded ancestors for round {clock_round}");
-                                score_and_pending_excluded_ancestors.push((score, ancestor));
-                                return None;
-                            }
-                        }
-
                         Some(ancestor)
                     }),
             )
@@ -995,120 +957,6 @@ impl Core {
             return (vec![], BTreeSet::new());
         }
 
-        // Sort scores descending so we can include the best of the pending excluded
-        // ancestors first until we reach the threshold.
-        score_and_pending_excluded_ancestors.sort_by(|a, b| b.0.cmp(&a.0));
-
-        let mut ancestors_to_propose = included_ancestors;
-        let mut excluded_ancestors = Vec::new();
-        for (score, ancestor) in score_and_pending_excluded_ancestors.into_iter() {
-            let block_hostname = &self.context.committee.authority(ancestor.author()).hostname;
-            if !parent_round_quorum.reached_threshold(&self.context.committee)
-                && ancestor.round() == quorum_round
-            {
-                debug!(
-                    "Including temporarily excluded parent round ancestor {ancestor} with score {score} to propose for round {clock_round}"
-                );
-                parent_round_quorum.add(ancestor.author(), &self.context.committee);
-                ancestors_to_propose.push(ancestor);
-                node_metrics
-                    .included_excluded_proposal_ancestors_count_by_authority
-                    .with_label_values(&[block_hostname.as_str(), "timeout"])
-                    .inc();
-            } else {
-                excluded_ancestors.push((score, ancestor));
-            }
-        }
-
-        // Iterate through excluded ancestors and include the ancestor or the ancestor's
-        // ancestor that has been accepted by a quorum of the network. If the
-        // original ancestor itself is not included then it will be part of
-        // excluded ancestors that are not included in the block but will still
-        // be broadcasted to peers.
-        for (score, ancestor) in excluded_ancestors.iter() {
-            let excluded_author = ancestor.author();
-            let block_hostname = &self.context.committee.authority(excluded_author).hostname;
-            // A quorum of validators reported to have accepted blocks from the
-            // excluded_author up to the low quorum round.
-            let mut accepted_low_quorum_round = self
-                .ancestor_state_manager
-                .accepted_quorum_round_per_authority[excluded_author]
-                .0;
-            // If the accepted quorum round of this ancestor is greater than or equal
-            // to the clock round then we want to make sure to set it to clock_round - 1
-            // as that is the max round the new block can include as an ancestor.
-            accepted_low_quorum_round = accepted_low_quorum_round.min(quorum_round);
-
-            let last_included_round = self.last_included_ancestors[excluded_author]
-                .map(|block_ref| block_ref.round)
-                .unwrap_or(GENESIS_ROUND);
-            if ancestor.round() <= last_included_round {
-                // This should have already been filtered out when filtering all_ancestors.
-                // Still, ensure previously included ancestors are filtered out.
-                continue;
-            }
-
-            if last_included_round >= accepted_low_quorum_round {
-                excluded_and_equivocating_ancestors.insert(ancestor.reference());
-                trace!(
-                    "Excluded low score ancestor {} with score {score} to propose for round {clock_round}: last included round {last_included_round} >= accepted low quorum round {accepted_low_quorum_round}",
-                    ancestor.reference()
-                );
-                node_metrics
-                    .excluded_proposal_ancestors_count_by_authority
-                    .with_label_values(&[block_hostname])
-                    .inc();
-                continue;
-            }
-
-            let ancestor = if ancestor.round() <= accepted_low_quorum_round {
-                // Include the ancestor block as it has been seen & accepted by a strong quorum.
-                ancestor.clone()
-            } else {
-                // Exclude this ancestor since it hasn't been accepted by a strong quorum
-                excluded_and_equivocating_ancestors.insert(ancestor.reference());
-                trace!(
-                    "Excluded low score ancestor {} with score {score} to propose for round {clock_round}: ancestor round {} > accepted low quorum round {accepted_low_quorum_round} ",
-                    ancestor.reference(),
-                    ancestor.round()
-                );
-                node_metrics
-                    .excluded_proposal_ancestors_count_by_authority
-                    .with_label_values(&[block_hostname])
-                    .inc();
-
-                // Look for an earlier block in the ancestor chain that we can include as there
-                // is a gap between the last included round and the accepted low quorum round.
-                //
-                // Note: Only cached blocks need to be propagated. Committed blocks
-                // do not need to be propagated.
-                match self.dag_state.read().get_last_cached_block_in_range(
-                    excluded_author,
-                    last_included_round + 1,
-                    accepted_low_quorum_round + 1,
-                ) {
-                    Some(earlier_ancestor) => {
-                        // Found an earlier block that has been propagated well - include it instead
-                        earlier_ancestor
-                    }
-                    None => {
-                        // No suitable earlier block found
-                        continue;
-                    }
-                }
-            };
-            self.last_included_ancestors[excluded_author] = Some(ancestor.reference());
-            ancestors_to_propose.push(ancestor.clone());
-            trace!(
-                "Included low scoring ancestor {} with score {score} seen at accepted low quorum round {accepted_low_quorum_round} to propose for round {clock_round}",
-                ancestor.reference()
-            );
-            node_metrics
-                .included_excluded_proposal_ancestors_count_by_authority
-                .with_label_values(&[block_hostname.as_str(), "quorum"])
-                .inc();
-        }
-
         assert!(
             parent_round_quorum.reached_threshold(&self.context.committee),
             "Fatal error, quorum not reached for parent round when proposing for round {clock_round}. Possible mismatch between DagState and Core."
@@ -1116,11 +964,11 @@ impl Core {
 
         info!(
             "Included {} ancestors & excluded {} low performing or equivocating ancestors for proposal in round {clock_round}",
-            ancestors_to_propose.len(),
+            included_ancestors.len(),
             excluded_and_equivocating_ancestors.len()
         );
 
-        (ancestors_to_propose, excluded_and_equivocating_ancestors)
+        (included_ancestors, excluded_and_equivocating_ancestors)
     }
 
     /// Checks whether all the leaders of the round exist.
@@ -2131,6 +1979,7 @@ mod test {
         }
     }
 
+    #[cfg(feature = "smart_ancestor_selection_tests")]
     #[tokio::test]
     async fn test_smart_ancestor_selection() {
         telemetry_subscribers::init_for_testing();
