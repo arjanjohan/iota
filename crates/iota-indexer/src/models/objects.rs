@@ -19,7 +19,7 @@ use serde::de::DeserializeOwned;
 
 use crate::{
     errors::IndexerError,
-    schema::{objects, objects_history, objects_snapshot},
+    schema::{objects, objects_history, objects_snapshot, optimistic_deleted_objects_versions},
     types::{IndexedDeletedObject, IndexedObject, ObjectStatus, owner_to_owner_info},
 };
 
@@ -74,6 +74,13 @@ pub struct StoredObjectSnapshot {
     pub coin_type: Option<String>,
     pub coin_balance: Option<i64>,
     pub df_kind: Option<i16>,
+}
+
+#[derive(Queryable, Insertable, Debug, Identifiable, Clone, QueryableByName)]
+#[diesel(table_name = optimistic_deleted_objects_versions, primary_key(object_id))]
+pub struct OptimisticDeletedObjectVersion {
+    pub object_id: Vec<u8>,
+    pub object_version: i64,
 }
 
 impl From<IndexedObject> for StoredObjectSnapshot {

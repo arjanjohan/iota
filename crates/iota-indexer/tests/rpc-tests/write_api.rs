@@ -354,6 +354,10 @@ fn test_consecutive_modifications_of_owned_object() -> Result<(), anyhow::Error>
 
 #[test]
 fn test_consecutive_wrap_unwrap() -> Result<(), anyhow::Error> {
+    let _guard = telemetry_subscribers::TelemetryConfig::new()
+        .with_env()
+        .init();
+
     let ApiTestSetup {
         runtime,
         store,
@@ -363,7 +367,7 @@ fn test_consecutive_wrap_unwrap() -> Result<(), anyhow::Error> {
     runtime.block_on(async move {
         indexer_wait_for_checkpoint(store, 1).await;
         let (sender, sender_kp): (_, AccountKeyPair) = get_key_pair();
-        let consecutive_updates = 50;
+        let consecutive_updates = 2500;
 
         let gas = cluster
             .fund_address_and_return_gas(
@@ -546,7 +550,7 @@ fn test_repeatedly_update_display() {
     } = ApiTestSetup::get_or_init();
 
     runtime.block_on(async {
-        let consecutive_updates = 50;
+        let consecutive_updates = 150;
         indexer_wait_for_checkpoint(store, 1).await;
 
         let (sender, sender_kp): (_, AccountKeyPair) = get_key_pair();

@@ -131,6 +131,11 @@ impl WriteApi {
             // index it safely since we may have already pruned optimistic
             // tables from that epoch. It's very likely that it's already
             // indexed anyway, let's just wait for it.
+            println!(
+                "Epoch change from {} to {}",
+                effects.executed_epoch(),
+                latest_epoch.epoch
+            );
         } else if let (Some(input_objects), Some(output_objects)) = (input_objects, output_objects)
         {
             // We have all needed data, let's optimistically index the tx.
@@ -145,6 +150,7 @@ impl WriteApi {
         } else {
             // TODO: input/output objects are missing, let's create some metric
             // for this
+            println!("Missing in/out objs");
         }
 
         let tx_block_response = self
@@ -163,8 +169,10 @@ impl WriteApi {
         tx_digest: TransactionDigest,
         options: Option<IotaTransactionBlockResponseOptions>,
     ) -> Result<IotaTransactionBlockResponse, IndexerError> {
-        let mut backoff = backoff::ExponentialBackoff::default();
-        backoff.max_elapsed_time = Some(Duration::from_secs(30));
+        let backoff = backoff::ExponentialBackoff {
+            max_elapsed_time: Some(Duration::from_secs(30)),
+            ..Default::default()
+        };
 
         backoff::future::retry(backoff, async || {
             let tx_block_response = self
@@ -181,15 +189,11 @@ impl WriteApi {
                 .pop();
 
             match tx_block_response {
-                Some(tx_block_response) => return Ok(tx_block_response),
-                None => {
-                    return Err(backoff::Error::Transient {
-                        err: IndexerError::PostgresRead(
-                            "Transaction not present in DB".to_string(),
-                        ),
-                        retry_after: None,
-                    });
-                }
+                Some(tx_block_response) => Ok(tx_block_response),
+                None => Err(backoff::Error::Transient {
+                    err: IndexerError::PostgresRead("Transaction not present in DB".to_string()),
+                    retry_after: None,
+                }),
             }
         })
         .await
