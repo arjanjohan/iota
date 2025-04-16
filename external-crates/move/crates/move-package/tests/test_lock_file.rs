@@ -2,22 +2,24 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use expect_test::expect;
 use std::{
     fs::{self, File},
     io::{self, Read, Write},
     path::PathBuf,
 };
-use tempfile::TempDir;
 
+use expect_test::expect;
 use move_compiler::editions::{Edition, Flavor};
-use move_package::lock_file::schema::{
-    update_managed_address, ManagedAddressUpdate, ManagedPackage, ToolchainVersion,
+use move_package::{
+    BuildConfig,
+    lock_file::{
+        LockFile,
+        schema::{ManagedAddressUpdate, ManagedPackage, ToolchainVersion, update_managed_address},
+    },
+    resolution::dependency_graph::DependencyGraph,
 };
-use move_package::lock_file::LockFile;
-use move_package::resolution::dependency_graph::DependencyGraph;
-use move_package::BuildConfig;
 use move_symbol_pool::Symbol;
+use tempfile::TempDir;
 
 #[test]
 fn commit() {
@@ -232,7 +234,7 @@ fn test_update_managed_address() {
         "default",
         ManagedAddressUpdate::Published {
             original_id: "0x123".into(),
-            chain_id: "35834a8a".into(),
+            chain_id: "placeholder".into(),
         },
     )
     .unwrap();
@@ -260,7 +262,7 @@ fn test_update_managed_address() {
             (
                 "default",
                 ManagedPackage {
-                    chain_id: "35834a8a",
+                    chain_id: "placeholder",
                     original_published_id: "0x123",
                     latest_published_id: "0x456",
                     version: "2",
