@@ -27,19 +27,12 @@ pub type CommitIndex = u32;
 
 pub(crate) const GENESIS_COMMIT_INDEX: CommitIndex = 0;
 
-/// Default wave length for all committers. A longer wave length increases the
-/// chance of committing the leader under asynchrony at the cost of latency in
-/// the common case.
-// TODO: merge DEFAULT_WAVE_LENGTH and MINIMUM_WAVE_LENGTH into a single
-// constant, because we are unlikely to change them via config in the
-// foreseeable future.
-pub(crate) const DEFAULT_WAVE_LENGTH: Round = MINIMUM_WAVE_LENGTH;
-
-/// We need at least one leader round, one voting round, and one decision round.
-pub(crate) const MINIMUM_WAVE_LENGTH: Round = 3;
+/// One wave consists of one leader round, one voting round, and one certifying
+/// round.
+pub(crate) const DEFAULT_WAVE_LENGTH: Round = 3;
 
 /// The consensus protocol operates in 'waves'. Each wave is composed of a
-/// leader round, at least one voting round, and one decision round.
+/// leader round, at least one voting round, and one certifying round.
 pub(crate) type WaveNumber = u32;
 
 /// [`Commit`] summarizes [`CommittedSubDag`] for storage and network

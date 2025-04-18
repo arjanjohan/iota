@@ -10,7 +10,7 @@ use tracing::warn;
 
 use crate::{
     block::{BlockAPI, BlockRef, Round, Slot, VerifiedBlock},
-    commit::{DEFAULT_WAVE_LENGTH, LeaderStatus, MINIMUM_WAVE_LENGTH, WaveNumber},
+    commit::{DEFAULT_WAVE_LENGTH, LeaderStatus, WaveNumber},
     context::Context,
     dag_state::DagState,
     leader_schedule::LeaderSchedule,
@@ -26,8 +26,7 @@ mod base_committer_tests;
 mod base_committer_declarative_tests;
 
 pub(crate) struct BaseCommitterOptions {
-    /// TODO: Re-evaluate if we want this to be configurable after running
-    /// experiments. The length of a wave (minimum 3)
+    /// The length of a wave is set to a hardcoded constant 3
     pub wave_length: u32,
     /// The offset used in the leader-election protocol. This is used by the
     /// multi-committer to ensure that each [`BaseCommitter`] instance elects
@@ -72,7 +71,7 @@ impl BaseCommitter {
         dag_state: Arc<RwLock<DagState>>,
         options: BaseCommitterOptions,
     ) -> Self {
-        assert!(options.wave_length >= MINIMUM_WAVE_LENGTH);
+        assert_eq!(options.wave_length, DEFAULT_WAVE_LENGTH);
         Self {
             context,
             leader_schedule,
@@ -97,11 +96,11 @@ impl BaseCommitter {
         // 2f+1 certificates over the leader. Note that there could be more than
         // one leader block (created by Byzantine leaders).
         let wave = self.wave_number(leader.round);
-        let decision_round = self.decision_round(wave);
+        let certifying_round = self.certifying_round(wave);
         let leader_blocks = self.dag_state.read().get_uncommitted_blocks_at_slot(leader);
         let mut leaders_with_enough_support: Vec<_> = leader_blocks
             .into_iter()
-            .filter(|l| self.enough_leader_support(decision_round, l))
+            .filter(|l| self.enough_leader_support(certifying_round, l))
             .map(LeaderStatus::Commit)
             .collect();
 
@@ -172,10 +171,10 @@ impl BaseCommitter {
         (wave * self.options.wave_length) + self.options.round_offset
     }
 
-    /// Return the decision round of the specified wave. The decision round is
-    /// always the last round of the wave. This takes into account round offset
-    /// for when pipelining is enabled.
-    pub(crate) fn decision_round(&self, wave: WaveNumber) -> Round {
+    /// Return the certifying round of the specified wave. The certifying round
+    /// is always the last round of the wave. This takes into account round
+    /// offset for when pipelining is enabled.
+    pub(crate) fn certifying_round(&self, wave: WaveNumber) -> Round {
         let wave_length = self.options.wave_length;
         (wave * wave_length) + wave_length - 1 + self.options.round_offset
     }
@@ -293,14 +292,14 @@ impl BaseCommitter {
         }
 
         // Get all blocks that could be potential certificates for the target leader.
-        // These blocks are in the decision round of the target leader and are
+        // These blocks are in the certifying round of the target leader and are
         // linked to the anchor.
         let wave = self.wave_number(leader_slot.round);
-        let decision_round = self.decision_round(wave);
+        let certifying_round = self.certifying_round(wave);
         let potential_certificates = self
             .dag_state
             .read()
-            .ancestors_at_round(anchor, decision_round);
+            .ancestors_at_round(anchor, certifying_round);
 
         // Use those potential certificates to determine which (if any) of the target
         // leader blocks can be committed.
@@ -363,11 +362,11 @@ impl BaseCommitter {
 
     /// Check whether the specified leader has 2f+1 certificates to be directly
     /// committed.
-    fn enough_leader_support(&self, decision_round: Round, leader_block: &VerifiedBlock) -> bool {
+    fn enough_leader_support(&self, certifying_round: Round, leader_block: &VerifiedBlock) -> bool {
         let decision_blocks = self
             .dag_state
             .read()
-            .get_uncommitted_blocks_at_round(decision_round);
+            .get_uncommitted_blocks_at_round(certifying_round);
 
         // Quickly reject if there isn't enough stake to support the leader from
         // the potential certificates.

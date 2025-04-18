@@ -166,10 +166,12 @@ pub(crate) mod universal_committer_builder {
         dag_state: Arc<RwLock<DagState>>,
         wave_length: Round,
         number_of_leaders: usize,
-        pipeline: bool,
     }
 
     impl UniversalCommitterBuilder {
+        // We use hardcoded parameters: the wave length is 3 and we use one leader in
+        // each round. Support for multi-leader option might be enabled at a
+        // later stage.
         pub(crate) fn new(
             context: Arc<Context>,
             leader_schedule: Arc<LeaderSchedule>,
@@ -181,29 +183,14 @@ pub(crate) mod universal_committer_builder {
                 dag_state,
                 wave_length: DEFAULT_WAVE_LENGTH,
                 number_of_leaders: 1,
-                pipeline: false,
             }
-        }
-
-        #[expect(unused)]
-        pub(crate) fn with_wave_length(mut self, wave_length: Round) -> Self {
-            self.wave_length = wave_length;
-            self
-        }
-
-        pub(crate) fn with_number_of_leaders(mut self, number_of_leaders: usize) -> Self {
-            self.number_of_leaders = number_of_leaders;
-            self
-        }
-
-        pub(crate) fn with_pipeline(mut self, pipeline: bool) -> Self {
-            self.pipeline = pipeline;
-            self
         }
 
         pub(crate) fn build(self) -> UniversalCommitter {
             let mut committers = Vec::new();
-            let pipeline_stages = if self.pipeline { self.wave_length } else { 1 };
+            // We use pipelined scheduler by default, thereby there should be 3 intersecting
+            // waves corresponding to each committer
+            let pipeline_stages = self.wave_length;
             for round_offset in 0..pipeline_stages {
                 for leader_offset in 0..self.number_of_leaders {
                     let options = BaseCommitterOptions {
