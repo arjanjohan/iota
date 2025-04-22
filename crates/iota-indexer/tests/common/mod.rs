@@ -10,9 +10,9 @@ use std::{
 
 use iota_config::local_ip_utils::{get_available_port, new_local_tcp_socket_for_testing};
 use iota_indexer::{
-    IndexerConfig,
+    config::{JsonRpcConfig, SnapshotLagConfig},
+    db::{ConnectionPoolConfig, get_pool_connection, new_connection_pool, reset_database},
     errors::IndexerError,
-    handlers::objects_snapshot_handler::SnapshotLagConfig,
     indexer::Indexer,
     store::{PgIndexerStore, indexer_store::IndexerStore},
     test_utils::{DBInitHook, IndexerTypeConfig, start_test_indexer},
@@ -115,7 +115,6 @@ pub async fn start_test_cluster_with_read_write_indexer(
     database_name: Option<&str>,
     builder_modifier: Option<Box<dyn FnOnce(TestClusterBuilder) -> TestClusterBuilder>>,
 ) -> (TestCluster, PgIndexerStore, HttpClient) {
-    let temp = tempdir().unwrap().into_path();
     let mut builder = TestClusterBuilder::new();
 
     if let Some(builder_modifier) = builder_modifier {
@@ -125,7 +124,7 @@ pub async fn start_test_cluster_with_read_write_indexer(
     let cluster = builder.build().await;
 
     // start indexer in write mode
-    let (pg_store, _pg_store_handle) = start_test_indexer(
+    let (pg_store, _pg_store_handle, _) = start_test_indexer(
         get_indexer_db_url(database_name),
         // reset the existing db
         true,
@@ -137,7 +136,7 @@ pub async fn start_test_cluster_with_read_write_indexer(
     .await;
 
     // start indexer in read mode
-    let indexer_port = start_indexer_reader(cluster.rpc_url().to_owned(), temp, database_name);
+    let indexer_port = start_indexer_reader(cluster.rpc_url().to_owned(), database_name);
 
     // create an RPC client by using the indexer url
     let rpc_client = HttpClientBuilder::default()
@@ -252,28 +251,22 @@ pub async fn execute_tx_and_wait_for_indexer(
 }
 
 /// Start an Indexer instance in `Read` mode
-fn start_indexer_reader(
-    fullnode_rpc_url: impl Into<String>,
-    data_ingestion_path: PathBuf,
-    database_name: Option<&str>,
-) -> u16 {
+fn start_indexer_reader(fullnode_rpc_url: impl Into<String>, database_name: Option<&str>) -> u16 {
     let db_url = get_indexer_db_url(database_name);
     let port = get_available_port(DEFAULT_INDEXER_IP);
-    let config = IndexerConfig {
-        db_url: Some(db_url.clone().into()),
-        rpc_client_url: fullnode_rpc_url.into(),
-        reset_db: true,
-        rpc_server_worker: true,
-        rpc_server_url: DEFAULT_INDEXER_IP.to_owned(),
-        rpc_server_port: port,
-        data_ingestion_path: Some(data_ingestion_path),
-        ..Default::default()
+
+    let config = JsonRpcConfig {
+        rpc_address: SocketAddr::new(DEFAULT_INDEXER_IP.parse().unwrap(), port),
+        rpc_client_url: fullnode_rpc_url.into().parse().unwrap(),
     };
+
+    let pool = new_connection_pool(&db_url, &ConnectionPoolConfig::default())
+        .expect("Creating new connection pool should succeed");
 
     let registry = prometheus::Registry::default();
     init_metrics(&registry);
 
-    tokio::spawn(async move { Indexer::start_reader(&config, &registry, db_url).await });
+    tokio::spawn(async move { Indexer::start_reader(&config, &registry, pool).await });
     port
 }
 
@@ -313,7 +306,7 @@ pub async fn start_simulacrum_rest_api_with_write_indexer(
             .await;
     });
     // Starts indexer
-    let (pg_store, pg_handle) = start_test_indexer(
+    let (pg_store, pg_handle, _) = start_test_indexer(
         get_indexer_db_url(database_name),
         true,
         db_init_hook,
@@ -352,11 +345,8 @@ pub async fn start_simulacrum_rest_api_with_read_write_indexer(
     .await;
 
     // start indexer in read mode
-    let indexer_port = start_indexer_reader(
-        format!("http://{}", simulacrum_server_url),
-        data_ingestion_path,
-        database_name,
-    );
+    let indexer_port =
+        start_indexer_reader(format!("http://{}", simulacrum_server_url), database_name);
 
     // create an RPC client by using the indexer url
     let rpc_client = HttpClientBuilder::default()

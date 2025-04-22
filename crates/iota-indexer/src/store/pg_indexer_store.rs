@@ -129,8 +129,6 @@ SET object_version = EXCLUDED.object_version,
 pub struct PgIndexerStoreConfig {
     pub parallel_chunk_size: usize,
     pub parallel_objects_chunk_size: usize,
-    #[expect(unused)]
-    pub epochs_to_keep: Option<u64>,
 }
 
 pub struct PgIndexerStore {
@@ -161,15 +159,11 @@ impl PgIndexerStore {
             .unwrap_or_else(|_e| PG_COMMIT_OBJECTS_PARALLEL_CHUNK_SIZE.to_string())
             .parse::<usize>()
             .unwrap();
-        let epochs_to_keep = std::env::var("EPOCHS_TO_KEEP")
-            .map(|s| s.parse::<u64>().ok())
-            .unwrap_or_else(|_e| None);
         let partition_manager = PgPartitionManager::new(blocking_cp.clone())
             .expect("Failed to initialize partition manager");
         let config = PgIndexerStoreConfig {
             parallel_chunk_size,
             parallel_objects_chunk_size,
-            epochs_to_keep,
         };
 
         Self {

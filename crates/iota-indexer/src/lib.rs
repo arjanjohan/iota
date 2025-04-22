@@ -4,7 +4,7 @@
 
 #![recursion_limit = "256"]
 
-use std::{net::SocketAddr, path::PathBuf, time::Duration};
+use std::{path::PathBuf, time::Duration};
 
 use anyhow::{Result, anyhow};
 use clap::Parser;
@@ -17,7 +17,6 @@ use metrics::IndexerMetrics;
 use prometheus::Registry;
 use secrecy::{ExposeSecret, Secret};
 use system_package_task::SystemPackageTask;
-use tokio::runtime::Handle;
 use tokio_util::sync::CancellationToken;
 use tracing::warn;
 use url::Url;
@@ -27,10 +26,12 @@ use crate::{
         CoinReadApi, ExtendedApi, GovernanceReadApi, IndexerApi, MoveUtilsApi, ReadApi,
         TransactionBuilderApi, WriteApi,
     },
+    config::JsonRpcConfig,
     indexer_reader::IndexerReader,
 };
 
 pub mod apis;
+pub mod config;
 pub mod db;
 pub mod errors;
 pub mod handlers;
@@ -50,7 +51,7 @@ pub mod types;
     name = "IOTA indexer",
     about = "An off-fullnode service serving data from IOTA protocol"
 )]
-pub struct IndexerConfig {
+pub struct OldIndexerConfig {
     #[arg(long)]
     pub db_url: Option<Secret<String>>,
     #[arg(long)]
@@ -87,7 +88,7 @@ pub struct IndexerConfig {
     pub analytical_worker: bool,
 }
 
-impl IndexerConfig {
+impl OldIndexerConfig {
     /// returns connection url without the db name
     pub fn base_connection_url(&self) -> Result<String, anyhow::Error> {
         let url_secret = self.get_db_url()?;
@@ -135,7 +136,7 @@ impl IndexerConfig {
     }
 }
 
-impl Default for IndexerConfig {
+impl Default for OldIndexerConfig {
     fn default() -> Self {
         Self {
             db_url: Some(secrecy::Secret::new(
@@ -164,8 +165,7 @@ impl Default for IndexerConfig {
 pub async fn build_json_rpc_server(
     prometheus_registry: &Registry,
     reader: IndexerReader,
-    config: &IndexerConfig,
-    custom_runtime: Option<Handle>,
+    config: &JsonRpcConfig,
 ) -> Result<ServerHandle, IndexerError> {
     let mut builder =
         JsonRpcServerBuilder::new(env!("CARGO_PKG_VERSION"), prometheus_registry, None, None);
@@ -180,12 +180,6 @@ pub async fn build_json_rpc_server(
     builder.register_module(CoinReadApi::new(reader.clone())?)?;
     builder.register_module(ExtendedApi::new(reader.clone()))?;
 
-    let default_socket_addr: SocketAddr = SocketAddr::new(
-        // unwrap() here is safe b/c the address is a static config.
-        config.rpc_server_url.as_str().parse().unwrap(),
-        config.rpc_server_port,
-    );
-
     let cancel = CancellationToken::new();
     let system_package_task =
         SystemPackageTask::new(reader.clone(), cancel.clone(), Duration::from_secs(10));
@@ -194,12 +188,7 @@ pub async fn build_json_rpc_server(
     spawn_monitored_task!(async move { system_package_task.run().await });
 
     Ok(builder
-        .start(
-            default_socket_addr,
-            custom_runtime,
-            ServerType::Http,
-            Some(cancel),
-        )
+        .start(config.rpc_address, None, ServerType::Http, Some(cancel))
         .await?)
 }
 
