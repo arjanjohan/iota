@@ -77,11 +77,11 @@ export default function Home() {
 
         <div className="flex flex-row flex-wrap justify-center gap-2 max-w-[1066px] mx-auto">
           <HomeCard title="About IOTA" heroCardBg={heroCardBg}>
+            <Link className={styles.cardLink} to="./about-iota/iota-architecture">
+              IOTA Architecture
+            </Link>
             <Link className={styles.cardLink} to="./about-iota/tokenomics">
               Tokenomics
-            </Link>
-            <Link className={styles.cardLink} to="./developer/cryptography">
-              Cryptography
             </Link>
             <Link className={styles.cardLink} to="./developer/standards">
               Standards
