@@ -36,7 +36,6 @@ use crate::{
     dag_state::DagState,
     error::{ConsensusError, ConsensusResult},
     leader_schedule::LeaderSchedule,
-    round_prober::QuorumRound,
     stake_aggregator::{QuorumThreshold, StakeAggregator},
     transaction::TransactionConsumer,
     universal_committer::{
@@ -719,38 +718,6 @@ impl Core {
     pub(crate) fn set_subscriber_exists(&mut self, exists: bool) {
         info!("Block subscriber exists: {exists}");
         self.subscriber_exists = exists;
-    }
-
-    /// Sets the delay by round for propagating blocks to a quorum and the
-    /// received & accepted quorum rounds per authority for ancestor state
-    /// manager.
-    pub(crate) fn set_propagation_delay_and_quorum_rounds(
-        &mut self,
-        delay: Round,
-        received_quorum_rounds: Vec<QuorumRound>,
-        accepted_quorum_rounds: Vec<QuorumRound>,
-    ) {
-        info!(
-            "Received quorum round per authority in ancestor state manager set to: {}",
-            self.context
-                .committee
-                .authorities()
-                .zip(received_quorum_rounds.iter())
-                .map(|((i, _), rounds)| format!("{i}: {rounds:?}"))
-                .join(", ")
-        );
-        info!(
-            "Accepted quorum round per authority in ancestor state manager set to: {}",
-            self.context
-                .committee
-                .authorities()
-                .zip(accepted_quorum_rounds.iter())
-                .map(|((i, _), rounds)| format!("{i}: {rounds:?}"))
-                .join(", ")
-        );
-
-        info!("Propagation round delay set to: {delay}");
-        self.propagation_delay = delay;
     }
 
     /// Sets the min propose round for the proposer allowing to propose blocks

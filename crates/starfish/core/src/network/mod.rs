@@ -121,6 +121,7 @@ pub(crate) trait NetworkClient: Send + Sync + Sized + 'static {
 
     /// Gets the latest received & accepted rounds of all authorities from the
     /// peer.
+    #[expect(dead_code)]
     async fn get_latest_rounds(
         &self,
         peer: AuthorityIndex,
