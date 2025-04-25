@@ -2679,7 +2679,6 @@ mod test {
     #[cfg(any())]
     mod round_prober_tests {
 
-
         #[tokio::test]
         async fn test_core_set_propagation_delay_per_authority() {
             // TODO: create helper to avoid the duplicated code here.
