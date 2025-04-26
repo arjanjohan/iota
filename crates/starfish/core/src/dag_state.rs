@@ -359,31 +359,6 @@ impl DagState {
         blocks
     }
 
-    // Sets the block as committed in the cache. If the block is set as committed
-    // for first time, then true is returned, otherwise false is returned instead.
-    // Method will panic if the block is not found in the cache.
-    pub(crate) fn set_committed(&mut self, block_ref: &BlockRef) -> bool {
-        if let Some(block_info) = self.recent_blocks.get_mut(block_ref) {
-            if !block_info.committed {
-                block_info.committed = true;
-                return true;
-            }
-            false
-        } else {
-            panic!(
-                "Block {:?} not found in cache to set as committed.",
-                block_ref
-            );
-        }
-    }
-
-    pub(crate) fn is_committed(&self, block_ref: &BlockRef) -> bool {
-        self.recent_blocks
-            .get(block_ref)
-            .unwrap_or_else(|| panic!("Attempted to query for commit status for a block not in cached data {block_ref}"))
-            .committed
-    }
-
     /// Gets all uncommitted blocks in a slot.
     /// Uncommitted blocks must exist in memory, so only in-memory blocks are
     /// checked.
@@ -1032,16 +1007,11 @@ impl DagState {
 
 struct BlockInfo {
     block: VerifiedBlock,
-    // Whether the block has been committed
-    committed: bool,
 }
 
 impl BlockInfo {
     fn new(block: VerifiedBlock) -> Self {
-        Self {
-            block,
-            committed: false,
-        }
+        Self { block }
     }
 }
 
@@ -1765,44 +1735,6 @@ mod test {
         // Unscored subdags will be recovered based on the flushed commits and no commit
         // info
         assert_eq!(dag_state.scoring_subdags_count(), 5);
-    }
-
-    #[tokio::test]
-    async fn test_block_info_as_committed() {
-        let num_authorities: u32 = 4;
-        let (context, _) = Context::new_for_test(num_authorities as usize);
-        let context = Arc::new(context);
-
-        let store = Arc::new(MemStore::new());
-        let mut dag_state = DagState::new(context.clone(), store.clone());
-
-        // Accept a block
-        let block = VerifiedBlock::new_for_test(
-            TestBlock::new(1, 0)
-                .set_timestamp_ms(1000)
-                .set_ancestors(vec![])
-                .build(),
-        );
-
-        dag_state.accept_block(block.clone());
-
-        // Query is committed
-        assert!(!dag_state.is_committed(&block.reference()));
-
-        // Set block as committed for first time should return true
-        assert!(
-            dag_state.set_committed(&block.reference()),
-            "Block should be successfully set as committed for first time"
-        );
-
-        // Now it should appear as committed
-        assert!(dag_state.is_committed(&block.reference()));
-
-        // Trying to set the block as committed again, it should return false.
-        assert!(
-            !dag_state.set_committed(&block.reference()),
-            "Block should not be successfully set as committed"
-        );
     }
 
     #[tokio::test]

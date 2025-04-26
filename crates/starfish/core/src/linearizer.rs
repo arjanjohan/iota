@@ -20,12 +20,6 @@ use crate::{
 /// `DagBuilder`.
 pub(crate) trait BlockStoreAPI {
     fn get_blocks(&self, refs: &[BlockRef]) -> Vec<Option<VerifiedBlock>>;
-
-    #[expect(dead_code)]
-    fn set_committed(&mut self, block_ref: &BlockRef) -> bool;
-
-    #[expect(dead_code)]
-    fn is_committed(&self, block_ref: &BlockRef) -> bool;
 }
 
 impl BlockStoreAPI
@@ -33,14 +27,6 @@ impl BlockStoreAPI
 {
     fn get_blocks(&self, refs: &[BlockRef]) -> Vec<Option<VerifiedBlock>> {
         DagState::get_blocks(self, refs)
-    }
-
-    fn set_committed(&mut self, block_ref: &BlockRef) -> bool {
-        DagState::set_committed(self, block_ref)
-    }
-
-    fn is_committed(&self, block_ref: &BlockRef) -> bool {
-        DagState::is_committed(self, block_ref)
     }
 }
 
@@ -90,12 +76,8 @@ impl Linearizer {
         let timestamp_ms = leader_block.timestamp_ms().max(last_commit_timestamp_ms);
 
         // Now linearize the sub-dag starting from the leader block
-        let to_commit = Self::linearize_sub_dag(
-            &self.context,
-            leader_block.clone(),
-            last_committed_rounds,
-            &mut dag_state,
-        );
+        let to_commit =
+            Self::linearize_sub_dag(leader_block.clone(), last_committed_rounds, &mut dag_state);
 
         drop(dag_state);
 
@@ -128,7 +110,6 @@ impl Linearizer {
     }
 
     pub(crate) fn linearize_sub_dag(
-        _context: &Context,
         leader_block: VerifiedBlock,
         last_committed_rounds: Vec<u32>,
         dag_state: &mut impl BlockStoreAPI,
