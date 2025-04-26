@@ -513,37 +513,6 @@ impl DagState {
         blocks
     }
 
-    // Retrieves the cached block within the range [start_round, end_round) from a
-    // given authority. NOTE: end_round must be greater than GENESIS_ROUND.
-    #[cfg(test)]
-    pub(crate) fn get_last_cached_block_in_range(
-        &self,
-        authority: AuthorityIndex,
-        start_round: Round,
-        end_round: Round,
-    ) -> Option<VerifiedBlock> {
-        if end_round == GENESIS_ROUND {
-            panic!(
-                "Attempted to retrieve blocks earlier than the genesis round which is impossible"
-            );
-        }
-
-        let block_ref = self.recent_refs_by_authority[authority]
-            .range((
-                Included(BlockRef::new(start_round, authority, BlockDigest::MIN)),
-                Excluded(BlockRef::new(
-                    end_round,
-                    AuthorityIndex::MIN,
-                    BlockDigest::MIN,
-                )),
-            ))
-            .last()?;
-
-        self.recent_blocks
-            .get(block_ref)
-            .map(|block_info| block_info.block.clone())
-    }
-
     /// Returns the last block proposed per authority with `evicted round <
     /// round < end_round`. The method is guaranteed to return results only
     /// when the `end_round` is not earlier of the available cached data for
@@ -1058,7 +1027,6 @@ mod test {
         block::{BlockDigest, BlockRef, BlockTimestampMs, TestBlock, VerifiedBlock},
         storage::{WriteBatch, mem_store::MemStore},
         test_dag_builder::DagBuilder,
-        test_dag_parser::parse_dag,
     };
 
     #[tokio::test]
@@ -1859,136 +1827,6 @@ mod test {
             dag_state.get_cached_blocks(context.committee.to_authority_index(3).unwrap(), 12);
         assert_eq!(cached_blocks.len(), 1);
         assert_eq!(cached_blocks[0].round(), 12);
-    }
-
-    #[rstest]
-    #[tokio::test]
-    async fn test_get_last_cached_block() {
-        // GIVEN
-        const CACHED_ROUNDS: Round = 2;
-        let (mut context, _) = Context::new_for_test(4);
-        context.parameters.dag_state_cached_rounds = CACHED_ROUNDS;
-
-        let context = Arc::new(context);
-        let store = Arc::new(MemStore::new());
-        let mut dag_state = DagState::new(context.clone(), store.clone());
-
-        // Create no blocks for authority 0
-        // Create one block (round 1) for authority 1
-        // Create two blocks (rounds 1,2) for authority 2
-        // Create three blocks (rounds 1,2,3) for authority 3
-        let dag_str = "DAG {
-            Round 0 : { 4 },
-            Round 1 : {
-                B -> [*],
-                C -> [*],
-                D -> [*],
-            },
-            Round 2 : {
-                C -> [*],
-                D -> [*],
-            },
-            Round 3 : {
-                D -> [*],
-            },
-        }";
-
-        let (_, dag_builder) = parse_dag(dag_str).expect("Invalid dag");
-
-        // Add equivocating block for round 2 authority 3
-        let block = VerifiedBlock::new_for_test(TestBlock::new(2, 2).build());
-
-        // Accept all blocks
-        for block in dag_builder
-            .all_blocks()
-            .into_iter()
-            .chain(std::iter::once(block))
-        {
-            dag_state.accept_block(block);
-        }
-
-        dag_state.add_commit(TrustedCommit::new_for_test(
-            1 as CommitIndex,
-            CommitDigest::MIN,
-            context.clock.timestamp_utc_ms(),
-            dag_builder.leader_block(3).unwrap().reference(),
-            vec![],
-        ));
-
-        // WHEN search for the latest blocks
-        let end_round = 4;
-        let expected_rounds = vec![0, 1, 2, 3];
-        let expected_excluded_and_equivocating_blocks = vec![0, 0, 1, 0];
-        // THEN
-        let last_blocks = dag_state.get_last_cached_block_per_authority(end_round);
-        assert_eq!(
-            last_blocks.iter().map(|b| b.0.round()).collect::<Vec<_>>(),
-            expected_rounds
-        );
-        assert_eq!(
-            last_blocks.iter().map(|b| b.1.len()).collect::<Vec<_>>(),
-            expected_excluded_and_equivocating_blocks
-        );
-
-        // THEN
-        for (i, expected_round) in expected_rounds.iter().enumerate() {
-            let round = dag_state
-                .get_last_cached_block_in_range(
-                    context.committee.to_authority_index(i).unwrap(),
-                    0,
-                    end_round,
-                )
-                .map(|b| b.round())
-                .unwrap_or_default();
-            assert_eq!(round, *expected_round, "Authority {i}");
-        }
-
-        // WHEN starting from round 2
-        let start_round = 2;
-        let expected_rounds = [0, 0, 2, 3];
-
-        // THEN
-        for (i, expected_round) in expected_rounds.iter().enumerate() {
-            let round = dag_state
-                .get_last_cached_block_in_range(
-                    context.committee.to_authority_index(i).unwrap(),
-                    start_round,
-                    end_round,
-                )
-                .map(|b| b.round())
-                .unwrap_or_default();
-            assert_eq!(round, *expected_round, "Authority {i}");
-        }
-
-        // WHEN we flush the DagState - after adding a
-        // commit with all the blocks, we expect this to trigger a clean up in
-        // the internal cache. That will keep the all the blocks with rounds >=
-        // authority_commit_round - CACHED_ROUND.
-        dag_state.flush();
-
-        // AND we request before round 3
-        let end_round = 3;
-        let expected_rounds = vec![0, 1, 2, 2];
-
-        // THEN
-        let last_blocks = dag_state.get_last_cached_block_per_authority(end_round);
-        assert_eq!(
-            last_blocks.iter().map(|b| b.0.round()).collect::<Vec<_>>(),
-            expected_rounds
-        );
-
-        // THEN
-        for (i, expected_round) in expected_rounds.iter().enumerate() {
-            let round = dag_state
-                .get_last_cached_block_in_range(
-                    context.committee.to_authority_index(i).unwrap(),
-                    0,
-                    end_round,
-                )
-                .map(|b| b.round())
-                .unwrap_or_default();
-            assert_eq!(round, *expected_round, "Authority {i}");
-        }
     }
 
     #[tokio::test]

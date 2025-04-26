@@ -131,14 +131,6 @@ impl DagBuilder {
             .collect::<Vec<VerifiedBlock>>()
     }
 
-    pub(crate) fn all_blocks(&self) -> Vec<VerifiedBlock> {
-        assert!(
-            !self.blocks.is_empty(),
-            "No blocks have been created, please make sure that you have called build method"
-        );
-        self.blocks.values().cloned().collect()
-    }
-
     pub(crate) fn get_sub_dag_and_commits(
         &mut self,
         leader_rounds: RangeInclusive<Round>,
