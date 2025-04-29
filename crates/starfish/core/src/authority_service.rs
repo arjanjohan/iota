@@ -16,7 +16,7 @@ use tracing::{debug, info, warn};
 
 use crate::{
     CommitIndex, Round,
-    block::{BlockAPI as _, BlockRef, ExtendedBlock, GENESIS_ROUND, SignedBlock, VerifiedBlock},
+    block::{BlockAPI as _, BlockRef, GENESIS_ROUND, SignedBlock, VerifiedBlock},
     block_verifier::BlockVerifier,
     commit::{CommitAPI as _, CommitRange, TrustedCommit},
     commit_vote_monitor::CommitVoteMonitor,
@@ -24,7 +24,7 @@ use crate::{
     core_thread::CoreThreadDispatcher,
     dag_state::DagState,
     error::{ConsensusError, ConsensusResult},
-    network::{BlockStream, ExtendedSerializedBlock, NetworkService},
+    network::{BlockStream, NetworkService},
     stake_aggregator::{QuorumThreshold, StakeAggregator},
     storage::Store,
     synchronizer::SynchronizerHandle,
@@ -40,7 +40,7 @@ pub(crate) struct AuthorityService<C: CoreThreadDispatcher> {
     block_verifier: Arc<dyn BlockVerifier>,
     synchronizer: Arc<SynchronizerHandle>,
     core_dispatcher: Arc<C>,
-    rx_block_broadcaster: broadcast::Receiver<ExtendedBlock>,
+    rx_block_broadcaster: broadcast::Receiver<VerifiedBlock>,
     subscription_counter: Arc<SubscriptionCounter>,
     dag_state: Arc<RwLock<DagState>>,
     store: Arc<dyn Store>,
@@ -53,7 +53,7 @@ impl<C: CoreThreadDispatcher> AuthorityService<C> {
         commit_vote_monitor: Arc<CommitVoteMonitor>,
         synchronizer: Arc<SynchronizerHandle>,
         core_dispatcher: Arc<C>,
-        rx_block_broadcaster: broadcast::Receiver<ExtendedBlock>,
+        rx_block_broadcaster: broadcast::Receiver<VerifiedBlock>,
         dag_state: Arc<RwLock<DagState>>,
         store: Arc<dyn Store>,
     ) -> Self {
@@ -80,7 +80,7 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
     async fn handle_send_block(
         &self,
         peer: AuthorityIndex,
-        serialized_block: ExtendedSerializedBlock,
+        serialized_block: Bytes,
     ) -> ConsensusResult<()> {
         fail_point_async!("consensus-rpc-response");
 
@@ -88,7 +88,7 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
 
         // TODO: dedup block verifications, here and with fetched blocks.
         let signed_block: SignedBlock =
-            bcs::from_bytes(&serialized_block.block).map_err(ConsensusError::MalformedBlock)?;
+            bcs::from_bytes(&serialized_block).map_err(ConsensusError::MalformedBlock)?;
 
         // Reject blocks not produced by the peer.
         if peer != signed_block.author() {
@@ -123,7 +123,7 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
             info!("Invalid block from {}: {}", peer, e);
             return Err(e);
         }
-        let verified_block = VerifiedBlock::new_verified(signed_block, serialized_block.block);
+        let verified_block = VerifiedBlock::new_verified(signed_block, serialized_block);
         let block_ref = verified_block.reference();
         debug!("Received block {} via send block.", block_ref);
 
@@ -252,9 +252,7 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
             dag_state
                 .get_cached_blocks(self.context.own_index, last_received + 1)
                 .into_iter()
-                .map(|block| ExtendedSerializedBlock {
-                    block: block.serialized().clone(),
-                }),
+                .map(|block| block.serialized().clone()),
         );
 
         let broadcasted_blocks = BroadcastedBlockStream::new(
@@ -266,7 +264,7 @@ impl<C: CoreThreadDispatcher> NetworkService for AuthorityService<C> {
         // Return a stream of blocks that first yields missed blocks as requested, then
         // new blocks.
         Ok(Box::pin(missed_blocks.chain(
-            broadcasted_blocks.map(ExtendedSerializedBlock::from),
+            broadcasted_blocks.map(|block| block.serialized().clone()),
         )))
     }
 
@@ -543,7 +541,7 @@ impl SubscriptionCounter {
 
 /// Each broadcasted block stream wraps a broadcast receiver for blocks.
 /// It yields blocks that are broadcasted after the stream is created.
-type BroadcastedBlockStream = BroadcastStream<ExtendedBlock>;
+type BroadcastedBlockStream = BroadcastStream<VerifiedBlock>;
 
 /// Adapted from `tokio_stream::wrappers::BroadcastStream`. The main difference
 /// is that this tolerates lags with only logging, without yielding errors.
@@ -655,7 +653,7 @@ mod tests {
         core_thread::{CoreError, CoreThreadDispatcher},
         dag_state::DagState,
         error::ConsensusResult,
-        network::{BlockStream, ExtendedSerializedBlock, NetworkClient, NetworkService},
+        network::{BlockStream, NetworkClient, NetworkService},
         round_prober::QuorumRound,
         storage::mem_store::MemStore,
         synchronizer::Synchronizer,
@@ -829,9 +827,7 @@ mod tests {
         );
 
         let service = authority_service.clone();
-        let serialized = ExtendedSerializedBlock {
-            block: input_block.serialized().clone(),
-        };
+        let serialized = input_block.serialized().clone();
 
         tokio::spawn(async move {
             service

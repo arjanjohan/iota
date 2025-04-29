@@ -27,7 +27,7 @@ use tower_http::trace::{DefaultMakeSpan, DefaultOnFailure, TraceLayer};
 use tracing::{debug, error, info, trace, warn};
 
 use super::{
-    BlockStream, ExtendedSerializedBlock, NetworkClient, NetworkManager, NetworkService,
+    BlockStream, NetworkClient, NetworkManager, NetworkService,
     metrics_layer::{MetricsCallbackMaker, MetricsResponseCallback, SizedRequest, SizedResponse},
     tonic_gen::{
         consensus_service_client::ConsensusServiceClient,
@@ -139,9 +139,7 @@ impl NetworkClient for TonicClient {
             .take_while(|b| futures::future::ready(b.is_ok()))
             .filter_map(move |b| async move {
                 match b {
-                    Ok(response) => Some(ExtendedSerializedBlock {
-                        block: response.block,
-                    }),
+                    Ok(response) => Some(response.block),
                     Err(e) => {
                         debug!("Network error received from {}: {e:?}", peer);
                         None
@@ -451,7 +449,6 @@ impl<S: NetworkService> ConsensusService for TonicServiceProxy<S> {
             return Err(tonic::Status::internal("PeerInfo not found"));
         };
         let block = request.into_inner().block;
-        let block = ExtendedSerializedBlock { block };
         self.service
             .handle_send_block(peer_index, block)
             .await
@@ -492,7 +489,7 @@ impl<S: NetworkService> ConsensusService for TonicServiceProxy<S> {
             .handle_subscribe_blocks(peer_index, first_request.last_received_round)
             .await
             .map_err(|e| tonic::Status::internal(format!("{e:?}")))?
-            .map(|block| Ok(SubscribeBlocksResponse { block: block.block }));
+            .map(|block| Ok(SubscribeBlocksResponse { block }));
         let rate_limited_stream =
             tokio_stream::StreamExt::throttle(stream, self.context.parameters.min_round_delay / 2)
                 .boxed();

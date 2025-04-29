@@ -31,7 +31,7 @@ use starfish_config::{AuthorityIndex, NetworkKeyPair};
 
 use crate::{
     Round,
-    block::{BlockRef, ExtendedBlock, VerifiedBlock},
+    block::{BlockRef, VerifiedBlock},
     commit::{CommitRange, TrustedCommit},
     context::Context,
     error::ConsensusResult,
@@ -55,7 +55,7 @@ pub mod tonic_network;
 mod tonic_tls;
 
 /// A stream of serialized filtered blocks returned over the network.
-pub(crate) type BlockStream = Pin<Box<dyn Stream<Item = ExtendedSerializedBlock> + Send>>;
+pub(crate) type BlockStream = Pin<Box<dyn Stream<Item = Bytes> + Send>>;
 
 /// Network client for communicating with peers.
 ///
@@ -137,11 +137,7 @@ pub(crate) trait NetworkService: Send + Sync + 'static {
     /// contents are trusted.
     /// Excluded ancestors are also included as part of an effort to further
     /// propagate blocks to peers despite the current exclusion.
-    async fn handle_send_block(
-        &self,
-        peer: AuthorityIndex,
-        block: ExtendedSerializedBlock,
-    ) -> ConsensusResult<()>;
+    async fn handle_send_block(&self, peer: AuthorityIndex, block: Bytes) -> ConsensusResult<()>;
 
     /// Handles the subscription request from the peer.
     /// A stream of newly proposed blocks is returned to the peer.
@@ -203,18 +199,4 @@ where
 
     /// Stops the network service.
     async fn stop(&mut self);
-}
-
-/// Serialized block with extended information from the proposing authority.
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub(crate) struct ExtendedSerializedBlock {
-    pub(crate) block: Bytes,
-}
-
-impl From<ExtendedBlock> for ExtendedSerializedBlock {
-    fn from(extended_block: ExtendedBlock) -> Self {
-        Self {
-            block: extended_block.block.serialized().clone(),
-        }
-    }
 }
