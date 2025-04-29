@@ -368,7 +368,7 @@ mod tests {
         // Write them in DagState
         dag_state.write().add_scoring_subdags(commits);
         // Now update the leader schedule
-        leader_schedule.update_leader_schedule_v2(&dag_state);
+        leader_schedule.update_leader_schedule(&dag_state);
         assert!(
             leader_schedule.leader_schedule_updated(&dag_state),
             "Leader schedule should have been updated"

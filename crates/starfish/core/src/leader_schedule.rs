@@ -98,7 +98,7 @@ impl LeaderSchedule {
         dag_state.read().is_scoring_subdag_empty()
     }
 
-    pub(crate) fn update_leader_schedule_v2(&self, dag_state: &RwLock<DagState>) {
+    pub(crate) fn update_leader_schedule(&self, dag_state: &RwLock<DagState>) {
         let _s = self
             .context
             .metrics
@@ -791,7 +791,7 @@ mod tests {
             AuthorityIndex::new_for_test(0)
         );
 
-        leader_schedule.update_leader_schedule_v2(&dag_state);
+        leader_schedule.update_leader_schedule(&dag_state);
 
         let leader_swap_table = leader_schedule.leader_swap_table.read();
         assert_eq!(leader_swap_table.good_nodes.len(), 1);
