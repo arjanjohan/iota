@@ -275,7 +275,6 @@ mod test {
                 sleep(Duration::from_millis(1)).await;
                 let block = ExtendedSerializedBlock {
                     block: Bytes::from(vec![1u8; 8]),
-                    excluded_ancestors: vec![],
                 };
                 Some((block, ()))
             })
@@ -357,7 +356,6 @@ mod test {
                 *block,
                 ExtendedSerializedBlock {
                     block: Bytes::from(vec![1u8; 8]),
-                    excluded_ancestors: vec![]
                 }
             );
         }

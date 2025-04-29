@@ -209,25 +209,12 @@ where
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub(crate) struct ExtendedSerializedBlock {
     pub(crate) block: Bytes,
-    // Serialized BlockRefs that are excluded from the blocks ancestors.
-    pub(crate) excluded_ancestors: Vec<Vec<u8>>,
 }
 
 impl From<ExtendedBlock> for ExtendedSerializedBlock {
     fn from(extended_block: ExtendedBlock) -> Self {
         Self {
             block: extended_block.block.serialized().clone(),
-            excluded_ancestors: extended_block
-                .excluded_ancestors
-                .iter()
-                .filter_map(|r| match bcs::to_bytes(r) {
-                    Ok(serialized) => Some(serialized),
-                    Err(e) => {
-                        tracing::debug!("Failed to serialize block ref {:?}: {e:?}", r);
-                        None
-                    }
-                })
-                .collect(),
         }
     }
 }

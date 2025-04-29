@@ -304,7 +304,6 @@ mod test {
             core_signals
                 .new_block(ExtendedBlock {
                     block: block.clone(),
-                    excluded_ancestors: vec![],
                 })
                 .is_ok(),
             "No subscriber active to receive the block"

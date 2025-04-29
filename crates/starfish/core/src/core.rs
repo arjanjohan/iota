@@ -227,7 +227,6 @@ impl Core {
             self.signals
                 .new_block(ExtendedBlock {
                     block: last_proposed_block.clone(),
-                    excluded_ancestors: vec![],
                 })
                 .unwrap();
             last_proposed_block
@@ -290,39 +289,6 @@ impl Core {
             // have advanced the threshold clock round.
             self.try_signal_new_round();
         }
-
-        if !missing_block_refs.is_empty() {
-            trace!(
-                "Missing block refs: {}",
-                missing_block_refs.iter().map(|b| b.to_string()).join(", ")
-            );
-        }
-        Ok(missing_block_refs)
-    }
-
-    /// Checks if provided block refs have been accepted. If not, missing block
-    /// refs are kept for synchronizations. Returns the references of
-    /// missing blocks among the input blocks.
-    pub(crate) fn check_block_refs(
-        &mut self,
-        block_refs: Vec<BlockRef>,
-    ) -> ConsensusResult<BTreeSet<BlockRef>> {
-        let _scope = monitored_scope("Core::check_block_refs");
-        let _s = self
-            .context
-            .metrics
-            .node_metrics
-            .scope_processing_time
-            .with_label_values(&["Core::check_block_refs"])
-            .start_timer();
-        self.context
-            .metrics
-            .node_metrics
-            .core_check_block_refs_batch_size
-            .observe(block_refs.len() as f64);
-
-        // Try to find them via the block manager
-        let missing_block_refs = self.block_manager.try_find_blocks(block_refs);
 
         if !missing_block_refs.is_empty() {
             trace!(
@@ -468,8 +434,7 @@ impl Core {
         }
 
         // Determine the ancestors to be included in proposal.
-        let (ancestors, excluded_and_equivocating_ancestors) =
-            self.ancestors_to_propose(clock_round, !force);
+        let ancestors = self.ancestors_to_propose(clock_round, !force);
 
         // If we did not find enough good ancestors to propose, continue to wait before
         // proposing.
@@ -480,18 +445,6 @@ impl Core {
             );
             return None;
         }
-
-        let excluded_ancestors_limit = self.context.committee.size() * 2;
-        if excluded_and_equivocating_ancestors.len() > excluded_ancestors_limit {
-            debug!(
-                "Dropping {} excluded ancestor(s) during proposal due to size limit",
-                excluded_and_equivocating_ancestors.len() - excluded_ancestors_limit,
-            );
-        }
-        let excluded_ancestors = excluded_and_equivocating_ancestors
-            .into_iter()
-            .take(excluded_ancestors_limit)
-            .collect();
 
         // Update the last included ancestor block refs
         for ancestor in &ancestors {
@@ -627,7 +580,6 @@ impl Core {
 
         Some(ExtendedBlock {
             block: verified_block,
-            excluded_ancestors,
         })
     }
 
@@ -880,11 +832,7 @@ impl Core {
     /// enough, then this function will wait. It force=true and stake is not
     /// big enough then the function will panic, because it means that there is
     /// a bug somewhere
-    fn ancestors_to_propose(
-        &mut self,
-        clock_round: Round,
-        force: bool,
-    ) -> (Vec<VerifiedBlock>, BTreeSet<BlockRef>) {
+    fn ancestors_to_propose(&mut self, clock_round: Round, force: bool) -> Vec<VerifiedBlock> {
         let node_metrics = &self.context.metrics.node_metrics;
         let _s = node_metrics
             .scope_processing_time
@@ -905,31 +853,20 @@ impl Core {
 
         let quorum_round = clock_round.saturating_sub(1);
 
-        let mut excluded_and_equivocating_ancestors = BTreeSet::new();
-
         // Propose only ancestors of higher rounds than what has already been proposed.
         // And always include own last proposed block first among ancestors.
         let included_ancestors = iter::once(self.last_proposed_block().clone())
-            .chain(
-                all_ancestors
-                    .into_iter()
-                    .flat_map(|(ancestor, equivocating_ancestors)| {
-                        if ancestor.author() == self.context.own_index {
-                            return None;
-                        }
-                        if let Some(last_block_ref) =
-                            self.last_included_ancestors[ancestor.author()]
-                        {
-                            if last_block_ref.round >= ancestor.round() {
-                                return None;
-                            }
-                        }
-
-                        // We will never include equivocating ancestors so add them immediately
-                        excluded_and_equivocating_ancestors.extend(equivocating_ancestors);
-                        Some(ancestor)
-                    }),
-            )
+            .chain(all_ancestors.into_iter().flat_map(|(ancestor, _)| {
+                if ancestor.author() == self.context.own_index {
+                    return None;
+                }
+                if let Some(last_block_ref) = self.last_included_ancestors[ancestor.author()] {
+                    if last_block_ref.round >= ancestor.round() {
+                        return None;
+                    }
+                }
+                Some(ancestor)
+            }))
             .collect::<Vec<_>>();
 
         let mut parent_round_quorum = StakeAggregator::<QuorumThreshold>::new();
@@ -948,7 +885,7 @@ impl Core {
                 "Only found {} stake of ancestors to include for round {clock_round}, will wait for more.",
                 parent_round_quorum.stake()
             );
-            return (vec![], BTreeSet::new());
+            return vec![];
         }
 
         assert!(
@@ -956,13 +893,7 @@ impl Core {
             "Fatal error, quorum not reached for parent round when proposing for round {clock_round}. Possible mismatch between DagState and Core."
         );
 
-        info!(
-            "Included {} ancestors & excluded {} low performing or equivocating ancestors for proposal in round {clock_round}",
-            included_ancestors.len(),
-            excluded_and_equivocating_ancestors.len()
-        );
-
-        (included_ancestors, excluded_and_equivocating_ancestors)
+        included_ancestors
     }
 
     /// Checks whether all the leaders of the round exist.

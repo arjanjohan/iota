@@ -540,7 +540,6 @@ impl fmt::Debug for VerifiedBlock {
 #[derive(Clone, Debug)]
 pub(crate) struct ExtendedBlock {
     pub block: VerifiedBlock,
-    pub excluded_ancestors: Vec<BlockRef>,
 }
 
 /// Generates the genesis blocks for the current Committee.

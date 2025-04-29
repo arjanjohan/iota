@@ -44,7 +44,6 @@ impl ManagerBuilder for TonicManagerBuilder {
 fn block_for_round(round: Round) -> ExtendedSerializedBlock {
     ExtendedSerializedBlock {
         block: Bytes::from(vec![round as u8; 16]),
-        excluded_ancestors: vec![],
     }
 }
 
@@ -119,7 +118,6 @@ async fn send_and_receive_blocks_with_auth(
         service_0.lock().handle_send_block[0].1,
         ExtendedSerializedBlock {
             block: test_block_1.serialized().clone(),
-            excluded_ancestors: vec![],
         },
     );
     assert_eq!(service_1.lock().handle_send_block.len(), 1);
@@ -128,7 +126,6 @@ async fn send_and_receive_blocks_with_auth(
         service_1.lock().handle_send_block[0].1,
         ExtendedSerializedBlock {
             block: test_block_0.serialized().clone(),
-            excluded_ancestors: vec![],
         },
     );
 
