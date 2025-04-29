@@ -70,15 +70,8 @@ export async function DetailsView({
     const [iotaEarnedFormatted, iotaEarnedSymbol] = useFormatCoin({ balance: iotaEarned });
     const [totalStakeFormatted, totalStakeSymbol] = useFormatCoin({ balance: totalStake });
 
-    let validatorName = null;
-    let validatorImageUrl = null;
-    if (validatorSummary === null && inactiveValidatorSummary !== null) {
-        validatorName = inactiveValidatorSummary?.name;
-        validatorImageUrl = inactiveValidatorSummary?.imageUrl;
-    } else if (validatorSummary !== null && inactiveValidatorSummary === null) {
-        validatorName = validatorSummary?.name;
-        validatorImageUrl = validatorSummary?.imageUrl;
-    }
+    let validatorName = inactiveValidatorSummary?.name || validatorSummary?.name;
+    let validatorImageUrl = inactiveValidatorSummary?.imageUrl || validatorSummary?.imageUrl;
 
     const subtitle = showActiveStatus ? (
         <div className="flex items-center gap-1">
