@@ -7317,6 +7317,7 @@ dependencies = [
 name = "iota-names"
 version = "0.13.0-alpha"
 dependencies = [
+ "anyhow",
  "bcs",
  "iota-types",
  "move-core-types",
