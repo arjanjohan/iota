@@ -4,21 +4,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { normalizeIotaAddress } from '@iota/iota-sdk/utils';
 import { getInactiveValidatorsData } from '../../utils';
-import { useIotaClient } from '@iota/dapp-kit';
+import { useIotaClient, useIotaClientQuery } from '@iota/dapp-kit';
 
-export function useGetInactiveValidatorData(
-    inactivePoolsId?: string,
-    validatorAddress?: string,
-){
+export function useGetInactiveValidator(validatorAddress?: string) {
     const client = useIotaClient();
+    const { data: systemStateData } = useIotaClientQuery('getLatestIotaSystemState');
+
     return useQuery({
-        queryKey: [inactivePoolsId, validatorAddress],
+        queryKey: [systemStateData?.inactivePoolsId, validatorAddress],
         async queryFn() {
-            if (!inactivePoolsId || !validatorAddress) {
+            if (!systemStateData?.inactivePoolsId || !validatorAddress) {
                 throw Error('Missing params');
             }
             const inactiveValidators = await client.getDynamicFields({
-                parentId: normalizeIotaAddress(inactivePoolsId),
+                parentId: normalizeIotaAddress(systemStateData?.inactivePoolsId),
             });
 
             const pendingInactiveValidatorsData = await Promise.all(
@@ -30,7 +29,7 @@ export function useGetInactiveValidatorData(
 
             return pendingInactiveValidatorsData;
         },
-        enabled: !!inactivePoolsId && !!validatorAddress,
+        enabled: !!systemStateData?.inactivePoolsId && !!validatorAddress,
         select(validators) {
             return validators.find((validator) => validator?.validatorAddress === validatorAddress);
         },

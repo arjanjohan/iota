@@ -5,7 +5,7 @@ import { Card, CardImage, CardType, CardBody, CardAction, CardActionType } from 
 import { useMemo } from 'react';
 import { ImageIcon } from '../icon';
 import { ExtendedDelegatedStake } from '../../utils';
-import { useFormatCoin, useStakeRewardStatus, useGetInactiveValidatorData } from '../../hooks';
+import { useFormatCoin, useStakeRewardStatus, useGetInactiveValidator } from '../../hooks';
 import { useIotaClientQuery } from '@iota/dapp-kit';
 interface StakedCardProps {
     extendedStake: ExtendedDelegatedStake;
@@ -23,7 +23,7 @@ export function StakedCard({
     onClick,
 }: StakedCardProps) {
     const { principal, stakeRequestEpoch, estimatedReward, validatorAddress } = extendedStake;
-    const { data } = useIotaClientQuery('getLatestIotaSystemState');
+    const { data: systemStateData } = useIotaClientQuery('getLatestIotaSystemState');
 
     const { rewards, title, subtitle } = useStakeRewardStatus({
         stakeRequestEpoch,
@@ -38,18 +38,16 @@ export function StakedCard({
     });
 
     const validatorMeta = useMemo(() => {
-        if (!data) return null;
+        if (!systemStateData) return null;
 
         return (
-            data.activeValidators.find((validator) => validator.iotaAddress === validatorAddress) ||
-            null
+            systemStateData.activeValidators.find(
+                (validator) => validator.iotaAddress === validatorAddress,
+            ) || null
         );
-    }, [validatorAddress, data]);
+    }, [validatorAddress, systemStateData?.activeValidators]);
 
-    const { data: inactiveValidatorData } = useGetInactiveValidatorData(
-        data?.inactivePoolsId || '',
-        validatorAddress,
-    );
+    const { data: inactiveValidatorData } = useGetInactiveValidator(validatorAddress);
     const validatorData = validatorMeta || inactiveValidatorData || null;
     return (
         <Card testId="staked-card" type={CardType.Default} isHoverable onClick={onClick}>

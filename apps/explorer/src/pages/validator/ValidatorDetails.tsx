@@ -2,7 +2,7 @@
 // Modifications Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { useGetInactiveValidatorData, useGetValidatorsApy, useGetValidatorsEvents } from '@iota/core';
+import { useGetInactiveValidator, useGetValidatorsApy, useGetValidatorsEvents } from '@iota/core';
 import { useParams } from 'react-router-dom';
 import { InactiveValidators, PageLayout, ValidatorMeta, ValidatorStats } from '~/components';
 import { VALIDATOR_LOW_STAKE_GRACE_PERIOD } from '~/lib/constants';
@@ -66,7 +66,7 @@ function ValidatorDetails(): JSX.Element {
         'getLatestIotaSystemState',
     );
 
-    const { data: inactiveValidatorData, isLoading: isInactiveValidatorLoading } = useGetInactiveValidatorData(systemStateData?.inactivePoolsId, id);
+    const { data: inactiveValidatorData, isLoading: isInactiveValidatorLoading } = useGetInactiveValidator(id);
 
     const numberOfValidators = systemStateData?.activeValidators.length ?? null;
     const { data: rollingAverageApys, isLoading: isValidatorsApysLoading } = useGetValidatorsApy();
