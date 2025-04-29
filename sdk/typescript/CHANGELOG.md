@@ -1,5 +1,35 @@
 # @iota/iota-sdk
 
+## 0.7.0
+
+### Minor Changes
+
+-   42898f1: Add support for getDynamicFieldObjectV2
+-   bdb736e: Update clients after RPC updates to base64
+-   65a0900: Add circulating supply support to the iota client
+
+### Patch Changes
+
+-   1ad39f9: Update dependencies
+
+## 0.6.0
+
+### Minor Changes
+
+-   1a4505b: Update clients to support committee selection protocol changes
+-   e629a39: Aligns the Typescript SDK for the "fixed gas price" protocol changes:
+
+    -   Add typing support for IotaChangeEpochV2 (computationCharge, computationChargeBurned).
+    -   Add Typescript SDK client support for versioned IotaSystemStateSummary.
+
+-   2717145: Update `TransactionKind` and `TransactionKindIn` filter types from `string` to
+    `IotaTransactionKind` type according to infra updates
+-   e213517: Make `getChainIdentifier` use the Node RPC.
+
+### Patch Changes
+
+-   3fe0747: Enhance normalizeIotaAddress utility with optional validation
+
 ## 0.5.0
 
 ### Minor Changes

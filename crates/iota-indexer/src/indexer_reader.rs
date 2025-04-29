@@ -22,16 +22,17 @@ use iota_json_rpc_types::{
     AddressMetrics, Balance, CheckpointId, Coin as IotaCoin, DisplayFieldsResponse, EpochInfo,
     EventFilter, IotaCoinMetadata, IotaEvent, IotaMoveValue, IotaObjectDataFilter,
     IotaTransactionBlockEffects, IotaTransactionBlockEffectsAPI, IotaTransactionBlockResponse,
-    IotaTransactionKind, MoveCallMetrics, MoveFunctionName, NetworkMetrics, TransactionFilter,
+    IotaTransactionKind, MoveCallMetrics, MoveFunctionName, NetworkMetrics, ParticipationMetrics,
+    TransactionFilter,
 };
 use iota_package_resolver::{Package, PackageStore, PackageStoreWithLruCache, Resolver};
 use iota_types::{
     TypeTag,
     balance::Supply,
-    base_types::{IotaAddress, ObjectID, VersionNumber},
+    base_types::{IotaAddress, ObjectID, SequenceNumber, VersionNumber},
     coin::{CoinMetadata, TreasuryCap},
     committee::EpochId,
-    digests::TransactionDigest,
+    digests::{ChainIdentifier, TransactionDigest},
     dynamic_field::{DynamicFieldInfo, DynamicFieldName, visitor as DFV},
     effects::TransactionEvents,
     event::EventID,
@@ -40,7 +41,8 @@ use iota_types::{
         iota_system_state_summary::{IotaSystemStateSummary, IotaValidatorSummary},
     },
     is_system_package,
-    object::{Object, ObjectRead, bounded_visitor::BoundedVisitor},
+    messages_checkpoint::CheckpointDigest,
+    object::{Object, ObjectRead, PastObjectRead, bounded_visitor::BoundedVisitor},
 };
 use itertools::Itertools;
 use move_core_types::{annotated_value::MoveStructLayout, language_storage::StructTag};
@@ -51,22 +53,25 @@ use crate::{
     errors::IndexerError,
     models::{
         address_metrics::StoredAddressMetrics,
-        checkpoints::StoredCheckpoint,
+        checkpoints::{StoredChainIdentifier, StoredCheckpoint},
         display::StoredDisplay,
         epoch::StoredEpochInfo,
         events::StoredEvent,
         move_call_metrics::QueriedMoveCallMetrics,
         network_metrics::StoredNetworkMetrics,
-        objects::{CoinBalance, StoredObject},
+        obj_indices::StoredObjectVersion,
+        objects::{CoinBalance, StoredHistoryObject, StoredObject},
+        participation_metrics::StoredParticipationMetrics,
         transactions::{
-            StoredTransaction, StoredTransactionEvents, stored_events_to_events,
-            tx_events_to_iota_tx_events,
+            OptimisticTransaction, StoredTransaction, StoredTransactionEvents,
+            stored_events_to_events, tx_events_to_iota_tx_events,
         },
         tx_indices::TxSequenceNumber,
     },
     schema::{
-        address_metrics, addresses, checkpoints, display, epochs, events, objects,
-        objects_snapshot, packages, pruner_cp_watermark, transactions, tx_digests,
+        address_metrics, addresses, chain_identifier, checkpoints, display, epochs, events,
+        objects, objects_history, objects_snapshot, objects_version, optimistic_transactions,
+        packages, pruner_cp_watermark, transactions, tx_digests, tx_insertion_order,
     },
     store::{diesel_macro::*, package_resolver::IndexerStorePackageResolver},
     types::{IndexerResult, OwnerType},
@@ -228,6 +233,115 @@ impl IndexerReader {
         Ok(stored_object)
     }
 
+    /// Fetches a past object by its ID and version.
+    ///
+    /// - If `before_version` is `false`, it looks for the exact version.
+    /// - If `true`, it finds the latest version before the given one.
+    ///
+    /// Searches the requested object version and checkpoint sequence number
+    /// in `objects_version` and fetches the requested object from
+    /// `objects_history`.
+    pub(crate) async fn get_past_object_read(
+        &self,
+        object_id: ObjectID,
+        object_version: SequenceNumber,
+        before_version: bool,
+    ) -> Result<PastObjectRead, IndexerError> {
+        let object_version_num = object_version.value() as i64;
+
+        // Query objects_version to find the requested version and relevant
+        // checkpoint sequence number considering the `before_version` flag.
+        let pool = self.get_pool();
+        let object_id_bytes = object_id.to_vec();
+        let object_version_info: Option<StoredObjectVersion> =
+            run_query_async!(&pool, move |conn| {
+                let mut query = objects_version::dsl::objects_version
+                    .filter(objects_version::object_id.eq(&object_id_bytes))
+                    .into_boxed();
+
+                if before_version {
+                    query = query.filter(objects_version::object_version.lt(object_version_num));
+                } else {
+                    query = query.filter(objects_version::object_version.eq(object_version_num));
+                }
+
+                query
+                    .order_by(objects_version::object_version.desc())
+                    .limit(1)
+                    .first::<StoredObjectVersion>(conn)
+                    .optional()
+            })?;
+
+        let Some(object_version_info) = object_version_info else {
+            // Check if the object ever existed.
+            let pool = self.get_pool();
+            let object_id_bytes = object_id.to_vec();
+            let latest_existing_version: Option<i64> = run_query_async!(&pool, move |conn| {
+                objects_version::dsl::objects_version
+                    .filter(objects_version::object_id.eq(&object_id_bytes))
+                    .order_by(objects_version::object_version.desc())
+                    .select(objects_version::object_version)
+                    .limit(1)
+                    .first::<i64>(conn)
+                    .optional()
+            })?;
+
+            return match latest_existing_version {
+                Some(latest) if object_version_num > latest => Ok(PastObjectRead::VersionTooHigh {
+                    object_id,
+                    asked_version: object_version,
+                    latest_version: SequenceNumber::from(latest as u64),
+                }),
+                Some(_) => Ok(PastObjectRead::VersionNotFound(object_id, object_version)),
+                None => Ok(PastObjectRead::ObjectNotExists(object_id)),
+            };
+        };
+
+        // Query objects_history for the object with the requested version.
+        let history_object = self
+            .get_stored_history_object(
+                object_id,
+                object_version_info.object_version,
+                object_version_info.cp_sequence_number,
+            )
+            .await?;
+
+        match history_object {
+            Some(obj) => {
+                obj.try_into_past_object_read(self.package_resolver.clone())
+                    .await
+            }
+            None => Err(IndexerError::PersistentStorageDataCorruption(format!(
+                "Object version {} not found in objects_history for object {}",
+                object_version_info.object_version, object_id
+            ))),
+        }
+    }
+
+    pub async fn get_stored_history_object(
+        &self,
+        object_id: ObjectID,
+        object_version: i64,
+        checkpoint_sequence_number: i64,
+    ) -> Result<Option<StoredHistoryObject>, IndexerError> {
+        let pool = self.get_pool();
+        let object_id_bytes = object_id.to_vec();
+        run_query_async!(&pool, move |conn| {
+            // Match on the primary key.
+            let query = objects_history::dsl::objects_history
+                .filter(objects_history::checkpoint_sequence_number.eq(checkpoint_sequence_number))
+                .filter(objects_history::object_id.eq(&object_id_bytes))
+                .filter(objects_history::object_version.eq(object_version))
+                .into_boxed();
+
+            query
+                .order_by(objects_history::object_version.desc())
+                .limit(1)
+                .first::<StoredHistoryObject>(conn)
+                .optional()
+        })
+    }
+
     pub async fn get_package(&self, package_id: ObjectID) -> Result<Package, IndexerError> {
         let store = self.package_resolver.package_store();
         let pkg = store
@@ -358,6 +472,33 @@ impl IndexerReader {
                 ))
             })?;
         Ok(system_state)
+    }
+
+    pub async fn get_chain_identifier_in_blocking_task(
+        &self,
+    ) -> Result<ChainIdentifier, IndexerError> {
+        self.spawn_blocking(|this| this.get_chain_identifier())
+            .await
+    }
+
+    pub fn get_chain_identifier(&self) -> Result<ChainIdentifier, IndexerError> {
+        let stored_chain_identifier = run_query!(&self.pool, |conn| {
+            chain_identifier::dsl::chain_identifier
+                .first::<StoredChainIdentifier>(conn)
+                .optional()
+        })?
+        .ok_or(IndexerError::PostgresRead(
+            "chain identifier not found".to_string(),
+        ))?;
+
+        let checkpoint_digest =
+            CheckpointDigest::try_from(stored_chain_identifier.checkpoint_digest).map_err(|e| {
+                IndexerError::PersistentStorageDataCorruption(format!(
+                    "failed to decode chain identifier with err: {e:?}"
+                ))
+            })?;
+
+        Ok(checkpoint_digest.into())
     }
 
     pub fn get_checkpoint_from_db(
@@ -492,8 +633,8 @@ impl IndexerReader {
         let digests = digests
             .iter()
             .map(|digest| digest.inner().to_vec())
-            .collect::<Vec<_>>();
-        run_query!(&self.pool, |conn| {
+            .collect::<HashSet<_>>();
+        let checkpointed_txs = run_query!(&self.pool, |conn| {
             transactions::table
                 .inner_join(
                     tx_digests::table
@@ -501,10 +642,33 @@ impl IndexerReader {
                 )
                 // we filter the tx_digests table because it is indexed by digest,
                 // transactions table is not
-                .filter(tx_digests::tx_digest.eq_any(digests))
+                .filter(tx_digests::tx_digest.eq_any(&digests))
                 .select(StoredTransaction::as_select())
                 .load::<StoredTransaction>(conn)
-        })
+        })?;
+        if checkpointed_txs.len() == digests.len() {
+            return Ok(checkpointed_txs);
+        }
+        let mut missing_digests = digests;
+        for tx in &checkpointed_txs {
+            missing_digests.remove(&tx.transaction_digest);
+        }
+        let optimistic_txs = run_query!(&self.pool, |conn| {
+            optimistic_transactions::table
+                .inner_join(
+                    tx_insertion_order::table.on(optimistic_transactions::insertion_order
+                        .eq(tx_insertion_order::insertion_order)),
+                )
+                // we filter the tx_insertion_order table because it is indexed by digest,
+                // optimistic_transactions table is not
+                .filter(tx_insertion_order::tx_digest.eq_any(missing_digests))
+                .select(OptimisticTransaction::as_select())
+                .load::<OptimisticTransaction>(conn)
+        })?;
+        Ok(checkpointed_txs
+            .into_iter()
+            .chain(optimistic_txs.into_iter().map(Into::into))
+            .collect())
     }
 
     async fn multi_get_transactions_in_blocking_task(
@@ -1879,6 +2043,17 @@ impl IndexerReader {
         })
         .await
         .map_err(Into::into)
+    }
+
+    /// Get the participation metrics. Participation is defined as the total
+    /// number of unique addresses that have delegated stake in the current
+    /// epoch. Includes both staked and timelocked staked IOTA.
+    pub fn get_participation_metrics(&self) -> IndexerResult<ParticipationMetrics> {
+        run_query!(&self.pool, |conn| {
+            diesel::sql_query("SELECT * FROM participation_metrics")
+                .get_result::<StoredParticipationMetrics>(conn)
+        })
+        .map(Into::into)
     }
 }
 

@@ -5,6 +5,7 @@
 use std::{
     future::Future,
     net::SocketAddr,
+    path::Path,
     pin::Pin,
     sync::Arc,
     task::{Context, Poll},
@@ -33,6 +34,7 @@ use tracing::{Span, warn};
 use uuid::Uuid;
 
 mod guards;
+pub mod hardware_metrics;
 pub mod histogram;
 pub mod metered_channel;
 pub mod metrics_network;
@@ -572,7 +574,9 @@ pub fn uptime_metric(
     let opts = prometheus::opts!("uptime", "uptime of the node service in seconds")
         .variable_label("process")
         .variable_label("version")
-        .variable_label("chain_identifier");
+        .variable_label("chain_identifier")
+        .variable_label("os_version")
+        .variable_label("is_docker");
 
     let start_time = std::time::Instant::now();
     let uptime = move || start_time.elapsed().as_secs();
@@ -580,11 +584,24 @@ pub fn uptime_metric(
         opts,
         prometheus_closure_metric::ValueType::Counter,
         uptime,
-        &[process, version, chain_identifier],
+        &[
+            process,
+            version,
+            chain_identifier,
+            &sysinfo::System::long_os_version()
+                .unwrap_or_else(|| "os_version_unavailable".to_string()),
+            &is_running_in_docker().to_string(),
+        ],
     )
     .unwrap();
 
     Box::new(metric)
+}
+
+pub fn is_running_in_docker() -> bool {
+    // Check for .dockerenv file instead. This file exists in the debian:__-slim
+    // image we use at runtime.
+    Path::new("/.dockerenv").exists()
 }
 
 pub const METRICS_ROUTE: &str = "/metrics";
@@ -672,17 +689,17 @@ mod tests {
 
         // THEN
         let mut metrics = registry_service.gather_all();
-        metrics.sort_by(|m1, m2| Ord::cmp(m1.get_name(), m2.get_name()));
+        metrics.sort_by(|m1, m2| Ord::cmp(m1.name(), m2.name()));
 
         assert_eq!(metrics.len(), 2);
 
         let metric_default = metrics.remove(0);
-        assert_eq!(metric_default.get_name(), "default_counter");
-        assert_eq!(metric_default.get_help(), "counter_desc");
+        assert_eq!(metric_default.name(), "default_counter");
+        assert_eq!(metric_default.help(), "counter_desc");
 
         let metric_1: prometheus::proto::MetricFamily = metrics.remove(0);
-        assert_eq!(metric_1.get_name(), "iota_counter_1");
-        assert_eq!(metric_1.get_help(), "counter_1_desc");
+        assert_eq!(metric_1.name(), "iota_counter_1");
+        assert_eq!(metric_1.help(), "counter_1_desc");
 
         // AND add a second registry with a metric
         let registry_2 = Registry::new_custom(Some("iota".to_string()), None).unwrap();
@@ -695,37 +712,37 @@ mod tests {
 
         // THEN all the metrics should be returned
         let mut metrics = registry_service.gather_all();
-        metrics.sort_by(|m1, m2| Ord::cmp(m1.get_name(), m2.get_name()));
+        metrics.sort_by(|m1, m2| Ord::cmp(m1.name(), m2.name()));
 
         assert_eq!(metrics.len(), 3);
 
         let metric_default = metrics.remove(0);
-        assert_eq!(metric_default.get_name(), "default_counter");
-        assert_eq!(metric_default.get_help(), "counter_desc");
+        assert_eq!(metric_default.name(), "default_counter");
+        assert_eq!(metric_default.help(), "counter_desc");
 
         let metric_1 = metrics.remove(0);
-        assert_eq!(metric_1.get_name(), "iota_counter_1");
-        assert_eq!(metric_1.get_help(), "counter_1_desc");
+        assert_eq!(metric_1.name(), "iota_counter_1");
+        assert_eq!(metric_1.help(), "counter_1_desc");
 
         let metric_2 = metrics.remove(0);
-        assert_eq!(metric_2.get_name(), "iota_counter_2");
-        assert_eq!(metric_2.get_help(), "counter_2_desc");
+        assert_eq!(metric_2.name(), "iota_counter_2");
+        assert_eq!(metric_2.help(), "counter_2_desc");
 
         // AND remove first registry
         assert!(registry_service.remove(registry_1_id));
 
         // THEN metrics should now not contain metric of registry_1
         let mut metrics = registry_service.gather_all();
-        metrics.sort_by(|m1, m2| Ord::cmp(m1.get_name(), m2.get_name()));
+        metrics.sort_by(|m1, m2| Ord::cmp(m1.name(), m2.name()));
 
         assert_eq!(metrics.len(), 2);
 
         let metric_default = metrics.remove(0);
-        assert_eq!(metric_default.get_name(), "default_counter");
-        assert_eq!(metric_default.get_help(), "counter_desc");
+        assert_eq!(metric_default.name(), "default_counter");
+        assert_eq!(metric_default.help(), "counter_desc");
 
         let metric_1 = metrics.remove(0);
-        assert_eq!(metric_1.get_name(), "iota_counter_2");
-        assert_eq!(metric_1.get_help(), "counter_2_desc");
+        assert_eq!(metric_1.name(), "iota_counter_2");
+        assert_eq!(metric_1.help(), "counter_2_desc");
     }
 }

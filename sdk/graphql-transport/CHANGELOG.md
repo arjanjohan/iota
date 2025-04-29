@@ -1,5 +1,39 @@
 # @iota/graphql-transport
 
+## 0.4.0
+
+### Minor Changes
+
+-   bdb736e: Update clients after RPC updates to base64
+
+### Patch Changes
+
+-   1ad39f9: Update dependencies
+-   Updated dependencies [42898f1]
+-   Updated dependencies [1ad39f9]
+-   Updated dependencies [bdb736e]
+-   Updated dependencies [65a0900]
+    -   @iota/iota-sdk@0.7.0
+
+## 0.3.0
+
+### Minor Changes
+
+-   1a4505b: Update clients to support committee selection protocol changes
+-   e629a39: Aligns the Typescript SDK for the "fixed gas price" protocol changes:
+
+    -   Add typing support for IotaChangeEpochV2 (computationCharge, computationChargeBurned).
+    -   Add Typescript SDK client support for versioned IotaSystemStateSummary.
+
+### Patch Changes
+
+-   Updated dependencies [1a4505b]
+-   Updated dependencies [e629a39]
+-   Updated dependencies [2717145]
+-   Updated dependencies [3fe0747]
+-   Updated dependencies [e213517]
+    -   @iota/iota-sdk@0.6.0
+
 ## 0.2.4
 
 ### Patch Changes

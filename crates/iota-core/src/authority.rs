@@ -4417,7 +4417,7 @@ impl AuthorityState {
                 let f = committee.total_votes() - committee.quorum_threshold();
 
                 // multiple by buffer_stake_bps / 10000, rounded up.
-                let buffer_stake = (f * buffer_stake_bps + 9999) / 10000;
+                let buffer_stake = (f * buffer_stake_bps).div_ceil(10000);
                 let effective_threshold = quorum_threshold + buffer_stake;
 
                 info!(
@@ -4629,7 +4629,11 @@ impl AuthorityState {
             ));
         };
 
-        if config.protocol_defined_base_fee() {
+        // ChangeEpochV2 requires that both options are set - ProtocolDefinedBaseFee and
+        // MaxCommitteeMembersCount.
+        if config.protocol_defined_base_fee()
+            && config.max_committee_members_count_as_option().is_some()
+        {
             txns.push(EndOfEpochTransactionKind::new_change_epoch_v2(
                 next_epoch,
                 next_epoch_protocol_version,

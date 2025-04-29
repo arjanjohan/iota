@@ -1,11 +1,9 @@
 // Copyright (c) 2024 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './RouteLink';
 export * from './Box';
 export * from './AmountBox';
 export * from './Input';
-export * from './VirtualList';
 export * from './ExternalImage';
 export * from './PageSizeSelector';
 export * from './PaginationOptions';

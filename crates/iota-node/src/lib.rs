@@ -49,10 +49,10 @@ use iota_core::{
     connection_monitor::ConnectionMonitor,
     consensus_adapter::{
         CheckConnection, ConnectionMonitorStatus, ConsensusAdapter, ConsensusAdapterMetrics,
-        SubmitToConsensus,
+        ConsensusClient,
     },
     consensus_handler::ConsensusHandlerInitializer,
-    consensus_manager::{ConsensusClient, ConsensusManager, ConsensusManagerTrait},
+    consensus_manager::{ConsensusManager, ConsensusManagerTrait, UpdatableConsensusClient},
     consensus_validator::{IotaTxValidator, IotaTxValidatorMetrics},
     db_checkpoint_handler::DBCheckpointHandler,
     epoch::{
@@ -82,6 +82,7 @@ use iota_json_rpc_api::JsonRpcMetrics;
 use iota_macros::{fail_point, fail_point_async, replay_log};
 use iota_metrics::{
     RegistryService,
+    hardware_metrics::register_hardware_metrics,
     metrics_network::{MetricsMakeCallbackHandler, NetworkConnectionMetrics, NetworkMetrics},
     server_timing_middleware, spawn_monitored_task,
 };
@@ -89,7 +90,7 @@ use iota_network::{
     api::ValidatorServer, discovery, discovery::TrustedPeerChangeEvent, randomness, state_sync,
 };
 use iota_network_stack::server::ServerBuilder;
-use iota_protocol_config::{Chain, ProtocolConfig};
+use iota_protocol_config::ProtocolConfig;
 use iota_rest_api::RestMetrics;
 use iota_snapshot::uploader::StateSnapshotUploader;
 use iota_storage::{
@@ -427,6 +428,13 @@ impl IotaNode {
             "Initializing iota-node listening on {}", config.network_address
         );
 
+        let genesis = config.genesis()?.clone();
+
+        let chain_identifier = ChainIdentifier::from(*genesis.checkpoint().digest());
+        // It's ok if the value is already set due to data races.
+        let _ = CHAIN_IDENTIFIER.set(chain_identifier);
+        info!("IOTA chain identifier: {chain_identifier}");
+
         // Initialize metrics to track db usage before creating any stores
         DBMetrics::init(&prometheus_registry);
 
@@ -437,8 +445,22 @@ impl IotaNode {
         #[cfg(not(msim))]
         iota_metrics::thread_stall_monitor::start_thread_stall_monitor();
 
-        // Clone the genesis
-        let genesis = config.genesis()?.clone();
+        // Register hardware metrics.
+        register_hardware_metrics(&registry_service, &config.db_path)
+            .expect("Failed registering hardware metrics");
+        // Register uptime metric
+        prometheus_registry
+            .register(iota_metrics::uptime_metric(
+                if is_validator {
+                    "validator"
+                } else {
+                    "fullnode"
+                },
+                software_version,
+                &chain_identifier.to_string(),
+            ))
+            .expect("Failed registering uptime metric");
+
         // If genesis come with some migration data then load them into memory from the
         // file path specified in config.
         let migration_tx_data = if genesis.contains_migrations() {
@@ -592,10 +614,6 @@ impl IotaNode {
             None
         };
 
-        let chain_identifier = ChainIdentifier::from(*genesis.checkpoint().digest());
-        // It's ok if the value is already set due to data races.
-        let _ = CHAIN_IDENTIFIER.set(chain_identifier);
-
         info!("creating archive reader");
         // Create network
         // TODO only configure validators as seed/preferred peers for validators and not
@@ -629,8 +647,7 @@ impl IotaNode {
             &config,
             &trusted_peer_change_tx,
             epoch_store.epoch_start_state(),
-        )
-        .expect("Initial trusted peers must be set");
+        );
 
         info!("start state archival");
         // Start archiving local state to remote store
@@ -1181,7 +1198,7 @@ impl IotaNode {
             .as_mut()
             .ok_or_else(|| anyhow!("Validator is missing consensus config"))?;
 
-        let client = Arc::new(ConsensusClient::new());
+        let client = Arc::new(UpdatableConsensusClient::new());
         let consensus_adapter = Arc::new(Self::construct_consensus_adapter(
             &committee,
             consensus_config,
@@ -1406,7 +1423,7 @@ impl IotaNode {
         authority: AuthorityName,
         connection_monitor_status: Arc<ConnectionMonitorStatus>,
         prometheus_registry: &Registry,
-        consensus_client: Arc<dyn SubmitToConsensus>,
+        consensus_client: Arc<dyn ConsensusClient>,
     ) -> ConsensusAdapter {
         let ca_metrics = ConsensusAdapterMetrics::new(prometheus_registry);
         // The consensus adapter allows the authority to send user certificates through
@@ -1627,7 +1644,7 @@ impl IotaNode {
 
             cur_epoch_store.record_epoch_reconfig_start_time_metric();
 
-            let _ = send_trusted_peer_change(
+            send_trusted_peer_change(
                 &self.config,
                 &self.trusted_peer_change_tx,
                 &new_epoch_start_state,
@@ -1716,6 +1733,11 @@ impl IotaNode {
                     )
                 } else {
                     info!("This node is no longer a validator after reconfiguration");
+
+                    consensus_adapter.unregister_consensus_adapter_metrics(
+                        &self.registry_service.default_registry(),
+                    );
+                    debug!("Unregistered consensus adapter metrics");
                     None
                 }
             } else {
@@ -1921,18 +1943,15 @@ impl IotaNode {
 fn send_trusted_peer_change(
     config: &NodeConfig,
     sender: &watch::Sender<TrustedPeerChangeEvent>,
-    epoch_state_state: &EpochStartSystemState,
-) -> Result<(), watch::error::SendError<TrustedPeerChangeEvent>> {
-    sender
-        .send(TrustedPeerChangeEvent {
-            new_peers: epoch_state_state.get_validator_as_p2p_peers(config.authority_public_key()),
-        })
-        .tap_err(|err| {
-            warn!(
-                "Failed to send validator peer information to state sync: {:?}",
-                err
-            );
-        })
+    new_epoch_start_state: &EpochStartSystemState,
+) {
+    let new_committee =
+        new_epoch_start_state.get_validator_as_p2p_peers(config.authority_public_key());
+
+    sender.send_modify(|event| {
+        core::mem::swap(&mut event.new_committee, &mut event.old_committee);
+        event.new_committee = new_committee;
+    })
 }
 
 fn build_kv_store(
@@ -1950,24 +1969,14 @@ fn build_kv_store(
         return Ok(Arc::new(db_store));
     }
 
-    let base_url: url::Url = base_url.parse().tap_err(|e| {
+    base_url.parse::<url::Url>().tap_err(|e| {
         error!(
             "failed to parse config.transaction_kv_store_config.base_url ({:?}) as url: {}",
             base_url, e
         )
     })?;
 
-    let network_str = match state.get_chain_identifier().map(|c| c.chain()) {
-        Some(Chain::Mainnet) => "/mainnet",
-        Some(Chain::Testnet) => "/testnet",
-        _ => {
-            info!("using local db only for kv store for unknown chain");
-            return Ok(Arc::new(db_store));
-        }
-    };
-
-    let base_url = base_url.join(network_str)?.to_string();
-    let http_store = HttpKVStore::new_kv(&base_url, metrics.clone())?;
+    let http_store = HttpKVStore::new_kv(base_url, metrics.clone())?;
     info!("using local key-value store with fallback to http key-value store");
     Ok(Arc::new(FallbackTransactionKVStore::new_kv(
         db_store,
@@ -2029,7 +2038,7 @@ pub async fn build_http_server(
             state.clone(),
             kv_store.clone(),
             metrics.clone(),
-        ))?;
+        )?)?;
 
         // if run_with_range is enabled we want to prevent any transactions
         // run_with_range = None is normal operating conditions
