@@ -48,7 +48,7 @@ pub(crate) struct DagState {
 
     // Contains recent blocks within CACHED_ROUNDS from the last committed round per authority.
     // Note: all uncommitted blocks are kept in memory.
-    recent_blocks: BTreeMap<BlockRef, BlockInfo>,
+    recent_blocks: BTreeMap<BlockRef, VerifiedBlock>,
 
     // Indexes recent block refs by their authorities.
     // Vec position corresponds to the authority index.
@@ -268,8 +268,7 @@ impl DagState {
     /// Updates internal metadata for a block.
     fn update_block_metadata(&mut self, block: &VerifiedBlock) {
         let block_ref = block.reference();
-        self.recent_blocks
-            .insert(block_ref, BlockInfo::new(block.clone()));
+        self.recent_blocks.insert(block_ref, block.clone());
         self.recent_refs_by_authority[block_ref.author].insert(block_ref);
         self.threshold_clock.add_block(block_ref);
         self.highest_accepted_round = max(self.highest_accepted_round, block.round());
@@ -326,8 +325,8 @@ impl DagState {
                 }
                 continue;
             }
-            if let Some(block_info) = self.recent_blocks.get(block_ref) {
-                blocks[index] = Some(block_info.block.clone());
+            if let Some(block) = self.recent_blocks.get(block_ref) {
+                blocks[index] = Some(block.clone());
                 continue;
             }
             missing.push((index, block_ref));
@@ -368,11 +367,11 @@ impl DagState {
         // to edge cases.
 
         let mut blocks = vec![];
-        for (_block_ref, block_info) in self.recent_blocks.range((
+        for (_block_ref, block) in self.recent_blocks.range((
             Included(BlockRef::new(slot.round, slot.authority, BlockDigest::MIN)),
             Included(BlockRef::new(slot.round, slot.authority, BlockDigest::MAX)),
         )) {
-            blocks.push(block_info.block.clone())
+            blocks.push(block.clone())
         }
         blocks
     }
@@ -386,7 +385,7 @@ impl DagState {
         }
 
         let mut blocks = vec![];
-        for (_block_ref, block_info) in self.recent_blocks.range((
+        for (_block_ref, block) in self.recent_blocks.range((
             Included(BlockRef::new(round, AuthorityIndex::ZERO, BlockDigest::MIN)),
             Excluded(BlockRef::new(
                 round + 1,
@@ -394,7 +393,7 @@ impl DagState {
                 BlockDigest::MIN,
             )),
         )) {
-            blocks.push(block_info.block.clone())
+            blocks.push(block.clone())
         }
         blocks
     }
@@ -451,7 +450,6 @@ impl DagState {
                 .recent_blocks
                 .get(last)
                 .expect("Block should be found in recent blocks")
-                .block
                 .clone();
         }
 
@@ -479,11 +477,11 @@ impl DagState {
             Included(BlockRef::new(start, authority, BlockDigest::MIN)),
             Unbounded,
         )) {
-            let block_info = self
+            let block = self
                 .recent_blocks
                 .get(block_ref)
                 .expect("Block should exist in recent blocks");
-            blocks.push(block_info.block.clone());
+            blocks.push(block.clone());
         }
         blocks
     }
@@ -513,9 +511,7 @@ impl DagState {
             ))
             .last()?;
 
-        self.recent_blocks
-            .get(block_ref)
-            .map(|block_info| block_info.block.clone())
+        self.recent_blocks.get(block_ref).cloned()
     }
 
     /// Returns the last block proposed per authority with `evicted round <
@@ -573,11 +569,11 @@ impl DagState {
             for block_ref in block_ref_iter {
                 if last_round == 0 {
                     last_round = block_ref.round;
-                    let block_info = self
+                    let block = self
                         .recent_blocks
                         .get(block_ref)
                         .expect("Block should exist in recent blocks");
-                    blocks[authority_index] = block_info.block.clone();
+                    blocks[authority_index] = block.clone();
                     continue;
                 }
                 if block_ref.round < last_round {
@@ -1004,17 +1000,6 @@ impl DagState {
         self.last_commit = Some(commit);
     }
 }
-
-struct BlockInfo {
-    block: VerifiedBlock,
-}
-
-impl BlockInfo {
-    fn new(block: VerifiedBlock) -> Self {
-        Self { block }
-    }
-}
-
 #[cfg(test)]
 mod test {
     use std::vec;
