@@ -78,6 +78,7 @@ pub trait BlockHeaderAPI {
     fn timestamp_ms(&self) -> BlockTimestampMs;
     fn ancestors(&self) -> &[BlockRef];
     fn commit_votes(&self) -> &[CommitVote];
+    fn transactions_commitment(&self) -> TransactionsCommitment;
 }
 
 #[derive(Clone, Default, Deserialize, Serialize)]
@@ -166,6 +167,10 @@ impl BlockHeaderAPI for BlockHeaderV1 {
 
     fn commit_votes(&self) -> &[CommitVote] {
         &self.commit_votes
+    }
+
+    fn transactions_commitment(&self) -> TransactionsCommitment {
+        self.transactions_commitment
     }
 }
 
@@ -553,6 +558,11 @@ impl VerifiedBlockHeader {
 
     pub(crate) fn digest(&self) -> BlockHeaderDigest {
         self.digest
+    }
+
+    #[cfg_attr(not(test), expect(unused))]
+    pub(crate) fn transactions_commitment(&self) -> TransactionsCommitment {
+        self.signed_block_header.inner.transactions_commitment()
     }
 
     /// Returns the serialization of the signed block header.

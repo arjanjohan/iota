@@ -573,7 +573,8 @@ impl Core {
         // this would acknowledge the inclusion of transactions. Just let this
         // be done in the end of the method.
         let (transactions, ack_transactions, _limit_reached) = self.transaction_consumer.next();
-
+        
+        info!("{} transaction are consumed by a block", transactions.len());
         // Compute transaction commitment that will be included in the block header
         let transactions_commitment =
             TransactionsCommitment::compute_transactions_commitment(&transactions)
@@ -1380,17 +1381,7 @@ mod test {
     use tokio::time::sleep;
 
     use super::*;
-    use crate::{
-        CommitConsumer, CommitIndex,
-        block_header::{TestBlockHeader, genesis_block_headers},
-        block_verifier::NoopBlockVerifier,
-        commit::CommitAPI,
-        leader_scoring::ReputationScores,
-        storage::{Store, WriteBatch, mem_store::MemStore},
-        test_dag_builder::DagBuilder,
-        test_dag_parser::parse_dag,
-        transaction::{BlockStatus, TransactionClient},
-    };
+    use crate::{CommitConsumer, CommitIndex, block_header::{TestBlockHeader, genesis_block_headers}, block_verifier::NoopBlockVerifier, commit::CommitAPI, leader_scoring::ReputationScores, storage::{Store, WriteBatch, mem_store::MemStore}, test_dag_builder::DagBuilder, test_dag_parser::parse_dag, transaction::{BlockStatus, TransactionClient}, Transaction};
 
     /// Recover Core and continue proposing from the last round which forms a
     /// quorum.
@@ -1694,9 +1685,11 @@ mod test {
         // Send some transactions
         let mut total = 0;
         let mut index = 0;
+        let mut transactions = vec![];
         loop {
             let transaction =
                 bcs::to_bytes(&format!("Transaction {index}")).expect("Shouldn't fail");
+            transactions.push(Transaction::new(transaction.clone()));
             total += transaction.len();
             index += 1;
             let _w = transaction_client
@@ -1709,6 +1702,8 @@ mod test {
                 break;
             }
         }
+        // manually check the transaction commitment that is expected to be computed in next block
+        let transactions_commitment = TransactionsCommitment::compute_transactions_commitment(&transactions).expect("Commitment should be computed correctly");
 
         // a new block should have been created during recovery.
         let extended_block = block_receiver
@@ -1720,6 +1715,7 @@ mod test {
         assert_eq!(extended_block.block_header.round(), 1);
         assert_eq!(extended_block.block_header.author().value(), 0);
         assert_eq!(extended_block.block_header.ancestors().len(), 4);
+        assert_eq!(extended_block.block_header.transactions_commitment(), transactions_commitment);
 
         // genesis blocks should be referenced
         let all_genesis = genesis_block_headers(context);
