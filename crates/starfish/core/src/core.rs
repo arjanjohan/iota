@@ -573,7 +573,9 @@ impl Core {
         // this would acknowledge the inclusion of transactions. Just let this
         // be done in the end of the method.
         let (transactions, ack_transactions, _limit_reached) = self.transaction_consumer.next();
-        
+
+        // TODO: remove this info debug when transaction consumption is aligned with
+        // expectation
         info!("{} transaction are consumed by a block", transactions.len());
         // Compute transaction commitment that will be included in the block header
         let transactions_commitment =
@@ -1381,7 +1383,17 @@ mod test {
     use tokio::time::sleep;
 
     use super::*;
-    use crate::{CommitConsumer, CommitIndex, block_header::{TestBlockHeader, genesis_block_headers}, block_verifier::NoopBlockVerifier, commit::CommitAPI, leader_scoring::ReputationScores, storage::{Store, WriteBatch, mem_store::MemStore}, test_dag_builder::DagBuilder, test_dag_parser::parse_dag, transaction::{BlockStatus, TransactionClient}, Transaction};
+    use crate::{
+        CommitConsumer, CommitIndex, Transaction,
+        block_header::{BlockHeaderDigest, TestBlockHeader, genesis_block_headers},
+        block_verifier::NoopBlockVerifier,
+        commit::CommitAPI,
+        leader_scoring::ReputationScores,
+        storage::{Store, WriteBatch, mem_store::MemStore},
+        test_dag_builder::DagBuilder,
+        test_dag_parser::parse_dag,
+        transaction::{BlockStatus, TransactionClient},
+    };
 
     /// Recover Core and continue proposing from the last round which forms a
     /// quorum.
@@ -1669,20 +1681,8 @@ mod test {
             leader_schedule.clone(),
         );
 
-        let mut core = Core::new(
-            context.clone(),
-            leader_schedule,
-            transaction_consumer,
-            block_manager,
-            true,
-            commit_observer,
-            signals,
-            key_pairs.remove(context.own_index.value()).1,
-            dag_state.clone(),
-            false,
-        );
-
-        // Send some transactions
+        // First send some transactions, since the block will be created once we recover
+        // core
         let mut total = 0;
         let mut index = 0;
         let mut transactions = vec![];
@@ -1702,8 +1702,60 @@ mod test {
                 break;
             }
         }
-        // manually check the transaction commitment that is expected to be computed in next block
-        let transactions_commitment = TransactionsCommitment::compute_transactions_commitment(&transactions).expect("Commitment should be computed correctly");
+
+        // Second set dummy acknowledgments in DagState. First 200 acknowledgments are
+        // from eligible round; the rest are from the clock round, thereby they
+        // will not be taken when creating a block
+        let mut acknowledgments = vec![];
+        let num_acks = 200;
+        let mut num_pending_acks = 0;
+        loop {
+            acknowledgments.push(BlockRef::new(
+                0,
+                AuthorityIndex::new_for_test(2),
+                BlockHeaderDigest::default(),
+            ));
+            num_pending_acks += 1;
+            if num_pending_acks >= num_acks {
+                break;
+            }
+        }
+
+        loop {
+            acknowledgments.push(BlockRef::new(
+                1,
+                AuthorityIndex::new_for_test(3),
+                BlockHeaderDigest::default(),
+            ));
+            num_pending_acks += 1;
+            if num_pending_acks >= 500 {
+                break;
+            }
+        }
+
+        dag_state
+            .write()
+            .set_pending_acknowledgments(acknowledgments.clone());
+
+        // Recover core and immoderately create a new block
+        let mut core = Core::new(
+            context.clone(),
+            leader_schedule,
+            transaction_consumer,
+            block_manager,
+            true,
+            commit_observer,
+            signals,
+            key_pairs.remove(context.own_index.value()).1,
+            dag_state.clone(),
+            false,
+        );
+
+        // manually check the transaction commitment that is expected to be computed in
+        // next block
+        let transactions_commitment =
+            TransactionsCommitment::compute_transactions_commitment(&transactions)
+                .expect("Commitment should be computed correctly");
 
         // a new block should have been created during recovery.
         let extended_block = block_receiver
@@ -1715,7 +1767,14 @@ mod test {
         assert_eq!(extended_block.block_header.round(), 1);
         assert_eq!(extended_block.block_header.author().value(), 0);
         assert_eq!(extended_block.block_header.ancestors().len(), 4);
-        assert_eq!(extended_block.block_header.transactions_commitment(), transactions_commitment);
+        assert_eq!(
+            extended_block.block_header.transactions_commitment(),
+            transactions_commitment
+        );
+        assert_eq!(
+            extended_block.block_header.acknowledgments().len(),
+            num_acks
+        );
 
         // genesis blocks should be referenced
         let all_genesis = genesis_block_headers(context);

@@ -1087,6 +1087,11 @@ impl DagState {
     pub(crate) fn set_last_commit(&mut self, commit: TrustedCommit) {
         self.last_commit = Some(commit);
     }
+
+    #[cfg(test)]
+    pub(crate) fn set_pending_acknowledgments(&mut self, acknowledgments: Vec<BlockRef>) {
+        self.pending_acknowledgments = acknowledgments;
+    }
 }
 
 struct BlockInfo {
