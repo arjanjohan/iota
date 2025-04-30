@@ -28,7 +28,7 @@ use crate::{
     ancestor::{AncestorState, AncestorStateManager},
     block_header::{
         BlockHeader, BlockHeaderAPI, BlockHeaderV1, BlockRef, BlockTimestampMs, ExtendedBlock,
-        GENESIS_ROUND, Round, SignedBlockHeader, Slot, VerifiedBlockHeader,
+        GENESIS_ROUND, Round, SignedBlockHeader, Slot, TransactionsCommitment, VerifiedBlockHeader,
     },
     block_manager::BlockManager,
     commit::{CertifiedCommits, CommittedSubDag},
@@ -573,6 +573,12 @@ impl Core {
         // this would acknowledge the inclusion of transactions. Just let this
         // be done in the end of the method.
         let (transactions, ack_transactions, _limit_reached) = self.transaction_consumer.next();
+
+        // Compute transaction commitment that will be included in the block header
+        let transactions_commitment =
+            TransactionsCommitment::compute_transactions_commitment(&transactions)
+                .expect("We should expect correct computation of the transactions commitment");
+
         self.context
             .metrics
             .node_metrics
@@ -593,7 +599,7 @@ impl Core {
             .take_commit_votes(MAX_COMMIT_VOTES_PER_BLOCK);
 
         // Create the block and insert to storage.
-        let block = BlockHeader::V1(BlockHeaderV1::new(
+        let block_header = BlockHeader::V1(BlockHeaderV1::new(
             self.context.committee.epoch(),
             clock_round,
             self.context.own_index,
@@ -601,10 +607,11 @@ impl Core {
             ancestors.iter().map(|b| b.reference()).collect(),
             acknowledgments,
             commit_votes,
+            transactions_commitment,
         ));
-        let signed_block =
-            SignedBlockHeader::new(block, &self.block_signer).expect("Block signing failed.");
-        let serialized = signed_block
+        let signed_block_header = SignedBlockHeader::new(block_header, &self.block_signer)
+            .expect("Block signing failed.");
+        let serialized = signed_block_header
             .serialize()
             .expect("Block serialization failed.");
         self.context
@@ -613,7 +620,8 @@ impl Core {
             .proposed_block_size
             .observe(serialized.len() as f64);
         // Own blocks are assumed to be valid.
-        let verified_block = VerifiedBlockHeader::new_verified(signed_block, serialized);
+        let verified_block_header =
+            VerifiedBlockHeader::new_verified(signed_block_header, serialized);
 
         // Record the interval from last proposal, before accepting the proposed block.
         let last_proposed_block = self.last_proposed_block();
@@ -624,7 +632,7 @@ impl Core {
                 .block_proposal_interval
                 .observe(
                     Duration::from_millis(
-                        verified_block
+                        verified_block_header
                             .timestamp_ms()
                             .saturating_sub(last_proposed_block.timestamp_ms()),
                     )
@@ -635,7 +643,7 @@ impl Core {
         // Accept the block into BlockManager and DagState.
         let (accepted_blocks, missing) = self
             .block_manager
-            .try_accept_blocks(vec![verified_block.clone()]);
+            .try_accept_blocks(vec![verified_block_header.clone()]);
         assert_eq!(accepted_blocks.len(), 1);
         assert!(missing.is_empty());
 
@@ -643,9 +651,9 @@ impl Core {
         self.dag_state.write().flush();
 
         // Now acknowledge the transactions for their inclusion to block
-        ack_transactions(verified_block.reference());
+        ack_transactions(verified_block_header.reference());
 
-        debug!("Created block {verified_block:?} for round {clock_round}");
+        debug!("Created block {verified_block_header:?} for round {clock_round}");
 
         self.context
             .metrics
@@ -655,7 +663,7 @@ impl Core {
             .inc();
 
         Some(ExtendedBlock {
-            block_header: verified_block,
+            block_header: verified_block_header,
             excluded_ancestors,
         })
     }

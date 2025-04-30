@@ -95,7 +95,7 @@ pub struct BlockHeaderV1 {
     // TODO: we should compress it together with ancestors to
     // avoid duplications since in most cases these sets have a big overlap
     acknowledgments: Vec<BlockRef>,
-    transactions_commitment: TransactionDigest,
+    transactions_commitment: TransactionsCommitment,
     commit_votes: Vec<CommitVote>,
 }
 
@@ -108,6 +108,7 @@ impl BlockHeaderV1 {
         ancestors: Vec<BlockRef>,
         acknowledgments: Vec<BlockRef>,
         commit_votes: Vec<CommitVote>,
+        transactions_commitment: TransactionsCommitment,
     ) -> BlockHeaderV1 {
         Self {
             epoch,
@@ -116,7 +117,7 @@ impl BlockHeaderV1 {
             timestamp_ms,
             ancestors,
             acknowledgments,
-            transactions_commitment: TransactionDigest::default(),
+            transactions_commitment,
             commit_votes,
         }
     }
@@ -130,7 +131,7 @@ impl BlockHeaderV1 {
             ancestors: vec![],
             acknowledgments: vec![],
             commit_votes: vec![],
-            transactions_commitment: TransactionDigest::default(),
+            transactions_commitment: TransactionsCommitment::default(),
         }
     }
 }
@@ -280,27 +281,34 @@ impl AsRef<[u8]> for BlockHeaderDigest {
 // is used for BlockDigest computations of BlockHeader does not include
 // explicitly the transaction data.
 #[derive(Clone, Copy, Serialize, Deserialize, Default, PartialEq, Eq, PartialOrd, Ord)]
-pub struct TransactionDigest([u8; starfish_config::DIGEST_LENGTH]);
+pub struct TransactionsCommitment([u8; starfish_config::DIGEST_LENGTH]);
 
-impl TransactionDigest {
+impl TransactionsCommitment {
     /// Lexicographic min & max digest.
     pub const MIN: Self = Self([u8::MIN; starfish_config::DIGEST_LENGTH]);
     pub const MAX: Self = Self([u8::MAX; starfish_config::DIGEST_LENGTH]);
+    pub(crate) fn compute_transactions_commitment(
+        transactions: &[Transaction],
+    ) -> ConsensusResult<TransactionsCommitment> {
+        let mut hasher = DefaultHashFunction::new();
+        hasher.update(bcs::to_bytes(transactions).map_err(ConsensusError::SerializationFailure)?);
+        Ok(TransactionsCommitment(hasher.finalize().into()))
+    }
 }
 
-impl Hash for TransactionDigest {
+impl Hash for TransactionsCommitment {
     fn hash<H: Hasher>(&self, state: &mut H) {
         state.write(&self.0[..8]);
     }
 }
 
-impl From<TransactionDigest> for Digest<{ DIGEST_LENGTH }> {
-    fn from(hd: TransactionDigest) -> Self {
+impl From<TransactionsCommitment> for Digest<{ DIGEST_LENGTH }> {
+    fn from(hd: TransactionsCommitment) -> Self {
         Digest::new(hd.0)
     }
 }
 
-impl fmt::Display for TransactionDigest {
+impl fmt::Display for TransactionsCommitment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
@@ -312,7 +320,7 @@ impl fmt::Display for TransactionDigest {
     }
 }
 
-impl fmt::Debug for TransactionDigest {
+impl fmt::Debug for TransactionsCommitment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
@@ -322,7 +330,7 @@ impl fmt::Debug for TransactionDigest {
     }
 }
 
-impl AsRef<[u8]> for TransactionDigest {
+impl AsRef<[u8]> for TransactionsCommitment {
     fn as_ref(&self) -> &[u8] {
         &self.0
     }
