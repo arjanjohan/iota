@@ -106,6 +106,7 @@ impl BlockHeaderV1 {
         author: AuthorityIndex,
         timestamp_ms: BlockTimestampMs,
         ancestors: Vec<BlockRef>,
+        acknowledgments: Vec<BlockRef>,
         commit_votes: Vec<CommitVote>,
     ) -> BlockHeaderV1 {
         Self {
@@ -113,10 +114,8 @@ impl BlockHeaderV1 {
             round,
             author,
             timestamp_ms,
-            ancestors: ancestors.clone(),
-            // TODO: we should track availability of transaction data separately and take this
-            // information from the pending state of DagState. We clone ancestors for now
-            acknowledgments: ancestors,
+            ancestors,
+            acknowledgments,
             transactions_commitment: TransactionDigest::default(),
             commit_votes,
         }

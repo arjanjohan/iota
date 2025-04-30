@@ -49,6 +49,14 @@ use crate::{
 // TODO: Move to protocol config, and verify in BlockVerifier.
 const MAX_COMMIT_VOTES_PER_BLOCK: usize = 100;
 
+// Maximum number of acknowledgments to be included in a block. It must be
+// larger than a factor of 4/3 multiplied by the number of validators to
+// acknowledge all the blocks. For now we set it as a constant to not
+// make the block header size too large.
+// TODO: after testing decide how to compress acknowledgments and move to a
+// protocol config
+const MAX_ACKNOWLEDGMENTS_PER_BLOCK: usize = 400;
+
 pub(crate) struct Core {
     context: Arc<Context>,
     /// The consumer to use in order to pull transactions to be included for the
@@ -571,6 +579,13 @@ impl Core {
             .proposed_block_transactions
             .observe(transactions.len() as f64);
 
+        // Consume the acknowledgments about transaction data availability for past
+        // blocks to be included.
+        let acknowledgments = self
+            .dag_state
+            .write()
+            .take_acknowledgments(MAX_ACKNOWLEDGMENTS_PER_BLOCK, clock_round);
+
         // Consume the commit votes to be included.
         let commit_votes = self
             .dag_state
@@ -584,6 +599,7 @@ impl Core {
             self.context.own_index,
             now,
             ancestors.iter().map(|b| b.reference()).collect(),
+            acknowledgments,
             commit_votes,
         ));
         let signed_block =
