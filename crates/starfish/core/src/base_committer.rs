@@ -25,6 +25,7 @@ mod base_committer_tests;
 #[path = "tests/base_committer_declarative_tests.rs"]
 mod base_committer_declarative_tests;
 
+#[derive(Default)]
 pub(crate) struct BaseCommitterOptions {
     /// The offset used in the leader-election protocol. This is used by the
     /// multi-committer to ensure that each [`BaseCommitter`] instance elects
@@ -34,15 +35,6 @@ pub(crate) struct BaseCommitterOptions {
     /// ensure that each[`BaseCommitter`] instances operates on a different
     /// view of the dag.
     pub round_offset: u32,
-}
-
-impl Default for BaseCommitterOptions {
-    fn default() -> Self {
-        Self {
-            leader_offset: 0,
-            round_offset: 0,
-        }
-    }
 }
 
 /// The [`BaseCommitter`] contains the bare bone commit logic. Once
