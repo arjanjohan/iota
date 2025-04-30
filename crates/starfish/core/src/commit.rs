@@ -29,7 +29,7 @@ pub(crate) const GENESIS_COMMIT_INDEX: CommitIndex = 0;
 
 /// One wave consists of one leader round, one voting round, and one certifying
 /// round.
-pub(crate) const DEFAULT_WAVE_LENGTH: Round = 3;
+pub(crate) const WAVE_LENGTH: Round = 3;
 
 /// The consensus protocol operates in 'waves'. Each wave is composed of a
 /// leader round, at least one voting round, and one certifying round.
@@ -651,7 +651,7 @@ mod tests {
     async fn test_new_subdag_from_commit() {
         let store = Arc::new(MemStore::new());
         let context = Arc::new(Context::new_for_test(4).0);
-        let wave_length = DEFAULT_WAVE_LENGTH;
+        let wave_length = WAVE_LENGTH;
 
         // Populate fully connected test blocks for round 0 ~ 3, authorities 0 ~ 3.
         let first_wave_rounds: u32 = wave_length;

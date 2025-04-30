@@ -9,7 +9,7 @@ use starfish_config::AuthorityIndex;
 
 use crate::{
     block::{BlockAPI, Slot, TestBlock, Transaction, VerifiedBlock},
-    commit::{DEFAULT_WAVE_LENGTH, DecidedLeader},
+    commit::{DecidedLeader, WAVE_LENGTH},
     context::Context,
     dag_state::DagState,
     leader_schedule::{LeaderSchedule, LeaderSwapTable},
@@ -103,7 +103,7 @@ async fn idempotence() {
 #[tokio::test]
 async fn multiple_direct_commit() {
     let (context, dag_state, committer) = basic_test_setup();
-    let wave_length = DEFAULT_WAVE_LENGTH;
+    let wave_length = WAVE_LENGTH;
 
     let mut last_decided = Slot::new_for_test(0, 0);
     let mut ancestors = None;
@@ -149,7 +149,7 @@ async fn multiple_direct_commit() {
 #[tokio::test]
 async fn direct_commit_late_call() {
     let (context, dag_state, committer) = basic_test_setup();
-    let wave_length = DEFAULT_WAVE_LENGTH;
+    let wave_length = WAVE_LENGTH;
 
     // note: pipelines, waves & rounds are zero-indexed.
     let n = 10;
@@ -325,7 +325,7 @@ async fn direct_skip_enough_blame() {
 #[tokio::test]
 async fn indirect_commit() {
     let (context, dag_state, committer) = basic_test_setup();
-    let wave_length = DEFAULT_WAVE_LENGTH;
+    let wave_length = WAVE_LENGTH;
 
     // Add enough blocks to reach the wave 0 leader of pipeline 1.
     // note: pipelines, waves & rounds are zero-indexed.
@@ -443,7 +443,7 @@ async fn indirect_commit() {
 #[tokio::test]
 async fn indirect_skip() {
     let (context, dag_state, committer) = basic_test_setup();
-    let wave_length = DEFAULT_WAVE_LENGTH;
+    let wave_length = WAVE_LENGTH;
 
     // Add enough blocks to reach the 4th leader.
     // note: pipelines, waves & rounds are zero-indexed.
