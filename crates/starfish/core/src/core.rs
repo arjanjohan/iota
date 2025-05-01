@@ -25,10 +25,12 @@ use crate::{
     storage::mem_store::MemStore,
 };
 use crate::{
+    Transaction,
     ancestor::{AncestorState, AncestorStateManager},
     block_header::{
         BlockHeader, BlockHeaderAPI, BlockHeaderV1, BlockRef, BlockTimestampMs, ExtendedBlock,
         GENESIS_ROUND, Round, SignedBlockHeader, Slot, TransactionsCommitment, VerifiedBlockHeader,
+        VerifiedTransactions,
     },
     block_manager::BlockManager,
     commit::{CertifiedCommits, CommittedSubDag},
@@ -573,13 +575,15 @@ impl Core {
         // this would acknowledge the inclusion of transactions. Just let this
         // be done in the end of the method.
         let (transactions, ack_transactions, _limit_reached) = self.transaction_consumer.next();
-
-        // TODO: remove this info debug when transaction consumption is aligned with
-        // expectation
+        // TODO: remove this info debug when transaction consumption is ensured to be
+        // aligned with expectation
         info!("{} transaction are consumed by a block", transactions.len());
+        // Serialize the transaction
+        let serialized_transactions = Transaction::serialize(&transactions)
+            .expect("We should expect correct serialization for transactions");
         // Compute transaction commitment that will be included in the block header
         let transactions_commitment =
-            TransactionsCommitment::compute_transactions_commitment(&transactions)
+            TransactionsCommitment::compute_transactions_commitment(&serialized_transactions)
                 .expect("We should expect correct computation of the transactions commitment");
 
         self.context
@@ -614,17 +618,20 @@ impl Core {
         ));
         let signed_block_header = SignedBlockHeader::new(block_header, &self.block_signer)
             .expect("Block signing failed.");
-        let serialized = signed_block_header
+
+        // Make serialization over the whole signed block header even though we
+        // serialized the block header when signing it.
+        let serialized_signed_block_header = signed_block_header
             .serialize()
             .expect("Block serialization failed.");
         self.context
             .metrics
             .node_metrics
             .proposed_block_size
-            .observe(serialized.len() as f64);
+            .observe(serialized_signed_block_header.len() as f64);
         // Own blocks are assumed to be valid.
         let verified_block_header =
-            VerifiedBlockHeader::new_verified(signed_block_header, serialized);
+            VerifiedBlockHeader::new_verified(signed_block_header, serialized_signed_block_header);
 
         // Record the interval from last proposal, before accepting the proposed block.
         let last_proposed_block = self.last_proposed_block();
@@ -649,6 +656,14 @@ impl Core {
             .try_accept_blocks(vec![verified_block_header.clone()]);
         assert_eq!(accepted_blocks.len(), 1);
         assert!(missing.is_empty());
+
+        // Construct verified transactions to be used for storing and broadcasting
+        // TODO: consume this transactions in the data manager and for broadcasting
+        let _verified_transactions = VerifiedTransactions::new(
+            transactions,
+            verified_block_header.reference(),
+            serialized_transactions,
+        );
 
         // Ensure the new block and its ancestors are persisted, before broadcasting it.
         self.dag_state.write().flush();
@@ -1751,11 +1766,14 @@ mod test {
             false,
         );
 
-        // manually check the transaction commitment that is expected to be computed in
+        // Manually check the transaction commitment that is expected to be computed in
         // next block
+        let serialized_transactions = Transaction::serialize(&transactions)
+            .expect("We should expect correct serialization for transactions");
+        // Compute transaction commitment that will be included in the block header
         let transactions_commitment =
-            TransactionsCommitment::compute_transactions_commitment(&transactions)
-                .expect("Commitment should be computed correctly");
+            TransactionsCommitment::compute_transactions_commitment(&serialized_transactions)
+                .expect("We should expect correct computation of the transactions commitment");
 
         // a new block should have been created during recovery.
         let extended_block = block_receiver

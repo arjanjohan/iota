@@ -56,6 +56,12 @@ impl Transaction {
     pub fn into_data(self) -> Bytes {
         self.data
     }
+
+    /// Serialises a vector of transactions using the bcs serializer
+    pub(crate) fn serialize(transactions: &[Transaction]) -> Result<Bytes, bcs::Error> {
+        let bytes = bcs::to_bytes(transactions)?;
+        Ok(bytes.into())
+    }
 }
 
 /// A block header includes references to previous round blocks and a commitment
@@ -293,10 +299,10 @@ impl TransactionsCommitment {
     pub const MIN: Self = Self([u8::MIN; starfish_config::DIGEST_LENGTH]);
     pub const MAX: Self = Self([u8::MAX; starfish_config::DIGEST_LENGTH]);
     pub(crate) fn compute_transactions_commitment(
-        transactions: &[Transaction],
+        serialized_transactions: &Bytes,
     ) -> ConsensusResult<TransactionsCommitment> {
         let mut hasher = DefaultHashFunction::new();
-        hasher.update(bcs::to_bytes(transactions).map_err(ConsensusError::SerializationFailure)?);
+        hasher.update(serialized_transactions);
         Ok(TransactionsCommitment(hasher.finalize().into()))
     }
 }
@@ -612,6 +618,34 @@ impl fmt::Debug for VerifiedBlockHeader {
             self.acknowledgments(),
             self.commit_votes().len(),
         )
+    }
+}
+
+/// VerifiedTransactions are transactions that correspond to an existing block
+pub struct VerifiedTransactions {
+    #[expect(dead_code)]
+    transactions: Vec<Transaction>,
+
+    /// The block reference of the block that contains the transactions.
+    #[expect(dead_code)]
+    block_ref: BlockRef,
+
+    /// The serialized bytes of the transactions.
+    #[expect(dead_code)]
+    serialized: Bytes,
+}
+
+impl VerifiedTransactions {
+    pub(crate) fn new(
+        transactions: Vec<Transaction>,
+        block_ref: BlockRef,
+        serialized: Bytes,
+    ) -> Self {
+        Self {
+            transactions,
+            block_ref,
+            serialized,
+        }
     }
 }
 
